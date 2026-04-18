@@ -114,6 +114,25 @@ export interface CommunicationTemplate {
   lastModified: string;
 }
 
+export type EventStatus = 'Upcoming' | 'Ongoing' | 'Completed' | 'Cancelled';
+export type EventCategory = 'Service' | 'Conference' | 'Training' | 'Social' | 'Wedding' | 'Funeral' | 'Outreach';
+
+export interface ChurchEvent {
+  id: string;
+  name: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+  category: EventCategory;
+  description: string;
+  capacity: number;
+  attendees: number;
+  status: EventStatus;
+  requiresRegistration: boolean;
+  createdBy: string;
+}
+
 export type AnnouncementAudience =
   | 'All Members'
   | 'Workers'
