@@ -114,6 +114,44 @@ export interface CommunicationTemplate {
   lastModified: string;
 }
 
+export interface WorkflowStep {
+  label: string;
+  order: number;
+}
+
+export interface WorkflowTemplate {
+  id: string;
+  name: string;
+  description: string;
+  trigger: string;
+  steps: WorkflowStep[];
+  active: boolean;
+  createdBy: string;
+  lastModified: string;
+}
+
+export type ActiveWorkflowStage =
+  | 'First Timers'
+  | 'Follow-up Call'
+  | 'Follow-up Visit'
+  | 'Second Timers'
+  | 'New Converts';
+
+export type WorkflowCardStatus = 'On Track' | 'Overdue' | 'Pending';
+
+export interface ActiveWorkflowCard {
+  id: string;
+  memberName: string;
+  phone: string;
+  assignedTo: string;
+  dateAdded: string;
+  stage: ActiveWorkflowStage;
+  status: WorkflowCardStatus;
+  templateId: string;
+  currentStepIndex: number;
+  notes?: string;
+}
+
 export type CalendarEventCategory = 'Service' | 'Bible Study' | 'Youth' | 'Birthday' | 'Meeting' | 'Other';
 
 export interface CalendarEvent {
