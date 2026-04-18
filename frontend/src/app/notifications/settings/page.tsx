@@ -58,6 +58,7 @@ const initialSettings: NotificationSetting[] = [
 
 export default function NotificationSettingsPage() {
   const [settings, setSettings] = useState(initialSettings);
+  const [showToast, setShowToast] = useState(false);
 
   const handleToggle = (id: string) => {
     setSettings((prev) =>
@@ -67,6 +68,8 @@ export default function NotificationSettingsPage() {
 
   const handleSave = () => {
     console.log("Saved notification settings:", settings);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
   };
 
   return (
@@ -78,6 +81,12 @@ export default function NotificationSettingsPage() {
       <div className="mb-6">
         <p className="text-sm text-[#6B7280]">Settings</p>
       </div>
+
+      {showToast && (
+        <div className="fixed right-6 top-24 z-50 rounded-lg bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-lg transition-opacity">
+          Settings saved successfully
+        </div>
+      )}
 
       {/* Settings Card */}
       <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
