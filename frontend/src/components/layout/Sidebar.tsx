@@ -1,0 +1,355 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import {
+  ClipboardList,
+  CircleUser,
+  Contact,
+  RefreshCcw,
+  UserRoundPlus,
+  PartyPopper,
+  Swords,
+  SquarePlay,
+  CalendarClock,
+  FileText,
+  CalendarDays,
+  GitFork,
+  BellRing,
+  Settings,
+  LogOut,
+  ChevronRight,
+  ChevronDown,
+} from "lucide-react";
+
+interface SubItem {
+  label: string;
+  href: string;
+}
+
+interface NavItem {
+  label: string;
+  icon: React.ElementType;
+  href?: string;
+  children?: SubItem[];
+}
+
+const navItems: NavItem[] = [
+  {
+    label: "Dashboard",
+    icon: ClipboardList,
+    href: "/dashboard",
+  },
+  {
+    label: "User Management",
+    icon: CircleUser,
+    children: [
+      { label: "Members", href: "/user-management/members" },
+      { label: "E-Members", href: "/user-management/e-members" },
+      { label: "First Timers", href: "/user-management/first-timers" },
+      { label: "Second Timers", href: "/user-management/second-timers" },
+      { label: "New Converts", href: "/user-management/new-converts" },
+    ],
+  },
+  {
+    label: "Communication",
+    icon: Contact,
+    children: [
+      { label: "Messages", href: "/communication/messages" },
+      { label: "Announcements", href: "/communication/announcements" },
+    ],
+  },
+  {
+    label: "Workflows",
+    icon: RefreshCcw,
+    children: [
+      { label: "Active Workflows", href: "/workflows/active" },
+      { label: "Templates", href: "/workflows/templates" },
+    ],
+  },
+  {
+    label: "Requests",
+    icon: UserRoundPlus,
+    href: "/requests",
+  },
+  {
+    label: "Celebrations",
+    icon: PartyPopper,
+    href: "/celebrations",
+  },
+  {
+    label: "Trainings",
+    icon: Swords,
+    children: [
+      { label: "Courses", href: "/trainings/courses" },
+      { label: "Schedules", href: "/trainings/schedules" },
+    ],
+  },
+  {
+    label: "Media",
+    icon: SquarePlay,
+    href: "/media",
+  },
+  {
+    label: "Event Management",
+    icon: CalendarClock,
+    href: "/event-management",
+  },
+  {
+    label: "Reports",
+    icon: FileText,
+    href: "/reports",
+  },
+  {
+    label: "Calendar",
+    icon: CalendarDays,
+    href: "/calendar",
+  },
+  {
+    label: "Directory",
+    icon: GitFork,
+    href: "/directory",
+  },
+  {
+    label: "Notifications",
+    icon: BellRing,
+    children: [
+      { label: "All Notifications", href: "/notifications" },
+      { label: "Settings", href: "/notifications/settings" },
+    ],
+  },
+  {
+    label: "Settings",
+    icon: Settings,
+    children: [
+      { label: "General", href: "/settings/general" },
+      { label: "Roles & Permissions", href: "/settings/roles" },
+    ],
+  },
+];
+
+export default function Sidebar() {
+  const pathname = usePathname();
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  // Auto-expand parent items whose children match the current path
+  useEffect(() => {
+    const activeParents = navItems
+      .filter(
+        (item) =>
+          item.children &&
+          item.children.some((child) => pathname.startsWith(child.href))
+      )
+      .map((item) => item.label);
+
+    setExpandedItems((prev) => {
+      const merged = new Set([...prev, ...activeParents]);
+      return Array.from(merged);
+    });
+  }, [pathname]);
+
+  const toggleExpand = (label: string) => {
+    setExpandedItems((prev) =>
+      prev.includes(label)
+        ? prev.filter((item) => item !== label)
+        : [...prev, label]
+    );
+  };
+
+  const isChildActive = (href: string) => pathname.startsWith(href);
+
+  const isParentActive = (item: NavItem) => {
+    if (item.children) {
+      return item.children.some((child) => pathname.startsWith(child.href));
+    }
+    return item.href ? pathname.startsWith(item.href) : false;
+  };
+
+  return (
+    <aside
+      className="fixed left-0 top-0 z-40 flex h-screen flex-col"
+      style={{
+        width: "322px",
+        backgroundColor: "#FEFEFF",
+        boxShadow: "4px 0px 4px 0px rgba(0, 0, 128, 0.16)",
+      }}
+    >
+      {/* Logo Area */}
+      <div className="px-5 py-5">
+        <Image
+          src="/rccg-logo.svg"
+          alt="Rose of Sharon - RCCG"
+          width={202}
+          height={54}
+          className="h-[54px] w-auto"
+          priority
+        />
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto pl-5 pr-3 py-2">
+        <ul className="space-y-0.5">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const hasChildren = !!item.children;
+            const isExpanded = expandedItems.includes(item.label);
+            const parentActive = isParentActive(item);
+
+            return (
+              <li key={item.label}>
+                {hasChildren ? (
+                  <>
+                    <button
+                      onClick={() => toggleExpand(item.label)}
+                      className="flex w-full items-center gap-3 rounded-lg px-3 transition-colors"
+                      style={{
+                        paddingTop: "14px",
+                        paddingBottom: "14px",
+                        backgroundColor: parentActive ? "#000080" : "transparent",
+                        color: parentActive ? "#FFFFFF" : "#000080",
+                        borderRadius: "8px",
+                      }}
+                    >
+                      <Icon
+                        className="flex-shrink-0"
+                        style={{
+                          width: "24px",
+                          height: "24px",
+                          color: parentActive ? "#FFFFFF" : "#000080",
+                        }}
+                        strokeWidth={1.5}
+                      />
+                      <span
+                        className="flex-1 text-left"
+                        style={{
+                          fontSize: "16px",
+                          fontWeight: parentActive ? 500 : 400,
+                        }}
+                      >
+                        {item.label}
+                      </span>
+                      {parentActive || isExpanded ? (
+                        <ChevronDown
+                          className="flex-shrink-0"
+                          style={{
+                            width: "20px",
+                            height: "20px",
+                            color: parentActive ? "#FFFFFF" : "#000080",
+                          }}
+                          strokeWidth={1.5}
+                        />
+                      ) : (
+                        <ChevronRight
+                          className="flex-shrink-0"
+                          style={{
+                            width: "20px",
+                            height: "20px",
+                            color: "#000080",
+                          }}
+                          strokeWidth={1.5}
+                        />
+                      )}
+                    </button>
+
+                    {/* Submenu */}
+                    {isExpanded && (
+                      <>
+                        {parentActive && (
+                          <div
+                            style={{
+                              height: "2px",
+                              backgroundColor: "#000080",
+                              margin: "2px 0",
+                            }}
+                          />
+                        )}
+                        <ul className="py-1">
+                          {item.children!.map((child) => {
+                            const childActive = isChildActive(child.href);
+                            return (
+                              <li key={child.href}>
+                                <Link
+                                  href={child.href}
+                                  className="block transition-colors"
+                                  style={{
+                                    paddingLeft: "40px",
+                                    paddingTop: "10px",
+                                    paddingBottom: "10px",
+                                    fontSize: "15px",
+                                    fontWeight: childActive ? 600 : 400,
+                                    color: childActive ? "#000080" : "#333333",
+                                  }}
+                                >
+                                  {child.label}
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    href={item.href!}
+                    className="flex items-center gap-3 rounded-lg px-3 transition-colors"
+                    style={{
+                      paddingTop: "14px",
+                      paddingBottom: "14px",
+                      backgroundColor:
+                        isParentActive(item) ? "#000080" : "transparent",
+                      color: isParentActive(item) ? "#FFFFFF" : "#000080",
+                      borderRadius: "8px",
+                    }}
+                  >
+                    <Icon
+                      className="flex-shrink-0"
+                      style={{
+                        width: "24px",
+                        height: "24px",
+                        color: isParentActive(item) ? "#FFFFFF" : "#000080",
+                      }}
+                      strokeWidth={1.5}
+                    />
+                    <span
+                      style={{
+                        fontSize: "16px",
+                        fontWeight: isParentActive(item) ? 500 : 400,
+                      }}
+                    >
+                      {item.label}
+                    </span>
+                  </Link>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      {/* Log Out */}
+      <div
+        className="px-5 py-4"
+        style={{ borderTop: "1px solid #E5E5E5" }}
+      >
+        <button
+          className="flex w-full items-center gap-3 rounded-lg px-3 transition-colors hover:bg-gray-100"
+          style={{
+            paddingTop: "14px",
+            paddingBottom: "14px",
+            color: "#000080",
+          }}
+        >
+          <LogOut
+            className="flex-shrink-0"
+            style={{ width: "24px", height: "24px", color: "#000080" }}
+            strokeWidth={1.5}
+          />
+          <span style={{ fontSize: "16px", fontWeight: 400 }}>Log Out</span>
+        </button>
+      </div>
+    </aside>
+  );
+}
