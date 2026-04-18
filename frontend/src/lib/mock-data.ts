@@ -1,4 +1,4 @@
-import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate } from './types';
+import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent, WorkflowTemplate, ActiveWorkflowCard, Course, TrainingSchedule, Celebration, Role, Group, PermissionMatrix } from './types';
 
 export const members: Member[] = Array.from({ length: 20 }, (_, i) => ({
   id: `m-${i + 1}`,
@@ -183,6 +183,286 @@ export const communicationTemplates: CommunicationTemplate[] = [
   { id: 'tpl-4', name: 'Event Invitation', type: 'Email', subject: 'You are Invited!', content: 'Dear {name}, you are cordially invited to {event} on {date}...', createdBy: 'Admin', lastModified: '03/20/2026' },
   { id: 'tpl-5', name: 'Follow-up Message', type: 'SMS', content: 'Hi {name}, we hope you enjoyed the service. We would love to see you again!', createdBy: 'Admin', lastModified: '03/25/2026' },
   { id: 'tpl-6', name: 'Prayer Request Acknowledgment', type: 'Email', subject: 'Prayer Request Received', content: 'Dear {name}, we have received your prayer request and our team is praying for you.', createdBy: 'Admin', lastModified: '03/28/2026' },
+];
+
+export const allAnnouncements: Announcement[] = [
+  {
+    id: 'ann-1',
+    title: 'Sunday Service Change',
+    body: 'Please be informed that this Sunday\'s service will start at 10:00 AM instead of the usual 9:00 AM. We look forward to worshipping with you.',
+    audience: 'All Members',
+    scheduledDate: '04/25/2026',
+    status: 'Scheduled',
+    createdBy: 'Pastor David',
+    createdDate: '04/15/2026',
+  },
+  {
+    id: 'ann-2',
+    title: 'Choir Rehearsal Reminder',
+    body: 'Choir members are reminded of the special rehearsal on Saturday at 4:00 PM ahead of the upcoming anniversary service.',
+    audience: 'Choir',
+    scheduledDate: '04/20/2026',
+    status: 'Published',
+    createdBy: 'Admin',
+    createdDate: '04/14/2026',
+  },
+  {
+    id: 'ann-3',
+    title: 'Workers Meeting',
+    body: 'All church workers are invited to the monthly workers meeting on Friday at 6:00 PM in the main hall.',
+    audience: 'Workers',
+    scheduledDate: '04/19/2026',
+    status: 'Published',
+    createdBy: 'Pastor David',
+    createdDate: '04/13/2026',
+  },
+  {
+    id: 'ann-4',
+    title: 'Youth Conference Registration',
+    body: 'Registration for the annual youth conference is now open. Visit the youth desk or register online before May 1st.',
+    audience: 'Youth',
+    scheduledDate: '04/30/2026',
+    status: 'Scheduled',
+    createdBy: 'Youth Pastor',
+    createdDate: '04/12/2026',
+  },
+  {
+    id: 'ann-5',
+    title: 'Children\'s Day Preparations',
+    body: 'Parents, please ensure your children wear white on Children\'s Day. A special program has been prepared.',
+    audience: 'Children',
+    scheduledDate: '05/01/2026',
+    status: 'Draft',
+    createdBy: 'Children Coordinator',
+    createdDate: '04/10/2026',
+  },
+  {
+    id: 'ann-6',
+    title: 'Ushering Schedule Update',
+    body: 'The new ushering roster has been published. Please check the notice board or contact your team lead.',
+    audience: 'Ushering',
+    scheduledDate: '04/18/2026',
+    status: 'Published',
+    createdBy: 'Head Usher',
+    createdDate: '04/11/2026',
+  },
+  {
+    id: 'ann-7',
+    title: 'Thanksgiving Service',
+    body: 'Join us for our monthly thanksgiving service on the last Sunday of this month. Come with a grateful heart.',
+    audience: 'All Members',
+    scheduledDate: '04/27/2026',
+    status: 'Scheduled',
+    createdBy: 'Pastor David',
+    createdDate: '04/09/2026',
+  },
+  {
+    id: 'ann-8',
+    title: 'Mid-Year Evaluation',
+    body: 'All department heads are to submit their mid-year evaluation reports by the end of next week.',
+    audience: 'Workers',
+    scheduledDate: '05/03/2026',
+    status: 'Draft',
+    createdBy: 'Admin',
+    createdDate: '04/08/2026',
+  },
+];
+
+export const allEvents: ChurchEvent[] = [
+  { id: 'ev-1', name: 'Sunday Worship Service', date: '04/19/2026', startTime: '09:00', endTime: '11:30', location: 'Main Auditorium', category: 'Service', description: 'Weekly worship service with sermon, worship, and fellowship.', capacity: 600, attendees: 450, status: 'Upcoming', requiresRegistration: false, createdBy: 'Pastor David' },
+  { id: 'ev-2', name: 'Annual Church Conference', date: '05/01/2026', startTime: '08:00', endTime: '17:00', location: 'Convention Center', category: 'Conference', description: 'Three-day annual conference with guest speakers and workshops.', capacity: 1500, attendees: 1200, status: 'Upcoming', requiresRegistration: true, createdBy: 'Admin' },
+  { id: 'ev-3', name: 'Leadership Training Workshop', date: '04/25/2026', startTime: '10:00', endTime: '15:00', location: 'Fellowship Hall', category: 'Training', description: 'Intensive leadership development workshop for church workers.', capacity: 100, attendees: 85, status: 'Upcoming', requiresRegistration: true, createdBy: 'Pastor James' },
+  { id: 'ev-4', name: 'Youth Fun Day', date: '04/18/2026', startTime: '12:00', endTime: '18:00', location: 'Church Grounds', category: 'Social', description: 'A day of games, music, and fellowship for the youth.', capacity: 150, attendees: 120, status: 'Upcoming', requiresRegistration: false, createdBy: 'Youth Pastor' },
+  { id: 'ev-5', name: 'Midweek Bible Study', date: '04/15/2026', startTime: '18:00', endTime: '20:00', location: 'Room 201', category: 'Service', description: 'Weekly Bible study and prayer meeting.', capacity: 150, attendees: 95, status: 'Ongoing', requiresRegistration: false, createdBy: 'Pastor David' },
+  { id: 'ev-6', name: 'Workers Training Seminar', date: '04/10/2026', startTime: '09:00', endTime: '14:00', location: 'Training Room', category: 'Training', description: 'Training seminar for newly appointed workers.', capacity: 80, attendees: 60, status: 'Completed', requiresRegistration: true, createdBy: 'Admin' },
+  { id: 'ev-7', name: 'Easter Celebration Service', date: '03/29/2026', startTime: '09:00', endTime: '12:00', location: 'Main Auditorium', category: 'Service', description: 'Special Easter Sunday celebration service.', capacity: 1000, attendees: 800, status: 'Completed', requiresRegistration: false, createdBy: 'Pastor David' },
+  { id: 'ev-8', name: 'Church Picnic & Fellowship', date: '03/22/2026', startTime: '11:00', endTime: '17:00', location: 'City Park', category: 'Social', description: 'Annual outdoor fellowship picnic with food and games.', capacity: 300, attendees: 200, status: 'Completed', requiresRegistration: true, createdBy: 'Admin' },
+  { id: 'ev-9', name: 'Marriage Enrichment Seminar', date: '05/10/2026', startTime: '14:00', endTime: '18:00', location: 'Fellowship Hall', category: 'Training', description: 'Seminar for married couples on strengthening their marriage.', capacity: 150, attendees: 0, status: 'Upcoming', requiresRegistration: true, createdBy: 'Pastor David' },
+  { id: 'ev-10', name: 'Community Outreach', date: '05/15/2026', startTime: '08:00', endTime: '16:00', location: 'City Center', category: 'Outreach', description: 'Evangelism and community service outreach.', capacity: 200, attendees: 0, status: 'Upcoming', requiresRegistration: true, createdBy: 'Admin' },
+  { id: 'ev-11', name: 'Choir Anniversary Concert', date: '05/22/2026', startTime: '16:00', endTime: '20:00', location: 'Main Auditorium', category: 'Service', description: 'Special concert celebrating the choir department anniversary.', capacity: 800, attendees: 0, status: 'Upcoming', requiresRegistration: false, createdBy: 'Choir Director' },
+  { id: 'ev-12', name: 'Children\'s Day Celebration', date: '05/28/2026', startTime: '10:00', endTime: '15:00', location: 'Main Auditorium', category: 'Social', description: 'Special program for the children of the church.', capacity: 400, attendees: 0, status: 'Upcoming', requiresRegistration: false, createdBy: 'Children Coordinator' },
+];
+
+export const directoryContacts: DirectoryContact[] = [
+  { id: 'dir-1', name: 'Pastor James Adewale', role: 'Senior Pastor', group: 'Pastoral', phone: '+234 801 234 5678', email: 'james.adewale@church.org', address: '15 Allen Avenue, Ikeja, Lagos', department: 'Pastoral', joinedDate: '01/15/2015' },
+  { id: 'dir-2', name: 'Grace Nwosu', role: 'Associate Pastor', group: 'Pastoral', phone: '+234 802 345 6789', email: 'grace.nwosu@church.org', address: '22 Adeniyi Jones, Ikeja', department: 'Pastoral', joinedDate: '03/10/2017' },
+  { id: 'dir-3', name: 'Emmanuel Okafor', role: 'Deacon', group: 'Deacons', phone: '+234 803 456 7890', email: 'emmanuel.okafor@church.org', address: '45 Opebi Road, Ikeja', department: 'Deacons', joinedDate: '06/20/2018' },
+  { id: 'dir-4', name: 'Sarah Bamidele', role: 'Choir Director', group: 'Music', phone: '+234 804 567 8901', email: 'sarah.bamidele@church.org', address: '8 Toyin Street, Ikeja', department: 'Music', joinedDate: '08/01/2019' },
+  { id: 'dir-5', name: 'David Okonkwo', role: 'Youth Leader', group: 'Youth', phone: '+234 805 678 9012', email: 'david.okonkwo@church.org', address: '12 Awolowo Road, Ikoyi', department: 'Youth', joinedDate: '02/14/2020' },
+  { id: 'dir-6', name: 'Blessing Okoro', role: "Children's Teacher", group: 'Children', phone: '+234 806 789 0123', email: 'blessing.okoro@church.org', address: '3 Marina Street, Lagos Island', department: 'Children', joinedDate: '09/05/2020' },
+  { id: 'dir-7', name: 'John Michael', role: 'Usher Coordinator', group: 'Ushering', phone: '+234 807 890 1234', email: 'john.michael@church.org', address: '123 Salami Street, Ikotun, Lagos', department: 'Ushering', joinedDate: '01/12/2021' },
+  { id: 'dir-8', name: 'Ruth Balogun', role: "Women's Leader", group: 'Women', phone: '+234 808 901 2345', email: 'ruth.balogun@church.org', address: '7 Queen Street, Ikeja', department: 'Women', joinedDate: '04/18/2021' },
+  { id: 'dir-9', name: 'Peter Adewale', role: "Men's Leader", group: 'Men', phone: '+234 809 012 3456', email: 'peter.adewale@church.org', address: '20 Ogunlana Drive, Surulere', department: 'Men', joinedDate: '07/22/2021' },
+  { id: 'dir-10', name: 'Mary Eze', role: 'Media Coordinator', group: 'Media', phone: '+234 810 123 4567', email: 'mary.eze@church.org', address: '14 Olayinka Street, Yaba', department: 'Media', joinedDate: '11/03/2021' },
+  { id: 'dir-11', name: 'Samuel Chukwu', role: 'Technical Director', group: 'Media', phone: '+234 811 234 5678', email: 'samuel.chukwu@church.org', address: '9 Adeola Hopewell, Victoria Island', department: 'Media', joinedDate: '02/09/2022' },
+  { id: 'dir-12', name: 'Esther Obi', role: 'Welfare Secretary', group: 'Welfare', phone: '+234 812 345 6789', email: 'esther.obi@church.org', address: '28 Aguiyi Ironsi, Maitama', department: 'Welfare', joinedDate: '05/15/2022' },
+];
+
+export const mediaItems: MediaItem[] = [
+  { id: 'med-1', title: 'Walking in Faith', description: 'A sermon on trusting God through life\'s challenges and walking boldly in faith.', type: 'Sermon', speaker: 'Pastor James Adewale', date: '04/13/2026', duration: '45 min', tags: ['faith', 'sunday sermon'], createdBy: 'Media Team' },
+  { id: 'med-2', title: 'The Power of Prayer', description: 'Midweek teaching on the transforming power of consistent prayer.', type: 'Sermon', speaker: 'Pastor David', date: '04/10/2026', duration: '38 min', tags: ['prayer', 'midweek'], createdBy: 'Media Team' },
+  { id: 'med-3', title: 'Morning Devotion Episode 12', description: 'Weekly devotional podcast featuring scripture reflection and worship.', type: 'Podcast', speaker: 'Deaconess Grace', date: '04/12/2026', duration: '22 min', tags: ['devotion', 'podcast'], createdBy: 'Media Team' },
+  { id: 'med-4', title: 'Youth Conference Highlights', description: 'Full-length recording of the 2026 Youth Conference keynote session.', type: 'Video', speaker: 'Various Speakers', date: '04/05/2026', duration: '1h 25min', tags: ['youth', 'conference'], createdBy: 'Media Team' },
+  { id: 'med-5', title: 'Identity in Christ', description: 'Teaching series on understanding our identity as believers.', type: 'Sermon', speaker: 'Pastor James Adewale', date: '04/06/2026', duration: '42 min', tags: ['identity', 'teaching'], createdBy: 'Media Team' },
+  { id: 'med-6', title: 'Marriage & Family Podcast', description: 'Guest interview on building strong Christian marriages and families.', type: 'Podcast', speaker: 'Pastor & Mrs. Adeyemi', date: '04/08/2026', duration: '35 min', tags: ['marriage', 'family'], createdBy: 'Media Team' },
+  { id: 'med-7', title: 'Easter Sunday Service', description: 'Full Easter celebration service with worship, communion, and sermon.', type: 'Video', speaker: 'Pastor James Adewale', date: '03/29/2026', duration: '1h 45min', tags: ['easter', 'service'], createdBy: 'Media Team' },
+  { id: 'med-8', title: 'Praise Night 2026', description: 'Recording of the annual praise and worship night.', type: 'Video', speaker: 'Choir', date: '03/22/2026', duration: '2h 10min', tags: ['praise', 'worship'], createdBy: 'Media Team' },
+  { id: 'med-9', title: 'The Book of Acts Series - Part 1', description: 'Beginning of a new teaching series through the Book of Acts.', type: 'Sermon', speaker: 'Pastor David', date: '03/15/2026', duration: '48 min', tags: ['acts', 'series'], createdBy: 'Media Team' },
+  { id: 'med-10', title: 'Counseling Corner Podcast', description: 'Christian counseling discussion on emotional healing.', type: 'Podcast', speaker: 'Counseling Team', date: '03/18/2026', duration: '28 min', tags: ['counseling', 'healing'], createdBy: 'Media Team' },
+];
+
+export const calendarEvents: CalendarEvent[] = [
+  { id: 'cal-1', name: 'Sunday Service', date: '2026-04-05', time: '9:00 AM', category: 'Service', description: 'Weekly Sunday worship service.', location: 'Main Auditorium' },
+  { id: 'cal-2', name: 'Sunday Service', date: '2026-04-12', time: '9:00 AM', category: 'Service', description: 'Weekly Sunday worship service.', location: 'Main Auditorium' },
+  { id: 'cal-3', name: 'Sunday Service', date: '2026-04-19', time: '9:00 AM', category: 'Service', description: 'Weekly Sunday worship service.', location: 'Main Auditorium' },
+  { id: 'cal-4', name: 'Sunday Service', date: '2026-04-26', time: '9:00 AM', category: 'Service', description: 'Weekly Sunday worship service.', location: 'Main Auditorium' },
+  { id: 'cal-5', name: 'Bible Study', date: '2026-04-01', time: '6:30 PM', category: 'Bible Study', description: 'Midweek Bible study session.', location: 'Room 201' },
+  { id: 'cal-6', name: 'Bible Study', date: '2026-04-08', time: '6:30 PM', category: 'Bible Study', description: 'Midweek Bible study session.', location: 'Room 201' },
+  { id: 'cal-7', name: 'Bible Study', date: '2026-04-15', time: '6:30 PM', category: 'Bible Study', description: 'Midweek Bible study session.', location: 'Room 201' },
+  { id: 'cal-8', name: 'Bible Study', date: '2026-04-22', time: '6:30 PM', category: 'Bible Study', description: 'Midweek Bible study session.', location: 'Room 201' },
+  { id: 'cal-9', name: 'Bible Study', date: '2026-04-29', time: '6:30 PM', category: 'Bible Study', description: 'Midweek Bible study session.', location: 'Room 201' },
+  { id: 'cal-10', name: 'Youth Meeting', date: '2026-04-10', time: '5:00 PM', category: 'Youth', description: 'Youth department meeting.', location: 'Youth Hall' },
+  { id: 'cal-11', name: 'Youth Meeting', date: '2026-04-24', time: '5:00 PM', category: 'Youth', description: 'Youth department meeting.', location: 'Youth Hall' },
+  { id: 'cal-12', name: 'Birthday: John M.', date: '2026-04-16', time: 'All Day', category: 'Birthday', description: 'John Michael birthday.' },
+  { id: 'cal-13', name: 'Sunday Service', date: '2026-05-03', time: '9:00 AM', category: 'Service', description: 'Weekly Sunday worship service.', location: 'Main Auditorium' },
+  { id: 'cal-14', name: 'Bible Study', date: '2026-05-06', time: '6:30 PM', category: 'Bible Study', description: 'Midweek Bible study session.', location: 'Room 201' },
+];
+
+export const workflowTemplates: WorkflowTemplate[] = [
+  {
+    id: 'wft-1',
+    name: 'Guest Follow-up Workflow',
+    description: 'Automated pipeline for tracking and following up with first-time guests from their initial visit through conversion.',
+    trigger: 'First Timer Registration',
+    steps: [
+      { label: 'First visit registration', order: 1 },
+      { label: 'Call within 48 hours', order: 2 },
+      { label: 'Visit within 1 week', order: 3 },
+      { label: 'Second service invite', order: 4 },
+      { label: 'Convert tracking', order: 5 },
+    ],
+    active: true,
+    createdBy: 'Pastor David',
+    lastModified: '04/10/2026',
+  },
+  {
+    id: 'wft-2',
+    name: 'New Member Onboarding',
+    description: 'Step-by-step onboarding process for new members joining the church, from welcome to full integration.',
+    trigger: 'Member Registration',
+    steps: [
+      { label: 'Welcome message', order: 1 },
+      { label: 'Assign to group', order: 2 },
+      { label: 'Orientation class', order: 3 },
+      { label: 'Mentor assignment', order: 4 },
+    ],
+    active: true,
+    createdBy: 'Deacon Sarah',
+    lastModified: '03/28/2026',
+  },
+  {
+    id: 'wft-3',
+    name: 'Prayer Request Pipeline',
+    description: 'Workflow for managing prayer requests from submission through counselor follow-up and resolution.',
+    trigger: 'Prayer Request Submitted',
+    steps: [
+      { label: 'Receive request', order: 1 },
+      { label: 'Assign counselor', order: 2 },
+      { label: 'Follow-up', order: 3 },
+      { label: 'Mark resolved', order: 4 },
+    ],
+    active: false,
+    createdBy: 'Sister Joy',
+    lastModified: '03/15/2026',
+  },
+];
+
+export const activeWorkflowCards: ActiveWorkflowCard[] = [
+  { id: 'aw-1', memberName: 'John Michael', phone: '08011252365', assignedTo: 'Shola Damson', dateAdded: '04/14/2026', stage: 'First Timers', status: 'On Track', templateId: 'wft-1', currentStepIndex: 0 },
+  { id: 'aw-2', memberName: 'Sarah Bamidele', phone: '09037311234', assignedTo: 'Shola Damson', dateAdded: '04/13/2026', stage: 'First Timers', status: 'On Track', templateId: 'wft-1', currentStepIndex: 0 },
+  { id: 'aw-3', memberName: 'David Okonkwo', phone: '08023456789', assignedTo: 'Pastor James', dateAdded: '04/12/2026', stage: 'First Timers', status: 'Pending', templateId: 'wft-1', currentStepIndex: 0 },
+  { id: 'aw-4', memberName: 'Grace Adeyemi', phone: '08034567890', assignedTo: 'Shola Damson', dateAdded: '04/10/2026', stage: 'Follow-up Call', status: 'On Track', templateId: 'wft-1', currentStepIndex: 1 },
+  { id: 'aw-5', memberName: 'Emmanuel Nwosu', phone: '08045678901', assignedTo: 'Pastor David', dateAdded: '04/08/2026', stage: 'Follow-up Call', status: 'Overdue', templateId: 'wft-1', currentStepIndex: 1 },
+  { id: 'aw-6', memberName: 'Blessing Okoro', phone: '08056789012', assignedTo: 'Deaconess Grace', dateAdded: '04/05/2026', stage: 'Follow-up Visit', status: 'On Track', templateId: 'wft-1', currentStepIndex: 2 },
+  { id: 'aw-7', memberName: 'Peter Adewale', phone: '08067890123', assignedTo: 'Shola Damson', dateAdded: '04/03/2026', stage: 'Follow-up Visit', status: 'Pending', templateId: 'wft-1', currentStepIndex: 2 },
+  { id: 'aw-8', memberName: 'Ruth Balogun', phone: '08078901234', assignedTo: 'Pastor James', dateAdded: '03/28/2026', stage: 'Second Timers', status: 'On Track', templateId: 'wft-1', currentStepIndex: 3 },
+  { id: 'aw-9', memberName: 'Mary Eze', phone: '08089012345', assignedTo: 'Deaconess Grace', dateAdded: '03/20/2026', stage: 'New Converts', status: 'On Track', templateId: 'wft-1', currentStepIndex: 4 },
+];
+
+export const trainingCourses: Course[] = [
+  { id: 'course-1', name: 'Water Baptism Class', description: 'A foundational course preparing believers for water baptism through biblical teachings and spiritual readiness.', category: 'Spiritual Formation', instructor: 'Pastor David', duration: '6 weeks', startDate: '04/01/2026', endDate: '05/15/2026', applications: 12, currentStudents: 28, pastStudents: 145, status: 'Active' },
+  { id: 'course-2', name: 'New Believers Foundation', description: 'An introductory program designed to ground new converts in the basics of Christian faith and church life.', category: 'Discipleship', instructor: 'Deaconess Grace', duration: '8 weeks', startDate: '04/10/2026', endDate: '06/10/2026', applications: 8, currentStudents: 35, pastStudents: 210, status: 'Active' },
+  { id: 'course-3', name: 'Leadership Training', description: 'An advanced course equipping members with leadership skills for ministry and church service.', category: 'Leadership', instructor: 'Pastor James', duration: '12 weeks', startDate: '05/01/2026', endDate: '07/30/2026', applications: 15, currentStudents: 20, pastStudents: 95, status: 'Upcoming' },
+  { id: 'course-4', name: 'Marriage Counseling', description: 'A comprehensive program for couples preparing for marriage or seeking to strengthen their union.', category: 'Counseling', instructor: 'Pastor & Mrs. Adeyemi', duration: '4 weeks', startDate: '03/01/2026', endDate: '03/30/2026', applications: 6, currentStudents: 14, pastStudents: 72, status: 'Completed' },
+  { id: 'course-5', name: 'Sunday School Teachers Training', description: 'Training for Sunday School teachers on curriculum delivery and child engagement.', category: 'Teaching', instructor: 'Elder Samuel', duration: '8 weeks', startDate: '04/15/2026', endDate: '06/15/2026', applications: 5, currentStudents: 12, pastStudents: 48, status: 'Active' },
+  { id: 'course-6', name: 'Youth Ministry Training', description: 'Specialized training for those working with the youth department.', category: 'Youth Ministry', instructor: 'Brother Emmanuel', duration: '8 weeks', startDate: '05/10/2026', endDate: '07/10/2026', applications: 10, currentStudents: 15, pastStudents: 60, status: 'Upcoming' },
+];
+
+export const trainingSchedules: TrainingSchedule[] = [
+  { id: 'sch-1', courseId: 'course-1', course: 'Water Baptism Class', instructor: 'Pastor David', startDate: '04/01/2026', endDate: '05/15/2026', dayTime: 'Saturdays, 10:00 AM', venue: 'Main Hall', capacity: 50, status: 'Active' },
+  { id: 'sch-2', courseId: 'course-2', course: 'New Believers Foundation', instructor: 'Deaconess Grace', startDate: '04/10/2026', endDate: '06/10/2026', dayTime: 'Sundays, 2:00 PM', venue: 'Room 3', capacity: 60, status: 'Active' },
+  { id: 'sch-3', courseId: 'course-3', course: 'Leadership Training', instructor: 'Pastor James', startDate: '05/01/2026', endDate: '07/30/2026', dayTime: 'Wednesdays, 6:00 PM', venue: 'Conference Room', capacity: 30, status: 'Upcoming' },
+  { id: 'sch-4', courseId: 'course-4', course: 'Marriage Counseling', instructor: 'Pastor & Mrs. Adeyemi', startDate: '03/01/2026', endDate: '03/30/2026', dayTime: 'Fridays, 5:00 PM', venue: 'Counseling Room', capacity: 20, status: 'Completed' },
+  { id: 'sch-5', courseId: 'course-5', course: 'Sunday School Teachers', instructor: 'Elder Samuel', startDate: '04/15/2026', endDate: '06/15/2026', dayTime: 'Saturdays, 9:00 AM', venue: 'Room 2', capacity: 25, status: 'Active' },
+  { id: 'sch-6', courseId: 'course-6', course: 'Youth Ministry Training', instructor: 'Brother Emmanuel', startDate: '05/10/2026', endDate: '07/10/2026', dayTime: 'Fridays, 4:00 PM', venue: 'Youth Center', capacity: 30, status: 'Upcoming' },
+];
+
+export const celebrations: Celebration[] = [
+  { id: 'cel-1', name: 'John Michael', type: 'Birthday', date: '04/16/2026', status: 'Scheduled', notes: 'Send a greeting in the morning.' },
+  { id: 'cel-2', name: 'Sarah Bamidele', type: 'Birthday', date: '04/18/2026', status: 'Scheduled' },
+  { id: 'cel-3', name: 'David Okonkwo', type: 'Birthday', date: '04/19/2026', status: 'Scheduled' },
+  { id: 'cel-4', name: 'Grace Adeyemi', type: 'Birthday', date: '04/20/2026', status: 'Scheduled' },
+  { id: 'cel-5', name: 'Emmanuel Nwosu', type: 'Birthday', date: '04/21/2026', status: 'Scheduled' },
+  { id: 'cel-6', name: 'Blessing Okoro', type: 'Birthday', date: '04/22/2026', status: 'Scheduled' },
+  { id: 'cel-7', name: 'John & Sarah Michael', type: 'Wedding Anniversary', date: '04/20/2026', status: 'Scheduled', years: 5 },
+  { id: 'cel-8', name: 'David & Grace Okonkwo', type: 'Wedding Anniversary', date: '04/21/2026', status: 'Scheduled', years: 10 },
+  { id: 'cel-9', name: 'Peter & Mary Adewale', type: 'Wedding Anniversary', date: '04/22/2026', status: 'Scheduled', years: 3 },
+  { id: 'cel-10', name: 'James & Ruth Balogun', type: 'Wedding Anniversary', date: '04/23/2026', status: 'Scheduled', years: 8 },
+  { id: 'cel-11', name: 'John Michael', type: 'Child Dedication', date: '04/25/2026', status: 'Scheduled', notes: 'For baby Joshua.' },
+  { id: 'cel-12', name: 'Sarah Bamidele', type: 'Thanksgiving', date: '04/18/2026', status: 'Completed', notes: 'Thanksgiving for promotion at work.' },
+  { id: 'cel-13', name: 'David Okonkwo', type: 'Thanksgiving', date: '05/02/2026', status: 'Scheduled', notes: 'Wedding thanksgiving.' },
+  { id: 'cel-14', name: 'Grace Adeyemi', type: 'Thanksgiving', date: '04/20/2026', status: 'Scheduled' },
+  { id: 'cel-15', name: 'Emmanuel Nwosu', type: 'Child Dedication', date: '05/10/2026', status: 'Completed' },
+];
+
+const emptyMatrix: PermissionMatrix = {
+  Dashboard: { view: true, create: false, edit: false, delete: false },
+  'User Management': { view: false, create: false, edit: false, delete: false },
+  Communication: { view: false, create: false, edit: false, delete: false },
+  Workflows: { view: false, create: false, edit: false, delete: false },
+  Requests: { view: false, create: false, edit: false, delete: false },
+  Reports: { view: false, create: false, edit: false, delete: false },
+  Settings: { view: false, create: false, edit: false, delete: false },
+};
+
+const fullMatrix: PermissionMatrix = {
+  Dashboard: { view: true, create: true, edit: true, delete: true },
+  'User Management': { view: true, create: true, edit: true, delete: true },
+  Communication: { view: true, create: true, edit: true, delete: true },
+  Workflows: { view: true, create: true, edit: true, delete: true },
+  Requests: { view: true, create: true, edit: true, delete: true },
+  Reports: { view: true, create: true, edit: true, delete: true },
+  Settings: { view: true, create: true, edit: true, delete: true },
+};
+
+export const roles: Role[] = [
+  { id: 'role-1', name: 'Admin', description: 'Full system access', userCount: 3, permissions: fullMatrix },
+  { id: 'role-2', name: 'Pastor', description: 'Pastoral oversight and management', userCount: 2, permissions: { ...fullMatrix, Settings: { view: true, create: false, edit: false, delete: false } } },
+  { id: 'role-3', name: 'Associate Pastor', description: 'Assistant pastoral role', userCount: 3, permissions: { ...fullMatrix, Settings: { view: false, create: false, edit: false, delete: false } } },
+  { id: 'role-4', name: 'Follow-up Officer', description: 'Manages guest follow-ups and workflows', userCount: 8, permissions: { ...emptyMatrix, 'User Management': { view: true, create: true, edit: true, delete: false }, Workflows: { view: true, create: false, edit: true, delete: false }, Requests: { view: true, create: true, edit: true, delete: false } } },
+  { id: 'role-5', name: 'Department Head', description: 'Leads a department', userCount: 12, permissions: { ...emptyMatrix, 'User Management': { view: true, create: false, edit: false, delete: false }, Communication: { view: true, create: true, edit: false, delete: false } } },
+  { id: 'role-6', name: 'Member', description: 'Regular church member', userCount: 245, permissions: { ...emptyMatrix, Dashboard: { view: true, create: false, edit: false, delete: false } } },
+];
+
+export const groups: Group[] = [
+  { id: 'grp-1', name: 'Choir', description: 'Church choir and worship team', leader: 'Sarah Bamidele', membersCount: 28 },
+  { id: 'grp-2', name: 'Ushering', description: 'Church ushering team', leader: 'John Michael', membersCount: 22 },
+  { id: 'grp-3', name: 'Technical / Media', description: 'Media, sound, and technical support', leader: 'Samuel Chukwu', membersCount: 15 },
+  { id: 'grp-4', name: 'Protocol', description: 'Protocol team for guests and events', leader: 'Peter Adewale', membersCount: 12 },
+  { id: "grp-5", name: "Children's Church", description: "Children's ministry teachers and helpers", leader: 'Blessing Okoro', membersCount: 18 },
+  { id: 'grp-6', name: 'Youth Fellowship', description: 'Youth department leadership', leader: 'David Okonkwo', membersCount: 45 },
+  { id: 'grp-7', name: 'Prayer Warriors', description: 'Intercessory prayer team', leader: 'Ruth Balogun', membersCount: 32 },
+  { id: 'grp-8', name: 'Evangelism', description: 'Evangelism and outreach team', leader: 'Emmanuel Nwosu', membersCount: 20 },
 ];
 
 export const profileDetails = {

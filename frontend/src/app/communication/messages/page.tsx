@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
@@ -11,6 +12,7 @@ import { messages } from "@/lib/mock-data";
 const ITEMS_PER_PAGE = 10;
 
 export default function MessagesPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
@@ -125,7 +127,7 @@ export default function MessagesPage() {
         <div className="flex items-center gap-2">
           <Button
             variant="primary"
-            onClick={() => {}}
+            onClick={() => router.push("/communication/messages/compose")}
             icon={
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -232,21 +234,15 @@ export default function MessagesPage() {
                     actions={[
                       {
                         label: "View",
-                        onClick: () => {
-                          console.log("View message:", message.id);
-                        },
+                        onClick: () => router.push(`/communication/messages/${message.id}`),
                       },
                       {
                         label: "Resend",
-                        onClick: () => {
-                          console.log("Resend message:", message.id);
-                        },
+                        onClick: () => console.log("Resend message:", message.id),
                       },
                       {
                         label: "Delete",
-                        onClick: () => {
-                          console.log("Delete message:", message.id);
-                        },
+                        onClick: () => console.log("Delete message:", message.id),
                       },
                     ]}
                   />

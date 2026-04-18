@@ -125,14 +125,33 @@ export default function NotificationsPage() {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
+  const handleDelete = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const handleClearAll = () => {
+    if (activeTab === "all") {
+      setNotifications([]);
+    } else if (activeTab === "read") {
+      setNotifications((prev) => prev.filter((n) => !n.read));
+    } else {
+      setNotifications((prev) => prev.filter((n) => n.read));
+    }
+  };
+
   return (
     <DashboardLayout>
       {/* Page Header */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-[28px] font-bold text-[#000000]">Notifications</h1>
-        <Button variant="secondary" onClick={handleMarkAllRead}>
-          + Mark All Read
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" onClick={handleMarkAllRead}>
+            Mark All Read
+          </Button>
+          <Button variant="danger" onClick={handleClearAll}>
+            Clear All
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -196,11 +215,23 @@ export default function NotificationsPage() {
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-bold text-[#111827]">{notification.title}</p>
-                {!notification.read && (
-                  <span className="h-2 w-2 shrink-0 rounded-full bg-[#000080]" />
-                )}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-[#111827]">{notification.title}</p>
+                  {!notification.read && (
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-[#000080]" />
+                  )}
+                </div>
+                <button
+                  onClick={() => handleDelete(notification.id)}
+                  className="text-red-500 transition-colors hover:text-red-700"
+                  aria-label="Delete notification"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                </button>
               </div>
               <p className="mt-1 text-sm text-[#6B7280]">{notification.description}</p>
               <p className="mt-2 text-xs text-[#9CA3AF]">{notification.timeAgo}</p>
