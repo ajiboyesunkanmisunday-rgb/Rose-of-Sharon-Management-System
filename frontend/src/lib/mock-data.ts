@@ -1,4 +1,4 @@
-import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem } from './types';
+import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent } from './types';
 
 export const members: Member[] = Array.from({ length: 20 }, (_, i) => ({
   id: `m-${i + 1}`,
@@ -309,6 +309,23 @@ export const mediaItems: MediaItem[] = [
   { id: 'med-8', title: 'Praise Night 2026', description: 'Recording of the annual praise and worship night.', type: 'Video', speaker: 'Choir', date: '03/22/2026', duration: '2h 10min', tags: ['praise', 'worship'], createdBy: 'Media Team' },
   { id: 'med-9', title: 'The Book of Acts Series - Part 1', description: 'Beginning of a new teaching series through the Book of Acts.', type: 'Sermon', speaker: 'Pastor David', date: '03/15/2026', duration: '48 min', tags: ['acts', 'series'], createdBy: 'Media Team' },
   { id: 'med-10', title: 'Counseling Corner Podcast', description: 'Christian counseling discussion on emotional healing.', type: 'Podcast', speaker: 'Counseling Team', date: '03/18/2026', duration: '28 min', tags: ['counseling', 'healing'], createdBy: 'Media Team' },
+];
+
+export const calendarEvents: CalendarEvent[] = [
+  { id: 'cal-1', name: 'Sunday Service', date: '2026-04-05', time: '9:00 AM', category: 'Service', description: 'Weekly Sunday worship service.', location: 'Main Auditorium' },
+  { id: 'cal-2', name: 'Sunday Service', date: '2026-04-12', time: '9:00 AM', category: 'Service', description: 'Weekly Sunday worship service.', location: 'Main Auditorium' },
+  { id: 'cal-3', name: 'Sunday Service', date: '2026-04-19', time: '9:00 AM', category: 'Service', description: 'Weekly Sunday worship service.', location: 'Main Auditorium' },
+  { id: 'cal-4', name: 'Sunday Service', date: '2026-04-26', time: '9:00 AM', category: 'Service', description: 'Weekly Sunday worship service.', location: 'Main Auditorium' },
+  { id: 'cal-5', name: 'Bible Study', date: '2026-04-01', time: '6:30 PM', category: 'Bible Study', description: 'Midweek Bible study session.', location: 'Room 201' },
+  { id: 'cal-6', name: 'Bible Study', date: '2026-04-08', time: '6:30 PM', category: 'Bible Study', description: 'Midweek Bible study session.', location: 'Room 201' },
+  { id: 'cal-7', name: 'Bible Study', date: '2026-04-15', time: '6:30 PM', category: 'Bible Study', description: 'Midweek Bible study session.', location: 'Room 201' },
+  { id: 'cal-8', name: 'Bible Study', date: '2026-04-22', time: '6:30 PM', category: 'Bible Study', description: 'Midweek Bible study session.', location: 'Room 201' },
+  { id: 'cal-9', name: 'Bible Study', date: '2026-04-29', time: '6:30 PM', category: 'Bible Study', description: 'Midweek Bible study session.', location: 'Room 201' },
+  { id: 'cal-10', name: 'Youth Meeting', date: '2026-04-10', time: '5:00 PM', category: 'Youth', description: 'Youth department meeting.', location: 'Youth Hall' },
+  { id: 'cal-11', name: 'Youth Meeting', date: '2026-04-24', time: '5:00 PM', category: 'Youth', description: 'Youth department meeting.', location: 'Youth Hall' },
+  { id: 'cal-12', name: 'Birthday: John M.', date: '2026-04-16', time: 'All Day', category: 'Birthday', description: 'John Michael birthday.' },
+  { id: 'cal-13', name: 'Sunday Service', date: '2026-05-03', time: '9:00 AM', category: 'Service', description: 'Weekly Sunday worship service.', location: 'Main Auditorium' },
+  { id: 'cal-14', name: 'Bible Study', date: '2026-05-06', time: '6:30 PM', category: 'Bible Study', description: 'Midweek Bible study session.', location: 'Room 201' },
 ];
 
 export const profileDetails = {
