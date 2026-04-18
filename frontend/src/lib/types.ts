@@ -114,6 +114,18 @@ export interface CommunicationTemplate {
   lastModified: string;
 }
 
+export type CalendarEventCategory = 'Service' | 'Bible Study' | 'Youth' | 'Birthday' | 'Meeting' | 'Other';
+
+export interface CalendarEvent {
+  id: string;
+  name: string;
+  date: string; // YYYY-MM-DD
+  time: string;
+  category: CalendarEventCategory;
+  description?: string;
+  location?: string;
+}
+
 export type MediaType = 'Sermon' | 'Podcast' | 'Video';
 
 export interface MediaItem {
