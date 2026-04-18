@@ -223,6 +223,12 @@ export default function RequestDetailPage() {
         <Button variant="secondary" onClick={() => router.push("/requests")}>
           Back
         </Button>
+        <Button
+          variant="primary"
+          onClick={() => router.push(`/requests/${params.id}/edit`)}
+        >
+          Edit
+        </Button>
         <Button variant="danger" onClick={() => setShowDeleteModal(true)}>
           Delete
         </Button>
