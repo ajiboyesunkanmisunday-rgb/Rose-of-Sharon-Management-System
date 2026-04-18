@@ -1,70 +1,11 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
-
-interface TemplateStep {
-  label: string;
-}
-
-interface WorkflowTemplate {
-  id: string;
-  name: string;
-  description: string;
-  steps: TemplateStep[];
-  active: boolean;
-  createdBy: string;
-  lastModified: string;
-}
-
-const templates: WorkflowTemplate[] = [
-  {
-    id: "1",
-    name: "Guest Follow-up Workflow",
-    description:
-      "Automated pipeline for tracking and following up with first-time guests from their initial visit through conversion.",
-    steps: [
-      { label: "First visit registration" },
-      { label: "Call within 48 hours" },
-      { label: "Visit within 1 week" },
-      { label: "Second service invite" },
-      { label: "Convert tracking" },
-    ],
-    active: true,
-    createdBy: "Pastor David",
-    lastModified: "Apr 10, 2026",
-  },
-  {
-    id: "2",
-    name: "New Member Onboarding",
-    description:
-      "Step-by-step onboarding process for new members joining the church, from welcome to full integration.",
-    steps: [
-      { label: "Welcome message" },
-      { label: "Assign to group" },
-      { label: "Orientation class" },
-      { label: "Mentor assignment" },
-    ],
-    active: true,
-    createdBy: "Deacon Sarah",
-    lastModified: "Mar 28, 2026",
-  },
-  {
-    id: "3",
-    name: "Prayer Request Pipeline",
-    description:
-      "Workflow for managing prayer requests from submission through counselor follow-up and resolution.",
-    steps: [
-      { label: "Receive request" },
-      { label: "Assign counselor" },
-      { label: "Follow-up" },
-      { label: "Mark resolved" },
-    ],
-    active: false,
-    createdBy: "Sister Joy",
-    lastModified: "Mar 15, 2026",
-  },
-];
+import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
+import { workflowTemplates } from "@/lib/mock-data";
 
 function StepIcon() {
   return (
@@ -78,38 +19,44 @@ function StepIcon() {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="shrink-0 text-[#000080]"
     >
-      <polyline points="9 11 12 14 22 4" />
-      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+      <polyline points="20 6 9 17 4 12" />
     </svg>
   );
 }
 
 export default function WorkflowTemplatesPage() {
+  const router = useRouter();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const handleDeleteClick = (id: string) => {
+    setSelectedId(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    console.log("Delete template:", selectedId);
+    setShowDeleteModal(false);
+    setSelectedId(null);
+  };
+
+  const handleDuplicate = (id: string) => {
+    console.log("Duplicate template:", id);
+  };
+
   return (
     <DashboardLayout>
-      {/* Page Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-[28px] font-bold text-[#000000]">Workflows</h1>
-          <p className="mt-1 text-sm text-[#6B7280]">Templates</p>
+          <h2 className="text-[22px] font-bold text-[#000080]">Templates</h2>
         </div>
         <Button
           variant="primary"
-          onClick={() => {}}
+          onClick={() => router.push("/workflows/templates/add")}
           icon={
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
@@ -119,76 +66,80 @@ export default function WorkflowTemplatesPage() {
         </Button>
       </div>
 
-      {/* Templates Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {templates.map((template) => (
+        {workflowTemplates.map((template) => (
           <div
             key={template.id}
             className="rounded-xl border border-[#E5E7EB] bg-white p-6"
           >
-            {/* Template Header */}
-            <div className="mb-2 flex items-start justify-between">
-              <h2 className="text-base font-bold text-[#000080]">
-                {template.name}
-              </h2>
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="text-base font-bold text-[#000080]">{template.name}</h3>
               <span
-                className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                className={`rounded-full px-3 py-1 text-xs font-medium ${
                   template.active
-                    ? "bg-[#DCFCE7] text-[#16A34A]"
-                    : "bg-[#F3F4F6] text-[#6B7280]"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-100 text-gray-600"
                 }`}
               >
                 {template.active ? "Active" : "Inactive"}
               </span>
             </div>
-
-            {/* Description */}
-            <p className="mb-4 text-sm text-[#6B7280]">
-              {template.description}
+            <p className="mt-2 text-sm text-[#6B7280]">{template.description}</p>
+            <p className="mt-2 text-xs text-[#9CA3AF]">
+              Trigger: <span className="font-medium text-[#374151]">{template.trigger}</span>
             </p>
 
-            {/* Steps */}
-            <div className="mb-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
-                Steps
-              </p>
-              <ol className="flex flex-col gap-1.5">
-                {template.steps.map((step, index) => (
-                  <li
-                    key={index}
-                    className="flex items-center gap-2 text-sm text-[#374151]"
-                  >
+            <ol className="mt-4 space-y-2">
+              {template.steps.map((step, idx) => (
+                <li key={idx} className="flex items-start gap-2 text-sm text-[#374151]">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#000080] text-white">
                     <StepIcon />
-                    <span className="text-xs font-medium text-[#6B7280]">
-                      {index + 1}.
-                    </span>
-                    {step.label}
-                  </li>
-                ))}
-              </ol>
+                  </span>
+                  <span>
+                    <span className="font-medium">{step.order}.</span> {step.label}
+                  </span>
+                </li>
+              ))}
+            </ol>
+
+            <div className="mt-5 flex items-center justify-between border-t border-[#F3F4F6] pt-4 text-xs text-[#6B7280]">
+              <span>
+                Created by <strong>{template.createdBy}</strong> · {template.lastModified}
+              </span>
             </div>
 
-            {/* Footer */}
-            <div className="border-t border-[#E5E7EB] pt-4">
-              <div className="mb-3 flex items-center justify-between text-xs text-[#6B7280]">
-                <span>Created by: {template.createdBy}</span>
-                <span>Modified: {template.lastModified}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <button className="text-xs font-medium text-[#000080] hover:underline">
-                  Edit
-                </button>
-                <button className="text-xs font-medium text-[#000080] hover:underline">
-                  Duplicate
-                </button>
-                <button className="text-xs font-medium text-[#DC2626] hover:underline">
-                  Delete
-                </button>
-              </div>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                onClick={() => router.push(`/workflows/templates/${template.id}/edit`)}
+                className="text-xs font-medium text-[#000080] underline transition-colors hover:text-[#000066]"
+              >
+                Edit
+              </button>
+              <span className="text-xs text-[#D1D5DB]">·</span>
+              <button
+                onClick={() => handleDuplicate(template.id)}
+                className="text-xs font-medium text-[#000080] underline transition-colors hover:text-[#000066]"
+              >
+                Duplicate
+              </button>
+              <span className="text-xs text-[#D1D5DB]">·</span>
+              <button
+                onClick={() => handleDeleteClick(template.id)}
+                className="text-xs font-medium text-red-600 underline transition-colors hover:text-red-700"
+              >
+                Delete
+              </button>
             </div>
           </div>
         ))}
       </div>
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleConfirmDelete}
+        message="Are you sure you want to delete this workflow template?"
+      />
     </DashboardLayout>
   );
 }
