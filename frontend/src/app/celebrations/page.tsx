@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
@@ -51,11 +52,11 @@ const anniversaryCards: AnniversaryCard[] = [
 ];
 
 const thanksgivingRows: ThanksgivingRow[] = [
-  { id: "t1", name: "John Michael", type: "Child Dedication", date: "Apr 25, 2026", status: "Scheduled" },
-  { id: "t2", name: "Sarah Bamidele", type: "Birthday", date: "Apr 18, 2026", status: "Completed" },
-  { id: "t3", name: "David Okonkwo", type: "Wedding", date: "May 2, 2026", status: "Scheduled" },
-  { id: "t4", name: "Grace Adeyemi", type: "Birthday", date: "Apr 20, 2026", status: "Scheduled" },
-  { id: "t5", name: "Emmanuel Nwosu", type: "Child Dedication", date: "May 10, 2026", status: "Completed" },
+  { id: "cel-11", name: "John Michael", type: "Child Dedication", date: "Apr 25, 2026", status: "Scheduled" },
+  { id: "cel-12", name: "Sarah Bamidele", type: "Thanksgiving", date: "Apr 18, 2026", status: "Completed" },
+  { id: "cel-13", name: "David Okonkwo", type: "Thanksgiving", date: "May 2, 2026", status: "Scheduled" },
+  { id: "cel-14", name: "Grace Adeyemi", type: "Thanksgiving", date: "Apr 20, 2026", status: "Scheduled" },
+  { id: "cel-15", name: "Emmanuel Nwosu", type: "Child Dedication", date: "May 10, 2026", status: "Completed" },
 ];
 
 // --- Icons ---
@@ -97,6 +98,7 @@ const HeartIcon = () => (
 );
 
 export default function CelebrationsPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("birthdays");
   const [search, setSearch] = useState("");
 
@@ -152,7 +154,21 @@ export default function CelebrationsPage() {
     <DashboardLayout>
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Celebrations</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-[28px] font-bold text-[#000000]">Celebrations</h1>
+          <Button
+            variant="primary"
+            onClick={() => router.push("/celebrations/add")}
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            }
+          >
+            Add Celebration
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -367,11 +383,11 @@ export default function CelebrationsPage() {
                         actions={[
                           {
                             label: "View",
-                            onClick: () => console.log("View:", row.id),
+                            onClick: () => router.push(`/celebrations/${row.id}`),
                           },
                           {
                             label: "Edit",
-                            onClick: () => console.log("Edit:", row.id),
+                            onClick: () => router.push(`/celebrations/${row.id}/edit`),
                           },
                           {
                             label: "Delete",

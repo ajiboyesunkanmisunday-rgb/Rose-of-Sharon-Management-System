@@ -1,4 +1,4 @@
-import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent, WorkflowTemplate, ActiveWorkflowCard, Course, TrainingSchedule } from './types';
+import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent, WorkflowTemplate, ActiveWorkflowCard, Course, TrainingSchedule, Celebration } from './types';
 
 export const members: Member[] = Array.from({ length: 20 }, (_, i) => ({
   id: `m-${i + 1}`,
@@ -405,6 +405,24 @@ export const trainingSchedules: TrainingSchedule[] = [
   { id: 'sch-4', courseId: 'course-4', course: 'Marriage Counseling', instructor: 'Pastor & Mrs. Adeyemi', startDate: '03/01/2026', endDate: '03/30/2026', dayTime: 'Fridays, 5:00 PM', venue: 'Counseling Room', capacity: 20, status: 'Completed' },
   { id: 'sch-5', courseId: 'course-5', course: 'Sunday School Teachers', instructor: 'Elder Samuel', startDate: '04/15/2026', endDate: '06/15/2026', dayTime: 'Saturdays, 9:00 AM', venue: 'Room 2', capacity: 25, status: 'Active' },
   { id: 'sch-6', courseId: 'course-6', course: 'Youth Ministry Training', instructor: 'Brother Emmanuel', startDate: '05/10/2026', endDate: '07/10/2026', dayTime: 'Fridays, 4:00 PM', venue: 'Youth Center', capacity: 30, status: 'Upcoming' },
+];
+
+export const celebrations: Celebration[] = [
+  { id: 'cel-1', name: 'John Michael', type: 'Birthday', date: '04/16/2026', status: 'Scheduled', notes: 'Send a greeting in the morning.' },
+  { id: 'cel-2', name: 'Sarah Bamidele', type: 'Birthday', date: '04/18/2026', status: 'Scheduled' },
+  { id: 'cel-3', name: 'David Okonkwo', type: 'Birthday', date: '04/19/2026', status: 'Scheduled' },
+  { id: 'cel-4', name: 'Grace Adeyemi', type: 'Birthday', date: '04/20/2026', status: 'Scheduled' },
+  { id: 'cel-5', name: 'Emmanuel Nwosu', type: 'Birthday', date: '04/21/2026', status: 'Scheduled' },
+  { id: 'cel-6', name: 'Blessing Okoro', type: 'Birthday', date: '04/22/2026', status: 'Scheduled' },
+  { id: 'cel-7', name: 'John & Sarah Michael', type: 'Wedding Anniversary', date: '04/20/2026', status: 'Scheduled', years: 5 },
+  { id: 'cel-8', name: 'David & Grace Okonkwo', type: 'Wedding Anniversary', date: '04/21/2026', status: 'Scheduled', years: 10 },
+  { id: 'cel-9', name: 'Peter & Mary Adewale', type: 'Wedding Anniversary', date: '04/22/2026', status: 'Scheduled', years: 3 },
+  { id: 'cel-10', name: 'James & Ruth Balogun', type: 'Wedding Anniversary', date: '04/23/2026', status: 'Scheduled', years: 8 },
+  { id: 'cel-11', name: 'John Michael', type: 'Child Dedication', date: '04/25/2026', status: 'Scheduled', notes: 'For baby Joshua.' },
+  { id: 'cel-12', name: 'Sarah Bamidele', type: 'Thanksgiving', date: '04/18/2026', status: 'Completed', notes: 'Thanksgiving for promotion at work.' },
+  { id: 'cel-13', name: 'David Okonkwo', type: 'Thanksgiving', date: '05/02/2026', status: 'Scheduled', notes: 'Wedding thanksgiving.' },
+  { id: 'cel-14', name: 'Grace Adeyemi', type: 'Thanksgiving', date: '04/20/2026', status: 'Scheduled' },
+  { id: 'cel-15', name: 'Emmanuel Nwosu', type: 'Child Dedication', date: '05/10/2026', status: 'Completed' },
 ];
 
 export const profileDetails = {
