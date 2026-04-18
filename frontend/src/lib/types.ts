@@ -114,6 +114,22 @@ export interface CommunicationTemplate {
   lastModified: string;
 }
 
+export type MediaType = 'Sermon' | 'Podcast' | 'Video';
+
+export interface MediaItem {
+  id: string;
+  title: string;
+  description: string;
+  type: MediaType;
+  speaker: string;
+  date: string;
+  duration: string;
+  thumbnail?: string;
+  url?: string;
+  tags?: string[];
+  createdBy: string;
+}
+
 export interface DirectoryContact {
   id: string;
   name: string;

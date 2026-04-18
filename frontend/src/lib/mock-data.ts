@@ -1,4 +1,4 @@
-import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact } from './types';
+import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem } from './types';
 
 export const members: Member[] = Array.from({ length: 20 }, (_, i) => ({
   id: `m-${i + 1}`,
@@ -296,6 +296,19 @@ export const directoryContacts: DirectoryContact[] = [
   { id: 'dir-10', name: 'Mary Eze', role: 'Media Coordinator', group: 'Media', phone: '+234 810 123 4567', email: 'mary.eze@church.org', address: '14 Olayinka Street, Yaba', department: 'Media', joinedDate: '11/03/2021' },
   { id: 'dir-11', name: 'Samuel Chukwu', role: 'Technical Director', group: 'Media', phone: '+234 811 234 5678', email: 'samuel.chukwu@church.org', address: '9 Adeola Hopewell, Victoria Island', department: 'Media', joinedDate: '02/09/2022' },
   { id: 'dir-12', name: 'Esther Obi', role: 'Welfare Secretary', group: 'Welfare', phone: '+234 812 345 6789', email: 'esther.obi@church.org', address: '28 Aguiyi Ironsi, Maitama', department: 'Welfare', joinedDate: '05/15/2022' },
+];
+
+export const mediaItems: MediaItem[] = [
+  { id: 'med-1', title: 'Walking in Faith', description: 'A sermon on trusting God through life\'s challenges and walking boldly in faith.', type: 'Sermon', speaker: 'Pastor James Adewale', date: '04/13/2026', duration: '45 min', tags: ['faith', 'sunday sermon'], createdBy: 'Media Team' },
+  { id: 'med-2', title: 'The Power of Prayer', description: 'Midweek teaching on the transforming power of consistent prayer.', type: 'Sermon', speaker: 'Pastor David', date: '04/10/2026', duration: '38 min', tags: ['prayer', 'midweek'], createdBy: 'Media Team' },
+  { id: 'med-3', title: 'Morning Devotion Episode 12', description: 'Weekly devotional podcast featuring scripture reflection and worship.', type: 'Podcast', speaker: 'Deaconess Grace', date: '04/12/2026', duration: '22 min', tags: ['devotion', 'podcast'], createdBy: 'Media Team' },
+  { id: 'med-4', title: 'Youth Conference Highlights', description: 'Full-length recording of the 2026 Youth Conference keynote session.', type: 'Video', speaker: 'Various Speakers', date: '04/05/2026', duration: '1h 25min', tags: ['youth', 'conference'], createdBy: 'Media Team' },
+  { id: 'med-5', title: 'Identity in Christ', description: 'Teaching series on understanding our identity as believers.', type: 'Sermon', speaker: 'Pastor James Adewale', date: '04/06/2026', duration: '42 min', tags: ['identity', 'teaching'], createdBy: 'Media Team' },
+  { id: 'med-6', title: 'Marriage & Family Podcast', description: 'Guest interview on building strong Christian marriages and families.', type: 'Podcast', speaker: 'Pastor & Mrs. Adeyemi', date: '04/08/2026', duration: '35 min', tags: ['marriage', 'family'], createdBy: 'Media Team' },
+  { id: 'med-7', title: 'Easter Sunday Service', description: 'Full Easter celebration service with worship, communion, and sermon.', type: 'Video', speaker: 'Pastor James Adewale', date: '03/29/2026', duration: '1h 45min', tags: ['easter', 'service'], createdBy: 'Media Team' },
+  { id: 'med-8', title: 'Praise Night 2026', description: 'Recording of the annual praise and worship night.', type: 'Video', speaker: 'Choir', date: '03/22/2026', duration: '2h 10min', tags: ['praise', 'worship'], createdBy: 'Media Team' },
+  { id: 'med-9', title: 'The Book of Acts Series - Part 1', description: 'Beginning of a new teaching series through the Book of Acts.', type: 'Sermon', speaker: 'Pastor David', date: '03/15/2026', duration: '48 min', tags: ['acts', 'series'], createdBy: 'Media Team' },
+  { id: 'med-10', title: 'Counseling Corner Podcast', description: 'Christian counseling discussion on emotional healing.', type: 'Podcast', speaker: 'Counseling Team', date: '03/18/2026', duration: '28 min', tags: ['counseling', 'healing'], createdBy: 'Media Team' },
 ];
 
 export const profileDetails = {
