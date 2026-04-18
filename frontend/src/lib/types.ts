@@ -114,6 +114,19 @@ export interface CommunicationTemplate {
   lastModified: string;
 }
 
+export type CelebrationType = 'Birthday' | 'Wedding Anniversary' | 'Thanksgiving' | 'Child Dedication';
+export type CelebrationStatus = 'Scheduled' | 'Completed';
+
+export interface Celebration {
+  id: string;
+  name: string;
+  type: CelebrationType;
+  date: string;
+  status: CelebrationStatus;
+  years?: number;
+  notes?: string;
+}
+
 export type CourseStatus = 'Active' | 'Completed' | 'Upcoming';
 
 export interface Course {
