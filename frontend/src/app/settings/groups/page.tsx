@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
@@ -89,6 +90,7 @@ const mockLeaders = [
 const ITEMS_PER_PAGE = 10;
 
 export default function GroupsPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -217,18 +219,15 @@ export default function GroupsPage() {
                     actions={[
                       {
                         label: "View Members",
-                        onClick: () =>
-                          console.log("View members:", group.id),
+                        onClick: () => router.push(`/settings/groups/${group.id}`),
                       },
                       {
                         label: "Edit",
-                        onClick: () =>
-                          console.log("Edit group:", group.id),
+                        onClick: () => router.push(`/settings/groups/${group.id}/edit`),
                       },
                       {
                         label: "Delete",
-                        onClick: () =>
-                          console.log("Delete group:", group.id),
+                        onClick: () => console.log("Delete group:", group.id),
                       },
                     ]}
                   />
