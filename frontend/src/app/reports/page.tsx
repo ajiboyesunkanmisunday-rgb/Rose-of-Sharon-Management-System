@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
+import { toCSV, downloadCSV } from "@/lib/csv";
 import {
   Users,
   UserPlus,
@@ -162,6 +164,59 @@ export default function ReportsPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reportType, setReportType] = useState("All");
+  const [showReportModal, setShowReportModal] = useState(false);
+
+  // Convert "MMM DD, YYYY" style to sortable YYYY-MM-DD for comparison.
+  const toISO = (dateStr: string): string => {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().slice(0, 10);
+  };
+
+  const filteredAttendance = useMemo(() => {
+    if (!startDate && !endDate) return attendanceData;
+    return attendanceData.filter((row) => {
+      const iso = toISO(row.date);
+      if (!iso) return true;
+      if (startDate && iso < startDate) return false;
+      if (endDate && iso > endDate) return false;
+      return true;
+    });
+  }, [startDate, endDate]);
+
+  const filteredActivity = useMemo(() => {
+    if (!startDate && !endDate) return activityLog;
+    return activityLog.filter((row) => {
+      const iso = toISO(row.date);
+      if (!iso) return true;
+      if (startDate && iso < startDate) return false;
+      if (endDate && iso > endDate) return false;
+      return true;
+    });
+  }, [startDate, endDate]);
+
+  const reportSummary = useMemo(() => {
+    const totalAttendance = filteredAttendance.reduce((sum, r) => sum + r.attendance, 0);
+    const totalFollowUps = followUpData.reduce((sum, r) => sum + r.total, 0);
+    const completedFollowUps = followUpData.reduce((sum, r) => sum + r.completed, 0);
+    return {
+      totalAttendance,
+      totalFollowUps,
+      completedFollowUps,
+      completionRate: totalFollowUps > 0 ? Math.round((completedFollowUps / totalFollowUps) * 100) : 0,
+      servicesIncluded: filteredAttendance.length,
+      activityEntries: filteredActivity.length,
+    };
+  }, [filteredAttendance, filteredActivity]);
+
+  const handleGenerateReport = () => {
+    setShowReportModal(true);
+  };
+
+  const handleExportCSV = () => {
+    const attendanceCSV = toCSV(filteredAttendance);
+    downloadCSV(attendanceCSV, `rosms-attendance-${reportType.toLowerCase()}-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
 
   return (
     <DashboardLayout>
@@ -208,9 +263,12 @@ export default function ReportsPage() {
             ))}
           </select>
         </div>
-        <Button variant="primary">Generate Report</Button>
+        <Button variant="primary" onClick={handleGenerateReport}>
+          Generate Report
+        </Button>
         <Button
           variant="secondary"
+          onClick={handleExportCSV}
           icon={<Download className="h-4 w-4" />}
         >
           Export CSV
@@ -266,7 +324,7 @@ export default function ReportsPage() {
                 </tr>
               </thead>
               <tbody>
-                {attendanceData.map((row) => (
+                {filteredAttendance.map((row) => (
                   <tr
                     key={row.service}
                     className="border-b border-[#E5E7EB] last:border-0"
@@ -365,7 +423,7 @@ export default function ReportsPage() {
               </tr>
             </thead>
             <tbody>
-              {activityLog.map((row, index) => (
+              {filteredActivity.map((row, index) => (
                 <tr
                   key={index}
                   className="border-b border-[#E5E7EB] last:border-0"
@@ -384,6 +442,57 @@ export default function ReportsPage() {
           </table>
         </div>
       </div>
+
+      <Modal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        title="Report Summary"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="rounded-lg border border-[#E5E7EB] p-4">
+              <p className="text-xs font-medium text-[#6B7280]">Total Attendance</p>
+              <p className="mt-1 text-2xl font-bold text-[#000080]">
+                {reportSummary.totalAttendance.toLocaleString()}
+              </p>
+            </div>
+            <div className="rounded-lg border border-[#E5E7EB] p-4">
+              <p className="text-xs font-medium text-[#6B7280]">Services Included</p>
+              <p className="mt-1 text-2xl font-bold text-[#000080]">
+                {reportSummary.servicesIncluded}
+              </p>
+            </div>
+            <div className="rounded-lg border border-[#E5E7EB] p-4">
+              <p className="text-xs font-medium text-[#6B7280]">Follow-up Total</p>
+              <p className="mt-1 text-2xl font-bold text-[#000080]">
+                {reportSummary.totalFollowUps}
+              </p>
+            </div>
+            <div className="rounded-lg border border-[#E5E7EB] p-4">
+              <p className="text-xs font-medium text-[#6B7280]">Completion Rate</p>
+              <p className="mt-1 text-2xl font-bold text-[#000080]">
+                {reportSummary.completionRate}%
+              </p>
+            </div>
+          </div>
+          <div className="rounded-lg bg-[#F9FAFB] p-3 text-xs text-[#6B7280]">
+            <strong>Filters:</strong>{" "}
+            {startDate || endDate
+              ? `${startDate || "start"} → ${endDate || "end"}`
+              : "No date filter applied"}
+            {" · "}Type: {reportType}
+          </div>
+          <div className="flex items-center justify-end gap-3">
+            <Button variant="secondary" onClick={() => setShowReportModal(false)}>
+              Close
+            </Button>
+            <Button variant="primary" onClick={handleExportCSV}>
+              Export CSV
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </DashboardLayout>
   );
 }
