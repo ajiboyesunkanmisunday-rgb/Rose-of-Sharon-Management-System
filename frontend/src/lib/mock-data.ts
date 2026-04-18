@@ -1,4 +1,4 @@
-import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent, WorkflowTemplate, ActiveWorkflowCard } from './types';
+import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent, WorkflowTemplate, ActiveWorkflowCard, Course, TrainingSchedule } from './types';
 
 export const members: Member[] = Array.from({ length: 20 }, (_, i) => ({
   id: `m-${i + 1}`,
@@ -387,6 +387,24 @@ export const activeWorkflowCards: ActiveWorkflowCard[] = [
   { id: 'aw-7', memberName: 'Peter Adewale', phone: '08067890123', assignedTo: 'Shola Damson', dateAdded: '04/03/2026', stage: 'Follow-up Visit', status: 'Pending', templateId: 'wft-1', currentStepIndex: 2 },
   { id: 'aw-8', memberName: 'Ruth Balogun', phone: '08078901234', assignedTo: 'Pastor James', dateAdded: '03/28/2026', stage: 'Second Timers', status: 'On Track', templateId: 'wft-1', currentStepIndex: 3 },
   { id: 'aw-9', memberName: 'Mary Eze', phone: '08089012345', assignedTo: 'Deaconess Grace', dateAdded: '03/20/2026', stage: 'New Converts', status: 'On Track', templateId: 'wft-1', currentStepIndex: 4 },
+];
+
+export const trainingCourses: Course[] = [
+  { id: 'course-1', name: 'Water Baptism Class', description: 'A foundational course preparing believers for water baptism through biblical teachings and spiritual readiness.', category: 'Spiritual Formation', instructor: 'Pastor David', duration: '6 weeks', startDate: '04/01/2026', endDate: '05/15/2026', applications: 12, currentStudents: 28, pastStudents: 145, status: 'Active' },
+  { id: 'course-2', name: 'New Believers Foundation', description: 'An introductory program designed to ground new converts in the basics of Christian faith and church life.', category: 'Discipleship', instructor: 'Deaconess Grace', duration: '8 weeks', startDate: '04/10/2026', endDate: '06/10/2026', applications: 8, currentStudents: 35, pastStudents: 210, status: 'Active' },
+  { id: 'course-3', name: 'Leadership Training', description: 'An advanced course equipping members with leadership skills for ministry and church service.', category: 'Leadership', instructor: 'Pastor James', duration: '12 weeks', startDate: '05/01/2026', endDate: '07/30/2026', applications: 15, currentStudents: 20, pastStudents: 95, status: 'Upcoming' },
+  { id: 'course-4', name: 'Marriage Counseling', description: 'A comprehensive program for couples preparing for marriage or seeking to strengthen their union.', category: 'Counseling', instructor: 'Pastor & Mrs. Adeyemi', duration: '4 weeks', startDate: '03/01/2026', endDate: '03/30/2026', applications: 6, currentStudents: 14, pastStudents: 72, status: 'Completed' },
+  { id: 'course-5', name: 'Sunday School Teachers Training', description: 'Training for Sunday School teachers on curriculum delivery and child engagement.', category: 'Teaching', instructor: 'Elder Samuel', duration: '8 weeks', startDate: '04/15/2026', endDate: '06/15/2026', applications: 5, currentStudents: 12, pastStudents: 48, status: 'Active' },
+  { id: 'course-6', name: 'Youth Ministry Training', description: 'Specialized training for those working with the youth department.', category: 'Youth Ministry', instructor: 'Brother Emmanuel', duration: '8 weeks', startDate: '05/10/2026', endDate: '07/10/2026', applications: 10, currentStudents: 15, pastStudents: 60, status: 'Upcoming' },
+];
+
+export const trainingSchedules: TrainingSchedule[] = [
+  { id: 'sch-1', courseId: 'course-1', course: 'Water Baptism Class', instructor: 'Pastor David', startDate: '04/01/2026', endDate: '05/15/2026', dayTime: 'Saturdays, 10:00 AM', venue: 'Main Hall', capacity: 50, status: 'Active' },
+  { id: 'sch-2', courseId: 'course-2', course: 'New Believers Foundation', instructor: 'Deaconess Grace', startDate: '04/10/2026', endDate: '06/10/2026', dayTime: 'Sundays, 2:00 PM', venue: 'Room 3', capacity: 60, status: 'Active' },
+  { id: 'sch-3', courseId: 'course-3', course: 'Leadership Training', instructor: 'Pastor James', startDate: '05/01/2026', endDate: '07/30/2026', dayTime: 'Wednesdays, 6:00 PM', venue: 'Conference Room', capacity: 30, status: 'Upcoming' },
+  { id: 'sch-4', courseId: 'course-4', course: 'Marriage Counseling', instructor: 'Pastor & Mrs. Adeyemi', startDate: '03/01/2026', endDate: '03/30/2026', dayTime: 'Fridays, 5:00 PM', venue: 'Counseling Room', capacity: 20, status: 'Completed' },
+  { id: 'sch-5', courseId: 'course-5', course: 'Sunday School Teachers', instructor: 'Elder Samuel', startDate: '04/15/2026', endDate: '06/15/2026', dayTime: 'Saturdays, 9:00 AM', venue: 'Room 2', capacity: 25, status: 'Active' },
+  { id: 'sch-6', courseId: 'course-6', course: 'Youth Ministry Training', instructor: 'Brother Emmanuel', startDate: '05/10/2026', endDate: '07/10/2026', dayTime: 'Fridays, 4:00 PM', venue: 'Youth Center', capacity: 30, status: 'Upcoming' },
 ];
 
 export const profileDetails = {
