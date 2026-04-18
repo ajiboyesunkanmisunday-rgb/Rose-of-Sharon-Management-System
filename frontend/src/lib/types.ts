@@ -114,6 +114,31 @@ export interface CommunicationTemplate {
   lastModified: string;
 }
 
+export interface PermissionMatrix {
+  [module: string]: {
+    view: boolean;
+    create: boolean;
+    edit: boolean;
+    delete: boolean;
+  };
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  description: string;
+  userCount: number;
+  permissions: PermissionMatrix;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  description: string;
+  leader: string;
+  membersCount: number;
+}
+
 export type CelebrationType = 'Birthday' | 'Wedding Anniversary' | 'Thanksgiving' | 'Child Dedication';
 export type CelebrationStatus = 'Scheduled' | 'Completed';
 

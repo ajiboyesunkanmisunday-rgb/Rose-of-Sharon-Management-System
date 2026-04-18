@@ -126,6 +126,7 @@ const navItems: NavItem[] = [
     children: [
       { label: "General", href: "/settings/general" },
       { label: "Roles & Permissions", href: "/settings/roles" },
+      { label: "Groups", href: "/settings/groups" },
     ],
   },
 ];

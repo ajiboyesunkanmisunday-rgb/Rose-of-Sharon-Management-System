@@ -1,4 +1,4 @@
-import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent, WorkflowTemplate, ActiveWorkflowCard, Course, TrainingSchedule, Celebration } from './types';
+import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent, WorkflowTemplate, ActiveWorkflowCard, Course, TrainingSchedule, Celebration, Role, Group, PermissionMatrix } from './types';
 
 export const members: Member[] = Array.from({ length: 20 }, (_, i) => ({
   id: `m-${i + 1}`,
@@ -423,6 +423,46 @@ export const celebrations: Celebration[] = [
   { id: 'cel-13', name: 'David Okonkwo', type: 'Thanksgiving', date: '05/02/2026', status: 'Scheduled', notes: 'Wedding thanksgiving.' },
   { id: 'cel-14', name: 'Grace Adeyemi', type: 'Thanksgiving', date: '04/20/2026', status: 'Scheduled' },
   { id: 'cel-15', name: 'Emmanuel Nwosu', type: 'Child Dedication', date: '05/10/2026', status: 'Completed' },
+];
+
+const emptyMatrix: PermissionMatrix = {
+  Dashboard: { view: true, create: false, edit: false, delete: false },
+  'User Management': { view: false, create: false, edit: false, delete: false },
+  Communication: { view: false, create: false, edit: false, delete: false },
+  Workflows: { view: false, create: false, edit: false, delete: false },
+  Requests: { view: false, create: false, edit: false, delete: false },
+  Reports: { view: false, create: false, edit: false, delete: false },
+  Settings: { view: false, create: false, edit: false, delete: false },
+};
+
+const fullMatrix: PermissionMatrix = {
+  Dashboard: { view: true, create: true, edit: true, delete: true },
+  'User Management': { view: true, create: true, edit: true, delete: true },
+  Communication: { view: true, create: true, edit: true, delete: true },
+  Workflows: { view: true, create: true, edit: true, delete: true },
+  Requests: { view: true, create: true, edit: true, delete: true },
+  Reports: { view: true, create: true, edit: true, delete: true },
+  Settings: { view: true, create: true, edit: true, delete: true },
+};
+
+export const roles: Role[] = [
+  { id: 'role-1', name: 'Admin', description: 'Full system access', userCount: 3, permissions: fullMatrix },
+  { id: 'role-2', name: 'Pastor', description: 'Pastoral oversight and management', userCount: 2, permissions: { ...fullMatrix, Settings: { view: true, create: false, edit: false, delete: false } } },
+  { id: 'role-3', name: 'Associate Pastor', description: 'Assistant pastoral role', userCount: 3, permissions: { ...fullMatrix, Settings: { view: false, create: false, edit: false, delete: false } } },
+  { id: 'role-4', name: 'Follow-up Officer', description: 'Manages guest follow-ups and workflows', userCount: 8, permissions: { ...emptyMatrix, 'User Management': { view: true, create: true, edit: true, delete: false }, Workflows: { view: true, create: false, edit: true, delete: false }, Requests: { view: true, create: true, edit: true, delete: false } } },
+  { id: 'role-5', name: 'Department Head', description: 'Leads a department', userCount: 12, permissions: { ...emptyMatrix, 'User Management': { view: true, create: false, edit: false, delete: false }, Communication: { view: true, create: true, edit: false, delete: false } } },
+  { id: 'role-6', name: 'Member', description: 'Regular church member', userCount: 245, permissions: { ...emptyMatrix, Dashboard: { view: true, create: false, edit: false, delete: false } } },
+];
+
+export const groups: Group[] = [
+  { id: 'grp-1', name: 'Choir', description: 'Church choir and worship team', leader: 'Sarah Bamidele', membersCount: 28 },
+  { id: 'grp-2', name: 'Ushering', description: 'Church ushering team', leader: 'John Michael', membersCount: 22 },
+  { id: 'grp-3', name: 'Technical / Media', description: 'Media, sound, and technical support', leader: 'Samuel Chukwu', membersCount: 15 },
+  { id: 'grp-4', name: 'Protocol', description: 'Protocol team for guests and events', leader: 'Peter Adewale', membersCount: 12 },
+  { id: "grp-5", name: "Children's Church", description: "Children's ministry teachers and helpers", leader: 'Blessing Okoro', membersCount: 18 },
+  { id: 'grp-6', name: 'Youth Fellowship', description: 'Youth department leadership', leader: 'David Okonkwo', membersCount: 45 },
+  { id: 'grp-7', name: 'Prayer Warriors', description: 'Intercessory prayer team', leader: 'Ruth Balogun', membersCount: 32 },
+  { id: 'grp-8', name: 'Evangelism', description: 'Evangelism and outreach team', leader: 'Emmanuel Nwosu', membersCount: 20 },
 ];
 
 export const profileDetails = {

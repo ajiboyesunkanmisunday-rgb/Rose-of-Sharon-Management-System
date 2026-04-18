@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
@@ -71,6 +72,7 @@ const defaultPermissions: Permission[] = [
 ];
 
 export default function RolesPage() {
+  const router = useRouter();
   const [roles] = useState<Role[]>(mockRoles);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
@@ -186,7 +188,7 @@ export default function RolesPage() {
                       },
                       {
                         label: "Edit",
-                        onClick: () => console.log("Edit role:", role.id),
+                        onClick: () => router.push(`/settings/roles/${role.id}/edit`),
                       },
                       {
                         label: "Delete",
