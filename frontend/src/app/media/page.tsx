@@ -1,126 +1,64 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
+import { mediaItems } from "@/lib/mock-data";
+import { MediaType } from "@/lib/types";
 
-type MediaType = "Sermon" | "Podcast" | "Video";
 type Tab = "All" | "Sermons" | "Podcasts" | "Videos";
 
-interface MediaItem {
-  id: string;
-  title: string;
-  type: MediaType;
-  speaker: string;
-  date: string;
-  duration: string;
-}
-
-const mockMedia: MediaItem[] = [
-  {
-    id: "m1",
-    title: "Sunday Sermon - Walking in Faith",
-    type: "Sermon",
-    speaker: "Pastor James Adewale",
-    date: "Apr 12, 2026",
-    duration: "45 min",
-  },
-  {
-    id: "m2",
-    title: "Midweek Teaching - The Power of Prayer",
-    type: "Sermon",
-    speaker: "Pastor Grace Nwosu",
-    date: "Apr 8, 2026",
-    duration: "38 min",
-  },
-  {
-    id: "m3",
-    title: "Youth Conference Highlights",
-    type: "Video",
-    speaker: "Media Team",
-    date: "Apr 5, 2026",
-    duration: "1h 20 min",
-  },
-  {
-    id: "m4",
-    title: "Faith & Family Podcast - Episode 12",
-    type: "Podcast",
-    speaker: "Deacon Emmanuel",
-    date: "Apr 3, 2026",
-    duration: "52 min",
-  },
-  {
-    id: "m5",
-    title: "Easter Sunday Special Service",
-    type: "Video",
-    speaker: "Senior Pastor",
-    date: "Mar 29, 2026",
-    duration: "1h 5 min",
-  },
-  {
-    id: "m6",
-    title: "Worship Night Podcast Recap",
-    type: "Podcast",
-    speaker: "Worship Team",
-    date: "Mar 25, 2026",
-    duration: "30 min",
-  },
+const tabs: { key: Tab; label: string }[] = [
+  { key: "All", label: "All" },
+  { key: "Sermons", label: "Sermons" },
+  { key: "Podcasts", label: "Podcasts" },
+  { key: "Videos", label: "Videos" },
 ];
 
-const typeBadgeColors: Record<MediaType, string> = {
+const typeColors: Record<MediaType, string> = {
   Sermon: "bg-[#000080] text-white",
-  Podcast: "bg-purple-100 text-purple-800",
-  Video: "bg-blue-100 text-blue-800",
-};
-
-const tabToType: Record<Tab, MediaType | null> = {
-  All: null,
-  Sermons: "Sermon",
-  Podcasts: "Podcast",
-  Videos: "Video",
+  Podcast: "bg-[#7C3AED] text-white",
+  Video: "bg-[#16A34A] text-white",
 };
 
 export default function MediaPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("All");
 
-  const tabs: { key: Tab; label: string }[] = [
-    { key: "All", label: "All" },
-    { key: "Sermons", label: "Sermons" },
-    { key: "Podcasts", label: "Podcasts" },
-    { key: "Videos", label: "Videos" },
-  ];
-
-  const filteredMedia = useMemo(() => {
-    let items = mockMedia;
-
-    const typeFilter = tabToType[activeTab];
-    if (typeFilter) {
-      items = items.filter((m) => m.type === typeFilter);
+  const filtered = useMemo(() => {
+    let items = mediaItems;
+    if (activeTab !== "All") {
+      const typeMap: Record<Exclude<Tab, "All">, MediaType> = {
+        Sermons: "Sermon",
+        Podcasts: "Podcast",
+        Videos: "Video",
+      };
+      items = items.filter((m) => m.type === typeMap[activeTab]);
     }
-
     if (search.trim()) {
-      const query = search.toLowerCase();
+      const q = search.toLowerCase();
       items = items.filter(
         (m) =>
-          m.title.toLowerCase().includes(query) ||
-          m.speaker.toLowerCase().includes(query)
+          m.title.toLowerCase().includes(q) ||
+          m.speaker.toLowerCase().includes(q)
       );
     }
-
     return items;
   }, [search, activeTab]);
 
+  const getActionLabel = (type: MediaType) =>
+    type === "Podcast" ? "Listen" : "Watch";
+
   return (
     <DashboardLayout>
-      {/* Page Header */}
       <div className="mb-6">
         <h1 className="text-[28px] font-bold text-[#000000]">Media</h1>
       </div>
 
-      {/* Top bar */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="w-72">
           <SearchBar
             value={search}
@@ -131,20 +69,20 @@ export default function MediaPage() {
         </div>
         <Button
           variant="primary"
-          onClick={() => {}}
+          onClick={() => router.push("/media/upload")}
           icon={
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
           }
         >
-          Add Media
+          Upload Media
         </Button>
       </div>
 
-      {/* Tabs */}
-      <div className="mb-6 flex gap-6 border-b border-[#E5E7EB]">
+      <div className="mb-6 flex gap-8 border-b border-[#E5E7EB]">
         {tabs.map((tab) => (
           <button
             key={tab.key}
@@ -160,48 +98,43 @@ export default function MediaPage() {
         ))}
       </div>
 
-      {/* Cards Grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredMedia.map((item) => (
-          <div
-            key={item.id}
-            className="rounded-xl border border-[#E5E7EB] bg-white overflow-hidden"
-          >
-            {/* Thumbnail */}
-            <div className="flex h-[160px] items-center justify-center bg-[#F3F4F6]">
-              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="5 3 19 12 5 21 5 3" />
-              </svg>
-            </div>
-
-            {/* Content */}
-            <div className="p-4">
-              <div className="mb-2 flex items-center gap-2">
-                <span
-                  className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${typeBadgeColors[item.type]}`}
-                >
+      {filtered.length === 0 ? (
+        <div className="rounded-xl border border-[#E5E7EB] bg-white p-12 text-center text-sm text-gray-400">
+          No media found.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((item) => (
+            <div
+              key={item.id}
+              className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white transition-shadow hover:shadow-md"
+            >
+              <div className="flex h-[160px] items-center justify-center bg-[#F3F4F6]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#9CA3AF" stroke="#9CA3AF" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+              </div>
+              <div className="p-4">
+                <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${typeColors[item.type]}`}>
                   {item.type}
                 </span>
-                <span className="text-xs text-[#9CA3AF]">{item.duration}</span>
-              </div>
-              <h3 className="text-sm font-bold text-[#111827]">{item.title}</h3>
-              <p className="mt-1 text-sm text-[#6B7280]">{item.speaker}</p>
-              <p className="mt-0.5 text-xs text-[#9CA3AF]">{item.date}</p>
-              <div className="mt-3">
-                <Button variant="secondary" onClick={() => {}} className="w-full">
-                  {item.type === "Podcast" ? "Listen" : "Watch"}
+                <h3 className="mt-3 text-sm font-semibold text-[#111827]">{item.title}</h3>
+                <p className="mt-1 text-xs text-[#6B7280]">
+                  {item.speaker} · {item.date}
+                </p>
+                <p className="mt-1 text-xs text-[#9CA3AF]">Duration: {item.duration}</p>
+                <Button
+                  variant="secondary"
+                  onClick={() => router.push(`/media/${item.id}`)}
+                  className="mt-3 w-full"
+                >
+                  {getActionLabel(item.type)}
                 </Button>
               </div>
             </div>
-          </div>
-        ))}
-
-        {filteredMedia.length === 0 && (
-          <div className="col-span-3 py-12 text-center text-sm text-gray-400">
-            No media found.
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </DashboardLayout>
   );
 }
