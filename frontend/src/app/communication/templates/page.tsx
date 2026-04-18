@@ -136,21 +136,15 @@ export default function TemplatesPage() {
                     actions={[
                       {
                         label: "Edit",
-                        onClick: () => {
-                          console.log("Edit template:", template.id);
-                        },
+                        onClick: () => router.push(`/communication/templates/${template.id}/edit`),
                       },
                       {
                         label: "Duplicate",
-                        onClick: () => {
-                          console.log("Duplicate template:", template.id);
-                        },
+                        onClick: () => console.log("Duplicate template:", template.id),
                       },
                       {
                         label: "Delete",
-                        onClick: () => {
-                          console.log("Delete template:", template.id);
-                        },
+                        onClick: () => console.log("Delete template:", template.id),
                       },
                     ]}
                   />

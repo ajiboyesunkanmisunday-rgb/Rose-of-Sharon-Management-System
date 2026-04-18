@@ -1,80 +1,59 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-
-interface CalendarEvent {
-  id: string;
-  name: string;
-  date: string; // YYYY-MM-DD
-  time: string;
-  color: string;
-}
-
-const mockEvents: CalendarEvent[] = [
-  // Sundays in April 2026
-  { id: "e1", name: "Sunday Service", date: "2026-04-05", time: "9:00 AM", color: "bg-[#000080]" },
-  { id: "e2", name: "Sunday Service", date: "2026-04-12", time: "9:00 AM", color: "bg-[#000080]" },
-  { id: "e3", name: "Sunday Service", date: "2026-04-19", time: "9:00 AM", color: "bg-[#000080]" },
-  { id: "e4", name: "Sunday Service", date: "2026-04-26", time: "9:00 AM", color: "bg-[#000080]" },
-  // Wednesdays - Bible Study
-  { id: "e5", name: "Bible Study", date: "2026-04-01", time: "6:30 PM", color: "bg-green-500" },
-  { id: "e6", name: "Bible Study", date: "2026-04-08", time: "6:30 PM", color: "bg-green-500" },
-  { id: "e7", name: "Bible Study", date: "2026-04-15", time: "6:30 PM", color: "bg-green-500" },
-  { id: "e8", name: "Bible Study", date: "2026-04-22", time: "6:30 PM", color: "bg-green-500" },
-  { id: "e9", name: "Bible Study", date: "2026-04-29", time: "6:30 PM", color: "bg-green-500" },
-  // Fridays - Youth Meeting
-  { id: "e10", name: "Youth Meeting", date: "2026-04-10", time: "5:00 PM", color: "bg-purple-500" },
-  { id: "e11", name: "Youth Meeting", date: "2026-04-24", time: "5:00 PM", color: "bg-purple-500" },
-  // Birthday
-  { id: "e12", name: "Birthday: John M.", date: "2026-04-16", time: "All Day", color: "bg-orange-500" },
-  // Extra events for May
-  { id: "e13", name: "Sunday Service", date: "2026-05-03", time: "9:00 AM", color: "bg-[#000080]" },
-  { id: "e14", name: "Bible Study", date: "2026-05-06", time: "6:30 PM", color: "bg-green-500" },
-];
+import Button from "@/components/ui/Button";
+import { calendarEvents } from "@/lib/mock-data";
+import { CalendarEventCategory } from "@/lib/types";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const legend = [
-  { label: "Sunday Service", color: "bg-[#000080]" },
+const categoryColors: Record<CalendarEventCategory, string> = {
+  Service: "bg-[#000080]",
+  "Bible Study": "bg-green-500",
+  Youth: "bg-purple-500",
+  Birthday: "bg-orange-500",
+  Meeting: "bg-yellow-500",
+  Other: "bg-gray-500",
+};
+
+const legend: { label: string; color: string }[] = [
+  { label: "Service", color: "bg-[#000080]" },
   { label: "Bible Study", color: "bg-green-500" },
-  { label: "Youth Meeting", color: "bg-purple-500" },
+  { label: "Youth", color: "bg-purple-500" },
   { label: "Birthday", color: "bg-orange-500" },
+  { label: "Meeting", color: "bg-yellow-500" },
 ];
-
-function getDaysInMonth(year: number, month: number) {
-  return new Date(year, month + 1, 0).getDate();
-}
-
-function getFirstDayOfMonth(year: number, month: number) {
-  return new Date(year, month, 1).getDay();
-}
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
 
+function getDaysInMonth(year: number, month: number) {
+  return new Date(year, month + 1, 0).getDate();
+}
+function getFirstDayOfMonth(year: number, month: number) {
+  return new Date(year, month, 1).getDay();
+}
+
 export default function CalendarPage() {
+  const router = useRouter();
   const [currentYear, setCurrentYear] = useState(2026);
-  const [currentMonth, setCurrentMonth] = useState(3); // April = 3 (0-indexed)
+  const [currentMonth, setCurrentMonth] = useState(3); // April
 
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
 
-  const eventsForMonth = useMemo(() => {
-    const monthStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}`;
-    return mockEvents.filter((e) => e.date.startsWith(monthStr));
-  }, [currentYear, currentMonth]);
-
   const getEventsForDay = (day: number) => {
     const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    return mockEvents.filter((e) => e.date === dateStr);
+    return calendarEvents.filter((e) => e.date === dateStr);
   };
 
   const upcomingEvents = useMemo(() => {
     const today = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-15`;
-    return mockEvents
+    return calendarEvents
       .filter((e) => e.date >= today)
       .sort((a, b) => a.date.localeCompare(b.date))
       .slice(0, 5);
@@ -98,7 +77,6 @@ export default function CalendarPage() {
     }
   };
 
-  // Build calendar grid
   const calendarCells: (number | null)[] = [];
   for (let i = 0; i < firstDay; i++) calendarCells.push(null);
   for (let d = 1; d <= daysInMonth; d++) calendarCells.push(d);
@@ -108,15 +86,24 @@ export default function CalendarPage() {
 
   return (
     <DashboardLayout>
-      {/* Page Header */}
-      <div className="mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <h1 className="text-[28px] font-bold text-[#000000]">Calendar</h1>
+        <Button
+          variant="primary"
+          onClick={() => router.push("/calendar/events/add")}
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          }
+        >
+          Add Event
+        </Button>
       </div>
 
       <div className="flex flex-col gap-6 lg:flex-row">
-        {/* Calendar Grid */}
         <div className="flex-1">
-          {/* Month Navigation */}
           <div className="mb-4 flex items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-6 py-4">
             <button
               onClick={handlePrevMonth}
@@ -139,9 +126,7 @@ export default function CalendarPage() {
             </button>
           </div>
 
-          {/* Calendar Table */}
-          <div className="rounded-xl border border-[#E5E7EB] bg-white overflow-hidden">
-            {/* Day headers */}
+          <div className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white">
             <div className="grid grid-cols-7 bg-[#F3F4F6]">
               {DAYS.map((day) => (
                 <div key={day} className="px-2 py-3 text-center text-sm font-bold text-[#000080]">
@@ -149,7 +134,6 @@ export default function CalendarPage() {
                 </div>
               ))}
             </div>
-            {/* Day cells */}
             <div className="grid grid-cols-7">
               {calendarCells.map((day, idx) => {
                 const dayEvents = day ? getEventsForDay(day) : [];
@@ -161,7 +145,7 @@ export default function CalendarPage() {
                 return (
                   <div
                     key={idx}
-                    className={`min-h-[80px] border-b border-r border-[#F3F4F6] p-2 ${
+                    className={`min-h-[100px] border-b border-r border-[#F3F4F6] p-2 ${
                       day ? "bg-white" : "bg-[#FAFAFA]"
                     }`}
                   >
@@ -169,21 +153,27 @@ export default function CalendarPage() {
                       <>
                         <span
                           className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm ${
-                            isToday
-                              ? "bg-[#000080] font-bold text-white"
-                              : "text-[#374151]"
+                            isToday ? "bg-[#000080] font-bold text-white" : "text-[#374151]"
                           }`}
                         >
                           {day}
                         </span>
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          {dayEvents.map((ev) => (
-                            <span
+                        <div className="mt-1 space-y-1">
+                          {dayEvents.slice(0, 3).map((ev) => (
+                            <button
                               key={ev.id}
-                              className={`h-2 w-2 rounded-full ${ev.color}`}
-                              title={ev.name}
-                            />
+                              onClick={() => router.push(`/calendar/events/${ev.id}`)}
+                              className={`block w-full truncate rounded px-1 py-0.5 text-left text-xs text-white ${categoryColors[ev.category]} transition-opacity hover:opacity-80`}
+                              title={`${ev.name} · ${ev.time}`}
+                            >
+                              {ev.name}
+                            </button>
                           ))}
+                          {dayEvents.length > 3 && (
+                            <span className="text-xs text-[#6B7280]">
+                              +{dayEvents.length - 3} more
+                            </span>
+                          )}
                         </div>
                       </>
                     )}
@@ -193,47 +183,42 @@ export default function CalendarPage() {
             </div>
           </div>
 
-          {/* Legend */}
           <div className="mt-4 flex flex-wrap gap-4 rounded-xl border border-[#E5E7EB] bg-white px-5 py-3">
             {legend.map((item) => (
               <div key={item.label} className="flex items-center gap-2">
                 <span className={`h-3 w-3 rounded-full ${item.color}`} />
-                <span className="text-sm text-[#6B7280]">{item.label}</span>
+                <span className="text-xs text-[#374151]">{item.label}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Upcoming Events Sidebar */}
-        <div className="w-full lg:w-[320px]">
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
-            <h3 className="mb-4 text-sm font-bold text-[#000080]">Upcoming Events</h3>
-            <div className="flex flex-col gap-3">
-              {upcomingEvents.map((event) => (
-                <div
-                  key={event.id}
-                  className="flex items-start gap-3 rounded-lg border border-[#F3F4F6] p-3"
+        <aside className="lg:w-80">
+          <h3 className="mb-3 text-sm font-semibold text-[#111827]">Upcoming Events</h3>
+          <div className="space-y-3">
+            {upcomingEvents.length === 0 ? (
+              <p className="rounded-xl border border-[#E5E7EB] bg-white p-6 text-sm text-[#6B7280]">
+                No upcoming events.
+              </p>
+            ) : (
+              upcomingEvents.map((ev) => (
+                <button
+                  key={ev.id}
+                  onClick={() => router.push(`/calendar/events/${ev.id}`)}
+                  className="block w-full rounded-xl border border-[#E5E7EB] bg-white p-4 text-left transition-colors hover:border-[#000080]"
                 >
-                  <span className={`mt-1 h-3 w-3 shrink-0 rounded-full ${event.color}`} />
-                  <div>
-                    <p className="text-sm font-bold text-[#111827]">{event.name}</p>
-                    <p className="text-xs text-[#6B7280]">
-                      {new Date(event.date + "T00:00:00").toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </p>
-                    <p className="text-xs text-[#9CA3AF]">{event.time}</p>
+                  <div className="flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${categoryColors[ev.category]}`} />
+                    <span className="text-xs font-medium text-[#6B7280]">
+                      {new Date(ev.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })} · {ev.time}
+                    </span>
                   </div>
-                </div>
-              ))}
-              {upcomingEvents.length === 0 && (
-                <p className="text-sm text-gray-400">No upcoming events.</p>
-              )}
-            </div>
+                  <p className="mt-1 text-sm font-semibold text-[#111827]">{ev.name}</p>
+                </button>
+              ))
+            )}
           </div>
-        </div>
+        </aside>
       </div>
     </DashboardLayout>
   );
