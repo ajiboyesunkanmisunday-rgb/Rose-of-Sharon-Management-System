@@ -1,4 +1,4 @@
-import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement } from './types';
+import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent } from './types';
 
 export const members: Member[] = Array.from({ length: 20 }, (_, i) => ({
   id: `m-${i + 1}`,
@@ -266,6 +266,21 @@ export const allAnnouncements: Announcement[] = [
     createdBy: 'Admin',
     createdDate: '04/08/2026',
   },
+];
+
+export const allEvents: ChurchEvent[] = [
+  { id: 'ev-1', name: 'Sunday Worship Service', date: '04/19/2026', startTime: '09:00', endTime: '11:30', location: 'Main Auditorium', category: 'Service', description: 'Weekly worship service with sermon, worship, and fellowship.', capacity: 600, attendees: 450, status: 'Upcoming', requiresRegistration: false, createdBy: 'Pastor David' },
+  { id: 'ev-2', name: 'Annual Church Conference', date: '05/01/2026', startTime: '08:00', endTime: '17:00', location: 'Convention Center', category: 'Conference', description: 'Three-day annual conference with guest speakers and workshops.', capacity: 1500, attendees: 1200, status: 'Upcoming', requiresRegistration: true, createdBy: 'Admin' },
+  { id: 'ev-3', name: 'Leadership Training Workshop', date: '04/25/2026', startTime: '10:00', endTime: '15:00', location: 'Fellowship Hall', category: 'Training', description: 'Intensive leadership development workshop for church workers.', capacity: 100, attendees: 85, status: 'Upcoming', requiresRegistration: true, createdBy: 'Pastor James' },
+  { id: 'ev-4', name: 'Youth Fun Day', date: '04/18/2026', startTime: '12:00', endTime: '18:00', location: 'Church Grounds', category: 'Social', description: 'A day of games, music, and fellowship for the youth.', capacity: 150, attendees: 120, status: 'Upcoming', requiresRegistration: false, createdBy: 'Youth Pastor' },
+  { id: 'ev-5', name: 'Midweek Bible Study', date: '04/15/2026', startTime: '18:00', endTime: '20:00', location: 'Room 201', category: 'Service', description: 'Weekly Bible study and prayer meeting.', capacity: 150, attendees: 95, status: 'Ongoing', requiresRegistration: false, createdBy: 'Pastor David' },
+  { id: 'ev-6', name: 'Workers Training Seminar', date: '04/10/2026', startTime: '09:00', endTime: '14:00', location: 'Training Room', category: 'Training', description: 'Training seminar for newly appointed workers.', capacity: 80, attendees: 60, status: 'Completed', requiresRegistration: true, createdBy: 'Admin' },
+  { id: 'ev-7', name: 'Easter Celebration Service', date: '03/29/2026', startTime: '09:00', endTime: '12:00', location: 'Main Auditorium', category: 'Service', description: 'Special Easter Sunday celebration service.', capacity: 1000, attendees: 800, status: 'Completed', requiresRegistration: false, createdBy: 'Pastor David' },
+  { id: 'ev-8', name: 'Church Picnic & Fellowship', date: '03/22/2026', startTime: '11:00', endTime: '17:00', location: 'City Park', category: 'Social', description: 'Annual outdoor fellowship picnic with food and games.', capacity: 300, attendees: 200, status: 'Completed', requiresRegistration: true, createdBy: 'Admin' },
+  { id: 'ev-9', name: 'Marriage Enrichment Seminar', date: '05/10/2026', startTime: '14:00', endTime: '18:00', location: 'Fellowship Hall', category: 'Training', description: 'Seminar for married couples on strengthening their marriage.', capacity: 150, attendees: 0, status: 'Upcoming', requiresRegistration: true, createdBy: 'Pastor David' },
+  { id: 'ev-10', name: 'Community Outreach', date: '05/15/2026', startTime: '08:00', endTime: '16:00', location: 'City Center', category: 'Outreach', description: 'Evangelism and community service outreach.', capacity: 200, attendees: 0, status: 'Upcoming', requiresRegistration: true, createdBy: 'Admin' },
+  { id: 'ev-11', name: 'Choir Anniversary Concert', date: '05/22/2026', startTime: '16:00', endTime: '20:00', location: 'Main Auditorium', category: 'Service', description: 'Special concert celebrating the choir department anniversary.', capacity: 800, attendees: 0, status: 'Upcoming', requiresRegistration: false, createdBy: 'Choir Director' },
+  { id: 'ev-12', name: 'Children\'s Day Celebration', date: '05/28/2026', startTime: '10:00', endTime: '15:00', location: 'Main Auditorium', category: 'Social', description: 'Special program for the children of the church.', capacity: 400, attendees: 0, status: 'Upcoming', requiresRegistration: false, createdBy: 'Children Coordinator' },
 ];
 
 export const profileDetails = {
