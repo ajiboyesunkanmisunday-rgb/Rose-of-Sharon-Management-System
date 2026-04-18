@@ -1,4 +1,4 @@
-import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent } from './types';
+import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent, WorkflowTemplate, ActiveWorkflowCard } from './types';
 
 export const members: Member[] = Array.from({ length: 20 }, (_, i) => ({
   id: `m-${i + 1}`,
@@ -326,6 +326,67 @@ export const calendarEvents: CalendarEvent[] = [
   { id: 'cal-12', name: 'Birthday: John M.', date: '2026-04-16', time: 'All Day', category: 'Birthday', description: 'John Michael birthday.' },
   { id: 'cal-13', name: 'Sunday Service', date: '2026-05-03', time: '9:00 AM', category: 'Service', description: 'Weekly Sunday worship service.', location: 'Main Auditorium' },
   { id: 'cal-14', name: 'Bible Study', date: '2026-05-06', time: '6:30 PM', category: 'Bible Study', description: 'Midweek Bible study session.', location: 'Room 201' },
+];
+
+export const workflowTemplates: WorkflowTemplate[] = [
+  {
+    id: 'wft-1',
+    name: 'Guest Follow-up Workflow',
+    description: 'Automated pipeline for tracking and following up with first-time guests from their initial visit through conversion.',
+    trigger: 'First Timer Registration',
+    steps: [
+      { label: 'First visit registration', order: 1 },
+      { label: 'Call within 48 hours', order: 2 },
+      { label: 'Visit within 1 week', order: 3 },
+      { label: 'Second service invite', order: 4 },
+      { label: 'Convert tracking', order: 5 },
+    ],
+    active: true,
+    createdBy: 'Pastor David',
+    lastModified: '04/10/2026',
+  },
+  {
+    id: 'wft-2',
+    name: 'New Member Onboarding',
+    description: 'Step-by-step onboarding process for new members joining the church, from welcome to full integration.',
+    trigger: 'Member Registration',
+    steps: [
+      { label: 'Welcome message', order: 1 },
+      { label: 'Assign to group', order: 2 },
+      { label: 'Orientation class', order: 3 },
+      { label: 'Mentor assignment', order: 4 },
+    ],
+    active: true,
+    createdBy: 'Deacon Sarah',
+    lastModified: '03/28/2026',
+  },
+  {
+    id: 'wft-3',
+    name: 'Prayer Request Pipeline',
+    description: 'Workflow for managing prayer requests from submission through counselor follow-up and resolution.',
+    trigger: 'Prayer Request Submitted',
+    steps: [
+      { label: 'Receive request', order: 1 },
+      { label: 'Assign counselor', order: 2 },
+      { label: 'Follow-up', order: 3 },
+      { label: 'Mark resolved', order: 4 },
+    ],
+    active: false,
+    createdBy: 'Sister Joy',
+    lastModified: '03/15/2026',
+  },
+];
+
+export const activeWorkflowCards: ActiveWorkflowCard[] = [
+  { id: 'aw-1', memberName: 'John Michael', phone: '08011252365', assignedTo: 'Shola Damson', dateAdded: '04/14/2026', stage: 'First Timers', status: 'On Track', templateId: 'wft-1', currentStepIndex: 0 },
+  { id: 'aw-2', memberName: 'Sarah Bamidele', phone: '09037311234', assignedTo: 'Shola Damson', dateAdded: '04/13/2026', stage: 'First Timers', status: 'On Track', templateId: 'wft-1', currentStepIndex: 0 },
+  { id: 'aw-3', memberName: 'David Okonkwo', phone: '08023456789', assignedTo: 'Pastor James', dateAdded: '04/12/2026', stage: 'First Timers', status: 'Pending', templateId: 'wft-1', currentStepIndex: 0 },
+  { id: 'aw-4', memberName: 'Grace Adeyemi', phone: '08034567890', assignedTo: 'Shola Damson', dateAdded: '04/10/2026', stage: 'Follow-up Call', status: 'On Track', templateId: 'wft-1', currentStepIndex: 1 },
+  { id: 'aw-5', memberName: 'Emmanuel Nwosu', phone: '08045678901', assignedTo: 'Pastor David', dateAdded: '04/08/2026', stage: 'Follow-up Call', status: 'Overdue', templateId: 'wft-1', currentStepIndex: 1 },
+  { id: 'aw-6', memberName: 'Blessing Okoro', phone: '08056789012', assignedTo: 'Deaconess Grace', dateAdded: '04/05/2026', stage: 'Follow-up Visit', status: 'On Track', templateId: 'wft-1', currentStepIndex: 2 },
+  { id: 'aw-7', memberName: 'Peter Adewale', phone: '08067890123', assignedTo: 'Shola Damson', dateAdded: '04/03/2026', stage: 'Follow-up Visit', status: 'Pending', templateId: 'wft-1', currentStepIndex: 2 },
+  { id: 'aw-8', memberName: 'Ruth Balogun', phone: '08078901234', assignedTo: 'Pastor James', dateAdded: '03/28/2026', stage: 'Second Timers', status: 'On Track', templateId: 'wft-1', currentStepIndex: 3 },
+  { id: 'aw-9', memberName: 'Mary Eze', phone: '08089012345', assignedTo: 'Deaconess Grace', dateAdded: '03/20/2026', stage: 'New Converts', status: 'On Track', templateId: 'wft-1', currentStepIndex: 4 },
 ];
 
 export const profileDetails = {
