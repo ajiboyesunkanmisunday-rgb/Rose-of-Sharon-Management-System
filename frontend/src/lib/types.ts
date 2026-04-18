@@ -114,6 +114,38 @@ export interface CommunicationTemplate {
   lastModified: string;
 }
 
+export type CourseStatus = 'Active' | 'Completed' | 'Upcoming';
+
+export interface Course {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  instructor: string;
+  duration: string;
+  startDate?: string;
+  endDate?: string;
+  applications: number;
+  currentStudents: number;
+  pastStudents: number;
+  status: CourseStatus;
+}
+
+export type ScheduleStatus = 'Active' | 'Upcoming' | 'Completed' | 'Cancelled';
+
+export interface TrainingSchedule {
+  id: string;
+  courseId: string;
+  course: string;
+  instructor: string;
+  startDate: string;
+  endDate: string;
+  dayTime: string;
+  venue: string;
+  capacity: number;
+  status: ScheduleStatus;
+}
+
 export interface WorkflowStep {
   label: string;
   order: number;
