@@ -1,30 +1,44 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
+import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
-
-const schedules = [
-  { id: "sch-1", course: "Water Baptism Class", instructor: "Pastor David", startDate: "04/01/2026", endDate: "05/15/2026", dayTime: "Saturdays, 10:00 AM", venue: "Main Hall", status: "Active" },
-  { id: "sch-2", course: "New Believers Foundation", instructor: "Deaconess Grace", startDate: "04/10/2026", endDate: "06/10/2026", dayTime: "Sundays, 2:00 PM", venue: "Room 3", status: "Active" },
-  { id: "sch-3", course: "Leadership Training", instructor: "Pastor James", startDate: "05/01/2026", endDate: "07/30/2026", dayTime: "Wednesdays, 6:00 PM", venue: "Conference Room", status: "Upcoming" },
-  { id: "sch-4", course: "Marriage Counseling", instructor: "Pastor & Mrs. Adeyemi", startDate: "03/01/2026", endDate: "03/30/2026", dayTime: "Fridays, 5:00 PM", venue: "Counseling Room", status: "Completed" },
-  { id: "sch-5", course: "Sunday School Teachers", instructor: "Elder Samuel", startDate: "04/15/2026", endDate: "06/15/2026", dayTime: "Saturdays, 9:00 AM", venue: "Room 2", status: "Active" },
-  { id: "sch-6", course: "Youth Ministry Training", instructor: "Brother Emmanuel", startDate: "05/10/2026", endDate: "07/10/2026", dayTime: "Fridays, 4:00 PM", venue: "Youth Center", status: "Upcoming" },
-];
+import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
+import { trainingSchedules } from "@/lib/mock-data";
+import { ScheduleStatus } from "@/lib/types";
 
 const ITEMS_PER_PAGE = 10;
 
+const statusColor = (status: ScheduleStatus): string => {
+  switch (status) {
+    case "Active":
+      return "bg-green-100 text-green-800";
+    case "Upcoming":
+      return "bg-blue-100 text-blue-800";
+    case "Completed":
+      return "bg-gray-100 text-gray-600";
+    case "Cancelled":
+      return "bg-red-100 text-red-800";
+    default:
+      return "bg-gray-100 text-gray-600";
+  }
+};
+
 export default function TrainingSchedulesPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return schedules;
+    if (!search.trim()) return trainingSchedules;
     const q = search.toLowerCase();
-    return schedules.filter(
+    return trainingSchedules.filter(
       (s) =>
         s.course.toLowerCase().includes(q) ||
         s.instructor.toLowerCase().includes(q) ||
@@ -38,17 +52,15 @@ export default function TrainingSchedulesPage() {
     currentPage * ITEMS_PER_PAGE
   );
 
-  const statusColor = (status: string) => {
-    switch (status) {
-      case "Active":
-        return "bg-green-100 text-green-800";
-      case "Upcoming":
-        return "bg-blue-100 text-blue-800";
-      case "Completed":
-        return "bg-gray-100 text-gray-600";
-      default:
-        return "bg-gray-100 text-gray-600";
-    }
+  const handleCancelClick = (id: string) => {
+    setSelectedId(id);
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancel = () => {
+    console.log("Cancel schedule:", selectedId);
+    setShowCancelModal(false);
+    setSelectedId(null);
   };
 
   return (
@@ -67,6 +79,18 @@ export default function TrainingSchedulesPage() {
             placeholder="Search schedules..."
           />
         </div>
+        <Button
+          variant="primary"
+          onClick={() => router.push("/trainings/schedules/add")}
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          }
+        >
+          Add Schedule
+        </Button>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
@@ -104,8 +128,9 @@ export default function TrainingSchedulesPage() {
                 <td className="px-4 py-3">
                   <ActionDropdown
                     actions={[
-                      { label: "Edit", onClick: () => console.log("Edit", s.id) },
-                      { label: "Cancel", onClick: () => console.log("Cancel", s.id) },
+                      { label: "View", onClick: () => router.push(`/trainings/schedules/${s.id}`) },
+                      { label: "Edit", onClick: () => router.push(`/trainings/schedules/${s.id}/edit`) },
+                      { label: "Cancel", onClick: () => handleCancelClick(s.id) },
                     ]}
                   />
                 </td>
@@ -129,6 +154,13 @@ export default function TrainingSchedulesPage() {
           onPageChange={setCurrentPage}
         />
       </div>
+
+      <DeleteConfirmModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={handleConfirmCancel}
+        message="Are you sure you want to cancel this schedule?"
+      />
     </DashboardLayout>
   );
 }
