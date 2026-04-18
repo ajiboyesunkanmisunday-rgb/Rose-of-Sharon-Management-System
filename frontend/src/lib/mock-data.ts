@@ -1,4 +1,4 @@
-import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent } from './types';
+import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact } from './types';
 
 export const members: Member[] = Array.from({ length: 20 }, (_, i) => ({
   id: `m-${i + 1}`,
@@ -281,6 +281,21 @@ export const allEvents: ChurchEvent[] = [
   { id: 'ev-10', name: 'Community Outreach', date: '05/15/2026', startTime: '08:00', endTime: '16:00', location: 'City Center', category: 'Outreach', description: 'Evangelism and community service outreach.', capacity: 200, attendees: 0, status: 'Upcoming', requiresRegistration: true, createdBy: 'Admin' },
   { id: 'ev-11', name: 'Choir Anniversary Concert', date: '05/22/2026', startTime: '16:00', endTime: '20:00', location: 'Main Auditorium', category: 'Service', description: 'Special concert celebrating the choir department anniversary.', capacity: 800, attendees: 0, status: 'Upcoming', requiresRegistration: false, createdBy: 'Choir Director' },
   { id: 'ev-12', name: 'Children\'s Day Celebration', date: '05/28/2026', startTime: '10:00', endTime: '15:00', location: 'Main Auditorium', category: 'Social', description: 'Special program for the children of the church.', capacity: 400, attendees: 0, status: 'Upcoming', requiresRegistration: false, createdBy: 'Children Coordinator' },
+];
+
+export const directoryContacts: DirectoryContact[] = [
+  { id: 'dir-1', name: 'Pastor James Adewale', role: 'Senior Pastor', group: 'Pastoral', phone: '+234 801 234 5678', email: 'james.adewale@church.org', address: '15 Allen Avenue, Ikeja, Lagos', department: 'Pastoral', joinedDate: '01/15/2015' },
+  { id: 'dir-2', name: 'Grace Nwosu', role: 'Associate Pastor', group: 'Pastoral', phone: '+234 802 345 6789', email: 'grace.nwosu@church.org', address: '22 Adeniyi Jones, Ikeja', department: 'Pastoral', joinedDate: '03/10/2017' },
+  { id: 'dir-3', name: 'Emmanuel Okafor', role: 'Deacon', group: 'Deacons', phone: '+234 803 456 7890', email: 'emmanuel.okafor@church.org', address: '45 Opebi Road, Ikeja', department: 'Deacons', joinedDate: '06/20/2018' },
+  { id: 'dir-4', name: 'Sarah Bamidele', role: 'Choir Director', group: 'Music', phone: '+234 804 567 8901', email: 'sarah.bamidele@church.org', address: '8 Toyin Street, Ikeja', department: 'Music', joinedDate: '08/01/2019' },
+  { id: 'dir-5', name: 'David Okonkwo', role: 'Youth Leader', group: 'Youth', phone: '+234 805 678 9012', email: 'david.okonkwo@church.org', address: '12 Awolowo Road, Ikoyi', department: 'Youth', joinedDate: '02/14/2020' },
+  { id: 'dir-6', name: 'Blessing Okoro', role: "Children's Teacher", group: 'Children', phone: '+234 806 789 0123', email: 'blessing.okoro@church.org', address: '3 Marina Street, Lagos Island', department: 'Children', joinedDate: '09/05/2020' },
+  { id: 'dir-7', name: 'John Michael', role: 'Usher Coordinator', group: 'Ushering', phone: '+234 807 890 1234', email: 'john.michael@church.org', address: '123 Salami Street, Ikotun, Lagos', department: 'Ushering', joinedDate: '01/12/2021' },
+  { id: 'dir-8', name: 'Ruth Balogun', role: "Women's Leader", group: 'Women', phone: '+234 808 901 2345', email: 'ruth.balogun@church.org', address: '7 Queen Street, Ikeja', department: 'Women', joinedDate: '04/18/2021' },
+  { id: 'dir-9', name: 'Peter Adewale', role: "Men's Leader", group: 'Men', phone: '+234 809 012 3456', email: 'peter.adewale@church.org', address: '20 Ogunlana Drive, Surulere', department: 'Men', joinedDate: '07/22/2021' },
+  { id: 'dir-10', name: 'Mary Eze', role: 'Media Coordinator', group: 'Media', phone: '+234 810 123 4567', email: 'mary.eze@church.org', address: '14 Olayinka Street, Yaba', department: 'Media', joinedDate: '11/03/2021' },
+  { id: 'dir-11', name: 'Samuel Chukwu', role: 'Technical Director', group: 'Media', phone: '+234 811 234 5678', email: 'samuel.chukwu@church.org', address: '9 Adeola Hopewell, Victoria Island', department: 'Media', joinedDate: '02/09/2022' },
+  { id: 'dir-12', name: 'Esther Obi', role: 'Welfare Secretary', group: 'Welfare', phone: '+234 812 345 6789', email: 'esther.obi@church.org', address: '28 Aguiyi Ironsi, Maitama', department: 'Welfare', joinedDate: '05/15/2022' },
 ];
 
 export const profileDetails = {

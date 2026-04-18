@@ -114,6 +114,18 @@ export interface CommunicationTemplate {
   lastModified: string;
 }
 
+export interface DirectoryContact {
+  id: string;
+  name: string;
+  role: string;
+  group: string;
+  phone: string;
+  email: string;
+  address?: string;
+  department?: string;
+  joinedDate?: string;
+}
+
 export type EventStatus = 'Upcoming' | 'Ongoing' | 'Completed' | 'Cancelled';
 export type EventCategory = 'Service' | 'Conference' | 'Training' | 'Social' | 'Wedding' | 'Funeral' | 'Outreach';
 
