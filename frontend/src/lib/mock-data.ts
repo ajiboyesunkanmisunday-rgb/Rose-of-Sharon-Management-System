@@ -1,4 +1,4 @@
-import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate } from './types';
+import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement } from './types';
 
 export const members: Member[] = Array.from({ length: 20 }, (_, i) => ({
   id: `m-${i + 1}`,
@@ -183,6 +183,89 @@ export const communicationTemplates: CommunicationTemplate[] = [
   { id: 'tpl-4', name: 'Event Invitation', type: 'Email', subject: 'You are Invited!', content: 'Dear {name}, you are cordially invited to {event} on {date}...', createdBy: 'Admin', lastModified: '03/20/2026' },
   { id: 'tpl-5', name: 'Follow-up Message', type: 'SMS', content: 'Hi {name}, we hope you enjoyed the service. We would love to see you again!', createdBy: 'Admin', lastModified: '03/25/2026' },
   { id: 'tpl-6', name: 'Prayer Request Acknowledgment', type: 'Email', subject: 'Prayer Request Received', content: 'Dear {name}, we have received your prayer request and our team is praying for you.', createdBy: 'Admin', lastModified: '03/28/2026' },
+];
+
+export const allAnnouncements: Announcement[] = [
+  {
+    id: 'ann-1',
+    title: 'Sunday Service Change',
+    body: 'Please be informed that this Sunday\'s service will start at 10:00 AM instead of the usual 9:00 AM. We look forward to worshipping with you.',
+    audience: 'All Members',
+    scheduledDate: '04/25/2026',
+    status: 'Scheduled',
+    createdBy: 'Pastor David',
+    createdDate: '04/15/2026',
+  },
+  {
+    id: 'ann-2',
+    title: 'Choir Rehearsal Reminder',
+    body: 'Choir members are reminded of the special rehearsal on Saturday at 4:00 PM ahead of the upcoming anniversary service.',
+    audience: 'Choir',
+    scheduledDate: '04/20/2026',
+    status: 'Published',
+    createdBy: 'Admin',
+    createdDate: '04/14/2026',
+  },
+  {
+    id: 'ann-3',
+    title: 'Workers Meeting',
+    body: 'All church workers are invited to the monthly workers meeting on Friday at 6:00 PM in the main hall.',
+    audience: 'Workers',
+    scheduledDate: '04/19/2026',
+    status: 'Published',
+    createdBy: 'Pastor David',
+    createdDate: '04/13/2026',
+  },
+  {
+    id: 'ann-4',
+    title: 'Youth Conference Registration',
+    body: 'Registration for the annual youth conference is now open. Visit the youth desk or register online before May 1st.',
+    audience: 'Youth',
+    scheduledDate: '04/30/2026',
+    status: 'Scheduled',
+    createdBy: 'Youth Pastor',
+    createdDate: '04/12/2026',
+  },
+  {
+    id: 'ann-5',
+    title: 'Children\'s Day Preparations',
+    body: 'Parents, please ensure your children wear white on Children\'s Day. A special program has been prepared.',
+    audience: 'Children',
+    scheduledDate: '05/01/2026',
+    status: 'Draft',
+    createdBy: 'Children Coordinator',
+    createdDate: '04/10/2026',
+  },
+  {
+    id: 'ann-6',
+    title: 'Ushering Schedule Update',
+    body: 'The new ushering roster has been published. Please check the notice board or contact your team lead.',
+    audience: 'Ushering',
+    scheduledDate: '04/18/2026',
+    status: 'Published',
+    createdBy: 'Head Usher',
+    createdDate: '04/11/2026',
+  },
+  {
+    id: 'ann-7',
+    title: 'Thanksgiving Service',
+    body: 'Join us for our monthly thanksgiving service on the last Sunday of this month. Come with a grateful heart.',
+    audience: 'All Members',
+    scheduledDate: '04/27/2026',
+    status: 'Scheduled',
+    createdBy: 'Pastor David',
+    createdDate: '04/09/2026',
+  },
+  {
+    id: 'ann-8',
+    title: 'Mid-Year Evaluation',
+    body: 'All department heads are to submit their mid-year evaluation reports by the end of next week.',
+    audience: 'Workers',
+    scheduledDate: '05/03/2026',
+    status: 'Draft',
+    createdBy: 'Admin',
+    createdDate: '04/08/2026',
+  },
 ];
 
 export const profileDetails = {

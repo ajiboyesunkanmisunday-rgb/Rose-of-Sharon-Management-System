@@ -114,6 +114,27 @@ export interface CommunicationTemplate {
   lastModified: string;
 }
 
+export type AnnouncementAudience =
+  | 'All Members'
+  | 'Workers'
+  | 'Choir'
+  | 'Ushering'
+  | 'Youth'
+  | 'Children';
+
+export type AnnouncementStatus = 'Scheduled' | 'Published' | 'Draft';
+
+export interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  audience: AnnouncementAudience;
+  scheduledDate: string;
+  status: AnnouncementStatus;
+  createdBy: string;
+  createdDate: string;
+}
+
 export interface NavItem {
   label: string;
   icon: string;
