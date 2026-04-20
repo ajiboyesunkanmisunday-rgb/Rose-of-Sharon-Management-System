@@ -1,50 +1,89 @@
-import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent, WorkflowTemplate, ActiveWorkflowCard, Course, TrainingSchedule, Celebration, Role, Group, PermissionMatrix } from './types';
+import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent, WorkflowTemplate, ActiveWorkflowCard, Course, TrainingSchedule, Celebration, Role, Group, PermissionMatrix, FollowUpOfficer, BelieversClass } from './types';
+
+export const followUpOfficers: FollowUpOfficer[] = [
+  { id: 'fo-1', name: 'Shola Damson', department: 'Follow-up', phone: '+234 801 111 2222', email: 'shola@church.org' },
+  { id: 'fo-2', name: 'Aisha Bello', department: 'Follow-up', phone: '+234 802 222 3333', email: 'aisha@church.org' },
+  { id: 'fo-3', name: 'David Okoro', department: 'Pastoral Care', phone: '+234 803 333 4444', email: 'david@church.org' },
+  { id: 'fo-4', name: 'Grace Adeyemi', department: 'Follow-up', phone: '+234 804 444 5555', email: 'grace@church.org' },
+  { id: 'fo-5', name: 'Samuel Eze', department: 'Pastoral Care', phone: '+234 805 555 6666', email: 'samuel@church.org' },
+  { id: 'fo-6', name: 'Ruth Balogun', department: "Women's Team", phone: '+234 806 666 7777', email: 'ruth@church.org' },
+];
 
 export const members: Member[] = Array.from({ length: 20 }, (_, i) => ({
   id: `m-${i + 1}`,
   firstName: i % 2 === 0 ? 'John' : 'Sarah',
+  middleName: i % 3 === 0 ? 'Olu' : undefined,
   lastName: i % 2 === 0 ? 'Michael' : 'Bamidele',
   email: i % 2 === 0 ? 'john123@gmail.com' : 'sarah345@gmail.com',
+  countryCode: '+234',
   phone: i % 2 === 0 ? '08011252365' : '09037311234',
+  maritalStatus: i % 3 === 0 ? 'Married' : 'Single',
+  spouse: i % 3 === 0 ? { name: 'Mary Adebayo', weddingDate: '2020-06-15' } : undefined,
   status: 'active',
 }));
 
 export const eMembers: EMember[] = Array.from({ length: 20 }, (_, i) => ({
   id: `em-${i + 1}`,
   firstName: i % 2 === 0 ? 'John' : 'Sarah',
+  middleName: i % 3 === 0 ? 'Kay' : undefined,
   lastName: i % 2 === 0 ? 'Michael' : 'Bamidele',
   country: 'Ghana',
+  countryCode: '+233',
   phone: i % 2 === 0 ? '08011252365' : '09037311234',
   email: i % 2 === 0 ? 'john123@gmail.com' : 'sarah345@gmail.com',
+  dateOfBirth: '1990-05-12',
+  maritalStatus: i % 2 === 0 ? 'Single' : 'Married',
+  serviceAttended: 'Sunday',
+  spouse: i % 2 === 0 ? undefined : { name: 'Peter Bamidele', weddingDate: '2018-11-20' },
 }));
 
 export const firstTimers: FirstTimer[] = Array.from({ length: 20 }, (_, i) => ({
   id: `ft-${i + 1}`,
-  name: 'John Michael',
+  firstName: i % 2 === 0 ? 'John' : 'Sarah',
+  lastName: i % 2 === 0 ? 'Michael' : 'Bamidele',
+  gender: i % 2 === 0 ? 'Male' : 'Female',
+  name: i % 2 === 0 ? 'John Michael' : 'Sarah Bamidele',
+  countryCode: '+234',
   phone: i % 2 === 0 ? '08011252365' : '09037311234',
   email: i % 2 === 0 ? 'john123@gmail.com' : 'jonn123@gmail.com',
   serviceAttended: 'Sunday Service',
   assignedFollowUp: 'Shola Damson',
+  followUpOfficerId: 'fo-1',
   date: '01/03/2026',
   calls: 2,
   visits: 1,
+  maritalStatus: 'Single',
+  worshippedOnlineBefore: false,
 }));
 
 export const secondTimers: SecondTimer[] = Array.from({ length: 20 }, (_, i) => ({
   id: `st-${i + 1}`,
-  name: 'John Michael',
+  firstName: i % 2 === 0 ? 'John' : 'Sarah',
+  lastName: i % 2 === 0 ? 'Michael' : 'Bamidele',
+  gender: i % 2 === 0 ? 'Male' : 'Female',
+  name: i % 2 === 0 ? 'John Michael' : 'Sarah Bamidele',
+  countryCode: '+234',
   phone: i % 2 === 0 ? '08011252365' : '09037311234',
   email: i % 2 === 0 ? 'john123@gmail.com' : 'jonn123@gmail.com',
   serviceAttended: 'Sunday Service',
   assignedFollowUp: 'Shola Damson',
+  followUpOfficerId: 'fo-2',
   date: '01/03/2026',
   calls: 2,
   visits: 1,
+  maritalStatus: 'Single',
+  worshippedOnlineBefore: true,
 }));
+
+const _bcClasses: BelieversClass[] = ['Not started', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5'];
 
 export const newConverts: NewConvert[] = Array.from({ length: 20 }, (_, i) => ({
   id: `nc-${i + 1}`,
-  name: 'John Michael',
+  firstName: i % 2 === 0 ? 'John' : 'Sarah',
+  lastName: i % 2 === 0 ? 'Michael' : 'Bamidele',
+  gender: i % 2 === 0 ? 'Male' : 'Female',
+  name: i % 2 === 0 ? 'John Michael' : 'Sarah Bamidele',
+  countryCode: '+234',
   phone: i % 2 === 0 ? '08011252365' : '09037311234',
   email: i % 2 === 0 ? 'john123@gmail.com' : 'jonn123@gmail.com',
   serviceAttended: 'Sunday Service',
@@ -52,6 +91,12 @@ export const newConverts: NewConvert[] = Array.from({ length: 20 }, (_, i) => ({
   date: '01/03/2026',
   calls: 2,
   visits: 1,
+  believersClass: _bcClasses[i % _bcClasses.length],
+  classAttendance: Array.from({ length: 5 }, (_, j) => j < (i % 6)),
+  addressStreet: '123 Sample Street',
+  addressCity: 'Lagos',
+  addressState: 'Lagos',
+  addressCountry: 'Nigeria',
 }));
 
 export const sampleReports: Report[] = [

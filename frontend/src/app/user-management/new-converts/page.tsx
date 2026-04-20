@@ -9,6 +9,8 @@ import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
 import AddNotesModal from "@/components/user-management/AddNotesModal";
+import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
+import MarkAttendanceModal from "@/components/user-management/MarkAttendanceModal";
 import Modal from "@/components/ui/Modal";
 import { newConverts } from "@/lib/mock-data";
 
@@ -24,6 +26,8 @@ export default function NewConvertsPage() {
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [showCallReportModal, setShowCallReportModal] = useState(false);
   const [showVisitReportModal, setShowVisitReportModal] = useState(false);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [callReport, setCallReport] = useState("");
   const [visitReport, setVisitReport] = useState("");
   const [selectedConvertId, setSelectedConvertId] = useState<string | null>(null);
@@ -43,6 +47,11 @@ export default function NewConvertsPage() {
   const paginatedConverts = filteredConverts.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
+  );
+
+  const selectedConvert = useMemo(
+    () => newConverts.find((nc) => nc.id === selectedConvertId) || null,
+    [selectedConvertId]
   );
 
   const handleSearch = () => {
@@ -89,6 +98,18 @@ export default function NewConvertsPage() {
     setSelectedConvertId(null);
   };
 
+  const handleBulkDeleteConfirm = () => {
+    console.log("Bulk delete new converts:", Array.from(selectedRows));
+    setSelectedRows(new Set());
+    setShowBulkDeleteModal(false);
+  };
+
+  const handleSaveAttendance = (attended: boolean[]) => {
+    console.log("Save attendance for:", selectedConvertId, attended);
+    setShowAttendanceModal(false);
+    setSelectedConvertId(null);
+  };
+
   const bulkActions = [
     {
       label: "Send SMS",
@@ -100,7 +121,7 @@ export default function NewConvertsPage() {
     },
     {
       label: "Delete",
-      onClick: () => console.log("Delete selected:", Array.from(selectedRows)),
+      onClick: () => setShowBulkDeleteModal(true),
     },
   ];
 
@@ -211,11 +232,9 @@ export default function NewConvertsPage() {
                 Service Attended
               </th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">
-                Assigned Follow-up
+                Believers Class
               </th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Calls</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Visits</th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
@@ -241,11 +260,9 @@ export default function NewConvertsPage() {
                   {nc.serviceAttended}
                 </td>
                 <td className="px-4 py-3 text-sm text-[#374151]">
-                  {nc.assignedFollowUp}
+                  {nc.believersClass}
                 </td>
                 <td className="px-4 py-3 text-sm text-[#374151]">{nc.date}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{nc.calls}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{nc.visits}</td>
                 <td className="px-4 py-3">
                   <ActionDropdown
                     actions={[
@@ -275,6 +292,13 @@ export default function NewConvertsPage() {
                           setShowVisitReportModal(true);
                         },
                       },
+                      {
+                        label: "Mark Class Attendance",
+                        onClick: () => {
+                          setSelectedConvertId(nc.id);
+                          setShowAttendanceModal(true);
+                        },
+                      },
                     ]}
                   />
                 </td>
@@ -283,7 +307,7 @@ export default function NewConvertsPage() {
             {paginatedConverts.length === 0 && (
               <tr>
                 <td
-                  colSpan={10}
+                  colSpan={8}
                   className="px-4 py-8 text-center text-gray-400"
                 >
                   No new converts found.
@@ -364,6 +388,25 @@ export default function NewConvertsPage() {
           </button>
         </div>
       </Modal>
+
+      <DeleteConfirmModal
+        isOpen={showBulkDeleteModal}
+        onClose={() => setShowBulkDeleteModal(false)}
+        onConfirm={handleBulkDeleteConfirm}
+        message={`Are you sure you want to delete ${selectedRows.size} selected new convert${selectedRows.size === 1 ? "" : "s"}?`}
+      />
+
+      <MarkAttendanceModal
+        isOpen={showAttendanceModal}
+        onClose={() => {
+          setShowAttendanceModal(false);
+          setSelectedConvertId(null);
+        }}
+        onSave={handleSaveAttendance}
+        memberName={selectedConvert?.name || ""}
+        initial={selectedConvert?.classAttendance}
+        classCount={5}
+      />
     </DashboardLayout>
   );
 }

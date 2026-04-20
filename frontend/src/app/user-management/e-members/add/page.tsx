@@ -4,69 +4,47 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
-
-const COUNTRIES = [
-  "Ghana",
-  "Nigeria",
-  "Kenya",
-  "Uganda",
-  "South Africa",
-  "Egypt",
-  "Tanzania",
-  "Ethiopia",
-  "Rwanda",
-  "Cameroon",
-  "Morocco",
-  "Algeria",
-  "Sudan",
-  "Angola",
-  "Mali",
-  "Burkina Faso",
-  "Côte d'Ivoire",
-  "Senegal",
-  "Liberia",
-  "Sierra Leone",
-  "Guinea",
-  "Benin",
-  "Togo",
-  "Niger",
-  "Chad",
-  "Zambia",
-  "Zimbabwe",
-  "Malawi",
-  "Mozambique",
-  "Botswana",
-  "Lesotho",
-  "Eswatini",
-  "Mauritius",
-  "Madagascar",
-  "Seychelles",
-  "Comoros",
-];
+import PhoneInput from "@/components/ui/PhoneInput";
+import PhotoUpload from "@/components/ui/PhotoUpload";
+import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
+import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
 
 export default function AddEMemberPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    country: "Ghana",
-    phone: "",
-    email: "",
-  });
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [countryCode, setCountryCode] = useState("+234");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [maritalStatus, setMaritalStatus] = useState("");
+  const [serviceAttended, setServiceAttended] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [spouse, setSpouse] = useState<SpouseData | null>(null);
+  const [showSpouseModal, setShowSpouseModal] = useState(false);
+
+  const inputStyles =
+    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  const selectStyles = inputStyles;
+  const labelStyles = "mb-1 block text-sm font-medium text-[#374151]";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Add E-Member:", formData);
+    console.log("Add E-Member:", {
+      firstName,
+      middleName,
+      lastName,
+      countryCode,
+      phone,
+      email,
+      dateOfBirth,
+      maritalStatus,
+      serviceAttended,
+      photo,
+      spouse,
+    });
     router.push("/user-management/e-members");
   };
 
@@ -106,90 +84,130 @@ export default function AddEMemberPage() {
       {/* Form Container */}
       <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
         <form onSubmit={handleSubmit}>
-          {/* Form Grid */}
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
             {/* First Name */}
             <div>
-              <label className="block text-xs font-medium text-[#6B7280]">
-                First Name
-              </label>
+              <label className={labelStyles}>First Name</label>
               <input
                 type="text"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleInputChange}
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
                 placeholder="Enter first name"
-                className="mt-2 w-full rounded-xl border border-[#E5E7EB] px-4 py-2.5 text-sm focus:border-[#000080] focus:outline-none focus:ring-1 focus:ring-[#000080]"
+                className={inputStyles}
                 required
+              />
+            </div>
+
+            {/* Middle Name */}
+            <div>
+              <label className={labelStyles}>Middle Name</label>
+              <input
+                type="text"
+                value={middleName}
+                onChange={(e) => setMiddleName(e.target.value)}
+                placeholder="Enter middle name (optional)"
+                className={inputStyles}
               />
             </div>
 
             {/* Last Name */}
             <div>
-              <label className="block text-xs font-medium text-[#6B7280]">
-                Last Name
-              </label>
+              <label className={labelStyles}>Last Name</label>
               <input
                 type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleInputChange}
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
                 placeholder="Enter last name"
-                className="mt-2 w-full rounded-xl border border-[#E5E7EB] px-4 py-2.5 text-sm focus:border-[#000080] focus:outline-none focus:ring-1 focus:ring-[#000080]"
+                className={inputStyles}
                 required
               />
-            </div>
-
-            {/* Country */}
-            <div>
-              <label className="block text-xs font-medium text-[#6B7280]">
-                Country
-              </label>
-              <select
-                name="country"
-                value={formData.country}
-                onChange={handleInputChange}
-                className="mt-2 w-full rounded-xl border border-[#E5E7EB] px-4 py-2.5 text-sm focus:border-[#000080] focus:outline-none focus:ring-1 focus:ring-[#000080]"
-              >
-                {COUNTRIES.map((country) => (
-                  <option key={country} value={country}>
-                    {country}
-                  </option>
-                ))}
-              </select>
             </div>
 
             {/* Phone */}
+            <PhoneInput
+              label="Phone Number"
+              code={countryCode}
+              number={phone}
+              onCodeChange={setCountryCode}
+              onNumberChange={setPhone}
+              placeholder="Enter phone number"
+              required
+            />
+
+            {/* Email */}
             <div>
-              <label className="block text-xs font-medium text-[#6B7280]">
-                Phone Number
-              </label>
+              <label className={labelStyles}>Email</label>
               <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                placeholder="Enter phone number"
-                className="mt-2 w-full rounded-xl border border-[#E5E7EB] px-4 py-2.5 text-sm focus:border-[#000080] focus:outline-none focus:ring-1 focus:ring-[#000080]"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter email address"
+                className={inputStyles}
                 required
               />
             </div>
 
-            {/* Email */}
+            {/* Date of Birth */}
             <div>
-              <label className="block text-xs font-medium text-[#6B7280]">
-                Email
-              </label>
+              <label className={labelStyles}>Date of Birth</label>
               <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="Enter email address"
-                className="mt-2 w-full rounded-xl border border-[#E5E7EB] px-4 py-2.5 text-sm focus:border-[#000080] focus:outline-none focus:ring-1 focus:ring-[#000080]"
-                required
+                type="date"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                className={inputStyles}
               />
             </div>
+
+            {/* Marital Status */}
+            <div>
+              <label className={labelStyles}>Marital Status</label>
+              <select
+                value={maritalStatus}
+                onChange={(e) => setMaritalStatus(e.target.value)}
+                className={selectStyles}
+              >
+                <option value="">Select Marital Status</option>
+                <option value="Single">Single</option>
+                <option value="Married">Married</option>
+                <option value="Widowed">Widowed</option>
+                <option value="Divorced">Divorced</option>
+              </select>
+              {maritalStatus === "Married" && (
+                <button
+                  type="button"
+                  onClick={() => setShowSpouseModal(true)}
+                  className="mt-2 text-xs font-medium text-[#000080] underline hover:text-[#000066]"
+                >
+                  {spouse ? `Spouse: ${spouse.name} (change)` : "+ Link Spouse"}
+                </button>
+              )}
+            </div>
+
+            {/* Service Attended */}
+            <div>
+              <label className={labelStyles}>Service Attended</label>
+              <select
+                value={serviceAttended}
+                onChange={(e) => setServiceAttended(e.target.value)}
+                className={selectStyles}
+              >
+                <option value="">Select Service</option>
+                <option value="Sunday">Sunday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Friday">Friday</option>
+                <option value="Special Service">Special Service</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Photo Upload */}
+          <div className="mt-6">
+            <PhotoUpload
+              label="Profile Photo"
+              value={photo}
+              onChange={setPhoto}
+              previewSize="md"
+            />
           </div>
 
           {/* Buttons */}
@@ -206,6 +224,13 @@ export default function AddEMemberPage() {
           </div>
         </form>
       </div>
+
+      <SpouseLinkModal
+        isOpen={showSpouseModal}
+        onClose={() => setShowSpouseModal(false)}
+        onSave={(data) => setSpouse(data)}
+        initial={spouse || undefined}
+      />
     </DashboardLayout>
   );
 }
