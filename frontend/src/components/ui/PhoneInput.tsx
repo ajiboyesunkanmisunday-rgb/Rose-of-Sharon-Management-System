@@ -36,6 +36,11 @@ interface PhoneInputProps {
   className?: string;
 }
 
+// Styling WITHOUT a width class — width applied separately on each element
+// to avoid w-full / w-24 conflict where Tailwind's CSS ordering picks the wrong one.
+const sharedStyles =
+  "rounded-lg border border-[#E5E7EB] px-3 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+
 export default function PhoneInput({
   label,
   required,
@@ -48,22 +53,20 @@ export default function PhoneInput({
   placeholder = "Enter phone number",
   className = "",
 }: PhoneInputProps) {
-  const inputBase =
-    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
-
   return (
     <div className={className}>
       <label className="mb-1 block text-sm font-medium text-[#374151]">
         {label}
         {required && <span className="text-red-500"> *</span>}
       </label>
-      <div className="flex gap-2">
+      <div className="flex items-stretch gap-2">
         <select
           name={codeName}
           value={code}
           onChange={(e) => onCodeChange(e.target.value)}
-          className={`${inputBase} w-24 shrink-0 bg-white px-2`}
           aria-label="Country code"
+          style={{ width: "96px" }}
+          className={`${sharedStyles} shrink-0 grow-0 bg-white`}
         >
           {COUNTRY_CODES.map((c) => (
             <option key={c.code} value={c.code}>
@@ -77,8 +80,8 @@ export default function PhoneInput({
           value={number}
           onChange={(e) => onNumberChange(e.target.value)}
           placeholder={placeholder}
-          className={inputBase}
           required={required}
+          className={`${sharedStyles} min-w-0 flex-1 grow`}
         />
       </div>
     </div>
