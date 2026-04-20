@@ -18,6 +18,7 @@ import {
   CalendarDays,
   GitFork,
   BellRing,
+  Heart,
   Settings,
   LogOut,
   ChevronRight,
@@ -59,6 +60,7 @@ const navItems: NavItem[] = [
     children: [
       { label: "Messages", href: "/communication/messages" },
       { label: "Announcements", href: "/communication/announcements" },
+      { label: "Templates", href: "/communication/templates" },
     ],
   },
   {
@@ -67,12 +69,21 @@ const navItems: NavItem[] = [
     children: [
       { label: "Active Workflows", href: "/workflows/active" },
       { label: "Templates", href: "/workflows/templates" },
+      { label: "Guest Workflow", href: "/workflows/guest" },
+      { label: "Prayer Request Workflow", href: "/workflows/prayer" },
+      { label: "Counseling Workflow", href: "/workflows/counseling" },
+      { label: "Celebration Request Workflow", href: "/workflows/celebration" },
     ],
   },
   {
     label: "Requests",
     icon: UserRoundPlus,
     href: "/requests",
+  },
+  {
+    label: "Testimonies",
+    icon: Heart,
+    href: "/testimonies",
   },
   {
     label: "Celebrations",
@@ -127,6 +138,8 @@ const navItems: NavItem[] = [
       { label: "General", href: "/settings/general" },
       { label: "Roles & Permissions", href: "/settings/roles" },
       { label: "Groups", href: "/settings/groups" },
+      { label: "Change Password", href: "/settings/change-password" },
+      { label: "Activity Logs", href: "/settings/activity-logs" },
     ],
   },
 ];

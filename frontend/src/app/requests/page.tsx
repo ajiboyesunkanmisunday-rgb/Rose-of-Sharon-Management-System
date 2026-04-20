@@ -16,8 +16,7 @@ type CategoryFilter =
   | "Prayer"
   | "Counseling"
   | "Complaint"
-  | "Suggestion"
-  | "Testimony";
+  | "Suggestion";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -27,7 +26,6 @@ const categoryTabs: { key: CategoryFilter; label: string }[] = [
   { key: "Counseling", label: "Counseling" },
   { key: "Complaint", label: "Complaints" },
   { key: "Suggestion", label: "Suggestions" },
-  { key: "Testimony", label: "Testimonies" },
 ];
 
 const categoryBadgeColors: Record<string, string> = {
@@ -35,8 +33,6 @@ const categoryBadgeColors: Record<string, string> = {
   Counseling: "bg-[#000080] text-white",
   Complaint: "bg-[#DC2626] text-white",
   Suggestion: "bg-[#CA8A04] text-white",
-  Celebration: "bg-[#7C3AED] text-white",
-  Testimony: "bg-[#7C3AED] text-white",
 };
 
 const statusBadgeColors: Record<string, string> = {
@@ -62,15 +58,7 @@ export default function RequestsPage() {
 
     // Category filter
     if (activeCategory !== "All") {
-      if (activeCategory === "Testimony") {
-        filtered = filtered.filter(
-          (r) =>
-            r.category === "Celebration" ||
-            r.title.toLowerCase().includes("testimony")
-        );
-      } else {
-        filtered = filtered.filter((r) => r.category === activeCategory);
-      }
+      filtered = filtered.filter((r) => r.category === activeCategory);
     }
 
     // Search filter
