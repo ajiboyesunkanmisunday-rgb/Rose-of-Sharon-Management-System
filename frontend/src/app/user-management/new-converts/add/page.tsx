@@ -114,19 +114,6 @@ export default function AddNewConvertPage() {
                 required
               />
             </div>
-            <div>
-              <label className={labelStyles}>Gender</label>
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className={selectStyles}
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-              </select>
-            </div>
-
             <PhoneInput
               label="Phone Number"
               code={countryCode}
@@ -145,6 +132,19 @@ export default function AddNewConvertPage() {
                 placeholder="Enter Email"
                 className={inputStyles}
               />
+            </div>
+
+            <div>
+              <label className={labelStyles}>Gender</label>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className={selectStyles}
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
             </div>
 
             <div>
