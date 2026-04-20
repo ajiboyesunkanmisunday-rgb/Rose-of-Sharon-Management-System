@@ -1,51 +1,105 @@
+export type ServiceType = 'Sunday' | 'Wednesday' | 'Friday' | 'Special Service';
+
+export interface SpouseLink {
+  memberId?: string;
+  name: string;
+  weddingDate: string;
+  anniversaryPhoto?: string;
+}
+
+export interface FollowUpOfficer {
+  id: string;
+  name: string;
+  department: string;
+  phone: string;
+  email: string;
+}
+
 export interface Member {
   id: string;
   firstName: string;
+  middleName?: string;
   lastName: string;
   email: string;
+  countryCode?: string;
   phone: string;
   avatar?: string;
   department?: string;
+  maritalStatus?: string;
+  spouse?: SpouseLink;
   status?: 'active' | 'inactive';
 }
 
 export interface EMember {
   id: string;
   firstName: string;
+  middleName?: string;
   lastName: string;
   country: string;
+  countryCode?: string;
   phone: string;
   email: string;
   avatar?: string;
+  dateOfBirth?: string;
+  maritalStatus?: string;
+  serviceAttended?: ServiceType;
+  spouse?: SpouseLink;
 }
 
 export interface FirstTimer {
   id: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  gender?: string;
   name: string;
+  countryCode?: string;
   phone: string;
   email: string;
   serviceAttended: string;
   assignedFollowUp: string;
+  followUpOfficerId?: string;
   date: string;
   calls: number;
   visits: number;
+  avatar?: string;
+  maritalStatus?: string;
+  spouse?: SpouseLink;
+  worshippedOnlineBefore?: boolean;
 }
 
 export interface SecondTimer {
   id: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  gender?: string;
   name: string;
+  countryCode?: string;
   phone: string;
   email: string;
   serviceAttended: string;
   assignedFollowUp: string;
+  followUpOfficerId?: string;
   date: string;
   calls: number;
   visits: number;
+  avatar?: string;
+  maritalStatus?: string;
+  spouse?: SpouseLink;
+  worshippedOnlineBefore?: boolean;
 }
+
+export type BelieversClass = 'Class 1' | 'Class 2' | 'Class 3' | 'Class 4' | 'Class 5' | 'Not started';
 
 export interface NewConvert {
   id: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  gender?: string;
   name: string;
+  countryCode?: string;
   phone: string;
   email: string;
   serviceAttended: string;
@@ -53,6 +107,12 @@ export interface NewConvert {
   date: string;
   calls: number;
   visits: number;
+  believersClass?: BelieversClass;
+  classAttendance?: boolean[];
+  addressStreet?: string;
+  addressCity?: string;
+  addressState?: string;
+  addressCountry?: string;
 }
 
 export interface ProfileDetails {

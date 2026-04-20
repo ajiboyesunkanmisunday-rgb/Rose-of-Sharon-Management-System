@@ -4,15 +4,22 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
+import PhoneInput from "@/components/ui/PhoneInput";
+import PhotoUpload from "@/components/ui/PhotoUpload";
+import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
+import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
 
 export default function AddSecondTimerPage() {
   const router = useRouter();
 
-  const [title, setTitle] = useState("Mr");
   const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [gender, setGender] = useState("");
   const [email, setEmail] = useState("");
-  const [mobileNumber, setMobileNumber] = useState("");
+  const [countryCode, setCountryCode] = useState("+234");
+  const [phone, setPhone] = useState("");
+  const [whatsappCode, setWhatsappCode] = useState("+234");
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [dobDay, setDobDay] = useState("");
   const [dobMonth, setDobMonth] = useState("");
@@ -22,18 +29,45 @@ export default function AddSecondTimerPage() {
   const [state, setState] = useState("");
   const [country, setCountry] = useState("");
   const [maritalStatus, setMaritalStatus] = useState("");
-  const [ageGroup, setAgeGroup] = useState("");
   const [socialMedia, setSocialMedia] = useState("");
-  const [socialMediaHandle, setSocialMediaHandle] = useState("");
   const [occupation, setOccupation] = useState("");
+  const [serviceAttended, setServiceAttended] = useState("");
   const [howDidYouHear, setHowDidYouHear] = useState("");
   const [howWasService, setHowWasService] = useState("");
   const [favouriteParts, setFavouriteParts] = useState("");
-  const [worshippedOnline, setWorshippedOnline] = useState("");
+  const [worshippedOnline, setWorshippedOnline] = useState(false);
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [spouse, setSpouse] = useState<SpouseData | null>(null);
+  const [showSpouseModal, setShowSpouseModal] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submit second timer form");
+    console.log("Submit second timer form", {
+      firstName,
+      middleName,
+      lastName,
+      gender,
+      email,
+      countryCode,
+      phone,
+      whatsappCode,
+      whatsappNumber,
+      dob: `${dobDay}/${dobMonth}/${dobYear}`,
+      street,
+      city,
+      state,
+      country,
+      maritalStatus,
+      socialMedia,
+      occupation,
+      serviceAttended,
+      howDidYouHear,
+      howWasService,
+      favouriteParts,
+      worshippedOnline,
+      photo,
+      spouse,
+    });
     router.push("/user-management/second-timers");
   };
 
@@ -97,29 +131,7 @@ export default function AddSecondTimerPage() {
             Enter Details
           </h2>
 
-          {/* Title */}
-          <div className="mb-6">
-            <label className={labelStyles}>Title</label>
-            <div className="flex items-center gap-6">
-              {["Mr", "Mrs", "Miss"].map((option) => (
-                <label key={option} className="flex items-center gap-2 text-sm text-[#374151]">
-                  <input
-                    type="radio"
-                    name="title"
-                    value={option}
-                    checked={title === option}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="h-4 w-4 text-[#000080] focus:ring-[#000080]"
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Two-column grid */}
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
-            {/* First Name */}
             <div>
               <label className={labelStyles}>First Name</label>
               <input
@@ -130,20 +142,16 @@ export default function AddSecondTimerPage() {
                 className={inputStyles}
               />
             </div>
-
-            {/* Email */}
             <div>
-              <label className={labelStyles}>Email</label>
+              <label className={labelStyles}>Middle Name</label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter Email"
+                type="text"
+                value={middleName}
+                onChange={(e) => setMiddleName(e.target.value)}
+                placeholder="Enter Middle Name (optional)"
                 className={inputStyles}
               />
             </div>
-
-            {/* Last Name */}
             <div>
               <label className={labelStyles}>Last Name</label>
               <input
@@ -154,8 +162,28 @@ export default function AddSecondTimerPage() {
                 className={inputStyles}
               />
             </div>
-
-            {/* Date of Birth */}
+            <div>
+              <label className={labelStyles}>Gender</label>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className={selectStyles}
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelStyles}>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter Email"
+                className={inputStyles}
+              />
+            </div>
             <div>
               <label className={labelStyles}>Date of Birth</label>
               <div className="grid grid-cols-3 gap-2">
@@ -198,39 +226,47 @@ export default function AddSecondTimerPage() {
               </div>
             </div>
 
-            {/* Mobile Number */}
-            <div>
-              <label className={labelStyles}>Mobile Number</label>
-              <div className="flex overflow-hidden rounded-lg border border-[#E5E7EB] focus-within:border-[#000080] focus-within:ring-1 focus-within:ring-[#000080]">
-                <span className="flex items-center bg-gray-50 px-3 text-sm text-[#6B7280]">
-                  +0
-                </span>
-                <input
-                  type="tel"
-                  value={mobileNumber}
-                  onChange={(e) => setMobileNumber(e.target.value)}
-                  placeholder="Enter Mobile Number"
-                  className="w-full border-none px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF]"
-                />
-              </div>
-            </div>
+            <PhoneInput
+              label="Mobile Number"
+              code={countryCode}
+              number={phone}
+              onCodeChange={setCountryCode}
+              onNumberChange={setPhone}
+              placeholder="Enter Mobile Number"
+            />
+            <PhoneInput
+              label="WhatsApp Number"
+              code={whatsappCode}
+              number={whatsappNumber}
+              onCodeChange={setWhatsappCode}
+              onNumberChange={setWhatsappNumber}
+              placeholder="Enter WhatsApp Number"
+            />
 
-            {/* WhatsApp Number */}
+            {/* Select Service */}
             <div>
-              <label className={labelStyles}>WhatsApp Number</label>
-              <div className="flex overflow-hidden rounded-lg border border-[#E5E7EB] focus-within:border-[#000080] focus-within:ring-1 focus-within:ring-[#000080]">
-                <span className="flex items-center bg-gray-50 px-3 text-sm text-[#6B7280]">
-                  +0
-                </span>
-                <input
-                  type="tel"
-                  value={whatsappNumber}
-                  onChange={(e) => setWhatsappNumber(e.target.value)}
-                  placeholder="Enter WhatsApp Number"
-                  className="w-full border-none px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF]"
-                />
-              </div>
+              <label className={labelStyles}>Select Service</label>
+              <select
+                value={serviceAttended}
+                onChange={(e) => setServiceAttended(e.target.value)}
+                className={selectStyles}
+              >
+                <option value="">Select Service</option>
+                <option value="Sunday">Sunday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Friday">Friday</option>
+                <option value="Special Service">Special Service</option>
+              </select>
             </div>
+          </div>
+
+          <div className="mt-6">
+            <PhotoUpload
+              label="Profile Photo"
+              value={photo}
+              onChange={setPhoto}
+              previewSize="md"
+            />
           </div>
         </div>
 
@@ -239,7 +275,6 @@ export default function AddSecondTimerPage() {
           <h2 className="mb-6 text-[18px] font-bold text-[#000000]">Address</h2>
 
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
-            {/* Street */}
             <div>
               <label className={labelStyles}>Street</label>
               <input
@@ -250,8 +285,6 @@ export default function AddSecondTimerPage() {
                 className={inputStyles}
               />
             </div>
-
-            {/* City */}
             <div>
               <label className={labelStyles}>City</label>
               <input
@@ -262,8 +295,6 @@ export default function AddSecondTimerPage() {
                 className={inputStyles}
               />
             </div>
-
-            {/* State */}
             <div>
               <label className={labelStyles}>State</label>
               <select
@@ -282,8 +313,6 @@ export default function AddSecondTimerPage() {
                 <option value="Ogun">Ogun</option>
               </select>
             </div>
-
-            {/* Country */}
             <div>
               <label className={labelStyles}>Country</label>
               <select
@@ -307,7 +336,6 @@ export default function AddSecondTimerPage() {
         {/* More Details Section */}
         <div className="mb-8 rounded-xl border border-[#E5E7EB] bg-white p-6">
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
-            {/* Marital Status */}
             <div>
               <label className={labelStyles}>Marital Status</label>
               <select
@@ -321,27 +349,16 @@ export default function AddSecondTimerPage() {
                 <option value="Divorced">Divorced</option>
                 <option value="Widowed">Widowed</option>
               </select>
+              {maritalStatus === "Married" && (
+                <button
+                  type="button"
+                  onClick={() => setShowSpouseModal(true)}
+                  className="mt-2 text-xs font-medium text-[#000080] underline hover:text-[#000066]"
+                >
+                  {spouse ? `Spouse: ${spouse.name} (change)` : "+ Link Spouse"}
+                </button>
+              )}
             </div>
-
-            {/* Age Group */}
-            <div>
-              <label className={labelStyles}>Age Group</label>
-              <select
-                value={ageGroup}
-                onChange={(e) => setAgeGroup(e.target.value)}
-                className={selectStyles}
-              >
-                <option value="">Select Age Group</option>
-                <option value="18-25">18-25</option>
-                <option value="26-35">26-35</option>
-                <option value="36-45">36-45</option>
-                <option value="46-55">46-55</option>
-                <option value="56-65">56-65</option>
-                <option value="65+">65+</option>
-              </select>
-            </div>
-
-            {/* Social Media */}
             <div>
               <label className={labelStyles}>Social Media</label>
               <select
@@ -357,20 +374,6 @@ export default function AddSecondTimerPage() {
                 <option value="TikTok">TikTok</option>
               </select>
             </div>
-
-            {/* Social Media Handle */}
-            <div>
-              <label className={labelStyles}>Social Media Handle</label>
-              <input
-                type="text"
-                value={socialMediaHandle}
-                onChange={(e) => setSocialMediaHandle(e.target.value)}
-                placeholder="Enter Social Media Handle"
-                className={inputStyles}
-              />
-            </div>
-
-            {/* Occupation */}
             <div>
               <label className={labelStyles}>Occupation</label>
               <select
@@ -388,11 +391,6 @@ export default function AddSecondTimerPage() {
                 <option value="Other">Other</option>
               </select>
             </div>
-
-            {/* Empty cell for alignment */}
-            <div />
-
-            {/* How did you hear about our church */}
             <div>
               <label className={labelStyles}>
                 How did you hear about our church?
@@ -411,8 +409,6 @@ export default function AddSecondTimerPage() {
                 <option value="Other">Other</option>
               </select>
             </div>
-
-            {/* How was our service */}
             <div>
               <label className={labelStyles}>How was our service?</label>
               <select
@@ -427,8 +423,6 @@ export default function AddSecondTimerPage() {
                 <option value="Poor">Poor</option>
               </select>
             </div>
-
-            {/* Favourite parts of the service */}
             <div>
               <label className={labelStyles}>
                 What were your favourite parts of the service?
@@ -446,32 +440,34 @@ export default function AddSecondTimerPage() {
                 <option value="All">All</option>
               </select>
             </div>
+          </div>
 
-            {/* Worshipped online before */}
-            <div>
-              <label className={labelStyles}>
-                Have you worshipped with us online before?
-              </label>
-              <select
-                value={worshippedOnline}
-                onChange={(e) => setWorshippedOnline(e.target.value)}
-                className={selectStyles}
-              >
-                <option value="">Select</option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-              </select>
-            </div>
+          <div className="mt-4">
+            <label className="flex items-center gap-2 text-sm text-[#374151]">
+              <input
+                type="checkbox"
+                checked={worshippedOnline}
+                onChange={(e) => setWorshippedOnline(e.target.checked)}
+                className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
+              />
+              Have you worshipped with us online before?
+            </label>
           </div>
         </div>
 
-        {/* Submit Button */}
         <div className="flex justify-end">
           <Button type="submit" variant="primary">
             Save
           </Button>
         </div>
       </form>
+
+      <SpouseLinkModal
+        isOpen={showSpouseModal}
+        onClose={() => setShowSpouseModal(false)}
+        onSave={(data) => setSpouse(data)}
+        initial={spouse || undefined}
+      />
     </DashboardLayout>
   );
 }
