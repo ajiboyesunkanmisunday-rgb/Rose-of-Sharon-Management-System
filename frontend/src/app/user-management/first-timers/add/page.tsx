@@ -166,6 +166,28 @@ export default function AddFirstTimerPage() {
               />
             </div>
 
+            {/* Phone Number */}
+            <PhoneInput
+              label="Mobile Number"
+              code={countryCode}
+              number={phone}
+              onCodeChange={setCountryCode}
+              onNumberChange={setPhone}
+              placeholder="Enter Mobile Number"
+            />
+
+            {/* Email */}
+            <div>
+              <label className={labelStyles}>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter Email"
+                className={inputStyles}
+              />
+            </div>
+
             {/* Gender */}
             <div>
               <label className={labelStyles}>Gender</label>
@@ -178,18 +200,6 @@ export default function AddFirstTimerPage() {
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
               </select>
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className={labelStyles}>Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter Email"
-                className={inputStyles}
-              />
             </div>
 
             {/* Date of Birth */}
@@ -234,16 +244,6 @@ export default function AddFirstTimerPage() {
                 </select>
               </div>
             </div>
-
-            {/* Phone Number */}
-            <PhoneInput
-              label="Mobile Number"
-              code={countryCode}
-              number={phone}
-              onCodeChange={setCountryCode}
-              onNumberChange={setPhone}
-              placeholder="Enter Mobile Number"
-            />
 
             {/* WhatsApp Number */}
             <PhoneInput
