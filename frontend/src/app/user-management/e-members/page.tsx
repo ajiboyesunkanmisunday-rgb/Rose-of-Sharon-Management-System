@@ -11,6 +11,7 @@ import SendSMSModal from "@/components/user-management/SendSMSModal";
 import SendEmailModal from "@/components/user-management/SendEmailModal";
 import FilterExportModal from "@/components/user-management/FilterExportModal";
 import QRCodeModal from "@/components/user-management/QRCodeModal";
+import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { eMembers } from "@/lib/mock-data";
 
 const ITEMS_PER_PAGE = 10;
@@ -26,6 +27,7 @@ export default function EMembersPage() {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showFilterExportModal, setShowFilterExportModal] = useState(false);
   const [showQRCodeModal, setShowQRCodeModal] = useState(false);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
   const filteredEMembers = useMemo(() => {
     if (!search.trim()) return eMembers;
@@ -91,11 +93,15 @@ export default function EMembersPage() {
     },
     {
       label: "Delete",
-      onClick: () => {
-        console.log("Delete selected:", Array.from(selectedRows));
-      },
+      onClick: () => setShowBulkDeleteModal(true),
     },
   ];
+
+  const handleBulkDeleteConfirm = () => {
+    console.log("Bulk delete e-members:", Array.from(selectedRows));
+    setSelectedRows(new Set());
+    setShowBulkDeleteModal(false);
+  };
 
   return (
     <DashboardLayout>
@@ -303,6 +309,12 @@ export default function EMembersPage() {
       <QRCodeModal
         isOpen={showQRCodeModal}
         onClose={() => setShowQRCodeModal(false)}
+      />
+      <DeleteConfirmModal
+        isOpen={showBulkDeleteModal}
+        onClose={() => setShowBulkDeleteModal(false)}
+        onConfirm={handleBulkDeleteConfirm}
+        message={`Are you sure you want to delete ${selectedRows.size} selected e-member${selectedRows.size === 1 ? "" : "s"}?`}
       />
     </DashboardLayout>
   );

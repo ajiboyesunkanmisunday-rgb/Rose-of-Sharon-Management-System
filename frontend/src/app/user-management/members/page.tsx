@@ -30,6 +30,7 @@ export default function MembersPage() {
   const [showFilterExportModal, setShowFilterExportModal] = useState(false);
   const [showQRCodeModal, setShowQRCodeModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
 
@@ -112,11 +113,15 @@ export default function MembersPage() {
     },
     {
       label: "Delete",
-      onClick: () => {
-        console.log("Delete selected:", Array.from(selectedRows));
-      },
+      onClick: () => setShowBulkDeleteModal(true),
     },
   ];
+
+  const handleBulkDeleteConfirm = () => {
+    console.log("Bulk delete members:", Array.from(selectedRows));
+    setSelectedRows(new Set());
+    setShowBulkDeleteModal(false);
+  };
 
   return (
     <DashboardLayout>
@@ -346,6 +351,13 @@ export default function MembersPage() {
           setSelectedMemberId(null);
         }}
         onConfirm={handleConfirmDelete}
+      />
+
+      <DeleteConfirmModal
+        isOpen={showBulkDeleteModal}
+        onClose={() => setShowBulkDeleteModal(false)}
+        onConfirm={handleBulkDeleteConfirm}
+        message={`Are you sure you want to delete ${selectedRows.size} selected member${selectedRows.size === 1 ? "" : "s"}?`}
       />
     </DashboardLayout>
   );

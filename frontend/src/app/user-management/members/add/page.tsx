@@ -4,13 +4,18 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
+import PhoneInput from "@/components/ui/PhoneInput";
+import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
+import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
 
 export default function AddMemberPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [countryCode, setCountryCode] = useState("+234");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [gender, setGender] = useState("");
@@ -24,10 +29,28 @@ export default function AddMemberPage() {
   const [maritalStatus, setMaritalStatus] = useState("");
   const [group, setGroup] = useState("");
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [spouse, setSpouse] = useState<SpouseData | null>(null);
+  const [showSpouseModal, setShowSpouseModal] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submit add member form");
+    console.log("Submit add member form", {
+      firstName,
+      middleName,
+      lastName,
+      countryCode,
+      phone,
+      email,
+      gender,
+      dob: `${dobDay}/${dobMonth}/${dobYear}`,
+      street,
+      city,
+      state,
+      country,
+      maritalStatus,
+      group,
+      spouse,
+    });
     router.push("/user-management/members");
   };
 
@@ -117,6 +140,18 @@ export default function AddMemberPage() {
                   />
                 </div>
 
+                {/* Middle Name */}
+                <div>
+                  <label className={labelStyles}>Middle Name</label>
+                  <input
+                    type="text"
+                    value={middleName}
+                    onChange={(e) => setMiddleName(e.target.value)}
+                    placeholder="Enter Middle Name (optional)"
+                    className={inputStyles}
+                  />
+                </div>
+
                 {/* Last Name */}
                 <div>
                   <label className={labelStyles}>Last Name</label>
@@ -129,17 +164,16 @@ export default function AddMemberPage() {
                   />
                 </div>
 
-                {/* Phone Number */}
-                <div>
-                  <label className={labelStyles}>Phone Number</label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Enter Phone Number"
-                    className={inputStyles}
-                  />
-                </div>
+                {/* Phone Number with country code */}
+                <PhoneInput
+                  label="Phone Number"
+                  code={countryCode}
+                  number={phone}
+                  onCodeChange={setCountryCode}
+                  onNumberChange={setPhone}
+                  placeholder="Enter Phone Number"
+                  required
+                />
 
                 {/* Email */}
                 <div>
@@ -294,6 +328,15 @@ export default function AddMemberPage() {
                     <option value="Widowed">Widowed</option>
                     <option value="Divorced">Divorced</option>
                   </select>
+                  {maritalStatus === "Married" && (
+                    <button
+                      type="button"
+                      onClick={() => setShowSpouseModal(true)}
+                      className="mt-2 text-xs font-medium text-[#000080] underline hover:text-[#000066]"
+                    >
+                      {spouse ? `Spouse: ${spouse.name} (change)` : "+ Link Spouse"}
+                    </button>
+                  )}
                 </div>
 
                 {/* Group */}
@@ -380,6 +423,13 @@ export default function AddMemberPage() {
           </div>
         </div>
       </form>
+
+      <SpouseLinkModal
+        isOpen={showSpouseModal}
+        onClose={() => setShowSpouseModal(false)}
+        onSave={(data) => setSpouse(data)}
+        initial={spouse || undefined}
+      />
     </DashboardLayout>
   );
 }

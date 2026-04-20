@@ -9,6 +9,8 @@ import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
 import AddNotesModal from "@/components/user-management/AddNotesModal";
+import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
+import AssignFollowUpModal from "@/components/user-management/AssignFollowUpModal";
 import Modal from "@/components/ui/Modal";
 import { firstTimers } from "@/lib/mock-data";
 
@@ -24,6 +26,10 @@ export default function FirstTimersPage() {
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [showCallReportModal, setShowCallReportModal] = useState(false);
   const [callReport, setCallReport] = useState("");
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [showBulkAssignModal, setShowBulkAssignModal] = useState(false);
+  const [showSingleAssignModal, setShowSingleAssignModal] = useState(false);
+  const [selectedTimerId, setSelectedTimerId] = useState<string | null>(null);
 
   const filteredTimers = useMemo(() => {
     if (!search.trim()) return firstTimers;
@@ -88,10 +94,32 @@ export default function FirstTimersPage() {
       onClick: () => console.log("Bulk Email:", Array.from(selectedRows)),
     },
     {
+      label: "Assign Follow-up",
+      onClick: () => setShowBulkAssignModal(true),
+    },
+    {
       label: "Delete",
-      onClick: () => console.log("Delete selected:", Array.from(selectedRows)),
+      onClick: () => setShowBulkDeleteModal(true),
     },
   ];
+
+  const handleBulkDeleteConfirm = () => {
+    console.log("Bulk delete first timers:", Array.from(selectedRows));
+    setSelectedRows(new Set());
+    setShowBulkDeleteModal(false);
+  };
+
+  const handleBulkAssign = (officerId: string, note: string) => {
+    console.log("Bulk assign follow-up:", Array.from(selectedRows), officerId, note);
+    setSelectedRows(new Set());
+    setShowBulkAssignModal(false);
+  };
+
+  const handleSingleAssign = (officerId: string, note: string) => {
+    console.log("Assign follow-up:", selectedTimerId, officerId, note);
+    setShowSingleAssignModal(false);
+    setSelectedTimerId(null);
+  };
 
   return (
     <DashboardLayout>
@@ -259,6 +287,13 @@ export default function FirstTimersPage() {
                           console.log("Add visit report:", ft.id),
                       },
                       {
+                        label: "Assign Follow-up",
+                        onClick: () => {
+                          setSelectedTimerId(ft.id);
+                          setShowSingleAssignModal(true);
+                        },
+                      },
+                      {
                         label: "Convert to Second Timer",
                         onClick: () =>
                           console.log("Convert to second timer:", ft.id),
@@ -324,6 +359,30 @@ export default function FirstTimersPage() {
           </button>
         </div>
       </Modal>
+
+      <DeleteConfirmModal
+        isOpen={showBulkDeleteModal}
+        onClose={() => setShowBulkDeleteModal(false)}
+        onConfirm={handleBulkDeleteConfirm}
+        message={`Are you sure you want to delete ${selectedRows.size} selected first timer${selectedRows.size === 1 ? "" : "s"}?`}
+      />
+
+      <AssignFollowUpModal
+        isOpen={showBulkAssignModal}
+        onClose={() => setShowBulkAssignModal(false)}
+        onAssign={handleBulkAssign}
+        memberCount={selectedRows.size}
+      />
+
+      <AssignFollowUpModal
+        isOpen={showSingleAssignModal}
+        onClose={() => {
+          setShowSingleAssignModal(false);
+          setSelectedTimerId(null);
+        }}
+        onAssign={handleSingleAssign}
+        memberCount={1}
+      />
     </DashboardLayout>
   );
 }
