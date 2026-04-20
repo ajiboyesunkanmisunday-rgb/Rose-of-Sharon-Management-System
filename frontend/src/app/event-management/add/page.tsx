@@ -22,12 +22,20 @@ const STATUS_OPTIONS = [
   { label: "Ongoing", value: "Ongoing" },
 ];
 
+const TYPE_OPTIONS = [
+  { label: "Virtual", value: "Virtual" },
+  { label: "Hybrid", value: "Hybrid" },
+  { label: "Physical", value: "Physical" },
+];
+
 export default function AddEventPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
+    topic: "",
+    type: "",
     category: "",
-    date: "",
+    eventDate: "",
     startTime: "",
     endTime: "",
     location: "",
@@ -35,6 +43,10 @@ export default function AddEventPage() {
     description: "",
     status: "Upcoming",
     requiresRegistration: false,
+    newConvertsCount: "",
+    firstTimersCount: "",
+    secondTimersCount: "",
+    eMembersCount: "",
   });
 
   const handleChange = (
@@ -71,6 +83,14 @@ export default function AddEventPage() {
             required
           />
 
+          <FormField
+            label="Topic"
+            name="topic"
+            value={formData.topic}
+            onChange={handleChange}
+            placeholder="Event topic / theme"
+          />
+
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
             <SelectField
               label="Category"
@@ -80,11 +100,18 @@ export default function AddEventPage() {
               options={CATEGORY_OPTIONS}
               required
             />
+            <SelectField
+              label="Type"
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              options={TYPE_OPTIONS}
+            />
             <FormField
-              label="Date"
+              label="Event Date"
               type="date"
-              name="date"
-              value={formData.date}
+              name="eventDate"
+              value={formData.eventDate}
               onChange={handleChange}
               required
             />
@@ -137,6 +164,44 @@ export default function AddEventPage() {
             placeholder="Event description and details"
             rows={5}
           />
+
+          <div className="pt-2">
+            <h3 className="mb-3 text-sm font-semibold text-[#111827]">Expected Attendance Breakdown</h3>
+            <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
+              <FormField
+                label="New Converts"
+                type="number"
+                name="newConvertsCount"
+                value={formData.newConvertsCount}
+                onChange={handleChange}
+                placeholder="0"
+              />
+              <FormField
+                label="First Timers"
+                type="number"
+                name="firstTimersCount"
+                value={formData.firstTimersCount}
+                onChange={handleChange}
+                placeholder="0"
+              />
+              <FormField
+                label="Second Timers"
+                type="number"
+                name="secondTimersCount"
+                value={formData.secondTimersCount}
+                onChange={handleChange}
+                placeholder="0"
+              />
+              <FormField
+                label="E-Members"
+                type="number"
+                name="eMembersCount"
+                value={formData.eMembersCount}
+                onChange={handleChange}
+                placeholder="0"
+              />
+            </div>
+          </div>
 
           <div className="flex items-center gap-2 pt-2">
             <input

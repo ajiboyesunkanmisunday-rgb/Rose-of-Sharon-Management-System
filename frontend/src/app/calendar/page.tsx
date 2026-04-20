@@ -38,10 +38,20 @@ function getFirstDayOfMonth(year: number, month: number) {
   return new Date(year, month, 1).getDay();
 }
 
+type ViewMode = "Month" | "Week";
+
 export default function CalendarPage() {
   const router = useRouter();
   const [currentYear, setCurrentYear] = useState(2026);
   const [currentMonth, setCurrentMonth] = useState(3); // April
+  const [viewMode, setViewMode] = useState<ViewMode>("Month");
+  const [weekStart, setWeekStart] = useState<Date>(() => {
+    // Start of current week (Sunday) for 2026-04-19
+    const d = new Date(2026, 3, 19);
+    const day = d.getDay();
+    d.setDate(d.getDate() - day);
+    return d;
+  });
 
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
@@ -88,6 +98,22 @@ export default function CalendarPage() {
     <DashboardLayout>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-[28px] font-bold text-[#000000]">Calendar</h1>
+        <div className="flex items-center gap-3">
+          <div className="inline-flex rounded-lg border border-[#E5E7EB] bg-white p-1">
+            {(["Month", "Week"] as ViewMode[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => setViewMode(m)}
+                className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                  viewMode === m
+                    ? "bg-[#000080] text-white"
+                    : "text-[#374151] hover:bg-[#F3F4F6]"
+                }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
         <Button
           variant="primary"
           onClick={() => router.push("/calendar/events/add")}
@@ -100,10 +126,13 @@ export default function CalendarPage() {
         >
           Add Event
         </Button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-6 lg:flex-row">
         <div className="flex-1">
+          {viewMode === "Month" ? (
+          <>
           <div className="mb-4 flex items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-6 py-4">
             <button
               onClick={handlePrevMonth}
@@ -191,6 +220,23 @@ export default function CalendarPage() {
               </div>
             ))}
           </div>
+          </>
+          ) : (
+            <WeekView
+              weekStart={weekStart}
+              onPrev={() => {
+                const d = new Date(weekStart);
+                d.setDate(d.getDate() - 7);
+                setWeekStart(d);
+              }}
+              onNext={() => {
+                const d = new Date(weekStart);
+                d.setDate(d.getDate() + 7);
+                setWeekStart(d);
+              }}
+              onEventClick={(id) => router.push(`/calendar/events/${id}`)}
+            />
+          )}
         </div>
 
         <aside className="lg:w-80">
@@ -221,5 +267,132 @@ export default function CalendarPage() {
         </aside>
       </div>
     </DashboardLayout>
+  );
+}
+
+// Parse a time string like "9:00 AM" → 9, "6:30 PM" → 18.5
+function parseHour(time: string): number | null {
+  const m = time.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  const mm = parseInt(m[2], 10);
+  const ap = m[3].toUpperCase();
+  if (ap === "PM" && h !== 12) h += 12;
+  if (ap === "AM" && h === 12) h = 0;
+  return h + mm / 60;
+}
+
+interface WeekViewProps {
+  weekStart: Date;
+  onPrev: () => void;
+  onNext: () => void;
+  onEventClick: (id: string) => void;
+}
+
+function WeekView({ weekStart, onPrev, onNext, onEventClick }: WeekViewProps) {
+  const days: Date[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    days.push(d);
+  }
+  const hours = Array.from({ length: 13 }, (_, i) => i + 8); // 8am..20
+  const rangeStart = 8;
+  const rangeEnd = 21; // 8am-9pm (shown up to 8pm row)
+
+  const toISO = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+      d.getDate()
+    ).padStart(2, "0")}`;
+
+  const weekLabel = `${weekStart.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  })} – ${days[6].toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+
+  return (
+    <>
+      <div className="mb-4 flex items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-6 py-4">
+        <button
+          onClick={onPrev}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#000080] transition-colors hover:bg-[#F3F4F6]"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+        <h2 className="text-lg font-bold text-[#000080]">{weekLabel}</h2>
+        <button
+          onClick={onNext}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#000080] transition-colors hover:bg-[#F3F4F6]"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white">
+        <div className="grid" style={{ gridTemplateColumns: "60px repeat(7, 1fr)" }}>
+          <div className="bg-[#F3F4F6] px-2 py-3 text-center text-xs font-bold text-[#000080]">Time</div>
+          {days.map((d, i) => (
+            <div key={i} className="bg-[#F3F4F6] px-2 py-3 text-center text-sm font-bold text-[#000080]">
+              {DAYS[i]}
+              <div className="text-xs font-normal text-[#6B7280]">{d.getDate()}</div>
+            </div>
+          ))}
+        </div>
+        <div className="relative grid" style={{ gridTemplateColumns: "60px repeat(7, 1fr)" }}>
+          {/* Hour labels */}
+          <div>
+            {hours.map((h) => (
+              <div key={h} className="h-12 border-b border-[#F3F4F6] px-2 py-1 text-right text-xs text-[#6B7280]">
+                {h === 12 ? "12 PM" : h < 12 ? `${h} AM` : `${h - 12} PM`}
+              </div>
+            ))}
+          </div>
+          {days.map((d, colIdx) => {
+            const iso = toISO(d);
+            const dayEvents = calendarEvents.filter((e) => e.date === iso);
+            return (
+              <div key={colIdx} className="relative border-l border-[#F3F4F6]">
+                {hours.map((h) => (
+                  <div key={h} className="h-12 border-b border-[#F3F4F6]" />
+                ))}
+                {dayEvents.map((ev) => {
+                  const hour = parseHour(ev.time);
+                  if (hour === null || hour < rangeStart || hour >= rangeEnd) {
+                    // All Day / out-of-range: render at top
+                    return (
+                      <button
+                        key={ev.id}
+                        onClick={() => onEventClick(ev.id)}
+                        className={`absolute left-1 right-1 top-0 truncate rounded px-1.5 py-0.5 text-left text-xs text-white ${categoryColors[ev.category]} hover:opacity-80`}
+                        title={`${ev.name} · ${ev.time}`}
+                      >
+                        {ev.name}
+                      </button>
+                    );
+                  }
+                  const top = (hour - rangeStart) * 48; // 48px per hour row
+                  return (
+                    <button
+                      key={ev.id}
+                      onClick={() => onEventClick(ev.id)}
+                      style={{ top: `${top}px`, height: "44px" }}
+                      className={`absolute left-1 right-1 overflow-hidden truncate rounded px-1.5 py-1 text-left text-xs text-white ${categoryColors[ev.category]} hover:opacity-80`}
+                      title={`${ev.name} · ${ev.time}`}
+                    >
+                      <div className="font-medium">{ev.name}</div>
+                      <div className="text-[10px] opacity-90">{ev.time}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </>
   );
 }

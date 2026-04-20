@@ -315,7 +315,7 @@ export interface CalendarEvent {
   location?: string;
 }
 
-export type MediaType = 'Sermon' | 'Podcast' | 'Video';
+export type MediaType = 'Sermon' | 'Podcast' | 'Video' | 'Picture';
 
 export interface MediaItem {
   id: string;
@@ -346,10 +346,17 @@ export interface DirectoryContact {
 export type EventStatus = 'Upcoming' | 'Ongoing' | 'Completed' | 'Cancelled';
 export type EventCategory = 'Service' | 'Conference' | 'Training' | 'Social' | 'Wedding' | 'Funeral' | 'Outreach';
 
+export type EventType = 'Virtual' | 'Hybrid' | 'Physical';
+export type BroadcastChannel = 'SMS' | 'Email' | 'Both';
+
 export interface ChurchEvent {
   id: string;
   name: string;
+  topic?: string;
+  type?: EventType;
   date: string;
+  eventDate?: string;
+  createdDate?: string;
   startTime: string;
   endTime: string;
   location: string;
@@ -360,6 +367,21 @@ export interface ChurchEvent {
   status: EventStatus;
   requiresRegistration: boolean;
   createdBy: string;
+  newConvertsCount?: number;
+  firstTimersCount?: number;
+  secondTimersCount?: number;
+  eMembersCount?: number;
+}
+
+export type MinistryProgram = 'Fresh Anointing' | 'Sunday Sermon' | 'Tuesday Digging Deep' | 'Friday Prayer' | 'Other';
+
+export interface MinisterOnDuty {
+  id: string;
+  date: string; // YYYY-MM-DD
+  program: MinistryProgram;
+  minister: string;
+  phone: string;
+  reminderEnabled: boolean;
 }
 
 export type AnnouncementAudience =
