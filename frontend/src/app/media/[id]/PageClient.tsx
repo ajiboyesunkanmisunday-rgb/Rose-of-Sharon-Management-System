@@ -13,6 +13,7 @@ const typeColors: Record<MediaType, string> = {
   Sermon: "bg-[#000080] text-white",
   Podcast: "bg-[#7C3AED] text-white",
   Video: "bg-[#16A34A] text-white",
+  Picture: "bg-[#F59E0B] text-white",
 };
 
 export default function MediaDetailClient() {
@@ -43,8 +44,15 @@ export default function MediaDetailClient() {
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <div className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white">
-            <div className="flex aspect-video items-center justify-center bg-[#F3F4F6]">
-              {item.type === "Podcast" ? (
+            <div className="flex aspect-video items-center justify-center overflow-hidden bg-[#F3F4F6]">
+              {item.type === "Picture" ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={item.thumbnail || "/rccg-logo.png"}
+                  alt={item.title}
+                  className="h-full w-full object-contain"
+                />
+              ) : item.type === "Podcast" ? (
                 <audio controls className="w-full max-w-md">
                   <source src={item.url || ""} />
                   Your browser does not support the audio tag.
