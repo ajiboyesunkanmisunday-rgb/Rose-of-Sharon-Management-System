@@ -1,4 +1,4 @@
-import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent, WorkflowTemplate, ActiveWorkflowCard, Course, TrainingSchedule, Celebration, Role, Group, PermissionMatrix, FollowUpOfficer, BelieversClass } from './types';
+import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent, WorkflowTemplate, ActiveWorkflowCard, Course, TrainingSchedule, Celebration, Role, Group, PermissionMatrix, FollowUpOfficer, BelieversClass, Testimony, ActivityLog } from './types';
 
 export const followUpOfficers: FollowUpOfficer[] = [
   { id: 'fo-1', name: 'Shola Damson', department: 'Follow-up', phone: '+234 801 111 2222', email: 'shola@church.org' },
@@ -148,7 +148,7 @@ export const sampleRequests: Request[] = [
     id: 'req-2',
     title: 'Counseling',
     content: 'I would like to speak with a counselor regarding some personal and family concerns. It\'s been affecting my focus and emotional well-being lately. I\'m available for a session anytime this week.',
-    category: 'Celebration',
+    category: 'Counseling',
     status: 'In Progress',
     submittedBy: 'Sarah Bamidele',
     assignedTo: 'Pastor David',
@@ -526,3 +526,44 @@ export const profileDetails = {
   dateJoined: '01/03/2026',
   spouse: '',
 };
+
+export const testimonies: Testimony[] = [
+  { id: 'tst-1', name: 'John Michael', date: '04/15/2026', category: 'Healing', status: 'Published', content: 'God healed me from a long-standing back pain after prayers during Sunday service. I am forever grateful!', sharedBy: 'Pastor David' },
+  { id: 'tst-2', name: 'Sarah Bamidele', date: '04/14/2026', category: 'Financial', status: 'Published', content: 'I received a breakthrough in my business after months of prayer and fasting. Debts have been cleared.', sharedBy: 'Shola Damson' },
+  { id: 'tst-3', name: 'David Okonkwo', date: '04/12/2026', category: 'Marriage', status: 'Pending', content: 'After years of separation, God restored my marriage. My family is united again.', sharedBy: 'Pastor James' },
+  { id: 'tst-4', name: 'Grace Adeyemi', date: '04/10/2026', category: 'Salvation', status: 'Published', content: 'I gave my life to Christ during last month\'s crusade. Life has never been the same.', sharedBy: 'Deaconess Grace' },
+  { id: 'tst-5', name: 'Emmanuel Nwosu', date: '04/08/2026', category: 'Healing', status: 'Published', content: 'I was diagnosed with an illness but the Lord healed me completely. Medical tests confirmed it.', sharedBy: 'Pastor David' },
+  { id: 'tst-6', name: 'Blessing Okoro', date: '04/06/2026', category: 'Financial', status: 'Pending', content: 'I got a new job after months of unemployment. God\'s timing is always perfect.', sharedBy: 'Shola Damson' },
+  { id: 'tst-7', name: 'Peter Adewale', date: '04/04/2026', category: 'Other', status: 'Published', content: 'My son passed his entrance exams with flying colors after a year of intercession.', sharedBy: 'Pastor James' },
+  { id: 'tst-8', name: 'Ruth Balogun', date: '04/02/2026', category: 'Marriage', status: 'Pending', content: 'God blessed us with a child after 7 years of waiting. He is indeed a miracle worker.', sharedBy: 'Deaconess Grace' },
+  { id: 'tst-9', name: 'Mary Eze', date: '03/30/2026', category: 'Salvation', status: 'Published', content: 'My entire family came to Christ this month. Our home now has peace and joy.', sharedBy: 'Pastor David' },
+  { id: 'tst-10', name: 'Samuel Chukwu', date: '03/28/2026', category: 'Healing', status: 'Pending', content: 'The Lord healed me of chronic migraines that had plagued me for years. Praise God!', sharedBy: 'Shola Damson' },
+];
+
+export const activityLogs: ActivityLog[] = [
+  { id: 'log-1', action: 'Logged in', performedBy: 'Pastor David', timestamp: '04/20/2026 08:15 AM', location: 'Lagos, Nigeria', category: 'Login' },
+  { id: 'log-2', action: 'Added member John Michael', performedBy: 'Shola Damson', timestamp: '04/20/2026 09:02 AM', location: 'Lagos, Nigeria', category: 'Member' },
+  { id: 'log-3', action: 'Sent SMS campaign "Sunday Reminder"', performedBy: 'Admin', timestamp: '04/19/2026 06:45 PM', location: 'Lagos, Nigeria', category: 'Communication' },
+  { id: 'log-4', action: 'Updated role permissions for Follow-up Officer', performedBy: 'Admin', timestamp: '04/19/2026 03:20 PM', location: 'Abuja, Nigeria', category: 'Settings' },
+  { id: 'log-5', action: 'Moved workflow card to Follow-up Call', performedBy: 'Shola Damson', timestamp: '04/19/2026 02:10 PM', location: 'Lagos, Nigeria', category: 'Workflow' },
+  { id: 'log-6', action: 'Logged in', performedBy: 'Deaconess Grace', timestamp: '04/19/2026 11:30 AM', location: 'Lagos, Nigeria', category: 'Login' },
+  { id: 'log-7', action: 'Deleted member record st-15', performedBy: 'Admin', timestamp: '04/18/2026 04:55 PM', location: 'Lagos, Nigeria', category: 'Member' },
+  { id: 'log-8', action: 'Created announcement "Workers Meeting"', performedBy: 'Pastor David', timestamp: '04/18/2026 01:10 PM', location: 'Lagos, Nigeria', category: 'Communication' },
+  { id: 'log-9', action: 'Changed password', performedBy: 'Shola Damson', timestamp: '04/18/2026 10:05 AM', location: 'Lagos, Nigeria', category: 'Settings' },
+  { id: 'log-10', action: 'Registered new convert Mary Eze', performedBy: 'Pastor James', timestamp: '04/18/2026 09:15 AM', location: 'Lagos, Nigeria', category: 'Member' },
+  { id: 'log-11', action: 'Logged in', performedBy: 'Admin', timestamp: '04/17/2026 08:00 AM', location: 'Abuja, Nigeria', category: 'Login' },
+  { id: 'log-12', action: 'Updated workflow template "Guest Follow-up"', performedBy: 'Pastor David', timestamp: '04/17/2026 02:30 PM', location: 'Lagos, Nigeria', category: 'Workflow' },
+  { id: 'log-13', action: 'Sent bulk email to Workers group', performedBy: 'Admin', timestamp: '04/17/2026 11:20 AM', location: 'Lagos, Nigeria', category: 'Communication' },
+  { id: 'log-14', action: 'Added new group "Prayer Warriors"', performedBy: 'Admin', timestamp: '04/16/2026 04:45 PM', location: 'Lagos, Nigeria', category: 'Settings' },
+  { id: 'log-15', action: 'Assigned member to workflow stage', performedBy: 'Shola Damson', timestamp: '04/16/2026 03:00 PM', location: 'Lagos, Nigeria', category: 'Workflow' },
+  { id: 'log-16', action: 'Logged in', performedBy: 'Pastor James', timestamp: '04/16/2026 09:30 AM', location: 'Lagos, Nigeria', category: 'Login' },
+  { id: 'log-17', action: 'Exported member list to CSV', performedBy: 'Admin', timestamp: '04/15/2026 05:20 PM', location: 'Abuja, Nigeria', category: 'Other' },
+  { id: 'log-18', action: 'Updated member profile Sarah Bamidele', performedBy: 'Shola Damson', timestamp: '04/15/2026 02:45 PM', location: 'Lagos, Nigeria', category: 'Member' },
+  { id: 'log-19', action: 'Scheduled SMS blast', performedBy: 'Admin', timestamp: '04/15/2026 10:15 AM', location: 'Lagos, Nigeria', category: 'Communication' },
+  { id: 'log-20', action: 'Created new role "Youth Coordinator"', performedBy: 'Admin', timestamp: '04/14/2026 03:50 PM', location: 'Abuja, Nigeria', category: 'Settings' },
+  { id: 'log-21', action: 'Logged in', performedBy: 'Shola Damson', timestamp: '04/14/2026 08:05 AM', location: 'Lagos, Nigeria', category: 'Login' },
+  { id: 'log-22', action: 'Completed workflow card aw-9', performedBy: 'Deaconess Grace', timestamp: '04/13/2026 06:30 PM', location: 'Lagos, Nigeria', category: 'Workflow' },
+  { id: 'log-23', action: 'Archived announcement ann-6', performedBy: 'Admin', timestamp: '04/13/2026 01:10 PM', location: 'Lagos, Nigeria', category: 'Communication' },
+  { id: 'log-24', action: 'Uploaded media item "Easter Sunday Service"', performedBy: 'Media Team', timestamp: '04/13/2026 10:45 AM', location: 'Lagos, Nigeria', category: 'Other' },
+  { id: 'log-25', action: 'Logged out', performedBy: 'Pastor David', timestamp: '04/12/2026 09:00 PM', location: 'Lagos, Nigeria', category: 'Login' },
+];

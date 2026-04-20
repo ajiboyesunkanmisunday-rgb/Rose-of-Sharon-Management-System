@@ -143,7 +143,7 @@ export interface Request {
   id: string;
   title: string;
   content: string;
-  category: 'Counseling' | 'Celebration' | 'Prayer' | 'Complaint' | 'Suggestion';
+  category: 'Counseling' | 'Prayer' | 'Complaint' | 'Suggestion';
   status: 'Treated' | 'In Progress' | 'Not treated';
   submittedBy: string;
   assignedTo: string;
@@ -360,6 +360,29 @@ export interface Announcement {
   status: AnnouncementStatus;
   createdBy: string;
   createdDate: string;
+}
+
+export type TestimonyCategory = 'Healing' | 'Financial' | 'Marriage' | 'Salvation' | 'Other';
+export type TestimonyStatus = 'Pending' | 'Published';
+
+export interface Testimony {
+  id: string;
+  name: string;
+  date: string;
+  category: TestimonyCategory;
+  status: TestimonyStatus;
+  content: string;
+  photo?: string;
+  sharedBy: string;
+}
+
+export interface ActivityLog {
+  id: string;
+  action: string;
+  performedBy: string;
+  timestamp: string;
+  location: string;
+  category: 'Login' | 'Member' | 'Communication' | 'Workflow' | 'Settings' | 'Other';
 }
 
 export interface NavItem {
