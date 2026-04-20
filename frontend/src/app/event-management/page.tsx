@@ -9,13 +9,19 @@ import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { allEvents } from "@/lib/mock-data";
-import { EventStatus } from "@/lib/types";
+import { EventStatus, EventType } from "@/lib/types";
 
 const statusColors: Record<EventStatus, string> = {
   Upcoming: "bg-blue-100 text-blue-800",
   Ongoing: "bg-green-100 text-green-800",
   Completed: "bg-gray-100 text-gray-600",
   Cancelled: "bg-red-100 text-red-800",
+};
+
+const typeColors: Record<EventType, string> = {
+  Virtual: "bg-blue-100 text-blue-800",
+  Hybrid: "bg-purple-100 text-purple-800",
+  Physical: "bg-green-100 text-green-800",
 };
 
 const ITEMS_PER_PAGE = 10;
@@ -95,6 +101,7 @@ export default function EventManagementPage() {
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Location</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Category</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Type</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Attendees</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
               <th className="px-4 py-4"></th>
@@ -114,6 +121,15 @@ export default function EventManagementPage() {
                   <span className="inline-block rounded-full bg-[#F3F4F6] px-3 py-1 text-xs font-medium text-[#374151]">
                     {event.category}
                   </span>
+                </td>
+                <td className="px-4 py-3">
+                  {event.type ? (
+                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${typeColors[event.type]}`}>
+                      {event.type}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-[#9CA3AF]">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-sm text-[#374151]">
                   {event.attendees.toLocaleString()}
@@ -141,7 +157,7 @@ export default function EventManagementPage() {
             ))}
             {paginatedEvents.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
                   No events found.
                 </td>
               </tr>

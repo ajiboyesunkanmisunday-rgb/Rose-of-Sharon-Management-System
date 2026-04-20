@@ -11,6 +11,7 @@ const TYPE_OPTIONS = [
   { label: "Sermon", value: "Sermon" },
   { label: "Podcast", value: "Podcast" },
   { label: "Video", value: "Video" },
+  { label: "Picture", value: "Picture" },
 ];
 
 export default function UploadMediaPage() {

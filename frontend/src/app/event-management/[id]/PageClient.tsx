@@ -6,8 +6,16 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
+import QRCodeModal from "@/components/user-management/QRCodeModal";
+import EventBroadcastModal from "@/components/events/EventBroadcastModal";
 import { allEvents } from "@/lib/mock-data";
-import { EventStatus } from "@/lib/types";
+import { EventStatus, EventType } from "@/lib/types";
+
+const typeColors: Record<EventType, string> = {
+  Virtual: "bg-blue-100 text-blue-800",
+  Hybrid: "bg-purple-100 text-purple-800",
+  Physical: "bg-green-100 text-green-800",
+};
 
 type Tab = "attendees" | "schedule";
 
@@ -32,6 +40,8 @@ export default function EventDetailClient() {
   const id = params.id as string;
   const [activeTab, setActiveTab] = useState<Tab>("attendees");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false);
 
   const event = allEvents.find((e) => e.id === id) || allEvents[0];
 
@@ -64,6 +74,11 @@ export default function EventDetailClient() {
               <span className="rounded-full bg-[#F3F4F6] px-3 py-1 text-xs font-medium text-[#374151]">
                 {event.category}
               </span>
+              {event.type && (
+                <span className={`rounded-full px-3 py-1 text-xs font-medium ${typeColors[event.type]}`}>
+                  {event.type}
+                </span>
+              )}
               {event.requiresRegistration && (
                 <span className="rounded-full bg-[#B5B5F3]/30 px-3 py-1 text-xs font-medium text-[#000080]">
                   Registration required
@@ -71,13 +86,24 @@ export default function EventDetailClient() {
               )}
             </div>
             <h2 className="mt-3 text-xl font-bold text-[#111827]">{event.name}</h2>
+            {event.topic && (
+              <p className="mt-1 text-sm text-[#6B7280]">Topic: <span className="font-medium text-[#374151]">{event.topic}</span></p>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" onClick={() => setShowBroadcastModal(true)}>
+              Broadcast
+            </Button>
+            <Button variant="secondary" onClick={() => setShowQRModal(true)}>
+              QR Code
+            </Button>
           </div>
         </div>
 
         <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">Date</p>
-            <p className="mt-1 text-sm font-medium text-[#111827]">{event.date}</p>
+            <p className="text-xs font-medium text-[#6B7280]">Event Date</p>
+            <p className="mt-1 text-sm font-medium text-[#111827]">{event.eventDate || event.date}</p>
           </div>
           <div>
             <p className="text-xs font-medium text-[#6B7280]">Time</p>
@@ -87,6 +113,12 @@ export default function EventDetailClient() {
             <p className="text-xs font-medium text-[#6B7280]">Location</p>
             <p className="mt-1 text-sm font-medium text-[#111827]">{event.location}</p>
           </div>
+          {event.createdDate && (
+            <div>
+              <p className="text-xs font-medium text-[#6B7280]">Created Date</p>
+              <p className="mt-1 text-sm font-medium text-[#111827]">{event.createdDate}</p>
+            </div>
+          )}
           <div>
             <p className="text-xs font-medium text-[#6B7280]">Capacity</p>
             <p className="mt-1 text-sm font-medium text-[#111827]">{event.capacity.toLocaleString()}</p>
@@ -98,6 +130,28 @@ export default function EventDetailClient() {
           <div>
             <p className="text-xs font-medium text-[#6B7280]">Created By</p>
             <p className="mt-1 text-sm font-medium text-[#111827]">{event.createdBy}</p>
+          </div>
+        </div>
+
+        <div className="mt-6 border-t border-[#F3F4F6] pt-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Expected Attendance Breakdown</p>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="rounded-lg bg-[#F9FAFB] p-3">
+              <p className="text-xs text-[#6B7280]">New Converts</p>
+              <p className="mt-1 text-lg font-bold text-[#000080]">{event.newConvertsCount ?? 0}</p>
+            </div>
+            <div className="rounded-lg bg-[#F9FAFB] p-3">
+              <p className="text-xs text-[#6B7280]">First Timers</p>
+              <p className="mt-1 text-lg font-bold text-[#000080]">{event.firstTimersCount ?? 0}</p>
+            </div>
+            <div className="rounded-lg bg-[#F9FAFB] p-3">
+              <p className="text-xs text-[#6B7280]">Second Timers</p>
+              <p className="mt-1 text-lg font-bold text-[#000080]">{event.secondTimersCount ?? 0}</p>
+            </div>
+            <div className="rounded-lg bg-[#F9FAFB] p-3">
+              <p className="text-xs text-[#6B7280]">E-Members</p>
+              <p className="mt-1 text-lg font-bold text-[#000080]">{event.eMembersCount ?? 0}</p>
+            </div>
           </div>
         </div>
 
@@ -201,6 +255,19 @@ export default function EventDetailClient() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
         message="Are you sure you want to cancel this event? Attendees will be notified."
+      />
+
+      <QRCodeModal
+        isOpen={showQRModal}
+        onClose={() => setShowQRModal(false)}
+        value={`https://rosms.app/events/${event.id}/check-in`}
+        title="Event Check-in QR Code"
+      />
+
+      <EventBroadcastModal
+        isOpen={showBroadcastModal}
+        onClose={() => setShowBroadcastModal(false)}
+        eventName={event.name}
       />
     </DashboardLayout>
   );
