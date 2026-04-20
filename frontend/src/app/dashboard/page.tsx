@@ -2,90 +2,35 @@
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Users, UserPlus, ClipboardCheck, PhoneCall } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { urgentFollowUps } from "@/lib/mock-data";
 
 const kpiCards = [
-  {
-    label: "Total Members",
-    value: "1,234",
-    icon: Users,
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
-  },
-  {
-    label: "Total Guests",
-    value: "256",
-    icon: UserPlus,
-    iconBg: "bg-green-100",
-    iconColor: "text-green-600",
-  },
-  {
-    label: "Today's Attendance",
-    value: "892",
-    icon: ClipboardCheck,
-    iconBg: "bg-purple-100",
-    iconColor: "text-purple-600",
-  },
-  {
-    label: "Active Follow-ups",
-    value: "47",
-    icon: PhoneCall,
-    iconBg: "bg-orange-100",
-    iconColor: "text-orange-600",
-  },
-];
-
-const recentActivities = [
-  {
-    id: "1",
-    name: "Shola Damson",
-    initials: "SD",
-    description: "Added a call report for John Michael",
-    time: "2 minutes ago",
-  },
-  {
-    id: "2",
-    name: "Aisha Bello",
-    initials: "AB",
-    description: "Registered a new first timer",
-    time: "15 minutes ago",
-  },
-  {
-    id: "3",
-    name: "David Okoro",
-    initials: "DO",
-    description: "Updated member profile for Sarah Bamidele",
-    time: "1 hour ago",
-  },
-  {
-    id: "4",
-    name: "Grace Adeyemi",
-    initials: "GA",
-    description: "Converted a first timer to second timer",
-    time: "3 hours ago",
-  },
-  {
-    id: "5",
-    name: "Samuel Eze",
-    initials: "SE",
-    description: "Submitted visit report for new convert",
-    time: "5 hours ago",
-  },
+  { label: "Total Members", value: "1,234", icon: Users, iconBg: "bg-blue-100", iconColor: "text-blue-600" },
+  { label: "Total Guests", value: "256", icon: UserPlus, iconBg: "bg-green-100", iconColor: "text-green-600" },
+  { label: "Last Sunday's Attendance", value: "892", icon: ClipboardCheck, iconBg: "bg-purple-100", iconColor: "text-purple-600" },
+  { label: "Active Follow-ups", value: "47", icon: PhoneCall, iconBg: "bg-orange-100", iconColor: "text-orange-600" },
 ];
 
 const attendanceData = [
-  { day: "Mon", value: 65 },
-  { day: "Tue", value: 45 },
-  { day: "Wed", value: 78 },
-  { day: "Thu", value: 52 },
-  { day: "Fri", value: 60 },
-  { day: "Sat", value: 40 },
-  { day: "Sun", value: 95 },
+  { day: "Mar 16", value: 780 },
+  { day: "Mar 23", value: 820 },
+  { day: "Mar 30", value: 910 },
+  { day: "Apr 6", value: 855 },
+  { day: "Apr 13", value: 890 },
+  { day: "Apr 20", value: 892 },
 ];
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const maxAttendance = Math.max(...attendanceData.map((d) => d.value));
+  const topFollowUps = urgentFollowUps.slice(0, 5);
+
+  const severityColor = (days: number) =>
+    days >= 10 ? "bg-red-100 text-red-700" : days >= 5 ? "bg-orange-100 text-orange-700" : "bg-yellow-100 text-yellow-800";
+
   return (
     <DashboardLayout>
-      {/* Header */}
       <div className="mb-6">
         <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
       </div>
@@ -95,13 +40,8 @@ export default function DashboardPage() {
         {kpiCards.map((card) => {
           const Icon = card.icon;
           return (
-            <div
-              key={card.label}
-              className="flex items-center gap-4 rounded-lg bg-white p-5 shadow-sm border border-gray-100"
-            >
-              <div
-                className={`flex h-12 w-12 items-center justify-center rounded-lg ${card.iconBg}`}
-              >
+            <div key={card.label} className="flex items-center gap-4 rounded-lg bg-white p-5 shadow-sm border border-gray-100">
+              <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${card.iconBg}`}>
                 <Icon className={`h-6 w-6 ${card.iconColor}`} />
               </div>
               <div>
@@ -113,27 +53,35 @@ export default function DashboardPage() {
         })}
       </div>
 
-      {/* Two-column section */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Recent Activities */}
+        {/* Urgent Follow-up */}
         <div className="rounded-lg border border-gray-100 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            Recent Activities
-          </h2>
-          <div className="space-y-4">
-            {recentActivities.map((activity) => (
-              <div key={activity.id} className="flex items-start gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700">
-                  {activity.initials}
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">Urgent Follow-up</h2>
+            <button
+              onClick={() => router.push("/dashboard/urgent-follow-up")}
+              className="text-sm font-medium text-[#000080] hover:underline"
+            >
+              View More
+            </button>
+          </div>
+          <div className="space-y-3">
+            {topFollowUps.map((f) => (
+              <div key={f.id} className="flex items-start justify-between gap-3 rounded-lg border border-[#E5E7EB] p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-gray-900">{f.name}</p>
+                  <p className="text-xs text-gray-500">{f.phone}</p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Assigned: <span className="text-gray-700">{f.assignedOfficer}</span>
+                  </p>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-700">
-                    <span className="font-medium">{activity.name}</span>{" "}
-                    {activity.description}
-                  </p>
-                  <p className="mt-0.5 text-xs text-gray-400">
-                    {activity.time}
-                  </p>
+                <div className="flex flex-col items-end gap-1.5">
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${severityColor(f.daysOverdue)}`}>
+                    {f.daysOverdue === 0 ? "Due today" : `${f.daysOverdue} days overdue`}
+                  </span>
+                  <span className="rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[11px] font-medium text-[#374151]">
+                    {f.category}
+                  </span>
                 </div>
               </div>
             ))}
@@ -142,15 +90,14 @@ export default function DashboardPage() {
 
         {/* Attendance Overview */}
         <div className="rounded-lg border border-gray-100 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            Attendance Overview
-          </h2>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Last 6 Sundays</h2>
           <div className="flex h-64 items-end justify-between gap-3 px-2">
             {attendanceData.map((item) => (
               <div key={item.day} className="flex flex-1 flex-col items-center gap-2">
+                <span className="text-xs font-medium text-gray-700">{item.value}</span>
                 <div
                   className="w-full rounded-t-md bg-blue-500 transition-all"
-                  style={{ height: `${(item.value / 100) * 200}px` }}
+                  style={{ height: `${(item.value / maxAttendance) * 200}px` }}
                 />
                 <span className="text-xs text-gray-500">{item.day}</span>
               </div>

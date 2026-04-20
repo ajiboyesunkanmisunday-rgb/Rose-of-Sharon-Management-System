@@ -6,68 +6,65 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
 import ActionDropdown from "@/components/ui/ActionDropdown";
+import DateRangePicker from "@/components/ui/DateRangePicker";
+import StatusFilterTabs from "@/components/ui/StatusFilterTabs";
 import SendSMSModal from "@/components/user-management/SendSMSModal";
 import SendEmailModal from "@/components/user-management/SendEmailModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
+import { celebrations as celebrationsData } from "@/lib/mock-data";
+import { toCSV, downloadCSV } from "@/lib/csv";
+import { Celebration } from "@/lib/types";
 
 type Tab = "birthdays" | "anniversaries" | "thanksgiving";
+type ThanksgivingStatus = "All" | "Pending" | "Treated";
 
-// --- Mock Data ---
+// Parse "MM/DD/YYYY" to Date
+const parseDate = (s: string): Date => {
+  const [mm, dd, yyyy] = s.split("/").map(Number);
+  return new Date(yyyy, (mm || 1) - 1, dd || 1);
+};
 
-interface BirthdayCard {
-  id: string;
-  name: string;
-  date: string;
-}
+// Format "MM/DD/YYYY" to "Mon D, YYYY"
+const formatDisplay = (s: string): string => {
+  const d = parseDate(s);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
 
-interface AnniversaryCard {
-  id: string;
-  couple: string;
-  date: string;
-  years: number;
-}
+const formatShort = (s: string): string => {
+  const d = parseDate(s);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
 
-interface ThanksgivingRow {
-  id: string;
-  name: string;
-  type: string;
-  date: string;
-  status: "Scheduled" | "Completed";
-}
+// Convert "MM/DD/YYYY" to ISO yyyy-mm-dd
+const toISO = (s: string): string => {
+  const d = parseDate(s);
+  return d.toISOString().slice(0, 10);
+};
 
-const birthdayCards: BirthdayCard[] = [
-  { id: "b1", name: "John Michael", date: "Apr 16" },
-  { id: "b2", name: "Sarah Bamidele", date: "Apr 18" },
-  { id: "b3", name: "David Okonkwo", date: "Apr 19" },
-  { id: "b4", name: "Grace Adeyemi", date: "Apr 20" },
-  { id: "b5", name: "Emmanuel Nwosu", date: "Apr 21" },
-  { id: "b6", name: "Blessing Okoro", date: "Apr 22" },
-];
+const monthStartISO = (): string => {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+};
 
-const anniversaryCards: AnniversaryCard[] = [
-  { id: "a1", couple: "John & Sarah Michael", date: "Apr 20", years: 5 },
-  { id: "a2", couple: "David & Grace Okonkwo", date: "Apr 21", years: 10 },
-  { id: "a3", couple: "Peter & Mary Adewale", date: "Apr 22", years: 3 },
-  { id: "a4", couple: "James & Ruth Balogun", date: "Apr 23", years: 8 },
-];
+const todayISO = (): string => new Date().toISOString().slice(0, 10);
 
-const thanksgivingRows: ThanksgivingRow[] = [
-  { id: "cel-11", name: "John Michael", type: "Child Dedication", date: "Apr 25, 2026", status: "Scheduled" },
-  { id: "cel-12", name: "Sarah Bamidele", type: "Thanksgiving", date: "Apr 18, 2026", status: "Completed" },
-  { id: "cel-13", name: "David Okonkwo", type: "Thanksgiving", date: "May 2, 2026", status: "Scheduled" },
-  { id: "cel-14", name: "Grace Adeyemi", type: "Thanksgiving", date: "Apr 20, 2026", status: "Scheduled" },
-  { id: "cel-15", name: "Emmanuel Nwosu", type: "Child Dedication", date: "May 10, 2026", status: "Completed" },
-];
+// photo filename parts from date "MM/DD/YYYY" => MonthDay like "Apr16"
+const monthDayTag = (s: string): string => {
+  const d = parseDate(s);
+  const mm = d.toLocaleDateString("en-US", { month: "short" });
+  return `${mm}${d.getDate()}`;
+};
 
-// --- Icons ---
+const UserIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
 
-const GiftIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 12 20 22 4 22 4 12" />
-    <rect x="2" y="7" width="20" height="5" />
-    <line x1="12" y1="22" x2="12" y2="7" />
-    <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
-    <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+const HeartIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
   </svg>
 );
 
@@ -84,16 +81,11 @@ const MailIcon = () => (
   </svg>
 );
 
-const UserIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-    <circle cx="12" cy="7" r="4" />
-  </svg>
-);
-
-const HeartIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+const DownloadIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
   </svg>
 );
 
@@ -102,7 +94,16 @@ export default function CelebrationsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("birthdays");
   const [search, setSearch] = useState("");
 
-  // Modal states
+  const [bFrom, setBFrom] = useState(monthStartISO());
+  const [bTo, setBTo] = useState(todayISO());
+  const [aFrom, setAFrom] = useState(monthStartISO());
+  const [aTo, setATo] = useState(todayISO());
+
+  const [tgStatus, setTgStatus] = useState<ThanksgivingStatus>("All");
+  const [thanksgivingList, setThanksgivingList] = useState<Celebration[]>(
+    celebrationsData.filter((c) => c.type === "Thanksgiving")
+  );
+
   const [showSMSModal, setShowSMSModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -114,30 +115,45 @@ export default function CelebrationsPage() {
     { key: "thanksgiving", label: "Thanksgiving" },
   ];
 
-  // Filtered data
+  const birthdayItems = celebrationsData.filter((c) => c.type === "Birthday");
+  const anniversaryItems = celebrationsData.filter((c) => c.type === "Wedding Anniversary");
+
+  const withinRange = (dateStr: string, from: string, to: string) => {
+    const d = parseDate(dateStr);
+    const f = new Date(from);
+    const t = new Date(to);
+    return d >= f && d <= t;
+  };
+
   const filteredBirthdays = useMemo(() => {
-    if (!search.trim()) return birthdayCards;
-    const query = search.toLowerCase();
-    return birthdayCards.filter((b) => b.name.toLowerCase().includes(query));
-  }, [search]);
+    let list = birthdayItems.filter((b) => withinRange(b.date, bFrom, bTo));
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((b) => b.name.toLowerCase().includes(q));
+    }
+    return list;
+  }, [birthdayItems, bFrom, bTo, search]);
 
   const filteredAnniversaries = useMemo(() => {
-    if (!search.trim()) return anniversaryCards;
-    const query = search.toLowerCase();
-    return anniversaryCards.filter((a) => a.couple.toLowerCase().includes(query));
-  }, [search]);
+    let list = anniversaryItems.filter((a) => withinRange(a.date, aFrom, aTo));
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((a) => a.name.toLowerCase().includes(q));
+    }
+    return list;
+  }, [anniversaryItems, aFrom, aTo, search]);
 
   const filteredThanksgiving = useMemo(() => {
-    if (!search.trim()) return thanksgivingRows;
-    const query = search.toLowerCase();
-    return thanksgivingRows.filter(
-      (t) =>
-        t.name.toLowerCase().includes(query) ||
-        t.type.toLowerCase().includes(query)
-    );
-  }, [search]);
-
-  const handleSearch = () => {};
+    let list = thanksgivingList;
+    if (tgStatus !== "All") {
+      list = list.filter((t) => t.status === tgStatus);
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((t) => t.name.toLowerCase().includes(q));
+    }
+    return list;
+  }, [thanksgivingList, tgStatus, search]);
 
   const handleDeleteClick = (id: string) => {
     setSelectedItemId(id);
@@ -150,28 +166,75 @@ export default function CelebrationsPage() {
     setSelectedItemId(null);
   };
 
+  const handleMarkTreated = (id: string) => {
+    console.log("Mark as treated:", id);
+    setThanksgivingList((prev) => prev.map((t) => (t.id === id ? { ...t, status: "Treated" } : t)));
+  };
+
+  const exportBirthdayPhotos = () => {
+    const rows = filteredBirthdays.map((b) => {
+      const [first, ...rest] = b.name.trim().split(" ");
+      const last = rest.join("_") || "Member";
+      return { filename: `${first}_${last}_${monthDayTag(b.date)}.jpg`, name: b.name, date: formatDisplay(b.date) };
+    });
+    const csv = toCSV(rows, [
+      { key: "filename", label: "Picture Filename" },
+      { key: "name", label: "Name" },
+      { key: "date", label: "Birthday" },
+    ]);
+    downloadCSV(csv, `birthday-photos-${todayISO()}.csv`);
+  };
+
+  const exportAnniversaryPhotos = () => {
+    const rows = filteredAnniversaries.map((a) => {
+      // parse "First & Last Lastname" -> "First_and_Second_MonthDay.jpg"
+      const names = a.name.replace("&", "and").split(/\s+/).filter(Boolean).join("_");
+      return { filename: `${names}_${monthDayTag(a.date)}.jpg`, couple: a.name, date: formatDisplay(a.date) };
+    });
+    const csv = toCSV(rows, [
+      { key: "filename", label: "Picture Filename" },
+      { key: "couple", label: "Couple" },
+      { key: "date", label: "Anniversary" },
+    ]);
+    downloadCSV(csv, `anniversary-photos-${todayISO()}.csv`);
+  };
+
   return (
     <DashboardLayout>
-      {/* Page Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <h1 className="text-[28px] font-bold text-[#000000]">Celebrations</h1>
-          <Button
-            variant="primary"
-            onClick={() => router.push("/celebrations/add")}
-            icon={
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-            }
-          >
-            Add Celebration
-          </Button>
+          {activeTab !== "thanksgiving" && (
+            <Button
+              variant="primary"
+              onClick={() => router.push("/celebrations/add")}
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              }
+            >
+              Add Celebration
+            </Button>
+          )}
+          {activeTab === "thanksgiving" && (
+            <Button
+              variant="primary"
+              onClick={() => router.push("/celebrations/add?type=Thanksgiving")}
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              }
+            >
+              Add Thanksgiving Request
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="mb-6 flex gap-6 border-b border-[#E5E7EB]">
         {tabs.map((tab) => (
           <button
@@ -191,208 +254,146 @@ export default function CelebrationsPage() {
         ))}
       </div>
 
-      {/* Birthdays Tab */}
       {activeTab === "birthdays" && (
         <>
-          {/* Top bar */}
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="w-72">
-              <SearchBar
-                value={search}
-                onChange={setSearch}
-                onSearch={handleSearch}
-                placeholder="Search birthdays..."
-              />
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="w-72">
+                <SearchBar value={search} onChange={setSearch} onSearch={() => {}} placeholder="Search birthdays..." />
+              </div>
+              <DateRangePicker from={bFrom} to={bTo} onFromChange={setBFrom} onToChange={setBTo} />
             </div>
-            <Button
-              variant="primary"
-              onClick={() => setShowSMSModal(true)}
-              icon={<GiftIcon />}
-            >
-              Send Greetings
+            <Button variant="secondary" onClick={exportBirthdayPhotos} icon={<DownloadIcon />}>
+              Filter &amp; Export
             </Button>
           </div>
 
-          {/* Section header */}
-          <h3 className="mb-4 text-lg font-bold text-[#000080]">This Week</h3>
-
-          {/* Cards grid */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredBirthdays.map((card) => (
-              <div
-                key={card.id}
-                className="rounded-xl border border-[#E5E7EB] bg-white p-5"
-              >
+              <div key={card.id} className="rounded-xl border border-[#E5E7EB] bg-white p-5">
                 <div className="mb-4 flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E5E7EB]">
                     <UserIcon />
                   </div>
                   <div>
                     <p className="text-sm font-bold text-[#111827]">{card.name}</p>
-                    <p className="text-xs text-[#6B7280]">{card.date}</p>
+                    <p className="text-xs text-[#6B7280]">{formatShort(card.date)}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowSMSModal(true)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] transition-colors hover:bg-[#000080]/5"
-                  >
-                    <MessageIcon />
-                    Send SMS
+                  <button onClick={() => setShowSMSModal(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080]/5">
+                    <MessageIcon /> Send SMS
                   </button>
-                  <button
-                    onClick={() => setShowEmailModal(true)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] transition-colors hover:bg-[#000080]/5"
-                  >
-                    <MailIcon />
-                    Send Email
+                  <button onClick={() => setShowEmailModal(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080]/5">
+                    <MailIcon /> Send Email
                   </button>
                 </div>
               </div>
             ))}
             {filteredBirthdays.length === 0 && (
-              <div className="col-span-3 py-8 text-center text-gray-400">
-                No birthdays found.
-              </div>
+              <div className="col-span-3 py-8 text-center text-gray-400">No birthdays found.</div>
             )}
           </div>
         </>
       )}
 
-      {/* Wedding Anniversaries Tab */}
       {activeTab === "anniversaries" && (
         <>
-          {/* Top bar */}
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="w-72">
-              <SearchBar
-                value={search}
-                onChange={setSearch}
-                onSearch={handleSearch}
-                placeholder="Search anniversaries..."
-              />
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="w-72">
+                <SearchBar value={search} onChange={setSearch} onSearch={() => {}} placeholder="Search anniversaries..." />
+              </div>
+              <DateRangePicker from={aFrom} to={aTo} onFromChange={setAFrom} onToChange={setATo} />
             </div>
-            <Button
-              variant="primary"
-              onClick={() => setShowSMSModal(true)}
-              icon={<GiftIcon />}
-            >
-              Send Greetings
+            <Button variant="secondary" onClick={exportAnniversaryPhotos} icon={<DownloadIcon />}>
+              Filter &amp; Export
             </Button>
           </div>
 
-          {/* Section header */}
-          <h3 className="mb-4 text-lg font-bold text-[#000080]">This Week</h3>
-
-          {/* Cards grid */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredAnniversaries.map((card) => (
-              <div
-                key={card.id}
-                className="rounded-xl border border-[#E5E7EB] bg-white p-5"
-              >
+              <div key={card.id} className="rounded-xl border border-[#E5E7EB] bg-white p-5">
                 <div className="mb-4 flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E5E7EB]">
                     <HeartIcon />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-[#111827]">{card.couple}</p>
+                    <p className="text-sm font-bold text-[#111827]">{card.name}</p>
                     <p className="text-xs text-[#6B7280]">
-                      {card.date} ({card.years}
-                      {card.years === 1 ? "st" : card.years === 2 ? "nd" : card.years === 3 ? "rd" : "th"} Anniversary)
+                      {formatShort(card.date)}
+                      {card.years ? ` (${card.years}${card.years === 1 ? "st" : card.years === 2 ? "nd" : card.years === 3 ? "rd" : "th"} Anniversary)` : ""}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowSMSModal(true)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] transition-colors hover:bg-[#000080]/5"
-                  >
-                    <MessageIcon />
-                    Send SMS
+                  <button onClick={() => setShowSMSModal(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080]/5">
+                    <MessageIcon /> Send SMS
                   </button>
-                  <button
-                    onClick={() => setShowEmailModal(true)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] transition-colors hover:bg-[#000080]/5"
-                  >
-                    <MailIcon />
-                    Send Email
+                  <button onClick={() => setShowEmailModal(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080]/5">
+                    <MailIcon /> Send Email
                   </button>
                 </div>
               </div>
             ))}
             {filteredAnniversaries.length === 0 && (
-              <div className="col-span-3 py-8 text-center text-gray-400">
-                No anniversaries found.
-              </div>
+              <div className="col-span-3 py-8 text-center text-gray-400">No anniversaries found.</div>
             )}
           </div>
         </>
       )}
 
-      {/* Thanksgiving Tab */}
       {activeTab === "thanksgiving" && (
         <>
-          {/* Top bar */}
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div className="w-72">
-              <SearchBar
-                value={search}
-                onChange={setSearch}
-                onSearch={handleSearch}
-                placeholder="Search thanksgiving..."
-              />
+              <SearchBar value={search} onChange={setSearch} onSearch={() => {}} placeholder="Search thanksgiving..." />
             </div>
           </div>
 
-          {/* Table */}
+          <div className="mb-4">
+            <StatusFilterTabs
+              options={[
+                { value: "All", label: "All" },
+                { value: "Pending", label: "Pending" },
+                { value: "Treated", label: "Treated" },
+              ]}
+              active={tgStatus}
+              onChange={(v) => setTgStatus(v as ThanksgivingStatus)}
+            />
+          </div>
+
           <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="bg-[#F3F4F6]">
                   <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
-                  <th className="px-4 py-4 text-sm font-bold text-[#000080]">Thanksgiving Type</th>
-                  <th className="px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
+                  <th className="px-4 py-4 text-sm font-bold text-[#000080]">Created Date</th>
+                  <th className="px-4 py-4 text-sm font-bold text-[#000080]">Thanksgiving Date</th>
                   <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
                   <th className="px-4 py-4"></th>
                 </tr>
               </thead>
               <tbody>
                 {filteredThanksgiving.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50"
-                    style={{ height: "56px" }}
-                  >
+                  <tr key={row.id} className="border-b border-[#F3F4F6] hover:bg-gray-50" style={{ height: "56px" }}>
                     <td className="px-4 py-3 text-sm text-[#374151]">{row.name}</td>
-                    <td className="px-4 py-3 text-sm text-[#374151]">{row.type}</td>
-                    <td className="px-4 py-3 text-sm text-[#374151]">{row.date}</td>
+                    <td className="px-4 py-3 text-sm text-[#374151]">{row.createdDate ? formatDisplay(row.createdDate) : "—"}</td>
+                    <td className="px-4 py-3 text-sm text-[#374151]">{formatDisplay(row.date)}</td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          row.status === "Completed"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${row.status === "Treated" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
                         {row.status}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <ActionDropdown
                         actions={[
-                          {
-                            label: "View",
-                            onClick: () => router.push(`/celebrations/${row.id}`),
-                          },
-                          {
-                            label: "Edit",
-                            onClick: () => router.push(`/celebrations/${row.id}/edit`),
-                          },
-                          {
-                            label: "Delete",
-                            onClick: () => handleDeleteClick(row.id),
-                          },
+                          { label: "View", onClick: () => router.push(`/celebrations/${row.id}`) },
+                          { label: "Edit", onClick: () => router.push(`/celebrations/${row.id}/edit`) },
+                          ...(row.status !== "Treated"
+                            ? [{ label: "Mark as Treated", onClick: () => handleMarkTreated(row.id) }]
+                            : []),
+                          { label: "Delete", onClick: () => handleDeleteClick(row.id) },
                         ]}
                       />
                     </td>
@@ -411,17 +412,8 @@ export default function CelebrationsPage() {
         </>
       )}
 
-      {/* Modals */}
-      <SendSMSModal
-        isOpen={showSMSModal}
-        onClose={() => setShowSMSModal(false)}
-        selectedCount={1}
-      />
-      <SendEmailModal
-        isOpen={showEmailModal}
-        onClose={() => setShowEmailModal(false)}
-        selectedCount={1}
-      />
+      <SendSMSModal isOpen={showSMSModal} onClose={() => setShowSMSModal(false)} selectedCount={1} />
+      <SendEmailModal isOpen={showEmailModal} onClose={() => setShowEmailModal(false)} selectedCount={1} />
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         onClose={() => {

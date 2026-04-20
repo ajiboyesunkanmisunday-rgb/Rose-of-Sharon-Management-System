@@ -8,19 +8,21 @@ import Button from "@/components/ui/Button";
 import { mediaItems } from "@/lib/mock-data";
 import { MediaType } from "@/lib/types";
 
-type Tab = "All" | "Sermons" | "Podcasts" | "Videos";
+type Tab = "All" | "Sermons" | "Podcasts" | "Videos" | "Pictures";
 
 const tabs: { key: Tab; label: string }[] = [
   { key: "All", label: "All" },
   { key: "Sermons", label: "Sermons" },
   { key: "Podcasts", label: "Podcasts" },
   { key: "Videos", label: "Videos" },
+  { key: "Pictures", label: "Pictures" },
 ];
 
 const typeColors: Record<MediaType, string> = {
   Sermon: "bg-[#000080] text-white",
   Podcast: "bg-[#7C3AED] text-white",
   Video: "bg-[#16A34A] text-white",
+  Picture: "bg-[#F59E0B] text-white",
 };
 
 export default function MediaPage() {
@@ -35,6 +37,7 @@ export default function MediaPage() {
         Sermons: "Sermon",
         Podcasts: "Podcast",
         Videos: "Video",
+        Pictures: "Picture",
       };
       items = items.filter((m) => m.type === typeMap[activeTab]);
     }
@@ -50,7 +53,7 @@ export default function MediaPage() {
   }, [search, activeTab]);
 
   const getActionLabel = (type: MediaType) =>
-    type === "Podcast" ? "Listen" : "Watch";
+    type === "Podcast" ? "Listen" : type === "Picture" ? "View" : "Watch";
 
   return (
     <DashboardLayout>
@@ -109,10 +112,19 @@ export default function MediaPage() {
               key={item.id}
               className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white transition-shadow hover:shadow-md"
             >
-              <div className="flex h-[160px] items-center justify-center bg-[#F3F4F6]">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#9CA3AF" stroke="#9CA3AF" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="5 3 19 12 5 21 5 3" />
-                </svg>
+              <div className="flex h-[160px] items-center justify-center overflow-hidden bg-[#F3F4F6]">
+                {item.type === "Picture" ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={item.thumbnail || "/rccg-logo.png"}
+                    alt={item.title}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#9CA3AF" stroke="#9CA3AF" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                )}
               </div>
               <div className="p-4">
                 <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${typeColors[item.type]}`}>
