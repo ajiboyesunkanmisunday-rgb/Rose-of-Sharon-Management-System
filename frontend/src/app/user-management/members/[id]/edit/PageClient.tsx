@@ -130,18 +130,6 @@ export default function EditMemberPage() {
                   />
                 </div>
 
-                {/* Phone Number */}
-                <div>
-                  <label className={labelStyles}>Phone Number</label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Enter Phone Number"
-                    className={inputStyles}
-                  />
-                </div>
-
                 {/* Email */}
                 <div>
                   <label className={labelStyles}>Email</label>
@@ -153,20 +141,32 @@ export default function EditMemberPage() {
                     className={inputStyles}
                   />
                 </div>
-              </div>
 
-              {/* Gender - Full width */}
-              <div className="mt-4">
-                <label className={labelStyles}>Gender</label>
-                <select
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value)}
-                  className={selectStyles}
-                >
-                  <option value="">Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                </select>
+                {/* Gender */}
+                <div>
+                  <label className={labelStyles}>Gender</label>
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    className={selectStyles}
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+
+                {/* Phone Number */}
+                <div>
+                  <label className={labelStyles}>Phone Number</label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Enter Phone Number"
+                    className={inputStyles}
+                  />
+                </div>
               </div>
 
               {/* Date of Birth */}

@@ -162,6 +162,24 @@ export default function AddSecondTimerPage() {
                 className={inputStyles}
               />
             </div>
+            <PhoneInput
+              label="Mobile Number"
+              code={countryCode}
+              number={phone}
+              onCodeChange={setCountryCode}
+              onNumberChange={setPhone}
+              placeholder="Enter Mobile Number"
+            />
+            <div>
+              <label className={labelStyles}>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter Email"
+                className={inputStyles}
+              />
+            </div>
             <div>
               <label className={labelStyles}>Gender</label>
               <select
@@ -173,16 +191,6 @@ export default function AddSecondTimerPage() {
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
               </select>
-            </div>
-            <div>
-              <label className={labelStyles}>Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter Email"
-                className={inputStyles}
-              />
             </div>
             <div>
               <label className={labelStyles}>Date of Birth</label>
@@ -225,15 +233,6 @@ export default function AddSecondTimerPage() {
                 </select>
               </div>
             </div>
-
-            <PhoneInput
-              label="Mobile Number"
-              code={countryCode}
-              number={phone}
-              onCodeChange={setCountryCode}
-              onNumberChange={setPhone}
-              placeholder="Enter Mobile Number"
-            />
             <PhoneInput
               label="WhatsApp Number"
               code={whatsappCode}
