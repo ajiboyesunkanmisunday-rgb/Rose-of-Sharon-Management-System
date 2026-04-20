@@ -159,9 +159,29 @@ export interface Message {
   recipientPhone?: string;
   subject?: string;
   content: string;
-  status: 'Delivered' | 'Pending' | 'Failed';
+  status: 'Sent' | 'Scheduled' | 'Failed';
   sentBy: string;
   date: string;
+  time?: string;
+}
+
+export type TemplateProcess =
+  | 'First Timer' | 'Second Timer' | 'Birthday' | 'Wedding Anniversary'
+  | 'New Converts' | 'New E-Member' | 'New Member' | 'Prayer Request'
+  | 'Counseling Request' | 'Birthday Thanksgiving'
+  | 'Anniversary Thanksgiving' | 'Child Dedication';
+
+export type MessageChannel = 'SMS' | 'Email' | 'Both';
+
+export interface UrgentFollowUp {
+  id: string;
+  name: string;
+  phone: string;
+  assignedOfficer: string;
+  daysOverdue: number;
+  status: 'Overdue' | 'Critical' | 'Due Today';
+  lastContact: string;
+  category: 'First Timer' | 'Second Timer' | 'New Convert' | 'Prayer Request';
 }
 
 export interface CommunicationTemplate {
@@ -207,9 +227,10 @@ export interface Celebration {
   name: string;
   type: CelebrationType;
   date: string;
-  status: CelebrationStatus;
+  status: CelebrationStatus | 'Pending' | 'Treated';
   years?: number;
   notes?: string;
+  createdDate?: string;
 }
 
 export type CourseStatus = 'Active' | 'Completed' | 'Upcoming';
