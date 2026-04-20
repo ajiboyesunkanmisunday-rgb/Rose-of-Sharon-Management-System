@@ -62,7 +62,7 @@ export default function PhoneInput({
           name={codeName}
           value={code}
           onChange={(e) => onCodeChange(e.target.value)}
-          className={`${inputBase} w-32 shrink-0 bg-white pr-2`}
+          className={`${inputBase} w-24 shrink-0 bg-white px-2`}
           aria-label="Country code"
         >
           {COUNTRY_CODES.map((c) => (
