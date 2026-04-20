@@ -116,7 +116,10 @@ const navItems: NavItem[] = [
   {
     label: "Calendar",
     icon: CalendarDays,
-    href: "/calendar",
+    children: [
+      { label: "Events Calendar", href: "/calendar" },
+      { label: "Ministers on Duty", href: "/calendar/ministers" },
+    ],
   },
   {
     label: "Directory",
