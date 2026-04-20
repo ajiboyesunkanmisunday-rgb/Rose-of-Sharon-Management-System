@@ -1,4 +1,4 @@
-import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent, WorkflowTemplate, ActiveWorkflowCard, Course, TrainingSchedule, Celebration, Role, Group, PermissionMatrix, FollowUpOfficer, BelieversClass, Testimony, ActivityLog } from './types';
+import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent, WorkflowTemplate, ActiveWorkflowCard, Course, TrainingSchedule, Celebration, Role, Group, PermissionMatrix, FollowUpOfficer, BelieversClass, Testimony, ActivityLog, UrgentFollowUp } from './types';
 
 export const followUpOfficers: FollowUpOfficer[] = [
   { id: 'fo-1', name: 'Shola Damson', department: 'Follow-up', phone: '+234 801 111 2222', email: 'shola@church.org' },
@@ -202,11 +202,14 @@ export const allRequests: Request[] = Array.from({ length: 20 }, (_, i) => ({
   ][i % 5],
   category: (['Counseling', 'Complaint', 'Prayer', 'Suggestion', 'Suggestion'] as const)[i % 5],
   status: (['Treated', 'In Progress', 'Not treated'] as const)[i % 3],
-  submittedBy: i % 2 === 0 ? 'John Michael' : 'Sarah Bamidele',
+  submittedBy: (i === 2 || i === 7) ? '' : (i % 2 === 0 ? 'John Michael' : 'Sarah Bamidele'),
   assignedTo: 'Pastor David',
   addedBy: 'Shola Damson',
   date: '04/03/2026',
 }));
+
+const _msgStatuses: Array<'Sent' | 'Scheduled' | 'Failed'> = ['Sent', 'Sent', 'Scheduled', 'Sent', 'Failed', 'Scheduled', 'Sent', 'Sent', 'Scheduled', 'Sent', 'Sent', 'Failed', 'Scheduled', 'Sent', 'Sent', 'Sent', 'Failed', 'Sent', 'Sent', 'Sent'];
+const _msgTimes: string[] = ['08:15 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:45 AM', '12:15 PM', '01:00 PM', '02:20 PM', '03:10 PM', '03:45 PM', '04:00 PM', '04:30 PM', '05:15 PM', '06:00 PM', '06:40 PM', '07:00 PM', '07:30 PM', '08:00 PM', '08:45 PM'];
 
 export const messages: Message[] = Array.from({ length: 20 }, (_, i) => ({
   id: `msg-${i + 1}`,
@@ -216,10 +219,30 @@ export const messages: Message[] = Array.from({ length: 20 }, (_, i) => ({
   recipientEmail: i % 2 === 0 ? 'john123@gmail.com' : 'sarah345@gmail.com',
   subject: i % 2 === 0 ? undefined : 'Sunday Service Reminder',
   content: i % 2 === 0 ? 'Dear member, you are reminded of the upcoming Sunday service...' : 'Dear member, please find attached the details for this week\'s service...',
-  status: ['Delivered', 'Pending', 'Failed'][i % 3] as 'Delivered' | 'Pending' | 'Failed',
+  status: _msgStatuses[i],
   sentBy: 'Admin',
   date: '04/03/2026',
+  time: _msgTimes[i],
 }));
+
+export const urgentFollowUps: UrgentFollowUp[] = Array.from({ length: 20 }, (_, i) => {
+  const categories: UrgentFollowUp['category'][] = ['First Timer', 'Second Timer', 'New Convert', 'Prayer Request'];
+  const names = ['John Michael', 'Sarah Bamidele', 'David Okonkwo', 'Grace Adeyemi', 'Emmanuel Nwosu', 'Blessing Okoro', 'Peter Adewale', 'Ruth Balogun', 'Mary Eze', 'Samuel Chukwu', 'Esther Obi', 'James Adewale', 'Tobi Lawal', 'Funke Ade', 'Chinedu Obi', 'Ngozi Eze', 'Yetunde Ojo', 'Kunle Bello', 'Zainab Musa', 'Segun Oyelade'];
+  const officers = followUpOfficers.map(f => f.name);
+  const days = [12, 9, 7, 15, 3, 5, 0, 8, 20, 2, 4, 6, 11, 1, 0, 14, 17, 3, 5, 9];
+  const d = days[i];
+  const status: UrgentFollowUp['status'] = d === 0 ? 'Due Today' : d >= 10 ? 'Critical' : 'Overdue';
+  return {
+    id: `uf-${i + 1}`,
+    name: names[i],
+    phone: i % 2 === 0 ? '08011252365' : '09037311234',
+    assignedOfficer: officers[i % officers.length],
+    daysOverdue: d,
+    status,
+    lastContact: '04/03/2026',
+    category: categories[i % 4],
+  };
+});
 
 export const communicationTemplates: CommunicationTemplate[] = [
   { id: 'tpl-1', name: 'Sunday Reminder', type: 'SMS', content: 'Dear {name}, this is a reminder for our Sunday service at 9:00 AM.', createdBy: 'Admin', lastModified: '03/15/2026' },
@@ -464,9 +487,9 @@ export const celebrations: Celebration[] = [
   { id: 'cel-9', name: 'Peter & Mary Adewale', type: 'Wedding Anniversary', date: '04/22/2026', status: 'Scheduled', years: 3 },
   { id: 'cel-10', name: 'James & Ruth Balogun', type: 'Wedding Anniversary', date: '04/23/2026', status: 'Scheduled', years: 8 },
   { id: 'cel-11', name: 'John Michael', type: 'Child Dedication', date: '04/25/2026', status: 'Scheduled', notes: 'For baby Joshua.' },
-  { id: 'cel-12', name: 'Sarah Bamidele', type: 'Thanksgiving', date: '04/18/2026', status: 'Completed', notes: 'Thanksgiving for promotion at work.' },
-  { id: 'cel-13', name: 'David Okonkwo', type: 'Thanksgiving', date: '05/02/2026', status: 'Scheduled', notes: 'Wedding thanksgiving.' },
-  { id: 'cel-14', name: 'Grace Adeyemi', type: 'Thanksgiving', date: '04/20/2026', status: 'Scheduled' },
+  { id: 'cel-12', name: 'Sarah Bamidele', type: 'Thanksgiving', date: '04/18/2026', status: 'Treated', notes: 'Thanksgiving for promotion at work.', createdDate: '04/10/2026' },
+  { id: 'cel-13', name: 'David Okonkwo', type: 'Thanksgiving', date: '05/02/2026', status: 'Pending', notes: 'Wedding thanksgiving.', createdDate: '04/15/2026' },
+  { id: 'cel-14', name: 'Grace Adeyemi', type: 'Thanksgiving', date: '04/20/2026', status: 'Pending', createdDate: '04/12/2026' },
   { id: 'cel-15', name: 'Emmanuel Nwosu', type: 'Child Dedication', date: '05/10/2026', status: 'Completed' },
 ];
 

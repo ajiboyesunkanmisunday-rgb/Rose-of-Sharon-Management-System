@@ -7,11 +7,11 @@ import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { celebrations } from "@/lib/mock-data";
-import { CelebrationStatus } from "@/lib/types";
-
-const statusColors: Record<CelebrationStatus, string> = {
+const statusColors: Record<string, string> = {
   Scheduled: "bg-blue-100 text-blue-800",
   Completed: "bg-green-100 text-green-800",
+  Pending: "bg-yellow-100 text-yellow-800",
+  Treated: "bg-green-100 text-green-800",
 };
 
 export default function CelebrationDetailClient() {
