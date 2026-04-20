@@ -3,16 +3,24 @@
 import React from "react";
 
 const COUNTRY_CODES = [
-  { code: "+234", label: "NG +234" },
-  { code: "+233", label: "GH +233" },
-  { code: "+254", label: "KE +254" },
-  { code: "+256", label: "UG +256" },
-  { code: "+27",  label: "ZA +27" },
-  { code: "+1",   label: "US +1" },
-  { code: "+44",  label: "UK +44" },
-  { code: "+49",  label: "DE +49" },
-  { code: "+33",  label: "FR +33" },
-  { code: "+971", label: "AE +971" },
+  { code: "+234", label: "🇳🇬 +234" },
+  { code: "+233", label: "🇬🇭 +233" },
+  { code: "+254", label: "🇰🇪 +254" },
+  { code: "+256", label: "🇺🇬 +256" },
+  { code: "+27",  label: "🇿🇦 +27" },
+  { code: "+255", label: "🇹🇿 +255" },
+  { code: "+251", label: "🇪🇹 +251" },
+  { code: "+20",  label: "🇪🇬 +20" },
+  { code: "+1",   label: "🇺🇸 +1" },
+  { code: "+44",  label: "🇬🇧 +44" },
+  { code: "+49",  label: "🇩🇪 +49" },
+  { code: "+33",  label: "🇫🇷 +33" },
+  { code: "+39",  label: "🇮🇹 +39" },
+  { code: "+34",  label: "🇪🇸 +34" },
+  { code: "+971", label: "🇦🇪 +971" },
+  { code: "+966", label: "🇸🇦 +966" },
+  { code: "+91",  label: "🇮🇳 +91" },
+  { code: "+86",  label: "🇨🇳 +86" },
 ];
 
 interface PhoneInputProps {
@@ -54,7 +62,8 @@ export default function PhoneInput({
           name={codeName}
           value={code}
           onChange={(e) => onCodeChange(e.target.value)}
-          className={`${inputBase} w-28 shrink-0 bg-white`}
+          className={`${inputBase} w-32 shrink-0 bg-white pr-2`}
+          aria-label="Country code"
         >
           {COUNTRY_CODES.map((c) => (
             <option key={c.code} value={c.code}>
