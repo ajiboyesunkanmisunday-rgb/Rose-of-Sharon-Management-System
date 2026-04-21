@@ -63,7 +63,12 @@ export default function PhotoUpload({
               <span className="mt-1 text-xs">Upload</span>
             </div>
           )}
-          <input type="file" accept={accept} onChange={handleChange} className="hidden" />
+          <input
+            type="file"
+            accept={accept}
+            onChange={handleChange}
+            className="hidden"
+          />
         </label>
         {hint && <p className="text-xs text-[#6B7280]">{hint}</p>}
       </div>

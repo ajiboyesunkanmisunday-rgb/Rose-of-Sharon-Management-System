@@ -13,6 +13,7 @@ import FilterExportModal from "@/components/user-management/FilterExportModal";
 import QRCodeModal from "@/components/user-management/QRCodeModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { eMembers } from "@/lib/mock-data";
+import { toCSV, downloadCSV } from "@/lib/csv";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -28,6 +29,8 @@ export default function EMembersPage() {
   const [showFilterExportModal, setShowFilterExportModal] = useState(false);
   const [showQRCodeModal, setShowQRCodeModal] = useState(false);
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedEMemberId, setSelectedEMemberId] = useState<string | null>(null);
 
   const filteredEMembers = useMemo(() => {
     if (!search.trim()) return eMembers;
@@ -78,8 +81,15 @@ export default function EMembersPage() {
     paginatedEMembers.length > 0 &&
     paginatedEMembers.every((m) => selectedRows.has(m.id));
 
-  const handleDelete = (id: string) => {
-    console.log("Delete e-member:", id);
+  const handleDeleteClick = (id: string) => {
+    setSelectedEMemberId(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    console.log("Delete e-member:", selectedEMemberId);
+    setShowDeleteModal(false);
+    setSelectedEMemberId(null);
   };
 
   const bulkActions = [
@@ -101,6 +111,23 @@ export default function EMembersPage() {
     console.log("Bulk delete e-members:", Array.from(selectedRows));
     setSelectedRows(new Set());
     setShowBulkDeleteModal(false);
+  };
+
+  const handleExport = () => {
+    const csv = toCSV(
+      filteredEMembers.map((m) => ({
+        id: m.id,
+        firstName: m.firstName,
+        lastName: m.lastName,
+        email: m.email,
+        phone: m.phone,
+        country: m.country,
+      }))
+    );
+    downloadCSV(
+      csv,
+      `e-members-export-${new Date().toISOString().slice(0, 10)}.csv`
+    );
   };
 
   return (
@@ -171,7 +198,7 @@ export default function EMembersPage() {
             Filter &amp; Export
           </Button>
 
-          <Button onClick={() => {}}
+          <Button onClick={handleExport}
             icon={
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -261,7 +288,7 @@ export default function EMembersPage() {
                       },
                       {
                         label: "Delete",
-                        onClick: () => handleDelete(member.id),
+                        onClick: () => handleDeleteClick(member.id),
                       },
                     ]}
                   />
@@ -309,6 +336,14 @@ export default function EMembersPage() {
       <QRCodeModal
         isOpen={showQRCodeModal}
         onClose={() => setShowQRCodeModal(false)}
+      />
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setSelectedEMemberId(null);
+        }}
+        onConfirm={handleConfirmDelete}
       />
       <DeleteConfirmModal
         isOpen={showBulkDeleteModal}

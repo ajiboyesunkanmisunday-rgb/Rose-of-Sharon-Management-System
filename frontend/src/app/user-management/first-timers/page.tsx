@@ -13,6 +13,7 @@ import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal"
 import AssignFollowUpModal from "@/components/user-management/AssignFollowUpModal";
 import Modal from "@/components/ui/Modal";
 import { firstTimers } from "@/lib/mock-data";
+import { toCSV, downloadCSV } from "@/lib/csv";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -121,6 +122,26 @@ export default function FirstTimersPage() {
     setSelectedTimerId(null);
   };
 
+  const handleExport = () => {
+    const csv = toCSV(
+      filteredTimers.map((ft) => ({
+        id: ft.id,
+        name: ft.name,
+        email: ft.email,
+        phone: ft.phone,
+        serviceAttended: ft.serviceAttended,
+        assignedFollowUp: ft.assignedFollowUp,
+        date: ft.date,
+        calls: ft.calls,
+        visits: ft.visits,
+      }))
+    );
+    downloadCSV(
+      csv,
+      `first-timers-export-${new Date().toISOString().slice(0, 10)}.csv`
+    );
+  };
+
   return (
     <DashboardLayout>
       {/* Page Header */}
@@ -188,7 +209,7 @@ export default function FirstTimersPage() {
             }
           >Filter &amp; Export</Button>
 
-          <Button onClick={() => {}}
+          <Button onClick={handleExport}
             icon={
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
