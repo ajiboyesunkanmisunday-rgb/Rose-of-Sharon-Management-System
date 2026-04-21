@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
+import MultiSelect from "@/components/ui/MultiSelect";
 import { profileDetails } from "@/lib/mock-data";
 
 export default function EditMemberPage() {
@@ -23,7 +24,7 @@ export default function EditMemberPage() {
   const [state, setState] = useState("Lagos");
   const [country, setCountry] = useState("Nigeria");
   const [maritalStatus, setMaritalStatus] = useState(profileDetails.maritalStatus);
-  const [group, setGroup] = useState("Youth");
+  const [groups, setGroups] = useState<string[]>(["Youth"]);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -297,23 +298,28 @@ export default function EditMemberPage() {
                   </select>
                 </div>
 
-                {/* Group */}
-                <div>
-                  <label className={labelStyles}>Group</label>
-                  <select
-                    value={group}
-                    onChange={(e) => setGroup(e.target.value)}
-                    className={selectStyles}
-                  >
-                    <option value="">Select Group</option>
-                    <option value="Youth">Youth</option>
-                    <option value="Men">Men</option>
-                    <option value="Women">Women</option>
-                    <option value="Children">Children</option>
-                    <option value="Teenagers">Teenagers</option>
-                    <option value="Young Adults">Young Adults</option>
-                  </select>
-                </div>
+                {/* Groups (multi-select dropdown) */}
+                <MultiSelect
+                  label="Groups"
+                  options={[
+                    "Youth",
+                    "Men",
+                    "Women",
+                    "Children",
+                    "Teenagers",
+                    "Young Adults",
+                    "Choir",
+                    "Ushering",
+                    "Protocol",
+                    "Media",
+                    "Prayer",
+                    "Evangelism",
+                  ]}
+                  value={groups}
+                  onChange={setGroups}
+                  placeholder="Select Groups"
+                  name="groups"
+                />
               </div>
 
               {/* Update Member Button */}
@@ -332,11 +338,9 @@ export default function EditMemberPage() {
                 Profile Photo
               </h2>
 
-              <div className="flex flex-col items-center">
-                {/* Dashed circle placeholder */}
-                <div
-                  className="flex h-40 w-40 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-[#D1D5DB]"
-                >
+              {/* Whole area (circle + "Upload Photo" text) is one clickable label */}
+              <label className="group flex cursor-pointer flex-col items-center">
+                <span className="flex h-40 w-40 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-[#D1D5DB] transition-colors group-hover:border-[#000080]">
                   {photoPreview ? (
                     <img
                       src={photoPreview}
@@ -359,25 +363,19 @@ export default function EditMemberPage() {
                       <circle cx="12" cy="7" r="4" />
                     </svg>
                   )}
-                </div>
+                </span>
 
-                {/* Upload Photo button */}
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  capture="environment"
                   onChange={handlePhotoUpload}
                   className="hidden"
                 />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="mt-4 text-sm font-medium text-[#000080] transition-colors hover:text-[#000066]"
-                >
+                <span className="mt-4 text-sm font-medium text-[#000080] transition-colors group-hover:text-[#000066]">
                   Upload Photo
-                </button>
-              </div>
+                </span>
+              </label>
             </div>
           </div>
         </div>
