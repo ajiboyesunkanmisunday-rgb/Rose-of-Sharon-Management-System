@@ -15,6 +15,7 @@ import AddNotesModal from "@/components/user-management/AddNotesModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { members } from "@/lib/mock-data";
 import { Member } from "@/lib/types";
+import { toCSV, downloadCSV } from "@/lib/csv";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -123,6 +124,23 @@ export default function MembersPage() {
     setShowBulkDeleteModal(false);
   };
 
+  const handleExport = () => {
+    const csv = toCSV(
+      filteredMembers.map((m) => ({
+        id: m.id,
+        firstName: m.firstName,
+        lastName: m.lastName,
+        email: m.email,
+        phone: m.phone,
+        status: m.status || "",
+      }))
+    );
+    downloadCSV(
+      csv,
+      `members-export-${new Date().toISOString().slice(0, 10)}.csv`
+    );
+  };
+
   return (
     <DashboardLayout>
       {/* Page Header */}
@@ -191,7 +209,7 @@ export default function MembersPage() {
             Filter &amp; Export
           </Button>
 
-          <Button onClick={() => {}}
+          <Button onClick={handleExport}
             icon={
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />

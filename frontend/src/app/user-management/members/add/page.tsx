@@ -27,7 +27,7 @@ export default function AddMemberPage() {
   const [state, setState] = useState("");
   const [country, setCountry] = useState("");
   const [maritalStatus, setMaritalStatus] = useState("");
-  const [group, setGroup] = useState("");
+  const [groups, setGroups] = useState<string[]>([]);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [spouse, setSpouse] = useState<SpouseData | null>(null);
   const [showSpouseModal, setShowSpouseModal] = useState(false);
@@ -48,7 +48,7 @@ export default function AddMemberPage() {
       state,
       country,
       maritalStatus,
-      group,
+      groups,
       spouse,
     });
     router.push("/user-management/members");
@@ -339,22 +339,44 @@ export default function AddMemberPage() {
                   )}
                 </div>
 
-                {/* Group */}
+                {/* Groups (multi-select) */}
                 <div>
-                  <label className={labelStyles}>Group</label>
-                  <select
-                    value={group}
-                    onChange={(e) => setGroup(e.target.value)}
-                    className={selectStyles}
-                  >
-                    <option value="">Select Group</option>
-                    <option value="Youth">Youth</option>
-                    <option value="Men">Men</option>
-                    <option value="Women">Women</option>
-                    <option value="Children">Children</option>
-                    <option value="Teenagers">Teenagers</option>
-                    <option value="Young Adults">Young Adults</option>
-                  </select>
+                  <label className={labelStyles}>Groups</label>
+                  <div className="rounded-lg border border-[#E5E7EB] bg-white p-3">
+                    {/* Selected chips */}
+                    {groups.length > 0 && (
+                      <div className="mb-2 flex flex-wrap gap-1">
+                        {groups.map((g) => (
+                          <span key={g} className="inline-flex items-center gap-1 rounded-full bg-[#B5B5F3]/30 px-2.5 py-1 text-xs font-medium text-[#000080]">
+                            {g}
+                            <button
+                              type="button"
+                              onClick={() => setGroups((prev) => prev.filter((x) => x !== g))}
+                              aria-label={`Remove ${g}`}
+                              className="ml-1 text-[#000080] hover:text-[#000066]"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-3">
+                      {["Youth", "Men", "Women", "Children", "Teenagers", "Young Adults", "Choir", "Ushering", "Protocol", "Media", "Prayer", "Evangelism"].map((g) => (
+                        <label key={g} className="inline-flex items-center gap-2 text-sm text-[#374151]">
+                          <input
+                            type="checkbox"
+                            checked={groups.includes(g)}
+                            onChange={(e) =>
+                              setGroups((prev) => (e.target.checked ? [...prev, g] : prev.filter((x) => x !== g)))
+                            }
+                            className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
+                          />
+                          {g}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
