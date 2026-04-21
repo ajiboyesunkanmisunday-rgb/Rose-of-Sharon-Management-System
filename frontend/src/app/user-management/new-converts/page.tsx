@@ -13,6 +13,8 @@ import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal"
 import MarkAttendanceModal from "@/components/user-management/MarkAttendanceModal";
 import Modal from "@/components/ui/Modal";
 import { newConverts } from "@/lib/mock-data";
+import { toCSV, downloadCSV } from "@/lib/csv";
+
 
 const ITEMS_PER_PAGE = 10;
 
@@ -110,6 +112,25 @@ export default function NewConvertsPage() {
     setSelectedConvertId(null);
   };
 
+  const handleExport = () => {
+    const csv = toCSV(
+      filteredConverts.map((nc) => ({
+        id: nc.id,
+        firstName: nc.firstName || "",
+        lastName: nc.lastName || "",
+        phone: nc.phone,
+        email: nc.email,
+        serviceAttended: nc.serviceAttended,
+        believersClass: nc.believersClass,
+        date: nc.date,
+      }))
+    );
+    downloadCSV(
+      csv,
+      `new-converts-export-${new Date().toISOString().slice(0, 10)}.csv`
+    );
+  };
+
   const bulkActions = [
     {
       label: "Send SMS",
@@ -192,7 +213,7 @@ export default function NewConvertsPage() {
             }
           >Filter &amp; Export</Button>
 
-          <Button onClick={() => {}}
+          <Button onClick={handleExport}
             icon={
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
