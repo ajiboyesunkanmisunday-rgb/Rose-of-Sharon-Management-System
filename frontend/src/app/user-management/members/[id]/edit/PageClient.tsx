@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
+import MultiSelect from "@/components/ui/MultiSelect";
 import { profileDetails } from "@/lib/mock-data";
 
 export default function EditMemberPage() {
@@ -297,69 +298,28 @@ export default function EditMemberPage() {
                   </select>
                 </div>
 
-                {/* Groups (multi-select) */}
-                <div>
-                  <label className={labelStyles}>Groups</label>
-                  <div className="rounded-lg border border-[#E5E7EB] bg-white p-3">
-                    {groups.length > 0 && (
-                      <div className="mb-2 flex flex-wrap gap-1">
-                        {groups.map((g) => (
-                          <span
-                            key={g}
-                            className="inline-flex items-center gap-1 rounded-full bg-[#B5B5F3]/30 px-2.5 py-1 text-xs font-medium text-[#000080]"
-                          >
-                            {g}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setGroups((prev) => prev.filter((x) => x !== g))
-                              }
-                              aria-label={`Remove ${g}`}
-                              className="ml-1 text-[#000080] hover:text-[#000066]"
-                            >
-                              ×
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <div className="flex flex-wrap gap-3">
-                      {[
-                        "Youth",
-                        "Men",
-                        "Women",
-                        "Children",
-                        "Teenagers",
-                        "Young Adults",
-                        "Choir",
-                        "Ushering",
-                        "Protocol",
-                        "Media",
-                        "Prayer",
-                        "Evangelism",
-                      ].map((g) => (
-                        <label
-                          key={g}
-                          className="inline-flex items-center gap-2 text-sm text-[#374151]"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={groups.includes(g)}
-                            onChange={(e) =>
-                              setGroups((prev) =>
-                                e.target.checked
-                                  ? [...prev, g]
-                                  : prev.filter((x) => x !== g)
-                              )
-                            }
-                            className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
-                          />
-                          {g}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                {/* Groups (multi-select dropdown) */}
+                <MultiSelect
+                  label="Groups"
+                  options={[
+                    "Youth",
+                    "Men",
+                    "Women",
+                    "Children",
+                    "Teenagers",
+                    "Young Adults",
+                    "Choir",
+                    "Ushering",
+                    "Protocol",
+                    "Media",
+                    "Prayer",
+                    "Evangelism",
+                  ]}
+                  value={groups}
+                  onChange={setGroups}
+                  placeholder="Select Groups"
+                  name="groups"
+                />
               </div>
 
               {/* Update Member Button */}
