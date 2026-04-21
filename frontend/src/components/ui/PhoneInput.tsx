@@ -3,24 +3,24 @@
 import React from "react";
 
 const COUNTRY_CODES = [
-  { code: "+234", label: "+234" },
-  { code: "+233", label: "+233" },
-  { code: "+254", label: "+254" },
-  { code: "+256", label: "+256" },
-  { code: "+27",  label: "+27" },
-  { code: "+255", label: "+255" },
-  { code: "+251", label: "+251" },
-  { code: "+20",  label: "+20" },
-  { code: "+1",   label: "+1" },
-  { code: "+44",  label: "+44" },
-  { code: "+49",  label: "+49" },
-  { code: "+33",  label: "+33" },
-  { code: "+39",  label: "+39" },
-  { code: "+34",  label: "+34" },
-  { code: "+971", label: "+971" },
-  { code: "+966", label: "+966" },
-  { code: "+91",  label: "+91" },
-  { code: "+86",  label: "+86" },
+  { code: "+234", label: "🇳🇬 +234" },
+  { code: "+233", label: "🇬🇭 +233" },
+  { code: "+254", label: "🇰🇪 +254" },
+  { code: "+256", label: "🇺🇬 +256" },
+  { code: "+27",  label: "🇿🇦 +27" },
+  { code: "+255", label: "🇹🇿 +255" },
+  { code: "+251", label: "🇪🇹 +251" },
+  { code: "+20",  label: "🇪🇬 +20" },
+  { code: "+1",   label: "🇺🇸 +1" },
+  { code: "+44",  label: "🇬🇧 +44" },
+  { code: "+49",  label: "🇩🇪 +49" },
+  { code: "+33",  label: "🇫🇷 +33" },
+  { code: "+39",  label: "🇮🇹 +39" },
+  { code: "+34",  label: "🇪🇸 +34" },
+  { code: "+971", label: "🇦🇪 +971" },
+  { code: "+966", label: "🇸🇦 +966" },
+  { code: "+91",  label: "🇮🇳 +91" },
+  { code: "+86",  label: "🇨🇳 +86" },
 ];
 
 interface PhoneInputProps {
@@ -58,10 +58,10 @@ export default function PhoneInput({
         {label}
         {required && <span className="text-red-500"> *</span>}
       </label>
-      {/* Grid: compact 72px column for country code; rest for phone input. */}
+      {/* Grid: 92px column for country code (fits flag + code); rest for phone input. */}
       <div
         className="grid items-stretch gap-2"
-        style={{ gridTemplateColumns: "72px minmax(0, 1fr)" }}
+        style={{ gridTemplateColumns: "92px minmax(0, 1fr)" }}
       >
         <select
           name={codeName}
