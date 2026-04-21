@@ -396,11 +396,10 @@ export default function AddMemberPage() {
                 Profile Photo
               </h2>
 
-              <div className="flex flex-col items-center">
+              {/* Whole area (circle + "Upload Photo" text) is one clickable label */}
+              <label className="group flex cursor-pointer flex-col items-center">
                 {/* Dashed circle placeholder */}
-                <div
-                  className="flex h-40 w-40 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-[#D1D5DB]"
-                >
+                <span className="flex h-40 w-40 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-[#D1D5DB] transition-colors group-hover:border-[#000080]">
                   {photoPreview ? (
                     <img
                       src={photoPreview}
@@ -423,9 +422,8 @@ export default function AddMemberPage() {
                       <circle cx="12" cy="7" r="4" />
                     </svg>
                   )}
-                </div>
+                </span>
 
-                {/* Upload Photo button */}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -433,14 +431,10 @@ export default function AddMemberPage() {
                   onChange={handlePhotoUpload}
                   className="hidden"
                 />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="mt-4 text-sm font-medium text-[#000080] transition-colors hover:text-[#000066]"
-                >
+                <span className="mt-4 text-sm font-medium text-[#000080] transition-colors group-hover:text-[#000066]">
                   Upload Photo
-                </button>
-              </div>
+                </span>
+              </label>
             </div>
           </div>
         </div>
