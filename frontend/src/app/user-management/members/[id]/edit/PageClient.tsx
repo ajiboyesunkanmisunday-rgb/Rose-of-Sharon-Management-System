@@ -23,7 +23,7 @@ export default function EditMemberPage() {
   const [state, setState] = useState("Lagos");
   const [country, setCountry] = useState("Nigeria");
   const [maritalStatus, setMaritalStatus] = useState(profileDetails.maritalStatus);
-  const [group, setGroup] = useState("Youth");
+  const [groups, setGroups] = useState<string[]>(["Youth"]);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -297,22 +297,68 @@ export default function EditMemberPage() {
                   </select>
                 </div>
 
-                {/* Group */}
+                {/* Groups (multi-select) */}
                 <div>
-                  <label className={labelStyles}>Group</label>
-                  <select
-                    value={group}
-                    onChange={(e) => setGroup(e.target.value)}
-                    className={selectStyles}
-                  >
-                    <option value="">Select Group</option>
-                    <option value="Youth">Youth</option>
-                    <option value="Men">Men</option>
-                    <option value="Women">Women</option>
-                    <option value="Children">Children</option>
-                    <option value="Teenagers">Teenagers</option>
-                    <option value="Young Adults">Young Adults</option>
-                  </select>
+                  <label className={labelStyles}>Groups</label>
+                  <div className="rounded-lg border border-[#E5E7EB] bg-white p-3">
+                    {groups.length > 0 && (
+                      <div className="mb-2 flex flex-wrap gap-1">
+                        {groups.map((g) => (
+                          <span
+                            key={g}
+                            className="inline-flex items-center gap-1 rounded-full bg-[#B5B5F3]/30 px-2.5 py-1 text-xs font-medium text-[#000080]"
+                          >
+                            {g}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setGroups((prev) => prev.filter((x) => x !== g))
+                              }
+                              aria-label={`Remove ${g}`}
+                              className="ml-1 text-[#000080] hover:text-[#000066]"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-3">
+                      {[
+                        "Youth",
+                        "Men",
+                        "Women",
+                        "Children",
+                        "Teenagers",
+                        "Young Adults",
+                        "Choir",
+                        "Ushering",
+                        "Protocol",
+                        "Media",
+                        "Prayer",
+                        "Evangelism",
+                      ].map((g) => (
+                        <label
+                          key={g}
+                          className="inline-flex items-center gap-2 text-sm text-[#374151]"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={groups.includes(g)}
+                            onChange={(e) =>
+                              setGroups((prev) =>
+                                e.target.checked
+                                  ? [...prev, g]
+                                  : prev.filter((x) => x !== g)
+                              )
+                            }
+                            className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
+                          />
+                          {g}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -332,11 +378,9 @@ export default function EditMemberPage() {
                 Profile Photo
               </h2>
 
-              <div className="flex flex-col items-center">
-                {/* Dashed circle placeholder */}
-                <div
-                  className="flex h-40 w-40 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-[#D1D5DB]"
-                >
+              {/* Whole area (circle + "Upload Photo" text) is one clickable label */}
+              <label className="group flex cursor-pointer flex-col items-center">
+                <span className="flex h-40 w-40 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-[#D1D5DB] transition-colors group-hover:border-[#000080]">
                   {photoPreview ? (
                     <img
                       src={photoPreview}
@@ -359,25 +403,19 @@ export default function EditMemberPage() {
                       <circle cx="12" cy="7" r="4" />
                     </svg>
                   )}
-                </div>
+                </span>
 
-                {/* Upload Photo button */}
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  capture="environment"
                   onChange={handlePhotoUpload}
                   className="hidden"
                 />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="mt-4 text-sm font-medium text-[#000080] transition-colors hover:text-[#000066]"
-                >
+                <span className="mt-4 text-sm font-medium text-[#000080] transition-colors group-hover:text-[#000066]">
                   Upload Photo
-                </button>
-              </div>
+                </span>
+              </label>
             </div>
           </div>
         </div>
