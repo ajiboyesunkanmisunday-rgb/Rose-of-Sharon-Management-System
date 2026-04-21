@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import PhoneInput from "@/components/ui/PhoneInput";
+import MultiSelect from "@/components/ui/MultiSelect";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
 
@@ -339,45 +340,28 @@ export default function AddMemberPage() {
                   )}
                 </div>
 
-                {/* Groups (multi-select) */}
-                <div>
-                  <label className={labelStyles}>Groups</label>
-                  <div className="rounded-lg border border-[#E5E7EB] bg-white p-3">
-                    {/* Selected chips */}
-                    {groups.length > 0 && (
-                      <div className="mb-2 flex flex-wrap gap-1">
-                        {groups.map((g) => (
-                          <span key={g} className="inline-flex items-center gap-1 rounded-full bg-[#B5B5F3]/30 px-2.5 py-1 text-xs font-medium text-[#000080]">
-                            {g}
-                            <button
-                              type="button"
-                              onClick={() => setGroups((prev) => prev.filter((x) => x !== g))}
-                              aria-label={`Remove ${g}`}
-                              className="ml-1 text-[#000080] hover:text-[#000066]"
-                            >
-                              ×
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <div className="flex flex-wrap gap-3">
-                      {["Youth", "Men", "Women", "Children", "Teenagers", "Young Adults", "Choir", "Ushering", "Protocol", "Media", "Prayer", "Evangelism"].map((g) => (
-                        <label key={g} className="inline-flex items-center gap-2 text-sm text-[#374151]">
-                          <input
-                            type="checkbox"
-                            checked={groups.includes(g)}
-                            onChange={(e) =>
-                              setGroups((prev) => (e.target.checked ? [...prev, g] : prev.filter((x) => x !== g)))
-                            }
-                            className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
-                          />
-                          {g}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                {/* Groups (multi-select dropdown) */}
+                <MultiSelect
+                  label="Groups"
+                  options={[
+                    "Youth",
+                    "Men",
+                    "Women",
+                    "Children",
+                    "Teenagers",
+                    "Young Adults",
+                    "Choir",
+                    "Ushering",
+                    "Protocol",
+                    "Media",
+                    "Prayer",
+                    "Evangelism",
+                  ]}
+                  value={groups}
+                  onChange={setGroups}
+                  placeholder="Select Groups"
+                  name="groups"
+                />
               </div>
 
               {/* Save Member Button */}
@@ -396,11 +380,10 @@ export default function AddMemberPage() {
                 Profile Photo
               </h2>
 
-              <div className="flex flex-col items-center">
+              {/* Whole area (circle + "Upload Photo" text) is one clickable label */}
+              <label className="group flex cursor-pointer flex-col items-center">
                 {/* Dashed circle placeholder */}
-                <div
-                  className="flex h-40 w-40 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-[#D1D5DB]"
-                >
+                <span className="flex h-40 w-40 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-[#D1D5DB] transition-colors group-hover:border-[#000080]">
                   {photoPreview ? (
                     <img
                       src={photoPreview}
@@ -423,9 +406,8 @@ export default function AddMemberPage() {
                       <circle cx="12" cy="7" r="4" />
                     </svg>
                   )}
-                </div>
+                </span>
 
-                {/* Upload Photo button */}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -433,14 +415,10 @@ export default function AddMemberPage() {
                   onChange={handlePhotoUpload}
                   className="hidden"
                 />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="mt-4 text-sm font-medium text-[#000080] transition-colors hover:text-[#000066]"
-                >
+                <span className="mt-4 text-sm font-medium text-[#000080] transition-colors group-hover:text-[#000066]">
                   Upload Photo
-                </button>
-              </div>
+                </span>
+              </label>
             </div>
           </div>
         </div>
