@@ -124,6 +124,7 @@ export default function DirectoryPage() {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
+          totalItems={filtered.length}
           onPageChange={setCurrentPage}
         />
       </div>

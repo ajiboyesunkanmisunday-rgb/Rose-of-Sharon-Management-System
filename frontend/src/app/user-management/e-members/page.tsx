@@ -9,10 +9,12 @@ import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
 import SendSMSModal from "@/components/user-management/SendSMSModal";
 import SendEmailModal from "@/components/user-management/SendEmailModal";
-import FilterExportModal from "@/components/user-management/FilterExportModal";
 import QRCodeModal from "@/components/user-management/QRCodeModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
+import BulkImportModal from "@/components/user-management/BulkImportModal";
+import NoLongerMemberModal from "@/components/user-management/NoLongerMemberModal";
 import { eMembers } from "@/lib/mock-data";
+import type { EMember } from "@/lib/types";
 import { toCSV, downloadCSV } from "@/lib/csv";
 
 const ITEMS_PER_PAGE = 10;
@@ -26,24 +28,46 @@ export default function EMembersPage() {
   // Modal states
   const [showSMSModal, setShowSMSModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [showFilterExportModal, setShowFilterExportModal] = useState(false);
   const [showQRCodeModal, setShowQRCodeModal] = useState(false);
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
+  const [showNoLongerBulkModal, setShowNoLongerBulkModal] = useState(false);
+  const [showNoLongerSingleModal, setShowNoLongerSingleModal] = useState(false);
   const [selectedEMemberId, setSelectedEMemberId] = useState<string | null>(null);
 
+  // Inline filter state
+  const [showFilter, setShowFilter] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [appliedStart, setAppliedStart] = useState("");
+  const [appliedEnd, setAppliedEnd] = useState("");
+
   const filteredEMembers = useMemo(() => {
-    if (!search.trim()) return eMembers;
-    const query = search.toLowerCase();
-    return eMembers.filter(
-      (m) =>
-        m.firstName.toLowerCase().includes(query) ||
-        m.lastName.toLowerCase().includes(query) ||
-        m.email.toLowerCase().includes(query) ||
-        m.phone.includes(query) ||
-        m.country.toLowerCase().includes(query)
-    );
-  }, [search]);
+    let list: EMember[] = eMembers;
+    if (search.trim()) {
+      const query = search.toLowerCase();
+      list = list.filter(
+        (m) =>
+          m.firstName.toLowerCase().includes(query) ||
+          m.lastName.toLowerCase().includes(query) ||
+          m.email.toLowerCase().includes(query) ||
+          m.phone.includes(query) ||
+          m.country.toLowerCase().includes(query)
+      );
+    }
+    if (appliedStart || appliedEnd) {
+      list = list.filter((m) => {
+        const d =
+          (m as unknown as { date?: string }).date ?? m.dateOfBirth ?? "";
+        if (!d) return true;
+        if (appliedStart && d < appliedStart) return false;
+        if (appliedEnd && d > appliedEnd) return false;
+        return true;
+      });
+    }
+    return list;
+  }, [search, appliedStart, appliedEnd]);
 
   const totalPages = Math.ceil(filteredEMembers.length / ITEMS_PER_PAGE);
   const paginatedEMembers = filteredEMembers.slice(
@@ -92,6 +116,11 @@ export default function EMembersPage() {
     setSelectedEMemberId(null);
   };
 
+  const handleNoLongerMemberClick = (id: string) => {
+    setSelectedEMemberId(id);
+    setShowNoLongerSingleModal(true);
+  };
+
   const bulkActions = [
     {
       label: "Send SMS",
@@ -100,6 +129,10 @@ export default function EMembersPage() {
     {
       label: "Send Email",
       onClick: () => setShowEmailModal(true),
+    },
+    {
+      label: "Mark as No longer a member",
+      onClick: () => setShowNoLongerBulkModal(true),
     },
     {
       label: "Delete",
@@ -111,6 +144,28 @@ export default function EMembersPage() {
     console.log("Bulk delete e-members:", Array.from(selectedRows));
     setSelectedRows(new Set());
     setShowBulkDeleteModal(false);
+  };
+
+  const handleBulkNoLongerConfirm = (reason: string) => {
+    console.log(
+      "Bulk mark as no longer a member (e-members):",
+      Array.from(selectedRows),
+      "reason:",
+      reason
+    );
+    setSelectedRows(new Set());
+    setShowNoLongerBulkModal(false);
+  };
+
+  const handleSingleNoLongerConfirm = (reason: string) => {
+    console.log(
+      "Mark as no longer a member (e-member):",
+      selectedEMemberId,
+      "reason:",
+      reason
+    );
+    setShowNoLongerSingleModal(false);
+    setSelectedEMemberId(null);
   };
 
   const handleExport = () => {
@@ -128,6 +183,20 @@ export default function EMembersPage() {
       csv,
       `e-members-export-${new Date().toISOString().slice(0, 10)}.csv`
     );
+  };
+
+  const handleApplyFilter = () => {
+    setAppliedStart(startDate);
+    setAppliedEnd(endDate);
+    setCurrentPage(1);
+  };
+
+  const handleClearFilter = () => {
+    setStartDate("");
+    setEndDate("");
+    setAppliedStart("");
+    setAppliedEnd("");
+    setCurrentPage(1);
   };
 
   return (
@@ -188,7 +257,7 @@ export default function EMembersPage() {
             }
           >QR Code</Button>
 
-          <Button onClick={() => setShowFilterExportModal(true)}
+          <Button onClick={() => setShowFilter((s) => !s)}
             icon={
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
@@ -207,8 +276,63 @@ export default function EMembersPage() {
               </svg>
             }
           >Export</Button>
+
+          <Button
+            variant="primary"
+            onClick={() => setShowBulkImportModal(true)}
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            }
+          >
+            Bulk Import
+          </Button>
         </div>
       </div>
+
+      {/* Inline Filter Row */}
+      {showFilter && (
+        <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[#374151]">
+              Start Date
+            </label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[#374151]">
+              End Date
+            </label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            />
+          </div>
+          <Button variant="primary" onClick={handleApplyFilter}>
+            Apply Filter
+          </Button>
+          <Button onClick={handleExport}>Export CSV</Button>
+          {(appliedStart || appliedEnd || startDate || endDate) && (
+            <button
+              type="button"
+              onClick={handleClearFilter}
+              className="text-sm font-medium text-[#000080] underline hover:text-[#000066]"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Selected count indicator */}
       {selectedRows.size > 0 && (
@@ -287,6 +411,10 @@ export default function EMembersPage() {
                           router.push(`/user-management/e-members/${member.id}/edit`),
                       },
                       {
+                        label: "Mark as No longer a member",
+                        onClick: () => handleNoLongerMemberClick(member.id),
+                      },
+                      {
                         label: "Delete",
                         onClick: () => handleDeleteClick(member.id),
                       },
@@ -314,6 +442,7 @@ export default function EMembersPage() {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
+          totalItems={filteredEMembers.length}
           onPageChange={setCurrentPage}
         />
       </div>
@@ -328,10 +457,6 @@ export default function EMembersPage() {
         isOpen={showEmailModal}
         onClose={() => setShowEmailModal(false)}
         selectedCount={selectedRows.size}
-      />
-      <FilterExportModal
-        isOpen={showFilterExportModal}
-        onClose={() => setShowFilterExportModal(false)}
       />
       <QRCodeModal
         isOpen={showQRCodeModal}
@@ -350,6 +475,35 @@ export default function EMembersPage() {
         onClose={() => setShowBulkDeleteModal(false)}
         onConfirm={handleBulkDeleteConfirm}
         message={`Are you sure you want to delete ${selectedRows.size} selected e-member${selectedRows.size === 1 ? "" : "s"}?`}
+      />
+
+      <NoLongerMemberModal
+        isOpen={showNoLongerBulkModal}
+        onClose={() => setShowNoLongerBulkModal(false)}
+        onConfirm={handleBulkNoLongerConfirm}
+        count={selectedRows.size}
+      />
+
+      <NoLongerMemberModal
+        isOpen={showNoLongerSingleModal}
+        onClose={() => {
+          setShowNoLongerSingleModal(false);
+          setSelectedEMemberId(null);
+        }}
+        onConfirm={handleSingleNoLongerConfirm}
+        count={1}
+      />
+
+      <BulkImportModal
+        isOpen={showBulkImportModal}
+        onClose={() => setShowBulkImportModal(false)}
+        onImport={(rows) => {
+          console.log("Bulk import E-Members:", rows);
+          setShowBulkImportModal(false);
+        }}
+        module="E-Members"
+        templateHeaders={["firstName","middleName","lastName","email","country","countryCode","phone","dateOfBirth","maritalStatus","serviceAttended"]}
+        templateSampleRow={["Jane","","Smith","jane@example.com","United States","+1","5551234567","1992-05-20","Married","Sunday Service"]}
       />
     </DashboardLayout>
   );

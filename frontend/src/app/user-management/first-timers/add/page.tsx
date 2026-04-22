@@ -29,8 +29,9 @@ export default function AddFirstTimerPage() {
   const [state, setState] = useState("");
   const [country, setCountry] = useState("");
   const [maritalStatus, setMaritalStatus] = useState("");
-  const [socialMedia, setSocialMedia] = useState("");
   const [occupation, setOccupation] = useState("");
+  const [serviceAttended, setServiceAttended] = useState("");
+  const [isVisiting, setIsVisiting] = useState(false);
   const [howDidYouHear, setHowDidYouHear] = useState("");
   const [howWasService, setHowWasService] = useState("");
   const [favouriteParts, setFavouriteParts] = useState("");
@@ -57,8 +58,9 @@ export default function AddFirstTimerPage() {
       state,
       country,
       maritalStatus,
-      socialMedia,
       occupation,
+      serviceAttended,
+      isVisiting,
       howDidYouHear,
       howWasService,
       favouriteParts,
@@ -128,6 +130,19 @@ export default function AddFirstTimerPage() {
           <h2 className="mb-6 text-[18px] font-bold text-[#000000]">
             Enter Details
           </h2>
+
+          {/* Is visiting checkbox */}
+          <div className="mb-4">
+            <label className="flex items-center gap-2 text-sm text-[#374151]">
+              <input
+                type="checkbox"
+                checked={isVisiting}
+                onChange={(e) => setIsVisiting(e.target.checked)}
+                className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
+              />
+              Is visiting?
+            </label>
+          </div>
 
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
             {/* First Name */}
@@ -358,20 +373,19 @@ export default function AddFirstTimerPage() {
               )}
             </div>
 
-            {/* Social Media */}
+            {/* Select Service */}
             <div>
-              <label className={labelStyles}>Social Media</label>
+              <label className={labelStyles}>Select Service</label>
               <select
-                value={socialMedia}
-                onChange={(e) => setSocialMedia(e.target.value)}
+                value={serviceAttended}
+                onChange={(e) => setServiceAttended(e.target.value)}
                 className={selectStyles}
               >
-                <option value="">Select Social Media</option>
-                <option value="Facebook">Facebook</option>
-                <option value="Instagram">Instagram</option>
-                <option value="Twitter">Twitter</option>
-                <option value="LinkedIn">LinkedIn</option>
-                <option value="TikTok">TikTok</option>
+                <option value="">Select Service</option>
+                <option value="Sunday Service">Sunday Service</option>
+                <option value="Wednesday Bible Study">Wednesday Bible Study</option>
+                <option value="Friday Prayer Meeting">Friday Prayer Meeting</option>
+                <option value="Special Service">Special Service</option>
               </select>
             </div>
 

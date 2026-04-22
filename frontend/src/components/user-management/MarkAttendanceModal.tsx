@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 
 interface MarkAttendanceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (attended: boolean[]) => void;
+  onSave: (highestClassAttained: string) => void;
   memberName: string;
-  initial?: boolean[];
-  classCount?: number;
+  initial?: string;
 }
+
+const CLASS_OPTIONS = ["Class 1", "Class 2", "Class 3", "Class 4", "Class 5"];
 
 export default function MarkAttendanceModal({
   isOpen,
@@ -19,18 +20,15 @@ export default function MarkAttendanceModal({
   onSave,
   memberName,
   initial,
-  classCount = 5,
 }: MarkAttendanceModalProps) {
-  const [attended, setAttended] = useState<boolean[]>(
-    initial && initial.length === classCount ? initial : Array(classCount).fill(false)
-  );
+  const [selected, setSelected] = useState<string>(initial ?? "");
 
-  const toggle = (idx: number) => {
-    setAttended((prev) => prev.map((v, i) => (i === idx ? !v : v)));
-  };
+  useEffect(() => {
+    if (isOpen) setSelected(initial ?? "");
+  }, [isOpen, initial]);
 
   const handleSave = () => {
-    onSave(attended);
+    onSave(selected);
     onClose();
   };
 
@@ -38,30 +36,29 @@ export default function MarkAttendanceModal({
     <Modal isOpen={isOpen} onClose={onClose} title="Mark Believers Class Attendance" size="md">
       <div className="space-y-4">
         <p className="text-sm text-[#6B7280]">
-          Mark which classes <strong className="text-[#111827]">{memberName}</strong> has attended.
+          Mark the highest Believers Class that{" "}
+          <strong className="text-[#111827]">{memberName}</strong> has attended.
         </p>
 
-        <div className="space-y-2 rounded-lg border border-[#E5E7EB] p-4">
-          {Array.from({ length: classCount }, (_, i) => (
-            <label
-              key={i}
-              className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 hover:bg-[#F9FAFB]"
-            >
-              <span className="text-sm text-[#374151]">Class {i + 1}</span>
-              <input
-                type="checkbox"
-                checked={attended[i]}
-                onChange={() => toggle(i)}
-                className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
-              />
-            </label>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between text-xs text-[#6B7280]">
-          <span>
-            Attended: <strong className="text-[#16A34A]">{attended.filter(Boolean).length}</strong> of {classCount}
-          </span>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-[#374151]">
+            Highest Class Attended
+          </label>
+          <select
+            value={selected}
+            onChange={(e) => setSelected(e.target.value)}
+            className="w-full rounded-lg border border-[#E5E7EB] bg-white px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+          >
+            <option value="">None</option>
+            {CLASS_OPTIONS.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          <p className="mt-2 text-xs text-[#6B7280]">
+            Selecting a class marks all previous classes as also attended.
+          </p>
         </div>
 
         <div className="flex items-center justify-end gap-3 pt-2">
