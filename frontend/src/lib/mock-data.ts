@@ -138,7 +138,7 @@ export const sampleRequests: Request[] = [
     title: 'Counseling',
     content: 'I would like to speak with a counselor regarding some personal and family concerns. It\'s been affecting my focus and emotional well-being lately. I\'m available for a session anytime this week.',
     category: 'Counseling',
-    status: 'Treated',
+    status: 'Resolved',
     submittedBy: 'John Michael',
     assignedTo: 'Pastor David',
     addedBy: 'Shola Damson',
@@ -160,7 +160,7 @@ export const sampleRequests: Request[] = [
     title: 'Complaint',
     content: 'I noticed some delays in communication regarding recent events and updates. It made it difficult to plan accordingly. I would appreciate more timely updates going forward.',
     category: 'Prayer',
-    status: 'Not treated',
+    status: 'Received',
     submittedBy: 'John Michael',
     assignedTo: 'Pastor David',
     addedBy: 'Shola Damson',
@@ -201,7 +201,7 @@ export const allRequests: Request[] = Array.from({ length: 20 }, (_, i) => ({
     'God has been faithful! I got a new job after months of prayer.',
   ][i % 5],
   category: (['Counseling', 'Complaint', 'Prayer', 'Suggestion', 'Suggestion'] as const)[i % 5],
-  status: (['Treated', 'In Progress', 'Not treated'] as const)[i % 3],
+  status: (['Received', 'Assigned', 'In Progress', 'Resolved'] as const)[i % 4],
   submittedBy: (i === 2 || i === 7) ? '' : (i % 2 === 0 ? 'John Michael' : 'Sarah Bamidele'),
   assignedTo: 'Pastor David',
   addedBy: 'Shola Damson',
@@ -578,16 +578,16 @@ export const profileDetails = {
 };
 
 export const testimonies: Testimony[] = [
-  { id: 'tst-1', name: 'John Michael', date: '04/15/2026', category: 'Healing', status: 'Published', content: 'God healed me from a long-standing back pain after prayers during Sunday service. I am forever grateful!', sharedBy: 'Pastor David' },
-  { id: 'tst-2', name: 'Sarah Bamidele', date: '04/14/2026', category: 'Financial', status: 'Published', content: 'I received a breakthrough in my business after months of prayer and fasting. Debts have been cleared.', sharedBy: 'Shola Damson' },
-  { id: 'tst-3', name: 'David Okonkwo', date: '04/12/2026', category: 'Marriage', status: 'Pending', content: 'After years of separation, God restored my marriage. My family is united again.', sharedBy: 'Pastor James' },
-  { id: 'tst-4', name: 'Grace Adeyemi', date: '04/10/2026', category: 'Salvation', status: 'Published', content: 'I gave my life to Christ during last month\'s crusade. Life has never been the same.', sharedBy: 'Deaconess Grace' },
-  { id: 'tst-5', name: 'Emmanuel Nwosu', date: '04/08/2026', category: 'Healing', status: 'Published', content: 'I was diagnosed with an illness but the Lord healed me completely. Medical tests confirmed it.', sharedBy: 'Pastor David' },
-  { id: 'tst-6', name: 'Blessing Okoro', date: '04/06/2026', category: 'Financial', status: 'Pending', content: 'I got a new job after months of unemployment. God\'s timing is always perfect.', sharedBy: 'Shola Damson' },
-  { id: 'tst-7', name: 'Peter Adewale', date: '04/04/2026', category: 'Other', status: 'Published', content: 'My son passed his entrance exams with flying colors after a year of intercession.', sharedBy: 'Pastor James' },
-  { id: 'tst-8', name: 'Ruth Balogun', date: '04/02/2026', category: 'Marriage', status: 'Pending', content: 'God blessed us with a child after 7 years of waiting. He is indeed a miracle worker.', sharedBy: 'Deaconess Grace' },
-  { id: 'tst-9', name: 'Mary Eze', date: '03/30/2026', category: 'Salvation', status: 'Published', content: 'My entire family came to Christ this month. Our home now has peace and joy.', sharedBy: 'Pastor David' },
-  { id: 'tst-10', name: 'Samuel Chukwu', date: '03/28/2026', category: 'Healing', status: 'Pending', content: 'The Lord healed me of chronic migraines that had plagued me for years. Praise God!', sharedBy: 'Shola Damson' },
+  { id: 'tst-1', name: 'John Michael', date: '04/15/2026', category: 'Healing', status: 'Read', content: 'God healed me from a long-standing back pain after prayers during Sunday service. I am forever grateful!', sharedBy: 'Pastor David', location: 'Lagos, Nigeria', featured: true, featuredDate: '04/16/2026' },
+  { id: 'tst-2', name: 'Sarah Bamidele', date: '04/14/2026', category: 'Financial', status: 'Read', content: 'I received a breakthrough in my business after months of prayer and fasting. Debts have been cleared.', sharedBy: 'Shola Damson', location: 'Abuja, Nigeria' },
+  { id: 'tst-3', name: '', date: '04/12/2026', category: 'Marriage', status: 'Not Read', content: 'After years of separation, God restored my marriage. My family is united again.', sharedBy: 'Pastor James', location: 'Accra, Ghana' },
+  { id: 'tst-4', name: 'Grace Adeyemi', date: '04/10/2026', category: 'Salvation', status: 'Read', content: 'I gave my life to Christ during last month\'s crusade. Life has never been the same.', sharedBy: 'Deaconess Grace', location: 'Ibadan, Nigeria', featured: true, featuredDate: '04/11/2026' },
+  { id: 'tst-5', name: 'Emmanuel Nwosu', date: '04/08/2026', category: 'Healing', status: 'Read', content: 'I was diagnosed with an illness but the Lord healed me completely. Medical tests confirmed it.', sharedBy: 'Pastor David', location: 'Port Harcourt, Nigeria' },
+  { id: 'tst-6', name: 'Blessing Okoro', date: '04/06/2026', category: 'Financial', status: 'Not Read', content: 'I got a new job after months of unemployment. God\'s timing is always perfect.', sharedBy: 'Shola Damson', location: 'Enugu, Nigeria' },
+  { id: 'tst-7', name: 'Peter Adewale', date: '04/04/2026', category: 'Other', status: 'Read', content: 'My son passed his entrance exams with flying colors after a year of intercession.', sharedBy: 'Pastor James', location: 'Lagos, Nigeria', featured: true, featuredDate: '04/05/2026' },
+  { id: 'tst-8', name: '', date: '04/02/2026', category: 'Marriage', status: 'Not Read', content: 'God blessed us with a child after 7 years of waiting. He is indeed a miracle worker.', sharedBy: 'Deaconess Grace', location: 'Kumasi, Ghana' },
+  { id: 'tst-9', name: 'Mary Eze', date: '03/30/2026', category: 'Salvation', status: 'Read', content: 'My entire family came to Christ this month. Our home now has peace and joy.', sharedBy: 'Pastor David', location: 'Abuja, Nigeria' },
+  { id: 'tst-10', name: 'Samuel Chukwu', date: '03/28/2026', category: 'Healing', status: 'Not Read', content: 'The Lord healed me of chronic migraines that had plagued me for years. Praise God!', sharedBy: 'Shola Damson', location: 'Lagos, Nigeria' },
 ];
 
 export const activityLogs: ActivityLog[] = [

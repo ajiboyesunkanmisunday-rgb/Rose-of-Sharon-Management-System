@@ -16,9 +16,10 @@ const CATEGORY_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { label: "Not treated", value: "Not treated" },
+  { label: "Received", value: "Received" },
+  { label: "Assigned", value: "Assigned" },
   { label: "In Progress", value: "In Progress" },
-  { label: "Treated", value: "Treated" },
+  { label: "Resolved", value: "Resolved" },
 ];
 
 const ASSIGNEE_OPTIONS = [

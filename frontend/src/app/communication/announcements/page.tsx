@@ -147,6 +147,7 @@ export default function AnnouncementsPage() {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
+          totalItems={filtered.length}
           onPageChange={setCurrentPage}
         />
       </div>

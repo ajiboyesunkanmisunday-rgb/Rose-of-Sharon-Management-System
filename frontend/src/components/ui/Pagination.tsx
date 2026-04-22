@@ -43,12 +43,14 @@ export default function Pagination({
     return pages;
   };
 
-  if (totalPages <= 1) return null;
+  if (totalPages <= 1 && totalItems === undefined) return null;
 
   return (
     <div className="flex items-center justify-between">
       <span className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-[#000080]">
-        {totalItems !== undefined ? `${totalItems} of ${totalItems}` : `${currentPage} of ${totalPages}`}
+        {totalItems !== undefined
+          ? `Showing page ${currentPage} of ${Math.max(totalPages, 1)} \u00B7 ${totalItems} total`
+          : `${currentPage} of ${totalPages}`}
       </span>
 
       <div className="flex items-center gap-1">

@@ -67,8 +67,6 @@ const navItems: NavItem[] = [
     label: "Workflows",
     icon: RefreshCcw,
     children: [
-      { label: "Active Workflows", href: "/workflows/active" },
-      { label: "Templates", href: "/workflows/templates" },
       { label: "Guest Workflow", href: "/workflows/guest" },
       { label: "Prayer Request Workflow", href: "/workflows/prayer" },
       { label: "Counseling Workflow", href: "/workflows/counseling" },
