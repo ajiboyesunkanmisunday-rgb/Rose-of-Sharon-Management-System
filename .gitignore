@@ -77,3 +77,10 @@ Desktop.ini
 *.sqlite
 *.sqlite3
 *.db
+
+# Editor/AI tool configs
+.cursor/
+.continue/
+.windsurf/
+.codeium/
+.aider*
