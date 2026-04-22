@@ -219,7 +219,7 @@ export default function MessagesPage() {
       </div>
 
       <div className="mt-4">
-        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+        <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filteredMessages.length} onPageChange={setCurrentPage} />
       </div>
 
       <Modal isOpen={viewing !== null} onClose={() => setViewing(null)} title="Message Details" size="md">

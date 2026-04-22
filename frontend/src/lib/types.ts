@@ -144,7 +144,7 @@ export interface Request {
   title: string;
   content: string;
   category: 'Counseling' | 'Prayer' | 'Complaint' | 'Suggestion';
-  status: 'Treated' | 'In Progress' | 'Not treated';
+  status: 'Received' | 'Assigned' | 'In Progress' | 'Resolved';
   submittedBy: string;
   assignedTo: string;
   addedBy: string;
@@ -406,7 +406,7 @@ export interface Announcement {
 }
 
 export type TestimonyCategory = 'Healing' | 'Financial' | 'Marriage' | 'Salvation' | 'Other';
-export type TestimonyStatus = 'Pending' | 'Published';
+export type TestimonyStatus = 'Read' | 'Not Read';
 
 export interface Testimony {
   id: string;
@@ -417,6 +417,9 @@ export interface Testimony {
   content: string;
   photo?: string;
   sharedBy: string;
+  featured?: boolean;
+  featuredDate?: string;
+  location?: string;
 }
 
 export interface ActivityLog {

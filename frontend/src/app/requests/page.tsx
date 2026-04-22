@@ -19,7 +19,7 @@ type CategoryFilter =
   | "Complaint"
   | "Suggestion";
 
-type StatusFilter = "All" | "Not treated" | "In Progress" | "Treated";
+type StatusFilter = "All" | "Received" | "Assigned" | "In Progress" | "Resolved";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -33,9 +33,10 @@ const categoryTabs: { key: CategoryFilter; label: string }[] = [
 
 const statusFilterOptions: { value: StatusFilter; label: string }[] = [
   { value: "All", label: "All" },
-  { value: "Not treated", label: "Not treated" },
+  { value: "Received", label: "Received" },
+  { value: "Assigned", label: "Assigned" },
   { value: "In Progress", label: "In Progress" },
-  { value: "Treated", label: "Treated" },
+  { value: "Resolved", label: "Resolved" },
 ];
 
 const categoryBadgeColors: Record<string, string> = {
@@ -46,9 +47,10 @@ const categoryBadgeColors: Record<string, string> = {
 };
 
 const statusBadgeColors: Record<string, string> = {
-  Treated: "bg-[#DCFCE7] text-[#16A34A]",
+  Received: "bg-[#F3F4F6] text-[#6B7280]",
+  Assigned: "bg-[#DBEAFE] text-[#1D4ED8]",
   "In Progress": "bg-[#FEF9C3] text-[#CA8A04]",
-  "Not treated": "bg-[#FEE2E2] text-[#DC2626]",
+  Resolved: "bg-[#DCFCE7] text-[#16A34A]",
 };
 
 export default function RequestsPage() {
@@ -61,7 +63,7 @@ export default function RequestsPage() {
 
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
-  const [bulkStatus, setBulkStatus] = useState<string>("Not treated");
+  const [bulkStatus, setBulkStatus] = useState<string>("Received");
   const [bulkOfficer, setBulkOfficer] = useState<string>(followUpOfficers[0]?.id || "");
 
   const filteredRequests = useMemo(() => {
@@ -275,16 +277,17 @@ export default function RequestsPage() {
       </div>
 
       <div className="mt-4">
-        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+        <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filteredRequests.length} onPageChange={setCurrentPage} />
       </div>
 
       {/* Status modal */}
       <Modal isOpen={showStatusModal} onClose={() => setShowStatusModal(false)} title="Update Status">
         <label className="mb-1 block text-sm font-medium text-[#374151]">Status</label>
         <select value={bulkStatus} onChange={(e) => setBulkStatus(e.target.value)} className={selectStyles}>
-          <option value="Not treated">Not treated</option>
+          <option value="Received">Received</option>
+          <option value="Assigned">Assigned</option>
           <option value="In Progress">In Progress</option>
-          <option value="Treated">Treated</option>
+          <option value="Resolved">Resolved</option>
         </select>
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="secondary" onClick={() => setShowStatusModal(false)}>Cancel</Button>

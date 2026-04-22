@@ -95,7 +95,7 @@ export default function UrgentFollowUpPage() {
       </div>
 
       <div className="mt-4">
-        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+        <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filtered.length} onPageChange={setCurrentPage} />
       </div>
     </DashboardLayout>
   );

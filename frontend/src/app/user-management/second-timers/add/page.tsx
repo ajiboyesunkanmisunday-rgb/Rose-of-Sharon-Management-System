@@ -29,8 +29,8 @@ export default function AddSecondTimerPage() {
   const [state, setState] = useState("");
   const [country, setCountry] = useState("");
   const [maritalStatus, setMaritalStatus] = useState("");
-  const [socialMedia, setSocialMedia] = useState("");
   const [occupation, setOccupation] = useState("");
+  const [isVisiting, setIsVisiting] = useState(false);
   const [serviceAttended, setServiceAttended] = useState("");
   const [howDidYouHear, setHowDidYouHear] = useState("");
   const [howWasService, setHowWasService] = useState("");
@@ -58,9 +58,9 @@ export default function AddSecondTimerPage() {
       state,
       country,
       maritalStatus,
-      socialMedia,
       occupation,
       serviceAttended,
+      isVisiting,
       howDidYouHear,
       howWasService,
       favouriteParts,
@@ -130,6 +130,19 @@ export default function AddSecondTimerPage() {
           <h2 className="mb-6 text-[18px] font-bold text-[#000000]">
             Enter Details
           </h2>
+
+          {/* Is visiting checkbox */}
+          <div className="mb-4">
+            <label className="flex items-center gap-2 text-sm text-[#374151]">
+              <input
+                type="checkbox"
+                checked={isVisiting}
+                onChange={(e) => setIsVisiting(e.target.checked)}
+                className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
+              />
+              Is visiting?
+            </label>
+          </div>
 
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
             <div>
@@ -251,9 +264,9 @@ export default function AddSecondTimerPage() {
                 className={selectStyles}
               >
                 <option value="">Select Service</option>
-                <option value="Sunday">Sunday</option>
-                <option value="Wednesday">Wednesday</option>
-                <option value="Friday">Friday</option>
+                <option value="Sunday Service">Sunday Service</option>
+                <option value="Wednesday Bible Study">Wednesday Bible Study</option>
+                <option value="Friday Prayer Meeting">Friday Prayer Meeting</option>
                 <option value="Special Service">Special Service</option>
               </select>
             </div>
@@ -357,21 +370,6 @@ export default function AddSecondTimerPage() {
                   {spouse ? `Spouse: ${spouse.name} (change)` : "+ Link Spouse"}
                 </button>
               )}
-            </div>
-            <div>
-              <label className={labelStyles}>Social Media</label>
-              <select
-                value={socialMedia}
-                onChange={(e) => setSocialMedia(e.target.value)}
-                className={selectStyles}
-              >
-                <option value="">Select Social Media</option>
-                <option value="Facebook">Facebook</option>
-                <option value="Instagram">Instagram</option>
-                <option value="Twitter">Twitter</option>
-                <option value="LinkedIn">LinkedIn</option>
-                <option value="TikTok">TikTok</option>
-              </select>
             </div>
             <div>
               <label className={labelStyles}>Occupation</label>
