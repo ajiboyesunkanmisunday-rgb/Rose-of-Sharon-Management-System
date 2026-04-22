@@ -20,7 +20,7 @@ const RECIPIENT_OPTIONS = [
   { label: "Ushering", value: "Ushering" },
   { label: "Youth", value: "Youth" },
   { label: "First Timers", value: "First Timers" },
-  { label: "Custom List", value: "Custom" },
+  { label: "Custom", value: "Custom" },
 ];
 
 export default function ComposeMessagePage() {
@@ -28,6 +28,7 @@ export default function ComposeMessagePage() {
   const [formData, setFormData] = useState({
     type: "SMS",
     recipient: "",
+    customRecipients: "",
     subject: "",
     content: "",
     templateId: "",
@@ -83,6 +84,17 @@ export default function ComposeMessagePage() {
             <SelectField label="Type" name="type" value={formData.type} onChange={handleChange} options={TYPE_OPTIONS} required />
             <SelectField label="Recipient(s)" name="recipient" value={formData.recipient} onChange={handleChange} options={RECIPIENT_OPTIONS} required />
           </div>
+
+          {formData.recipient === "Custom" && (
+            <TextAreaField
+              label="Custom Recipients"
+              name="customRecipients"
+              value={formData.customRecipients}
+              onChange={handleChange}
+              placeholder="Enter phone numbers or emails separated by commas"
+              rows={3}
+            />
+          )}
 
           {templateOptions.length > 0 && (
             <SelectField

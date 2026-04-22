@@ -11,6 +11,7 @@ import ActionDropdown from "@/components/ui/ActionDropdown";
 import AddNotesModal from "@/components/user-management/AddNotesModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import AssignFollowUpModal from "@/components/user-management/AssignFollowUpModal";
+import BulkImportModal from "@/components/user-management/BulkImportModal";
 import Modal from "@/components/ui/Modal";
 import { firstTimers } from "@/lib/mock-data";
 import { toCSV, downloadCSV } from "@/lib/csv";
@@ -30,6 +31,7 @@ export default function FirstTimersPage() {
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [showBulkAssignModal, setShowBulkAssignModal] = useState(false);
   const [showSingleAssignModal, setShowSingleAssignModal] = useState(false);
+  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [selectedTimerId, setSelectedTimerId] = useState<string | null>(null);
 
   const filteredTimers = useMemo(() => {
@@ -218,6 +220,20 @@ export default function FirstTimersPage() {
               </svg>
             }
           >Export</Button>
+
+          <Button
+            variant="primary"
+            onClick={() => setShowBulkImportModal(true)}
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            }
+          >
+            Bulk Import
+          </Button>
         </div>
       </div>
 
@@ -343,6 +359,7 @@ export default function FirstTimersPage() {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
+          totalItems={filteredTimers.length}
           onPageChange={setCurrentPage}
         />
       </div>
@@ -403,6 +420,18 @@ export default function FirstTimersPage() {
         }}
         onAssign={handleSingleAssign}
         memberCount={1}
+      />
+
+      <BulkImportModal
+        isOpen={showBulkImportModal}
+        onClose={() => setShowBulkImportModal(false)}
+        onImport={(rows) => {
+          console.log("Bulk import First Timers:", rows);
+          setShowBulkImportModal(false);
+        }}
+        module="First Timers"
+        templateHeaders={["firstName","middleName","lastName","gender","countryCode","phone","email","serviceAttended","date"]}
+        templateSampleRow={["Alex","","Johnson","Male","+1","5551234567","alex@example.com","Sunday Service","2026-04-20"]}
       />
     </DashboardLayout>
   );

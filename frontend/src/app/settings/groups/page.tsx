@@ -253,6 +253,7 @@ export default function GroupsPage() {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
+          totalItems={filteredGroups.length}
           onPageChange={setCurrentPage}
         />
       </div>

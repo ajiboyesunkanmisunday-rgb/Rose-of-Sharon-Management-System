@@ -11,9 +11,23 @@ import ActionDropdown from "@/components/ui/ActionDropdown";
 import AddNotesModal from "@/components/user-management/AddNotesModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import MarkAttendanceModal from "@/components/user-management/MarkAttendanceModal";
+import BulkImportModal from "@/components/user-management/BulkImportModal";
 import Modal from "@/components/ui/Modal";
 import { newConverts } from "@/lib/mock-data";
 import { toCSV, downloadCSV } from "@/lib/csv";
+import type { BelieversClass } from "@/lib/types";
+
+type BelieversClassFilter = "All" | BelieversClass;
+
+const BELIEVERS_CLASS_FILTERS: BelieversClassFilter[] = [
+  "All",
+  "Not started",
+  "Class 1",
+  "Class 2",
+  "Class 3",
+  "Class 4",
+  "Class 5",
+];
 
 
 const ITEMS_PER_PAGE = 10;
@@ -30,20 +44,31 @@ export default function NewConvertsPage() {
   const [showVisitReportModal, setShowVisitReportModal] = useState(false);
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [callReport, setCallReport] = useState("");
   const [visitReport, setVisitReport] = useState("");
   const [selectedConvertId, setSelectedConvertId] = useState<string | null>(null);
+  const [believersClassFilter, setBelieversClassFilter] =
+    useState<BelieversClassFilter>("All");
 
   const filteredConverts = useMemo(() => {
-    if (!search.trim()) return newConverts;
-    const query = search.toLowerCase();
-    return newConverts.filter(
-      (nc) =>
-        nc.name.toLowerCase().includes(query) ||
-        nc.email.toLowerCase().includes(query) ||
-        nc.phone.includes(query)
-    );
-  }, [search]);
+    const query = search.trim().toLowerCase();
+    return newConverts.filter((nc) => {
+      if (query) {
+        const match =
+          nc.name.toLowerCase().includes(query) ||
+          nc.email.toLowerCase().includes(query) ||
+          nc.phone.includes(query);
+        if (!match) return false;
+      }
+      if (believersClassFilter !== "All") {
+        if ((nc.believersClass || "Not started") !== believersClassFilter) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [search, believersClassFilter]);
 
   const totalPages = Math.ceil(filteredConverts.length / ITEMS_PER_PAGE);
   const paginatedConverts = filteredConverts.slice(
@@ -106,10 +131,34 @@ export default function NewConvertsPage() {
     setShowBulkDeleteModal(false);
   };
 
-  const handleSaveAttendance = (attended: boolean[]) => {
-    console.log("Save attendance for:", selectedConvertId, attended);
+  const handleSaveAttendance = (highestClass: string) => {
+    const classCount = 5;
+    const highestIndex = highestClass
+      ? parseInt(highestClass.replace(/[^0-9]/g, ""), 10)
+      : 0;
+    const attendance = Array.from(
+      { length: classCount },
+      (_, i) => i < highestIndex
+    );
+    console.log(
+      "Save attendance for:",
+      selectedConvertId,
+      highestClass,
+      attendance
+    );
     setShowAttendanceModal(false);
     setSelectedConvertId(null);
+  };
+
+  const highestClassFromAttendance = (
+    classAttendance?: boolean[]
+  ): string => {
+    if (!classAttendance || classAttendance.length === 0) return "";
+    let lastTrue = -1;
+    classAttendance.forEach((v, i) => {
+      if (v) lastTrue = i;
+    });
+    return lastTrue >= 0 ? `Class ${lastTrue + 1}` : "";
   };
 
   const handleExport = () => {
@@ -156,13 +205,38 @@ export default function NewConvertsPage() {
 
       {/* Top bar: search + actions */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="w-72">
-          <SearchBar
-            value={search}
-            onChange={setSearch}
-            onSearch={handleSearch}
-            placeholder="Search..."
-          />
+        <div className="flex items-center gap-3">
+          <div className="w-72">
+            <SearchBar
+              value={search}
+              onChange={setSearch}
+              onSearch={handleSearch}
+              placeholder="Search..."
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="believers-class-filter"
+              className="whitespace-nowrap text-sm font-medium text-[#374151]"
+            >
+              Filter by Believers Class
+            </label>
+            <select
+              id="believers-class-filter"
+              value={believersClassFilter}
+              onChange={(e) => {
+                setBelieversClassFilter(e.target.value as BelieversClassFilter);
+                setCurrentPage(1);
+              }}
+              className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            >
+              {BELIEVERS_CLASS_FILTERS.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -222,6 +296,20 @@ export default function NewConvertsPage() {
               </svg>
             }
           >Export</Button>
+
+          <Button
+            variant="primary"
+            onClick={() => setShowBulkImportModal(true)}
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            }
+          >
+            Bulk Import
+          </Button>
         </div>
       </div>
 
@@ -281,7 +369,7 @@ export default function NewConvertsPage() {
                   {nc.serviceAttended}
                 </td>
                 <td className="px-4 py-3 text-sm text-[#374151]">
-                  {nc.believersClass}
+                  {nc.believersClass || "Not started"}
                 </td>
                 <td className="px-4 py-3 text-sm text-[#374151]">{nc.date}</td>
                 <td className="px-4 py-3">
@@ -344,6 +432,7 @@ export default function NewConvertsPage() {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
+          totalItems={filteredConverts.length}
           onPageChange={setCurrentPage}
         />
       </div>
@@ -425,8 +514,19 @@ export default function NewConvertsPage() {
         }}
         onSave={handleSaveAttendance}
         memberName={selectedConvert?.name || ""}
-        initial={selectedConvert?.classAttendance}
-        classCount={5}
+        initial={highestClassFromAttendance(selectedConvert?.classAttendance)}
+      />
+
+      <BulkImportModal
+        isOpen={showBulkImportModal}
+        onClose={() => setShowBulkImportModal(false)}
+        onImport={(rows) => {
+          console.log("Bulk import New Converts:", rows);
+          setShowBulkImportModal(false);
+        }}
+        module="New Converts"
+        templateHeaders={["firstName","middleName","lastName","gender","countryCode","phone","email","serviceAttended","address"]}
+        templateSampleRow={["Sam","","Taylor","Male","+1","5551234567","sam@example.com","Sunday Service","123 Main St"]}
       />
     </DashboardLayout>
   );
