@@ -170,6 +170,7 @@ export default function TemplatesPage() {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
+          totalItems={filteredTemplates.length}
           onPageChange={setCurrentPage}
         />
       </div>

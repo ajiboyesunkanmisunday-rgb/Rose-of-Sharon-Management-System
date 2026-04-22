@@ -17,12 +17,13 @@ const categoryBadgeColors: Record<string, string> = {
 };
 
 const statusBadgeColors: Record<string, string> = {
-  Treated: "bg-[#DCFCE7] text-[#16A34A]",
+  Received: "bg-[#F3F4F6] text-[#6B7280]",
+  Assigned: "bg-[#DBEAFE] text-[#1D4ED8]",
   "In Progress": "bg-[#FEF9C3] text-[#CA8A04]",
-  "Not treated": "bg-[#FEE2E2] text-[#DC2626]",
+  Resolved: "bg-[#DCFCE7] text-[#16A34A]",
 };
 
-const statusOptions = ["Not treated", "In Progress", "Treated"] as const;
+const statusOptions = ["Received", "Assigned", "In Progress", "Resolved"] as const;
 
 export default function RequestDetailPage() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function RequestDetailPage() {
   const request = allRequests.find((r) => r.id === params.id);
 
   const [currentStatus, setCurrentStatus] = useState(
-    request?.status || "Not treated"
+    request?.status || "Received"
   );
   const [currentAssignee, setCurrentAssignee] = useState(
     request?.assignedTo || ""

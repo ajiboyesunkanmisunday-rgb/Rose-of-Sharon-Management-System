@@ -170,6 +170,7 @@ export default function EventManagementPage() {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
+          totalItems={filteredEvents.length}
           onPageChange={setCurrentPage}
         />
       </div>
