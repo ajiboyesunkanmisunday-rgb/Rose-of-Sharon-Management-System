@@ -61,7 +61,7 @@ export default function ActivityLogsPage() {
           onFromChange={setFromDate}
           onToChange={setToDate}
         />
-        <div className="w-72">
+        <div className="w-full sm:w-72">
           <SearchBar
             value={search}
             onChange={setSearch}

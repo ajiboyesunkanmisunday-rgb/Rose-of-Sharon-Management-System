@@ -120,9 +120,9 @@ export default function AddMemberPage() {
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className="flex gap-6">
+        <div className="flex flex-col gap-6 lg:flex-row">
           {/* Left Side - Form (70%) */}
-          <div className="w-[70%]">
+          <div className="w-full lg:w-[70%]">
             <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
               <h2 className="mb-6 text-[18px] font-bold text-[#000000]">
                 Enter Details
@@ -374,7 +374,7 @@ export default function AddMemberPage() {
           </div>
 
           {/* Right Side - Profile Photo (30%) */}
-          <div className="w-[30%]">
+          <div className="w-full lg:w-[30%]">
             <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
               <h2 className="mb-6 text-[18px] font-bold text-[#000000]">
                 Profile Photo

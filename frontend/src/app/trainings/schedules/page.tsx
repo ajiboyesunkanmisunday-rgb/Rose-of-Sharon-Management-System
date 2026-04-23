@@ -71,7 +71,7 @@ export default function TrainingSchedulesPage() {
       </div>
 
       <div className="mb-4 flex items-center justify-between">
-        <div className="w-72">
+        <div className="w-full sm:w-72">
           <SearchBar
             value={search}
             onChange={setSearch}

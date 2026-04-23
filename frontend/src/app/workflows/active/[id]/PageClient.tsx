@@ -61,7 +61,7 @@ export default function ActiveWorkflowDetailClient() {
             <h2 className="mt-3 text-xl font-bold text-[#111827]">{card.memberName}</h2>
             <p className="mt-1 text-sm text-[#6B7280]">{card.phone}</p>
 
-            <div className="mt-5 grid grid-cols-2 gap-4">
+            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <p className="text-xs font-medium text-[#6B7280]">Template</p>
                 <p className="mt-1 text-sm font-medium text-[#111827]">{template.name}</p>
