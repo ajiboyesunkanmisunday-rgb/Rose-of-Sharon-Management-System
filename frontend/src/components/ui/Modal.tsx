@@ -45,9 +45,9 @@ export default function Modal({ isOpen, onClose, title, children, size = "sm" }:
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4"
     >
-      <div className={`relative w-full ${sizeStyles[size]} rounded-2xl bg-white p-6 shadow-xl`}>
+      <div className={`relative my-auto w-full ${sizeStyles[size]} rounded-2xl bg-white p-4 shadow-xl sm:p-6`}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-[#000080]">{title}</h2>
           <button

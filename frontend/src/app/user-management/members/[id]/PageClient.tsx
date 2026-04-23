@@ -103,7 +103,7 @@ export default function ViewMemberProfilePage() {
       <div className="mb-8 rounded-xl border border-[#E5E7EB] bg-white p-6">
         <div className="flex flex-col gap-6 md:flex-row">
           {/* Profile Photo Placeholder with edit pencil */}
-          <div className="relative flex h-[250px] w-[200px] shrink-0 items-center justify-center rounded-xl bg-[#E5E7EB]">
+          <div className="relative flex h-[180px] w-[150px] shrink-0 sm:h-[250px] sm:w-[200px] items-center justify-center rounded-xl bg-[#E5E7EB]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="64"
@@ -144,7 +144,7 @@ export default function ViewMemberProfilePage() {
             </h2>
 
             {/* Row 1: First Name, Email, Address */}
-            <div className="mb-4 grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">
+            <div className="mb-4 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-3">
               {detailsRow1.map((item) => (
                 <div key={item.label}>
                   <p className="text-xs font-medium text-[#6B7280]">
@@ -156,7 +156,7 @@ export default function ViewMemberProfilePage() {
             </div>
 
             {/* Row 2: Last Name, Phone Number, Group */}
-            <div className="mb-4 grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">
+            <div className="mb-4 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-3">
               {detailsRow2.map((item) => (
                 <div key={item.label}>
                   <p className="text-xs font-medium text-[#6B7280]">
@@ -168,7 +168,7 @@ export default function ViewMemberProfilePage() {
             </div>
 
             {/* Row 3: Gender, Date of Birth, Date Joined */}
-            <div className="mb-4 grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">
+            <div className="mb-4 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-3">
               {detailsRow3.map((item) => (
                 <div key={item.label}>
                   <p className="text-xs font-medium text-[#6B7280]">
@@ -180,7 +180,7 @@ export default function ViewMemberProfilePage() {
             </div>
 
             {/* Row 4: Marital Status, Spouse */}
-            <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-3">
               {detailsRow4.map((item) => (
                 <div key={item.label}>
                   <p className="text-xs font-medium text-[#6B7280]">
