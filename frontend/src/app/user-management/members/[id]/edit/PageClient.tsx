@@ -99,8 +99,8 @@ export default function EditMemberPage() {
 
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-6 lg:flex-row">
-          {/* Left Side - Form */}
-          <div className="w-full lg:w-[70%]">
+          {/* Left Side - Form — second on mobile, first on desktop */}
+          <div className="order-2 w-full lg:order-1 lg:w-[70%]">
             <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
               <h2 className="mb-6 text-[18px] font-bold text-[#000000]">
                 Enter Details
@@ -331,8 +331,8 @@ export default function EditMemberPage() {
             </div>
           </div>
 
-          {/* Right Side - Profile Photo */}
-          <div className="w-full lg:w-[30%]">
+          {/* Right Side - Profile Photo — first on mobile, second on desktop */}
+          <div className="order-1 w-full lg:order-2 lg:w-[30%]">
             <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
               <h2 className="mb-6 text-[18px] font-bold text-[#000000]">
                 Profile Photo
