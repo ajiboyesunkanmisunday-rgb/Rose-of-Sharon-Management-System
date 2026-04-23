@@ -91,7 +91,7 @@ export default function AddRolePage() {
             <label className="mb-2 block text-sm font-medium text-[#374151]">
               Permissions
             </label>
-            <div className="overflow-hidden rounded-lg border border-[#E5E7EB]">
+            <div className="overflow-x-auto overflow-hidden rounded-lg border border-[#E5E7EB]">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="bg-[#F3F4F6]">

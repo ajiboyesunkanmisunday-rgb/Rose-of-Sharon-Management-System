@@ -2,23 +2,43 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 
-export default function TopNav() {
+interface TopNavProps {
+  onMenuOpen?: () => void;
+}
+
+export default function TopNav({ onMenuOpen }: TopNavProps) {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
-    <header className="fixed left-[322px] right-0 top-0 z-30 flex h-16 items-center justify-end border-b border-[#E5E7EB] bg-white px-6">
+    <header className="fixed left-0 right-0 top-0 z-30 flex h-16 items-center border-b border-[#E5E7EB] bg-white px-4 lg:left-[322px] lg:px-6">
+      {/* Hamburger — mobile & tablet only */}
+      <button
+        onClick={onMenuOpen}
+        className="mr-3 flex h-9 w-9 items-center justify-center rounded-lg text-[#000080] hover:bg-gray-100 lg:hidden"
+        aria-label="Open menu"
+      >
+        <Menu size={22} strokeWidth={1.8} />
+      </button>
+
+      {/* Spacer */}
+      <div className="flex-1" />
+
       {/* User Profile */}
       <div className="relative">
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-50"
+          className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-50"
         >
-          <div className="text-right">
+          <div className="text-right hidden sm:block">
             <p className="text-sm font-bold text-[#1F2937]">John Cooper</p>
             <p className="text-xs text-[#6B7280]">johncoopl23@gmail.com</p>
+          </div>
+          {/* Avatar initials on small screens */}
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#B5B5F3] text-xs font-bold text-[#000080] sm:hidden">
+            JC
           </div>
           <ChevronDown
             className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
