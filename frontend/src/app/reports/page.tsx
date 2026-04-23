@@ -450,7 +450,7 @@ export default function ReportsPage() {
         size="md"
       >
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="rounded-lg border border-[#E5E7EB] p-4">
               <p className="text-xs font-medium text-[#6B7280]">Total Attendance</p>
               <p className="mt-1 text-2xl font-bold text-[#000080]">

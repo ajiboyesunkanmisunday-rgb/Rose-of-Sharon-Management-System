@@ -47,7 +47,7 @@ export default function UrgentFollowUpPage() {
     <DashboardLayout>
       <PageHeader title="Dashboard" subtitle="Urgent Follow-up" backHref="/dashboard" />
 
-      <div className="mb-4 w-72">
+      <div className="mb-4 w-full sm:w-72">
         <SearchBar
           value={search}
           onChange={setSearch}

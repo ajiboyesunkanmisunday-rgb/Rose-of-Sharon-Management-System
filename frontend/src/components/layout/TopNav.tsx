@@ -54,7 +54,7 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
               className="fixed inset-0 z-40"
               onClick={() => setDropdownOpen(false)}
             />
-            <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+            <div className="absolute right-0 top-full z-50 mt-1 w-48 max-w-[calc(100vw-1rem)] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
               <a
                 href="/profile"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"

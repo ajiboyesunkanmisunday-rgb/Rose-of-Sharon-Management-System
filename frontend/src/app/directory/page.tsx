@@ -48,7 +48,7 @@ export default function DirectoryPage() {
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="w-72">
+          <div className="w-full sm:w-72">
             <SearchBar
               value={search}
               onChange={(val) => {
