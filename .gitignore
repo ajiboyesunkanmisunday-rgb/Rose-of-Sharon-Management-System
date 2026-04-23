@@ -85,3 +85,6 @@ Desktop.ini
 .windsurf/
 .codeium/
 .aider*
+
+# Netlify state folders (mobile)
+frontend-mobile/.netlify/
