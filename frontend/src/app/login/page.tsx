@@ -15,16 +15,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
-    // Mock auth — replace with real API call later
-    setTimeout(() => {
-      setSubmitting(false);
-      router.push("/dashboard");
-    }, 400);
+    // Auth is not wired up yet — pass through to the app.
+    router.push("/dashboard");
   };
 
   return (
@@ -55,7 +50,6 @@ export default function LoginPage() {
             id="email"
             type="email"
             autoComplete="email"
-            required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
@@ -83,7 +77,6 @@ export default function LoginPage() {
               id="password"
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
-              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
@@ -109,13 +102,8 @@ export default function LoginPage() {
           Keep me signed in
         </label>
 
-        <Button
-          type="submit"
-          variant="primary"
-          disabled={submitting}
-          className="w-full"
-        >
-          {submitting ? "Signing in..." : "Sign In"}
+        <Button type="submit" variant="primary" className="w-full">
+          Sign In
         </Button>
       </form>
     </AuthShell>
