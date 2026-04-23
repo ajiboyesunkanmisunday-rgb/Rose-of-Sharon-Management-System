@@ -105,9 +105,9 @@ export default function TemplatesPage() {
             <tr className="bg-[#F3F4F6]">
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Type</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Subject</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Created By</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Last Modified</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Subject</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Created By</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Last Modified</th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
@@ -122,13 +122,13 @@ export default function TemplatesPage() {
                   {template.name}
                 </td>
                 <td className="px-4 py-3">{getTypeBadge(template.type)}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                   {template.subject || "—"}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">
                   {template.createdBy}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">
                   {template.lastModified}
                 </td>
                 <td className="px-4 py-3">

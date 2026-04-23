@@ -144,9 +144,10 @@ export default function NotificationsPage() {
       {/* Page Header */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-[28px] font-bold text-[#000000]">Notifications</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" onClick={handleMarkAllRead}>
-            Mark All Read
+            <span className="hidden sm:inline">Mark All Read</span>
+            <span className="sm:hidden">Mark Read</span>
           </Button>
           <Button variant="danger" onClick={handleClearAll}>
             Clear All

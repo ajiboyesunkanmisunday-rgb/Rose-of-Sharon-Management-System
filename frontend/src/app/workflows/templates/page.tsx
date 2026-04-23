@@ -47,7 +47,7 @@ export default function WorkflowTemplatesPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-[28px] font-bold text-[#000000]">Workflows</h1>
           <h2 className="text-[22px] font-bold text-[#000080]">Templates</h2>

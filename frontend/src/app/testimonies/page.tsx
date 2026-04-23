@@ -159,9 +159,9 @@ export default function TestimoniesPage() {
               </th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Category</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Featured</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Location</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Featured</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Location</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
               <th className="px-4 py-4"></th>
             </tr>
@@ -191,7 +191,7 @@ export default function TestimoniesPage() {
                     {t.category}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                   {t.featured ? (
                     <div>
                       <div className="font-medium text-[#16A34A]">Yes</div>
@@ -203,10 +203,10 @@ export default function TestimoniesPage() {
                     <span className="text-gray-400">No</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">
                   {t.location || <span className="text-gray-400">—</span>}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{t.date}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{t.date}</td>
                 <td className="px-4 py-3">
                   <span
                     className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
