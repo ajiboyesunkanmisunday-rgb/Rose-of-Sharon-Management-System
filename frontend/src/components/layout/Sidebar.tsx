@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ClipboardList,
   CircleUser,
@@ -147,6 +147,7 @@ const navItems: NavItem[] = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   // Auto-expand parent items whose children match the current path
@@ -350,6 +351,7 @@ export default function Sidebar() {
         style={{ borderTop: "1px solid #E5E5E5" }}
       >
         <button
+          onClick={() => router.push("/login")}
           className="flex w-full items-center gap-3 rounded-lg px-3 transition-colors hover:bg-gray-100"
           style={{
             paddingTop: "14px",
