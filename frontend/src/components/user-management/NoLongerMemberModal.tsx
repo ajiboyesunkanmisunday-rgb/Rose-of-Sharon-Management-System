@@ -63,7 +63,7 @@ export default function NoLongerMemberModal({
         {/* Navy Header */}
         <div className="flex items-center justify-between bg-[#000080] px-6 py-4">
           <h2 className="text-lg font-bold text-white">
-            Mark as No longer a member
+            Mark as Inactive
           </h2>
           <button
             onClick={onClose}
@@ -92,7 +92,7 @@ export default function NoLongerMemberModal({
           {count !== undefined && count > 0 && (
             <p className="mb-3 text-sm text-[#374151]">
               This will mark <span className="font-semibold">{count}</span>{" "}
-              {count === 1 ? "member" : "members"} as no longer a member.
+              {count === 1 ? "member" : "members"} as inactive.
             </p>
           )}
           <label className="mb-1 block text-sm font-medium text-gray-700">
