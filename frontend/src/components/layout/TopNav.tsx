@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 
 export default function TopNav() {
+  const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
@@ -46,7 +48,13 @@ export default function TopNav() {
                 Settings
               </a>
               <hr className="my-1 border-gray-100" />
-              <button className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50">
+              <button
+                onClick={() => {
+                  setDropdownOpen(false);
+                  router.push("/login");
+                }}
+                className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50"
+              >
                 Log Out
               </button>
             </div>
