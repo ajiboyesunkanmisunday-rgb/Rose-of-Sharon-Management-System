@@ -368,7 +368,7 @@ export default function CelebrationsPage() {
               <thead>
                 <tr className="bg-[#F3F4F6]">
                   <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
-                  <th className="px-4 py-4 text-sm font-bold text-[#000080]">Created Date</th>
+                  <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Created Date</th>
                   <th className="px-4 py-4 text-sm font-bold text-[#000080]">Thanksgiving Date</th>
                   <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
                   <th className="px-4 py-4"></th>
@@ -378,7 +378,7 @@ export default function CelebrationsPage() {
                 {filteredThanksgiving.map((row) => (
                   <tr key={row.id} className="border-b border-[#F3F4F6] hover:bg-gray-50" style={{ height: "56px" }}>
                     <td className="px-4 py-3 text-sm text-[#374151]">{row.name}</td>
-                    <td className="px-4 py-3 text-sm text-[#374151]">{row.createdDate ? formatDisplay(row.createdDate) : "—"}</td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{row.createdDate ? formatDisplay(row.createdDate) : "—"}</td>
                     <td className="px-4 py-3 text-sm text-[#374151]">{formatDisplay(row.date)}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${row.status === "Treated" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>

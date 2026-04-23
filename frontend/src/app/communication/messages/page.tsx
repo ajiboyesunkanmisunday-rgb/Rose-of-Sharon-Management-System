@@ -118,7 +118,7 @@ export default function MessagesPage() {
         <div className="w-full sm:w-72">
           <SearchBar value={search} onChange={setSearch} onSearch={() => setCurrentPage(1)} placeholder="Search..." />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="primary"
             onClick={() => router.push("/communication/messages/compose")}
@@ -139,7 +139,7 @@ export default function MessagesPage() {
               </svg>
             }
           >
-            Filter &amp; Export
+            <span className="hidden sm:inline">Filter &amp; Export</span>
           </Button>
         </div>
       </div>
@@ -164,11 +164,11 @@ export default function MessagesPage() {
               </th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Type</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Recipient</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Subject</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Subject</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Sent By</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Time</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Sent By</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Time</th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
@@ -185,11 +185,11 @@ export default function MessagesPage() {
                 </td>
                 <td className="px-4 py-3">{getTypeBadge(message.type)}</td>
                 <td className="px-4 py-3 text-sm text-[#374151]">{message.recipient}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{message.subject || "—"}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{message.subject || "—"}</td>
                 <td className="px-4 py-3">{getStatusBadge(message.status)}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{message.sentBy}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{message.date}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{message.time || "—"}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{message.sentBy}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{message.date}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{message.time || "—"}</td>
                 <td className="px-4 py-3">
                   <ActionDropdown
                     actions={

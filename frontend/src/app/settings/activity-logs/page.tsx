@@ -77,9 +77,9 @@ export default function ActivityLogsPage() {
             <tr className="bg-[#F3F4F6]">
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Action</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Performed By</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Date & Time</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Location</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Category</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Date & Time</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Location</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Category</th>
             </tr>
           </thead>
           <tbody>
@@ -91,9 +91,9 @@ export default function ActivityLogsPage() {
               >
                 <td className="px-4 py-3 text-sm text-[#374151]">{log.action}</td>
                 <td className="px-4 py-3 text-sm text-[#374151]">{log.performedBy}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{log.timestamp}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{log.location}</td>
-                <td className="px-4 py-3">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{log.timestamp}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{log.location}</td>
+                <td className="hidden sm:table-cell px-4 py-3">
                   <span
                     className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
                       categoryBadgeColors[log.category] || "bg-gray-200 text-gray-700"
@@ -106,7 +106,7 @@ export default function ActivityLogsPage() {
             ))}
             {paginated.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={5} className="px-4 py-8 text-center text-gray-400" style={{}}>
                   No activity found.
                 </td>
               </tr>

@@ -89,10 +89,10 @@ export default function AnnouncementsPage() {
           <thead>
             <tr className="bg-[#F3F4F6]">
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Title</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Audience</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Scheduled Date</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Audience</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Scheduled Date</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Created By</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Created By</th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
@@ -104,14 +104,14 @@ export default function AnnouncementsPage() {
                 style={{ height: "56px" }}
               >
                 <td className="px-4 py-3 font-medium text-[#111827]">{a.title}</td>
-                <td className="px-4 py-3 text-[#374151]">{a.audience}</td>
-                <td className="px-4 py-3 text-[#374151]">{a.scheduledDate}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{a.audience}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-[#374151]">{a.scheduledDate}</td>
                 <td className="px-4 py-3">
                   <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColors[a.status]}`}>
                     {a.status}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-[#374151]">{a.createdBy}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-[#374151]">{a.createdBy}</td>
                 <td className="px-4 py-3">
                   <ActionDropdown
                     actions={[
