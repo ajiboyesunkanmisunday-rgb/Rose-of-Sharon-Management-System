@@ -145,7 +145,12 @@ const navItems: NavItem[] = [
   },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -185,7 +190,15 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="fixed left-0 top-0 z-40 flex h-screen flex-col"
+      className={[
+        // Base
+        "fixed left-0 top-0 z-40 flex h-screen flex-col",
+        // Desktop — always visible, no transition needed
+        "lg:translate-x-0",
+        // Mobile — slide in/out based on isOpen
+        isOpen ? "translate-x-0" : "-translate-x-full",
+        "transition-transform duration-300 ease-in-out lg:transition-none",
+      ].join(" ")}
       style={{
         width: "322px",
         backgroundColor: "#FEFEFF",
@@ -193,7 +206,7 @@ export default function Sidebar() {
       }}
     >
       {/* Logo Area */}
-      <div className="px-5 py-5">
+      <div className="flex items-center justify-between px-5 py-5">
         <Image
           src="/rccg-logo.svg"
           alt="Rose of Sharon - RCCG"
@@ -202,6 +215,19 @@ export default function Sidebar() {
           className="h-[54px] w-auto"
           priority
         />
+        {/* Close button — only shown on mobile */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-[#000080] hover:bg-gray-100 lg:hidden"
+            aria-label="Close menu"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
@@ -288,6 +314,7 @@ export default function Sidebar() {
                               <li key={child.href}>
                                 <Link
                                   href={child.href}
+                                  onClick={onClose}
                                   className="block transition-colors"
                                   style={{
                                     paddingLeft: "40px",
@@ -310,6 +337,7 @@ export default function Sidebar() {
                 ) : (
                   <Link
                     href={item.href!}
+                    onClick={onClose}
                     className="flex items-center gap-3 rounded-lg px-3 transition-colors"
                     style={{
                       paddingTop: "14px",
