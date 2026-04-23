@@ -163,7 +163,7 @@ export default function FirstTimersPage() {
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {selectedRows.size > 0 && (
             <ActionDropdown actions={bulkActions} />
           )}
@@ -201,7 +201,7 @@ export default function FirstTimersPage() {
                 <rect x="14" y="14" width="7" height="7" />
               </svg>
             }
-          >QR Code</Button>
+          ><span className="hidden sm:inline">QR Code</span></Button>
 
           <Button onClick={() => {}}
             icon={
@@ -209,7 +209,7 @@ export default function FirstTimersPage() {
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
               </svg>
             }
-          >Filter &amp; Export</Button>
+          ><span className="hidden sm:inline">Filter</span></Button>
 
           <Button onClick={handleExport}
             icon={
@@ -219,7 +219,7 @@ export default function FirstTimersPage() {
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
             }
-          >Export</Button>
+          ><span className="hidden sm:inline">Export</span></Button>
 
           <Button
             variant="primary"
@@ -232,7 +232,7 @@ export default function FirstTimersPage() {
               </svg>
             }
           >
-            Bulk Import
+            <span className="hidden sm:inline">Bulk Import</span>
           </Button>
         </div>
       </div>
@@ -260,11 +260,11 @@ export default function FirstTimersPage() {
               </th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Phone</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Email</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Email</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">
                 Service Attended
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
                 Assigned Follow-up
               </th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
@@ -290,11 +290,11 @@ export default function FirstTimersPage() {
                 </td>
                 <td className="px-4 py-3 text-sm text-[#374151]">{ft.name}</td>
                 <td className="px-4 py-3 text-sm text-[#374151]">{ft.phone}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{ft.email}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{ft.email}</td>
                 <td className="px-4 py-3 text-sm text-[#374151]">
                   {ft.serviceAttended}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                   {ft.assignedFollowUp}
                 </td>
                 <td className="px-4 py-3 text-sm text-[#374151]">{ft.date}</td>
