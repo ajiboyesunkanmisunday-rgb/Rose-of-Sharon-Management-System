@@ -218,7 +218,7 @@ export default function EMembersPage() {
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {selectedRows.size > 0 && (
             <ActionDropdown actions={bulkActions} />
           )}
@@ -255,7 +255,7 @@ export default function EMembersPage() {
                 <rect x="14" y="14" width="7" height="7" />
               </svg>
             }
-          >QR Code</Button>
+          ><span className="hidden sm:inline">QR Code</span></Button>
 
           <Button onClick={() => setShowFilter((s) => !s)}
             icon={
@@ -264,7 +264,7 @@ export default function EMembersPage() {
               </svg>
             }
           >
-            Filter &amp; Export
+            <span className="hidden sm:inline">Filter</span>
           </Button>
 
           <Button onClick={handleExport}
@@ -275,7 +275,7 @@ export default function EMembersPage() {
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
             }
-          >Export</Button>
+          ><span className="hidden sm:inline">Export</span></Button>
 
           <Button
             variant="primary"
@@ -288,7 +288,7 @@ export default function EMembersPage() {
               </svg>
             }
           >
-            Bulk Import
+            <span className="hidden sm:inline">Bulk Import</span>
           </Button>
         </div>
       </div>
@@ -363,7 +363,7 @@ export default function EMembersPage() {
               </th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Country</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Phone</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Email</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Email</th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
@@ -396,7 +396,7 @@ export default function EMembersPage() {
                 <td className="px-4 py-3 text-sm text-[#374151]">{member.lastName}</td>
                 <td className="px-4 py-3 text-sm text-[#374151]">{member.country}</td>
                 <td className="px-4 py-3 text-sm text-[#374151]">{member.phone}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{member.email}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{member.email}</td>
                 <td className="px-4 py-3">
                   <ActionDropdown
                     actions={[
