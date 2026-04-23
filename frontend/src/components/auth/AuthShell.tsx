@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 interface AuthShellProps {
   title: string;
   subtitle?: string;
@@ -16,15 +14,28 @@ export default function AuthShell({
   return (
     <div className="min-h-screen w-full bg-[#F7F7FB]">
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
-        {/* Left panel — brand */}
-        <div className="relative hidden flex-col justify-between bg-[#000080] p-10 text-white lg:flex">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white">
-              <Image
+        {/* Left panel — brand with church background image */}
+        <div
+          className="relative hidden flex-col justify-between p-10 text-white lg:flex"
+          style={{
+            backgroundImage: "url('/church-bg.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          {/* Dark overlay so text stays legible */}
+          <div className="absolute inset-0 bg-[#000080]/75" />
+
+          {/* Content sits above the overlay */}
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src="/rccg-logo.png"
                 alt="RCCG Rose of Sharon"
                 width={40}
                 height={40}
+                className="h-10 w-10 object-contain"
               />
             </div>
             <div>
@@ -33,7 +44,7 @@ export default function AuthShell({
             </div>
           </div>
 
-          <div className="max-w-md">
+          <div className="relative z-10 max-w-md">
             <h2 className="text-[32px] font-bold leading-tight">
               Rose of Sharon Management System
             </h2>
@@ -43,7 +54,7 @@ export default function AuthShell({
             </p>
           </div>
 
-          <p className="text-xs text-[#B5B5F3]">
+          <p className="relative z-10 text-xs text-[#B5B5F3]">
             © {new Date().getFullYear()} RCCG Rose of Sharon. All rights
             reserved.
           </p>
@@ -55,11 +66,11 @@ export default function AuthShell({
             {/* Mobile brand */}
             <div className="mb-8 flex items-center gap-3 lg:hidden">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#000080]">
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src="/rccg-logo.png"
                   alt="RCCG Rose of Sharon"
-                  width={28}
-                  height={28}
+                  className="h-7 w-7 object-contain"
                 />
               </div>
               <div>
