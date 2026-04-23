@@ -105,7 +105,7 @@ export default function TestimoniesPage() {
       </div>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="w-72">
+        <div className="w-full sm:w-72">
           <SearchBar
             value={search}
             onChange={setSearch}
@@ -293,7 +293,7 @@ export default function TestimoniesPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <div className="text-xs font-medium text-gray-500">Date</div>
                 <div className="text-sm text-[#374151]">{viewing.date}</div>

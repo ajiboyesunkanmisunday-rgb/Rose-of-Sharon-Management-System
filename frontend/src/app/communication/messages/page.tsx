@@ -115,7 +115,7 @@ export default function MessagesPage() {
       </div>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="w-72">
+        <div className="w-full sm:w-72">
           <SearchBar value={search} onChange={setSearch} onSearch={() => setCurrentPage(1)} placeholder="Search..." />
         </div>
         <div className="flex items-center gap-2">
@@ -243,7 +243,7 @@ export default function MessagesPage() {
               <p className="text-xs font-medium text-[#6B7280]">Content</p>
               <p className="whitespace-pre-wrap text-[#374151]">{viewing.content}</p>
             </div>
-            <div className="grid grid-cols-2 gap-3 pt-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pt-2">
               <div>
                 <p className="text-xs font-medium text-[#6B7280]">Sent By</p>
                 <p className="text-[#374151]">{viewing.sentBy}</p>
