@@ -181,13 +181,13 @@ export default function GroupsPage() {
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">
                 Group Name
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
                 Description
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
                 Members
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
                 Leader
               </th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">
@@ -205,13 +205,13 @@ export default function GroupsPage() {
                 <td className="px-4 py-3 text-sm font-medium text-[#374151]">
                   {group.name}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                   {group.description}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                   {group.membersCount}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">
                   {group.leader}
                 </td>
                 <td className="px-4 py-3">

@@ -152,10 +152,10 @@ export default function RolesPage() {
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">
                 Role Name
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
                 Description
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
                 Users Count
               </th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">
@@ -173,10 +173,10 @@ export default function RolesPage() {
                 <td className="px-4 py-3 text-sm font-medium text-[#374151]">
                   {role.name}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                   {role.description}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                   {role.usersCount}
                 </td>
                 <td className="px-4 py-3">

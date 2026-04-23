@@ -96,9 +96,9 @@ export default function CalendarPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-[28px] font-bold text-[#000000]">Calendar</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="inline-flex rounded-lg border border-[#E5E7EB] bg-white p-1">
             {(["Month", "Week"] as ViewMode[]).map((m) => (
               <button
@@ -129,7 +129,7 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-6 lg:flex-row">
+      <div className="flex flex-col gap-6 lg:flex-row min-w-0">
         <div className="flex-1">
           {viewMode === "Month" ? (
           <>
@@ -155,15 +155,15 @@ export default function CalendarPage() {
             </button>
           </div>
 
-          <div className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white">
-            <div className="grid grid-cols-7 bg-[#F3F4F6]">
+          <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+            <div className="grid grid-cols-7 min-w-[320px] bg-[#F3F4F6]">
               {DAYS.map((day) => (
                 <div key={day} className="px-2 py-3 text-center text-sm font-bold text-[#000080]">
                   {day}
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-7">
+            <div className="grid grid-cols-7 min-w-[320px]">
               {calendarCells.map((day, idx) => {
                 const dayEvents = day ? getEventsForDay(day) : [];
                 const dateStr = day
@@ -332,8 +332,8 @@ function WeekView({ weekStart, onPrev, onNext, onEventClick }: WeekViewProps) {
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white">
-        <div className="grid" style={{ gridTemplateColumns: "60px repeat(7, 1fr)" }}>
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+        <div className="grid min-w-[560px]" style={{ gridTemplateColumns: "60px repeat(7, 1fr)" }}>
           <div className="bg-[#F3F4F6] px-2 py-3 text-center text-xs font-bold text-[#000080]">Time</div>
           {days.map((d, i) => (
             <div key={i} className="bg-[#F3F4F6] px-2 py-3 text-center text-sm font-bold text-[#000080]">
@@ -342,7 +342,7 @@ function WeekView({ weekStart, onPrev, onNext, onEventClick }: WeekViewProps) {
             </div>
           ))}
         </div>
-        <div className="relative grid" style={{ gridTemplateColumns: "60px repeat(7, 1fr)" }}>
+        <div className="relative grid min-w-[560px]" style={{ gridTemplateColumns: "60px repeat(7, 1fr)" }}>
           {/* Hour labels */}
           <div>
             {hours.map((h) => (

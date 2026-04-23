@@ -134,7 +134,7 @@ export default function RequestDetailPage() {
           {request.content}
         </p>
 
-        <div className="flex items-center gap-6 text-xs text-[#6B7280]">
+        <div className="flex flex-wrap items-center gap-4 text-xs text-[#6B7280]">
           <span>
             <span className="font-medium">Submitted by:</span>{" "}
             {request.submittedBy}
@@ -148,7 +148,7 @@ export default function RequestDetailPage() {
       {/* Status Section */}
       <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
         <h4 className="mb-4 text-sm font-bold text-[#111827]">Status</h4>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <span
             className={`rounded-full px-3 py-1 text-xs font-medium ${
               statusBadgeColors[currentStatus] || "bg-gray-200 text-gray-700"
@@ -187,7 +187,7 @@ export default function RequestDetailPage() {
       {/* Assigned To Section */}
       <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
         <h4 className="mb-4 text-sm font-bold text-[#111827]">Assigned To</h4>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <span className="text-sm text-[#374151]">
             {currentAssignee || "Unassigned"}
           </span>

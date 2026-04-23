@@ -185,8 +185,8 @@ export default function EventDetailClient() {
             <thead>
               <tr className="bg-[#F3F4F6]">
                 <th className="px-4 py-3 text-sm font-bold text-[#000080]">Name</th>
-                <th className="px-4 py-3 text-sm font-bold text-[#000080]">Email</th>
-                <th className="px-4 py-3 text-sm font-bold text-[#000080]">Phone</th>
+                <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Email</th>
+                <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Phone</th>
                 <th className="px-4 py-3 text-sm font-bold text-[#000080]">Registered</th>
                 <th className="px-4 py-3 text-sm font-bold text-[#000080]">Check-in</th>
               </tr>
@@ -195,8 +195,8 @@ export default function EventDetailClient() {
               {mockAttendees.map((a) => (
                 <tr key={a.id} className="border-b border-[#F3F4F6]">
                   <td className="px-4 py-3 font-medium text-[#111827]">{a.name}</td>
-                  <td className="px-4 py-3 text-[#374151]">{a.email}</td>
-                  <td className="px-4 py-3 text-[#374151]">{a.phone}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{a.email}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{a.phone}</td>
                   <td className="px-4 py-3 text-[#374151]">{a.registeredDate}</td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-3 py-1 text-xs font-medium ${a.checkedIn ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}>

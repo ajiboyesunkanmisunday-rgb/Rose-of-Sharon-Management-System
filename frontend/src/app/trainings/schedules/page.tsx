@@ -70,7 +70,7 @@ export default function TrainingSchedulesPage() {
         <h2 className="text-[22px] font-bold text-[#000080]">Schedules</h2>
       </div>
 
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="w-full sm:w-72">
           <SearchBar
             value={search}
@@ -98,11 +98,11 @@ export default function TrainingSchedulesPage() {
           <thead>
             <tr className="bg-[#F3F4F6]">
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Course</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Instructor</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Instructor</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Start Date</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">End Date</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Day/Time</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Venue</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">End Date</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Day/Time</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Venue</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
               <th className="px-4 py-4"></th>
             </tr>
@@ -115,11 +115,11 @@ export default function TrainingSchedulesPage() {
                 style={{ height: "56px" }}
               >
                 <td className="px-4 py-3 font-medium text-[#111827]">{s.course}</td>
-                <td className="px-4 py-3 text-[#374151]">{s.instructor}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{s.instructor}</td>
                 <td className="px-4 py-3 text-[#374151]">{s.startDate}</td>
-                <td className="px-4 py-3 text-[#374151]">{s.endDate}</td>
-                <td className="px-4 py-3 text-[#374151]">{s.dayTime}</td>
-                <td className="px-4 py-3 text-[#374151]">{s.venue}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{s.endDate}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-[#374151]">{s.dayTime}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-[#374151]">{s.venue}</td>
                 <td className="px-4 py-3">
                   <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColor(s.status)}`}>
                     {s.status}

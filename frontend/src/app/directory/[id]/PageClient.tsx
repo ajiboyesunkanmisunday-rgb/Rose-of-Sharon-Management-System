@@ -42,7 +42,7 @@ export default function DirectoryDetailClient() {
       />
 
       <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
-        <div className="flex items-start gap-6">
+        <div className="flex flex-col sm:flex-row items-start gap-6">
           <div className="flex h-[120px] w-[120px] shrink-0 items-center justify-center rounded-xl bg-[#E5E7EB]">
             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />

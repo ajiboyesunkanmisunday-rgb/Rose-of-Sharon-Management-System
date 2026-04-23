@@ -271,12 +271,12 @@ export default function ReportsPage() {
           onClick={handleExportCSV}
           icon={<Download className="h-4 w-4" />}
         >
-          Export CSV
+          <span className="hidden sm:inline">Export CSV</span>
         </Button>
       </div>
 
       {/* KPI Cards */}
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {kpiCards.map((card) => {
           const Icon = card.icon;
           return (
@@ -414,10 +414,10 @@ export default function ReportsPage() {
                 <th className="pb-3 text-left font-medium text-gray-500">
                   Action
                 </th>
-                <th className="pb-3 text-left font-medium text-gray-500">
+                <th className="hidden sm:table-cell pb-3 text-left font-medium text-gray-500">
                   Performed By
                 </th>
-                <th className="pb-3 text-left font-medium text-gray-500">
+                <th className="hidden sm:table-cell pb-3 text-left font-medium text-gray-500">
                   Details
                 </th>
               </tr>
@@ -434,8 +434,8 @@ export default function ReportsPage() {
                   <td className="py-3 font-medium text-gray-900">
                     {row.action}
                   </td>
-                  <td className="py-3 text-gray-700">{row.performedBy}</td>
-                  <td className="py-3 text-gray-500">{row.details}</td>
+                  <td className="hidden sm:table-cell py-3 text-gray-700">{row.performedBy}</td>
+                  <td className="hidden sm:table-cell py-3 text-gray-500">{row.details}</td>
                 </tr>
               ))}
             </tbody>

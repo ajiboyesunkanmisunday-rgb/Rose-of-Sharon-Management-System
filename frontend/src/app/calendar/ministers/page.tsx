@@ -156,8 +156,8 @@ export default function MinistersOnDutyPage() {
           <div className="mb-4 rounded-xl border border-[#E5E7EB] bg-white px-6 py-4">
             <h2 className="text-lg font-bold text-[#000080]">April 2026</h2>
           </div>
-          <div className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white">
-            <div className="grid grid-cols-7 bg-[#F3F4F6]">
+          <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+            <div className="grid grid-cols-7 min-w-[320px] bg-[#F3F4F6]">
               {DAYS.map((d) => (
                 <div
                   key={d}
@@ -167,7 +167,7 @@ export default function MinistersOnDutyPage() {
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-7">
+            <div className="grid grid-cols-7 min-w-[320px]">
               {calendarCells.map((day, idx) => {
                 const dateStr = day
                   ? `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`

@@ -61,11 +61,11 @@ export default function UrgentFollowUpPage() {
           <thead>
             <tr className="bg-[#F3F4F6]">
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Phone</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Category</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Assigned Officer</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Phone</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Category</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Assigned Officer</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Days Overdue</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Last Contact</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Last Contact</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
             </tr>
           </thead>
@@ -73,13 +73,13 @@ export default function UrgentFollowUpPage() {
             {paginated.map((f) => (
               <tr key={f.id} className="border-b border-[#F3F4F6] hover:bg-gray-50" style={{ height: "56px" }}>
                 <td className="px-4 py-3 text-sm text-[#374151]">{f.name}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{f.phone}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{f.category}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{f.assignedOfficer}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{f.phone}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{f.category}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{f.assignedOfficer}</td>
                 <td className={`px-4 py-3 text-sm ${daysColor(f.daysOverdue)}`}>
                   {f.daysOverdue === 0 ? "Due today" : `${f.daysOverdue} days`}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{f.lastContact}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{f.lastContact}</td>
                 <td className="px-4 py-3">{statusBadge(f.status)}</td>
               </tr>
             ))}
