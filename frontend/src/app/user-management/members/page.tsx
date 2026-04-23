@@ -136,7 +136,7 @@ export default function MembersPage() {
       onClick: () => setShowEmailModal(true),
     },
     {
-      label: "Mark as No longer a member",
+      label: "Mark as Inactive",
       onClick: () => setShowNoLongerBulkModal(true),
     },
     {
@@ -423,7 +423,7 @@ export default function MembersPage() {
                           router.push(`/user-management/members/${member.id}/link-spouse`),
                       },
                       {
-                        label: "Mark as No longer a member",
+                        label: "Mark as Inactive",
                         onClick: () => handleNoLongerMemberClick(member.id),
                       },
                       {
