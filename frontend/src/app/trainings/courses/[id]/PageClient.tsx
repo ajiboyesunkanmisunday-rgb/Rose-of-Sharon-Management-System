@@ -317,10 +317,10 @@ export default function CourseDetailPage() {
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">
                 Name
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
                 Phone
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
                 Email
               </th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">
@@ -344,10 +344,10 @@ export default function CourseDetailPage() {
                 <td className="px-4 py-3 text-sm text-[#374151]">
                   {student.name}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                   {student.phone}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                   {student.email}
                 </td>
                 <td className="px-4 py-3 text-sm text-[#374151]">

@@ -133,8 +133,8 @@ export default function RequestsPage() {
       </div>
 
       {/* Category Tabs */}
-      <div className="mb-4 flex items-center border-b border-[#E5E7EB]">
-        <div className="flex gap-8">
+      <div className="mb-4 flex items-center overflow-x-auto border-b border-[#E5E7EB]">
+        <div className="flex gap-6 sm:gap-8">
           {categoryTabs.map((tab) => (
             <button
               key={tab.key}
@@ -217,10 +217,10 @@ export default function RequestsPage() {
               </th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Type</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Subject</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Submitted By</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Submitted By</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Assigned To</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Assigned To</th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
@@ -241,20 +241,20 @@ export default function RequestsPage() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-sm text-[#374151]">{request.title}</td>
-                <td className="px-4 py-3 text-sm">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm">
                   {request.submittedBy && request.submittedBy.trim() !== "" ? (
                     <span className="text-[#374151]">{request.submittedBy}</span>
                   ) : (
                     <span className="italic text-gray-400">Anonymous</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{request.date}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{request.date}</td>
                 <td className="px-4 py-3">
                   <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${statusBadgeColors[request.status] || "bg-gray-200 text-gray-700"}`}>
                     {request.status}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{request.assignedTo}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{request.assignedTo}</td>
                 <td className="px-4 py-3">
                   <ActionDropdown
                     actions={[

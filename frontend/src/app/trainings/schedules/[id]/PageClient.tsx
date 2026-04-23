@@ -58,7 +58,7 @@ export default function ScheduleDetailClient() {
       />
 
       <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
-        <div className="flex items-start justify-between">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <h2 className="text-xl font-bold text-[#111827]">{schedule.course}</h2>
           <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColor(schedule.status)}`}>
             {schedule.status}

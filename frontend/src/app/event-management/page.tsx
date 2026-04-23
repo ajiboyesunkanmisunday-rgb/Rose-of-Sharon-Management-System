@@ -99,10 +99,10 @@ export default function EventManagementPage() {
             <tr className="bg-[#F3F4F6]">
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Event Name</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Location</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Category</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Type</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Attendees</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Location</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Category</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Type</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Attendees</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
               <th className="px-4 py-4"></th>
             </tr>
@@ -116,13 +116,13 @@ export default function EventManagementPage() {
               >
                 <td className="px-4 py-3 text-sm font-medium text-[#374151]">{event.name}</td>
                 <td className="px-4 py-3 text-sm text-[#374151]">{event.date}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{event.location}</td>
-                <td className="px-4 py-3">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{event.location}</td>
+                <td className="hidden sm:table-cell px-4 py-3">
                   <span className="inline-block rounded-full bg-[#F3F4F6] px-3 py-1 text-xs font-medium text-[#374151]">
                     {event.category}
                   </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="hidden md:table-cell px-4 py-3">
                   {event.type ? (
                     <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${typeColors[event.type]}`}>
                       {event.type}
@@ -131,7 +131,7 @@ export default function EventManagementPage() {
                     <span className="text-xs text-[#9CA3AF]">—</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">
                   {event.attendees.toLocaleString()}
                   {event.capacity > 0 && (
                     <span className="text-[#9CA3AF]"> / {event.capacity.toLocaleString()}</span>
