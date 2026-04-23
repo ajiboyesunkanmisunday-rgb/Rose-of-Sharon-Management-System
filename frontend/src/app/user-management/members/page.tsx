@@ -214,7 +214,7 @@ export default function MembersPage() {
 
       {/* Top bar: search + actions */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="w-72">
+        <div className="w-full sm:w-72">
           <SearchBar
             value={search}
             onChange={setSearch}
