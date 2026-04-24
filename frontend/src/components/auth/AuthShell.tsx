@@ -28,12 +28,12 @@ export default function AuthShell({
 
           {/* Content sits above the overlay */}
           <div className="relative z-10 flex items-center gap-3">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-white/90 p-2">
+            <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/rccg-logo.svg"
                 alt="RCCG"
-                className="h-full w-full object-contain"
+                className="h-full w-full object-cover"
               />
             </div>
             <div>
@@ -63,12 +63,12 @@ export default function AuthShell({
           <div className="w-full max-w-md">
             {/* Mobile brand */}
             <div className="mb-8 flex items-center gap-3 lg:hidden">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#000080] p-2">
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/rccg-logo.svg"
                   alt="RCCG"
-                  className="h-full w-full object-contain"
+                  className="h-full w-full object-cover"
                 />
               </div>
               <div>
