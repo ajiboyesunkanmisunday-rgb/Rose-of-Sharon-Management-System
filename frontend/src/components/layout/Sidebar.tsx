@@ -214,7 +214,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       {/* Logo Area */}
       <div className="flex items-center justify-between px-5 py-5">
         <Image
-          src="/rccg-logo.svg"
+          src="/rccg-combined-logo.svg"
           alt="Rose of Sharon - RCCG"
           width={202}
           height={54}
