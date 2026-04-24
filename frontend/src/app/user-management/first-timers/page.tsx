@@ -277,8 +277,9 @@ export default function FirstTimersPage() {
             {paginatedTimers.map((ft) => (
               <tr
                 key={ft.id}
-                className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50"
+                className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
                 style={{ height: "56px" }}
+                onDoubleClick={() => router.push(`/user-management/first-timers/${ft.id}`)}
               >
                 <td className="px-4 py-3">
                   <input
@@ -308,6 +309,13 @@ export default function FirstTimersPage() {
                         onClick: () =>
                           router.push(
                             `/user-management/first-timers/${ft.id}`
+                          ),
+                      },
+                      {
+                        label: "Edit",
+                        onClick: () =>
+                          router.push(
+                            `/user-management/first-timers/${ft.id}/edit`
                           ),
                       },
                       {

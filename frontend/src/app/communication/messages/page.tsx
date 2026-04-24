@@ -22,6 +22,9 @@ export default function MessagesPage() {
   const [activeTab, setActiveTab] = useState<MessageTab>("Sent");
   const [list, setList] = useState<Message[]>(messagesData);
   const [viewing, setViewing] = useState<Message | null>(null);
+  const [showFilter, setShowFilter] = useState(false);
+  const [filterType, setFilterType] = useState<"" | "SMS" | "Email">("");
+  const [filterStatus, setFilterStatus] = useState<"" | "Sent" | "Scheduled" | "Failed">("");
 
   const filteredMessages = useMemo(() => {
     let result = list;
@@ -30,6 +33,8 @@ export default function MessagesPage() {
     } else {
       result = result.filter((m) => m.status === "Scheduled");
     }
+    if (filterType) result = result.filter((m) => m.type === filterType);
+    if (filterStatus) result = result.filter((m) => m.status === filterStatus);
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
@@ -41,7 +46,7 @@ export default function MessagesPage() {
       );
     }
     return result;
-  }, [search, activeTab, list]);
+  }, [search, activeTab, list, filterType, filterStatus]);
 
   const totalPages = Math.ceil(filteredMessages.length / ITEMS_PER_PAGE);
   const paginatedMessages = filteredMessages.slice(
@@ -132,7 +137,7 @@ export default function MessagesPage() {
             New Message
           </Button>
           <Button
-            onClick={() => {}}
+            onClick={() => setShowFilter(!showFilter)}
             icon={
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
@@ -143,6 +148,45 @@ export default function MessagesPage() {
           </Button>
         </div>
       </div>
+
+      {showFilter && (
+        <div className="mb-4 flex flex-wrap items-end gap-4 rounded-xl border border-[#E5E7EB] bg-white p-4">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[#374151]">Type</label>
+            <select
+              value={filterType}
+              onChange={(e) => { setFilterType(e.target.value as any); setCurrentPage(1); }}
+              className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            >
+              <option value="">All Types</option>
+              <option value="SMS">SMS</option>
+              <option value="Email">Email</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[#374151]">Status</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => { setFilterStatus(e.target.value as any); setCurrentPage(1); }}
+              className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            >
+              <option value="">All Statuses</option>
+              <option value="Sent">Sent</option>
+              <option value="Scheduled">Scheduled</option>
+              <option value="Failed">Failed</option>
+            </select>
+          </div>
+          <button
+            onClick={() => { setFilterType(""); setFilterStatus(""); setCurrentPage(1); }}
+            className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] hover:bg-gray-50"
+          >
+            Clear
+          </button>
+          {(filterType || filterStatus) && (
+            <span className="text-xs text-[#000080] font-medium">Filters active</span>
+          )}
+        </div>
+      )}
 
       {selectedRows.size > 0 && (
         <div className="mb-2 text-sm text-gray-500">
@@ -174,7 +218,7 @@ export default function MessagesPage() {
           </thead>
           <tbody>
             {paginatedMessages.map((message) => (
-              <tr key={message.id} className="border-b border-[#F3F4F6] hover:bg-gray-50" style={{ height: "56px" }}>
+              <tr key={message.id} className="border-b border-[#F3F4F6] hover:bg-gray-50 cursor-pointer" style={{ height: "56px" }} onDoubleClick={() => setViewing(message)}>
                 <td className="px-4 py-3">
                   <input
                     type="checkbox"

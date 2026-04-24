@@ -121,8 +121,55 @@ export default function AddMemberPage() {
 
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-6 lg:flex-row">
+          {/* Right Side - Profile Photo (30%) — first on mobile, second on desktop */}
+          <div className="w-full lg:order-2 lg:w-[30%]">
+            <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+              <h2 className="mb-6 text-[18px] font-bold text-[#000000]">
+                Profile Photo
+              </h2>
+
+              <label className="group flex cursor-pointer flex-col items-center">
+                <span className="flex h-40 w-40 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-[#D1D5DB] transition-colors group-hover:border-[#000080]">
+                  {photoPreview ? (
+                    <img
+                      src={photoPreview}
+                      alt="Profile preview"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="48"
+                      height="48"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#9CA3AF"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  )}
+                </span>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
+                <span className="mt-4 text-sm font-medium text-[#000080] transition-colors group-hover:text-[#000066]">
+                  Upload Photo
+                </span>
+              </label>
+            </div>
+          </div>
+
           {/* Left Side - Form (70%) — second on mobile, first on desktop */}
-          <div className="order-2 w-full lg:order-1 lg:w-[70%]">
+          <div className="w-full lg:order-1 lg:w-[70%]">
             <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
               <h2 className="mb-6 text-[18px] font-bold text-[#000000]">
                 Enter Details
@@ -373,54 +420,6 @@ export default function AddMemberPage() {
             </div>
           </div>
 
-          {/* Right Side - Profile Photo (30%) — first on mobile, second on desktop */}
-          <div className="order-1 w-full lg:order-2 lg:w-[30%]">
-            <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
-              <h2 className="mb-6 text-[18px] font-bold text-[#000000]">
-                Profile Photo
-              </h2>
-
-              {/* Whole area (circle + "Upload Photo" text) is one clickable label */}
-              <label className="group flex cursor-pointer flex-col items-center">
-                {/* Dashed circle placeholder */}
-                <span className="flex h-40 w-40 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-[#D1D5DB] transition-colors group-hover:border-[#000080]">
-                  {photoPreview ? (
-                    <img
-                      src={photoPreview}
-                      alt="Profile preview"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="48"
-                      height="48"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#9CA3AF"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                  )}
-                </span>
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoUpload}
-                  className="hidden"
-                />
-                <span className="mt-4 text-sm font-medium text-[#000080] transition-colors group-hover:text-[#000066]">
-                  Upload Photo
-                </span>
-              </label>
-            </div>
-          </div>
         </div>
       </form>
 

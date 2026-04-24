@@ -100,8 +100,9 @@ export default function AnnouncementsPage() {
             {paginated.map((a) => (
               <tr
                 key={a.id}
-                className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50"
+                className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
                 style={{ height: "56px" }}
+                onDoubleClick={() => router.push(`/communication/announcements/${a.id}`)}
               >
                 <td className="px-4 py-3 font-medium text-[#111827]">{a.title}</td>
                 <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{a.audience}</td>

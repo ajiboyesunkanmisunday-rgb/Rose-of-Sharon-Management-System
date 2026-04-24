@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
@@ -13,6 +13,8 @@ const REPORTS_PER_PAGE = 3;
 
 export default function ViewSecondTimerPage() {
   const router = useRouter();
+  const params = useParams();
+  const id = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
   const [activeTab, setActiveTab] = useState<Tab>("visits");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -125,6 +127,16 @@ export default function ViewSecondTimerPage() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Edit Button */}
+      <div className="mb-6 flex justify-end">
+        <Button
+          variant="primary"
+          onClick={() => router.push(`/user-management/second-timers/${id}/edit`)}
+        >
+          Edit
+        </Button>
       </div>
 
       {/* Reports Section */}
