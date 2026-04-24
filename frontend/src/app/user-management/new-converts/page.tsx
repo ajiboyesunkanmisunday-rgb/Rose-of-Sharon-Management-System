@@ -337,13 +337,13 @@ export default function NewConvertsPage() {
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Phone</th>
               <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Email</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
                 Service Attended
               </th>
               <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
                 Believers Class
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
@@ -366,13 +366,13 @@ export default function NewConvertsPage() {
                 <td className="px-4 py-3 text-sm text-[#374151]">{nc.name}</td>
                 <td className="px-4 py-3 text-sm text-[#374151]">{nc.phone}</td>
                 <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{nc.email}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                   {nc.serviceAttended}
                 </td>
                 <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                   {nc.believersClass || "Not started"}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{nc.date}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{nc.date}</td>
                 <td className="px-4 py-3">
                   <ActionDropdown
                     actions={[
