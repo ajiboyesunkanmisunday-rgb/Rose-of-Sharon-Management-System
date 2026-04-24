@@ -1,9 +1,9 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Users, UserPlus, ClipboardCheck, PhoneCall } from "lucide-react";
+import { Users, UserPlus, ClipboardCheck, PhoneCall, Cake, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { urgentFollowUps } from "@/lib/mock-data";
+import { urgentFollowUps, birthdayReminders } from "@/lib/mock-data";
 
 const kpiCards = [
   { label: "Total Members", value: "1,234", icon: Users, iconBg: "bg-blue-100", iconColor: "text-blue-600" },
@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const maxAttendance = Math.max(...attendanceData.map((d) => d.value));
   const topFollowUps = urgentFollowUps.slice(0, 5);
+  const upcomingCelebrations = birthdayReminders.slice(0, 5);
 
   const severityColor = (days: number) =>
     days >= 10 ? "bg-red-100 text-red-700" : days >= 5 ? "bg-orange-100 text-orange-700" : "bg-yellow-100 text-yellow-800";
@@ -103,6 +104,39 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Birthdays & Anniversaries Widget */}
+      <div className="mt-6 rounded-lg border border-gray-100 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Upcoming Birthdays &amp; Anniversaries</h2>
+          <span className="text-xs font-medium text-[#6B7280]">Next 30 days</span>
+        </div>
+        <div className="space-y-3">
+          {upcomingCelebrations.map((item) => (
+            <div key={item.id} className="flex items-center justify-between gap-3 rounded-lg border border-[#E5E7EB] p-3">
+              <div className="flex items-center gap-3">
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${item.type === "Birthday" ? "bg-pink-100" : "bg-purple-100"}`}>
+                  {item.type === "Birthday"
+                    ? <Cake className="h-5 w-5 text-pink-600" />
+                    : <Heart className="h-5 w-5 text-purple-600" />}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{item.name}</p>
+                  {item.phone && <p className="text-xs text-gray-500">{item.phone}</p>}
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${item.type === "Birthday" ? "bg-pink-100 text-pink-700" : "bg-purple-100 text-purple-700"}`}>
+                  {item.type}
+                </span>
+                <span className="text-[11px] font-medium text-gray-500">
+                  {item.daysUntil === 0 ? "Today 🎉" : item.daysUntil === 1 ? "Tomorrow" : `In ${item.daysUntil} days`} · {item.date}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </DashboardLayout>

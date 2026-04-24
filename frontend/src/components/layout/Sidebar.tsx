@@ -19,6 +19,7 @@ import {
   GitFork,
   BellRing,
   Heart,
+  Flame,
   Settings,
   LogOut,
   ChevronRight,
@@ -77,6 +78,11 @@ const navItems: NavItem[] = [
     label: "Requests",
     icon: UserRoundPlus,
     href: "/requests",
+  },
+  {
+    label: "Prayer Requests",
+    icon: Flame,
+    href: "/prayer-requests",
   },
   {
     label: "Testimonies",

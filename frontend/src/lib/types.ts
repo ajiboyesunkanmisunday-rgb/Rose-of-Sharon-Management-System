@@ -437,3 +437,29 @@ export interface NavItem {
   href?: string;
   children?: { label: string; href: string }[];
 }
+
+export type PrayerCategory = 'Healing' | 'Finance' | 'Family' | 'Marriage' | 'Salvation' | 'Career' | 'Other';
+export type PrayerStatus = 'Pending' | 'Assigned' | 'Prayed For' | 'Closed';
+
+export interface PrayerRequest {
+  id: string;
+  submittedBy: string;
+  phone?: string;
+  email?: string;
+  category: PrayerCategory;
+  request: string;
+  status: PrayerStatus;
+  assignedTo?: string;
+  date: string;
+  isAnonymous: boolean;
+}
+
+export interface BirthdayReminder {
+  id: string;
+  name: string;
+  type: 'Birthday' | 'Anniversary';
+  date: string; // MM/DD
+  daysUntil: number;
+  phone?: string;
+}
+
