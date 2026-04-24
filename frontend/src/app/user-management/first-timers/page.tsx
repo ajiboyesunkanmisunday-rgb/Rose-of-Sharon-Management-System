@@ -261,15 +261,15 @@ export default function FirstTimersPage() {
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Phone</th>
               <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Email</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
                 Service Attended
               </th>
               <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
                 Assigned Follow-up
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Calls</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Visits</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Calls</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Visits</th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
@@ -292,15 +292,15 @@ export default function FirstTimersPage() {
                 <td className="px-4 py-3 text-sm text-[#374151]">{ft.name}</td>
                 <td className="px-4 py-3 text-sm text-[#374151]">{ft.phone}</td>
                 <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{ft.email}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                   {ft.serviceAttended}
                 </td>
                 <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                   {ft.assignedFollowUp}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{ft.date}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{ft.calls}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{ft.visits}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{ft.date}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{ft.calls}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{ft.visits}</td>
                 <td className="px-4 py-3">
                   <ActionDropdown
                     actions={[

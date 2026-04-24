@@ -62,11 +62,11 @@ export default function CelebrationWorkflowPage() {
         <h2 className="text-[22px] font-bold text-[#000080]">Celebration Request Workflow</h2>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:overflow-x-auto sm:pb-4">
         {columns.map((col) => (
           <div
             key={col.title}
-            className="flex min-w-[260px] flex-col rounded-xl border border-[#E5E7EB] bg-white"
+            className="flex w-full flex-col rounded-xl border border-[#E5E7EB] bg-white sm:min-w-[260px] sm:w-auto"
           >
             <div className={`rounded-t-xl ${col.headerBg} px-4 py-3`}>
               <div className="flex items-center justify-between">
