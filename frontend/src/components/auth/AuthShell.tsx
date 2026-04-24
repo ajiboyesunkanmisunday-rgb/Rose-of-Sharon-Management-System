@@ -27,20 +27,14 @@ export default function AuthShell({
           <div className="absolute inset-0 bg-[#000080]/75" />
 
           {/* Content sits above the overlay */}
-          <div className="relative z-10 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90">
+          <div className="relative z-10">
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white/90 p-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/rccg-logo.svg"
-                alt="RCCG Rose of Sharon"
-                width={40}
-                height={40}
-                className="h-10 w-10 object-contain"
+                alt="RCCG"
+                className="h-full w-full object-contain"
               />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-[#B5B5F3]">RCCG</p>
-              <p className="text-lg font-semibold">Rose of Sharon</p>
             </div>
           </div>
 
@@ -64,20 +58,14 @@ export default function AuthShell({
         <div className="flex items-center justify-center p-6 sm:p-10">
           <div className="w-full max-w-md">
             {/* Mobile brand */}
-            <div className="mb-8 flex items-center gap-3 lg:hidden">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#000080]">
+            <div className="mb-8 flex items-center justify-center lg:hidden">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#000080] p-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/rccg-logo.svg"
-                  alt="RCCG Rose of Sharon"
-                  className="h-7 w-7 object-contain"
+                  alt="RCCG"
+                  className="h-full w-full object-contain"
                 />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-[#000080]">RCCG</p>
-                <p className="text-base font-semibold text-[#000000]">
-                  Rose of Sharon
-                </p>
               </div>
             </div>
 
