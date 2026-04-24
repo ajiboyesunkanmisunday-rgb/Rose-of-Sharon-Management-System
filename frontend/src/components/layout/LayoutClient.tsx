@@ -34,7 +34,7 @@ export default function LayoutClient({
   }, [sidebarOpen]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-gray-50">
       {/* Sidebar — always visible on desktop, drawer on mobile */}
       <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
@@ -53,7 +53,7 @@ export default function LayoutClient({
       {/* Main content area
           - Mobile/tablet: full width, pushed below top bar
           - Desktop: indented by sidebar width */}
-      <main className="mt-16 min-h-[calc(100vh-64px)] bg-white p-4 sm:p-6 lg:ml-[322px] dark:bg-gray-900">
+      <main className="mt-16 min-h-[calc(100vh-64px)] bg-white p-4 sm:p-6 lg:ml-[322px]">
         {children}
       </main>
     </div>
