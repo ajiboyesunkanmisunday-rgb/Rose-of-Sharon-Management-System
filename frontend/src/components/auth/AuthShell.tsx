@@ -28,14 +28,15 @@ export default function AuthShell({
 
           {/* Content sits above the overlay */}
           <div className="relative z-10 flex items-center gap-3">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/rccg-logo.svg"
-                alt="RCCG"
-                className="h-[60px] w-[60px] object-contain"
-              />
-            </div>
+            <div
+              className="h-20 w-20 shrink-0 rounded-full bg-white"
+              style={{
+                backgroundImage: "url('/rccg-logo.svg')",
+                backgroundSize: "72%",
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "center",
+              }}
+            />
             <div>
               <p className="text-sm font-medium text-[#B5B5F3]">RCCG</p>
               <p className="text-lg font-semibold">Rose of Sharon</p>
@@ -63,14 +64,15 @@ export default function AuthShell({
           <div className="w-full max-w-md">
             {/* Mobile brand */}
             <div className="mb-8 flex items-center gap-3 lg:hidden">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white border border-[#E5E7EB]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/rccg-logo.svg"
-                  alt="RCCG"
-                  className="h-10 w-10 object-contain"
-                />
-              </div>
+              <div
+                className="h-14 w-14 shrink-0 rounded-full bg-white border border-[#E5E7EB]"
+                style={{
+                  backgroundImage: "url('/rccg-logo.svg')",
+                  backgroundSize: "72%",
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "center",
+                }}
+              />
               <div>
                 <p className="text-xs font-medium text-[#000080]">RCCG</p>
                 <p className="text-base font-semibold text-[#000000]">

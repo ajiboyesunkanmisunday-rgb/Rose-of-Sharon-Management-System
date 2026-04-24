@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ClipboardList,
@@ -213,13 +212,11 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     >
       {/* Logo Area */}
       <div className="flex items-center justify-between px-5 py-5">
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src="/rccg-combined-logo.svg"
           alt="Rose of Sharon - RCCG"
-          width={202}
-          height={54}
           className="h-[54px] w-auto"
-          priority
         />
         {/* Close button — only shown on mobile */}
         {onClose && (
