@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Menu } from "lucide-react";
+import { ChevronDown, Menu, Sun, Moon } from "lucide-react";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 interface TopNavProps {
   onMenuOpen?: () => void;
@@ -11,9 +12,10 @@ interface TopNavProps {
 export default function TopNav({ onMenuOpen }: TopNavProps) {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { isDark, toggle } = useTheme();
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-30 flex h-16 items-center border-b border-[#E5E7EB] bg-white px-4 lg:left-[322px] lg:px-6">
+    <header className="fixed left-0 right-0 top-0 z-30 flex h-16 items-center border-b border-[#E5E7EB] bg-white px-4 lg:left-[322px] lg:px-6 dark:bg-gray-900 dark:border-gray-700">
       {/* Hamburger — mobile & tablet only */}
       <button
         onClick={onMenuOpen}
@@ -25,6 +27,15 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* Dark Mode Toggle */}
+      <button
+        onClick={toggle}
+        className="mr-2 flex h-9 w-9 items-center justify-center rounded-lg text-[#000080] hover:bg-gray-100 dark:text-yellow-400 dark:hover:bg-gray-800"
+        aria-label="Toggle dark mode"
+      >
+        {isDark ? <Sun size={20} strokeWidth={1.8} /> : <Moon size={20} strokeWidth={1.8} />}
+      </button>
 
       {/* User Profile */}
       <div className="relative">

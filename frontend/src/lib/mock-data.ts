@@ -1,4 +1,4 @@
-import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent, WorkflowTemplate, ActiveWorkflowCard, Course, TrainingSchedule, Celebration, Role, Group, PermissionMatrix, FollowUpOfficer, BelieversClass, Testimony, ActivityLog, UrgentFollowUp, MinisterOnDuty } from './types';
+import { Member, EMember, FirstTimer, SecondTimer, NewConvert, Report, Request, Message, CommunicationTemplate, Announcement, ChurchEvent, DirectoryContact, MediaItem, CalendarEvent, WorkflowTemplate, ActiveWorkflowCard, Course, TrainingSchedule, Celebration, Role, Group, PermissionMatrix, FollowUpOfficer, BelieversClass, Testimony, ActivityLog, UrgentFollowUp, MinisterOnDuty, PrayerRequest, BirthdayReminder } from './types';
 
 export const followUpOfficers: FollowUpOfficer[] = [
   { id: 'fo-1', name: 'Shola Damson', department: 'Follow-up', phone: '+234 801 111 2222', email: 'shola@church.org' },
@@ -616,4 +616,32 @@ export const activityLogs: ActivityLog[] = [
   { id: 'log-23', action: 'Archived announcement ann-6', performedBy: 'Admin', timestamp: '04/13/2026 01:10 PM', location: 'Lagos, Nigeria', category: 'Communication' },
   { id: 'log-24', action: 'Uploaded media item "Easter Sunday Service"', performedBy: 'Media Team', timestamp: '04/13/2026 10:45 AM', location: 'Lagos, Nigeria', category: 'Other' },
   { id: 'log-25', action: 'Logged out', performedBy: 'Pastor David', timestamp: '04/12/2026 09:00 PM', location: 'Lagos, Nigeria', category: 'Login' },
+];
+
+export const prayerRequests: PrayerRequest[] = [
+  { id: 'pr-1', submittedBy: 'John Michael', phone: '+234 801 000 0001', email: 'john@example.com', category: 'Healing', request: 'Please pray for my recovery from a surgery scheduled next week. I believe God will see me through.', status: 'Assigned', assignedTo: 'Pastor David', date: '04/22/2026', isAnonymous: false },
+  { id: 'pr-2', submittedBy: 'Anonymous', category: 'Finance', request: 'I am going through a serious financial difficulty and need God\'s intervention urgently.', status: 'Pending', date: '04/21/2026', isAnonymous: true },
+  { id: 'pr-3', submittedBy: 'Sarah Bamidele', phone: '+234 802 000 0002', email: 'sarah@example.com', category: 'Marriage', request: 'Please intercede for my marriage. We have been having disagreements and need peace to be restored.', status: 'Prayed For', assignedTo: 'Deaconess Grace', date: '04/20/2026', isAnonymous: false },
+  { id: 'pr-4', submittedBy: 'Emmanuel Nwosu', phone: '+234 803 000 0003', category: 'Family', request: 'My teenage son has been rebellious lately. Please pray for restoration of our family bond.', status: 'Pending', date: '04/19/2026', isAnonymous: false },
+  { id: 'pr-5', submittedBy: 'Anonymous', category: 'Salvation', request: 'Please pray for my husband who is yet to give his life to Christ. I have been praying for years.', status: 'Assigned', assignedTo: 'Pastor James', date: '04/18/2026', isAnonymous: true },
+  { id: 'pr-6', submittedBy: 'Grace Adeyemi', phone: '+234 804 000 0004', email: 'grace@example.com', category: 'Career', request: 'I have been job hunting for six months. Please agree with me in prayer for a breakthrough.', status: 'Prayed For', assignedTo: 'Shola Damson', date: '04/17/2026', isAnonymous: false },
+  { id: 'pr-7', submittedBy: 'Peter Adewale', phone: '+234 805 000 0005', category: 'Healing', request: 'My mother was diagnosed with diabetes. Please pray for her complete healing.', status: 'Closed', assignedTo: 'Pastor David', date: '04/15/2026', isAnonymous: false },
+  { id: 'pr-8', submittedBy: 'Anonymous', category: 'Other', request: 'Please pray for my peace of mind. I have been struggling with anxiety and fear.', status: 'Pending', date: '04/14/2026', isAnonymous: true },
+  { id: 'pr-9', submittedBy: 'Mary Eze', phone: '+234 806 000 0006', email: 'mary@example.com', category: 'Finance', request: 'My business is struggling. Please pray for wisdom and divine direction.', status: 'Assigned', assignedTo: 'Deaconess Grace', date: '04/13/2026', isAnonymous: false },
+  { id: 'pr-10', submittedBy: 'Samuel Chukwu', phone: '+234 807 000 0007', category: 'Salvation', request: 'Kindly pray for my entire family to come to know the Lord personally.', status: 'Prayed For', assignedTo: 'Pastor James', date: '04/12/2026', isAnonymous: false },
+  { id: 'pr-11', submittedBy: 'Blessing Okoro', phone: '+234 808 000 0008', email: 'blessing@example.com', category: 'Healing', request: 'I have been battling with chronic headaches for months. Please pray for divine healing.', status: 'Pending', date: '04/11/2026', isAnonymous: false },
+  { id: 'pr-12', submittedBy: 'Anonymous', category: 'Marriage', request: 'Please pray for God to send the right life partner. I have been trusting God for years.', status: 'Assigned', assignedTo: 'Deaconess Grace', date: '04/10/2026', isAnonymous: true },
+  { id: 'pr-13', submittedBy: 'Ruth Balogun', phone: '+234 809 000 0009', category: 'Family', request: 'My sister has been estranged from the family for two years. Please pray for reconciliation.', status: 'Prayed For', assignedTo: 'Shola Damson', date: '04/08/2026', isAnonymous: false },
+  { id: 'pr-14', submittedBy: 'David Okoro', phone: '+234 810 000 0010', email: 'dokoro@example.com', category: 'Career', request: 'I am awaiting results for a major professional exam. Please agree with me in faith.', status: 'Closed', assignedTo: 'Pastor David', date: '04/06/2026', isAnonymous: false },
+  { id: 'pr-15', submittedBy: 'Aisha Bello', phone: '+234 811 000 0011', email: 'aisha@example.com', category: 'Other', request: 'Please pray for our nation. Things are tough and we need God\'s intervention on a national level.', status: 'Prayed For', assignedTo: 'Pastor James', date: '04/04/2026', isAnonymous: false },
+];
+
+export const birthdayReminders: BirthdayReminder[] = [
+  { id: 'br-1', name: 'John Michael', type: 'Birthday', date: '04/25', daysUntil: 1, phone: '+234 801 000 0001' },
+  { id: 'br-2', name: 'Sarah & Peter Bamidele', type: 'Anniversary', date: '04/27', daysUntil: 3, phone: '+234 802 000 0002' },
+  { id: 'br-3', name: 'Grace Adeyemi', type: 'Birthday', date: '04/29', daysUntil: 5, phone: '+234 804 000 0004' },
+  { id: 'br-4', name: 'Emmanuel Nwosu', type: 'Birthday', date: '05/02', daysUntil: 8, phone: '+234 803 000 0003' },
+  { id: 'br-5', name: 'John & Mary Michael', type: 'Anniversary', date: '05/05', daysUntil: 11, phone: '+234 801 000 0001' },
+  { id: 'br-6', name: 'Blessing Okoro', type: 'Birthday', date: '05/10', daysUntil: 16, phone: '+234 808 000 0008' },
+  { id: 'br-7', name: 'Samuel Chukwu', type: 'Birthday', date: '05/15', daysUntil: 21, phone: '+234 807 000 0007' },
 ];
