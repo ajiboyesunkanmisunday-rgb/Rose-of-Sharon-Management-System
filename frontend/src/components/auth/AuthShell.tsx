@@ -31,7 +31,7 @@ export default function AuthShell({
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/rccg-logo.png"
+                src="/rccg-logo.svg"
                 alt="RCCG Rose of Sharon"
                 width={40}
                 height={40}
@@ -68,7 +68,7 @@ export default function AuthShell({
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#000080]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/rccg-logo.png"
+                  src="/rccg-logo.svg"
                   alt="RCCG Rose of Sharon"
                   className="h-7 w-7 object-contain"
                 />

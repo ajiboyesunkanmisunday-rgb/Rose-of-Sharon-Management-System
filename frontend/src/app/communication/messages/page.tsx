@@ -164,24 +164,24 @@ export default function MessagesPage() {
 
       {showFilter && (
         <div className="mb-4 flex flex-wrap items-end gap-4 rounded-xl border border-[#E5E7EB] bg-white p-4">
-          <div>
+          <div className="flex flex-col">
             <label className="mb-1 block text-xs font-medium text-[#374151]">Type</label>
             <select
               value={filterType}
               onChange={(e) => { setFilterType(e.target.value as any); setCurrentPage(1); }}
-              className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             >
               <option value="">All Types</option>
               <option value="SMS">SMS</option>
               <option value="Email">Email</option>
             </select>
           </div>
-          <div>
+          <div className="flex flex-col">
             <label className="mb-1 block text-xs font-medium text-[#374151]">Status</label>
             <select
               value={filterStatus}
               onChange={(e) => { setFilterStatus(e.target.value as any); setCurrentPage(1); }}
-              className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             >
               <option value="">All Statuses</option>
               <option value="Sent">Sent</option>
@@ -189,32 +189,32 @@ export default function MessagesPage() {
               <option value="Failed">Failed</option>
             </select>
           </div>
-          <div>
+          <div className="flex flex-col">
             <label className="mb-1 block text-xs font-medium text-[#374151]">From</label>
             <input
               type="date"
               value={filterDateFrom}
               onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }}
-              className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
           </div>
-          <div>
+          <div className="flex flex-col">
             <label className="mb-1 block text-xs font-medium text-[#374151]">To</label>
             <input
               type="date"
               value={filterDateTo}
               onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }}
-              className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
           </div>
           <button
             onClick={() => { setFilterType(""); setFilterStatus(""); setFilterDateFrom(""); setFilterDateTo(""); setCurrentPage(1); }}
-            className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] hover:bg-gray-50"
+            className="h-[42px] rounded-lg border border-[#E5E7EB] px-4 text-sm text-[#374151] hover:bg-gray-50"
           >
             Clear
           </button>
           {(filterType || filterStatus || filterDateFrom || filterDateTo) && (
-            <span className="text-xs text-[#000080] font-medium">Filters active</span>
+            <span className="self-end pb-1 text-xs font-medium text-[#000080]">Filters active</span>
           )}
         </div>
       )}
