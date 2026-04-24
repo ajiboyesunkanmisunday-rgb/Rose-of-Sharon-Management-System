@@ -351,8 +351,9 @@ export default function NewConvertsPage() {
             {paginatedConverts.map((nc) => (
               <tr
                 key={nc.id}
-                className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50"
+                className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
                 style={{ height: "56px" }}
+                onDoubleClick={() => router.push(`/user-management/new-converts/${nc.id}`)}
               >
                 <td className="px-4 py-3">
                   <input

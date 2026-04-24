@@ -371,8 +371,9 @@ export default function EMembersPage() {
             {paginatedEMembers.map((member) => (
               <tr
                 key={member.id}
-                className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50"
+                className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
                 style={{ height: "56px" }}
+                onDoubleClick={() => router.push(`/user-management/e-members/${member.id}`)}
               >
                 <td className="px-4 py-3">
                   <input
