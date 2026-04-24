@@ -33,17 +33,35 @@ export default function SecondTimersPage() {
   const [showSingleAssignModal, setShowSingleAssignModal] = useState(false);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [selectedTimerId, setSelectedTimerId] = useState<string | null>(null);
+  const [showFilter, setShowFilter] = useState(false);
+  const [filterService, setFilterService] = useState("");
+  const [filterAssigned, setFilterAssigned] = useState("");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
 
   const filteredTimers = useMemo(() => {
-    if (!search.trim()) return secondTimers;
+    let result = secondTimers;
+    if (filterService) result = result.filter((st) => st.serviceAttended === filterService);
+    if (filterAssigned) result = result.filter((st) => st.assignedFollowUp === filterAssigned);
+    if (filterDateFrom || filterDateTo) {
+      result = result.filter((st) => {
+        const parts = st.date.split("/");
+        if (parts.length !== 3) return true;
+        const d = `${parts[2]}-${parts[0].padStart(2,"0")}-${parts[1].padStart(2,"0")}`;
+        if (filterDateFrom && d < filterDateFrom) return false;
+        if (filterDateTo && d > filterDateTo) return false;
+        return true;
+      });
+    }
+    if (!search.trim()) return result;
     const query = search.toLowerCase();
-    return secondTimers.filter(
+    return result.filter(
       (st) =>
         st.name.toLowerCase().includes(query) ||
         st.email.toLowerCase().includes(query) ||
         st.phone.includes(query)
     );
-  }, [search]);
+  }, [search, filterService, filterAssigned, filterDateFrom, filterDateTo]);
 
   const totalPages = Math.ceil(filteredTimers.length / ITEMS_PER_PAGE);
   const paginatedTimers = filteredTimers.slice(
@@ -203,7 +221,7 @@ export default function SecondTimersPage() {
             }
           ><span className="hidden sm:inline">QR Code</span></Button>
 
-          <Button onClick={() => {}}
+          <Button onClick={() => setShowFilter(!showFilter)}
             icon={
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
@@ -236,6 +254,40 @@ export default function SecondTimersPage() {
           </Button>
         </div>
       </div>
+
+      {/* Filter panel */}
+      {showFilter && (
+        <div className="mb-4 flex flex-wrap items-end gap-4 rounded-xl border border-[#E5E7EB] bg-white p-4">
+          <div className="flex flex-col">
+            <label className="mb-1 block text-xs font-medium text-[#374151]">Service Attended</label>
+            <select value={filterService} onChange={(e) => { setFilterService(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]">
+              <option value="">All Services</option>
+              <option value="Sunday Service">Sunday Service</option>
+              <option value="Wednesday Service">Wednesday Service</option>
+              <option value="Friday Service">Friday Service</option>
+            </select>
+          </div>
+          <div className="flex flex-col">
+            <label className="mb-1 block text-xs font-medium text-[#374151]">Assigned Officer</label>
+            <select value={filterAssigned} onChange={(e) => { setFilterAssigned(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]">
+              <option value="">All Officers</option>
+              <option value="Shola Damson">Shola Damson</option>
+              <option value="Aisha Bello">Aisha Bello</option>
+              <option value="David Okoro">David Okoro</option>
+              <option value="Grace Adeyemi">Grace Adeyemi</option>
+            </select>
+          </div>
+          <div className="flex flex-col">
+            <label className="mb-1 block text-xs font-medium text-[#374151]">From</label>
+            <input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]" />
+          </div>
+          <div className="flex flex-col">
+            <label className="mb-1 block text-xs font-medium text-[#374151]">To</label>
+            <input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]" />
+          </div>
+          <button onClick={() => { setFilterService(""); setFilterAssigned(""); setFilterDateFrom(""); setFilterDateTo(""); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] px-4 text-sm text-[#374151] hover:bg-gray-50">Clear</button>
+        </div>
+      )}
 
       {/* Selected count indicator */}
       {selectedRows.size > 0 && (
