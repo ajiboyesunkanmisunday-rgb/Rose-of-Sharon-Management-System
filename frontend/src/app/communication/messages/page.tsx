@@ -25,6 +25,8 @@ export default function MessagesPage() {
   const [showFilter, setShowFilter] = useState(false);
   const [filterType, setFilterType] = useState<"" | "SMS" | "Email">("");
   const [filterStatus, setFilterStatus] = useState<"" | "Sent" | "Scheduled" | "Failed">("");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
 
   const filteredMessages = useMemo(() => {
     let result = list;
@@ -35,6 +37,17 @@ export default function MessagesPage() {
     }
     if (filterType) result = result.filter((m) => m.type === filterType);
     if (filterStatus) result = result.filter((m) => m.status === filterStatus);
+    if (filterDateFrom || filterDateTo) {
+      result = result.filter((m) => {
+        // date stored as MM/DD/YYYY — convert to comparable YYYY-MM-DD
+        const parts = m.date.split("/");
+        if (parts.length !== 3) return true;
+        const msgDate = `${parts[2]}-${parts[0].padStart(2, "0")}-${parts[1].padStart(2, "0")}`;
+        if (filterDateFrom && msgDate < filterDateFrom) return false;
+        if (filterDateTo && msgDate > filterDateTo) return false;
+        return true;
+      });
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
@@ -46,7 +59,7 @@ export default function MessagesPage() {
       );
     }
     return result;
-  }, [search, activeTab, list, filterType, filterStatus]);
+  }, [search, activeTab, list, filterType, filterStatus, filterDateFrom, filterDateTo]);
 
   const totalPages = Math.ceil(filteredMessages.length / ITEMS_PER_PAGE);
   const paginatedMessages = filteredMessages.slice(
@@ -176,13 +189,31 @@ export default function MessagesPage() {
               <option value="Failed">Failed</option>
             </select>
           </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[#374151]">From</label>
+            <input
+              type="date"
+              value={filterDateFrom}
+              onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }}
+              className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[#374151]">To</label>
+            <input
+              type="date"
+              value={filterDateTo}
+              onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }}
+              className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            />
+          </div>
           <button
-            onClick={() => { setFilterType(""); setFilterStatus(""); setCurrentPage(1); }}
+            onClick={() => { setFilterType(""); setFilterStatus(""); setFilterDateFrom(""); setFilterDateTo(""); setCurrentPage(1); }}
             className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] hover:bg-gray-50"
           >
             Clear
           </button>
-          {(filterType || filterStatus) && (
+          {(filterType || filterStatus || filterDateFrom || filterDateTo) && (
             <span className="text-xs text-[#000080] font-medium">Filters active</span>
           )}
         </div>
