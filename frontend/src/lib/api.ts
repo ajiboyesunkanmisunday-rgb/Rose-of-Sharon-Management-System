@@ -57,10 +57,15 @@ export function isAuthenticated(): boolean {
 
 // ─── Core fetch wrapper ─────────────────────────────────────────────────────────
 
-async function apiFetch<T>(
+interface ApiFetchResult<T> {
+  data: T;
+  headers: Headers;
+}
+
+async function apiFetchRaw<T>(
   path: string,
   options: RequestInit = {}
-): Promise<T> {
+): Promise<ApiFetchResult<T>> {
   const token = getToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -98,8 +103,16 @@ async function apiFetch<T>(
 
   // Some endpoints return empty body on success
   const text = await response.text();
-  if (!text) return {} as T;
-  return JSON.parse(text) as T;
+  const data = text ? (JSON.parse(text) as T) : ({} as T);
+  return { data, headers: response.headers };
+}
+
+async function apiFetch<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const { data } = await apiFetchRaw<T>(path, options);
+  return data;
 }
 
 // ─── API Response Types ─────────────────────────────────────────────────────────
@@ -179,15 +192,26 @@ export interface LoginRequest {
 }
 
 export async function loginUser(body: LoginRequest): Promise<UserResponse> {
-  const response = await apiFetch<UserResponse>("/api/v1/users/login", {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
+  const { data: response, headers } = await apiFetchRaw<UserResponse & Record<string, unknown>>(
+    "/api/v1/users/login",
+    { method: "POST", body: JSON.stringify(body) }
+  );
 
-  // Store token and user info
-  if (response.token) {
-    setToken(response.token);
+  // The backend exposes the JWT via the Authorization response header
+  // (Access-Control-Expose-Headers: Authorization).
+  // Fall back to common body field names just in case.
+  const authHeader = headers.get("Authorization") || headers.get("authorization");
+  const token =
+    (authHeader ? authHeader.replace(/^Bearer\s+/i, "") : null) ||
+    (response.token as string | undefined) ||
+    (response.accessToken as string | undefined) ||
+    (response.jwt as string | undefined) ||
+    null;
+
+  if (token) {
+    setToken(token);
   }
+
   setStoredUser({
     id: response.id,
     firstName: response.firstName,
