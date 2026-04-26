@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AuthShell from "@/components/auth/AuthShell";
 import Button from "@/components/ui/Button";
+import { loginUser } from "@/lib/api";
 
 const inputClass =
   "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none transition-colors focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
@@ -15,11 +16,24 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Auth is not wired up yet — pass through to the app.
-    router.push("/dashboard");
+    setError("");
+    setLoading(true);
+
+    try {
+      await loginUser({ email, password });
+      router.push("/dashboard");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Login failed. Please try again.";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -39,6 +53,12 @@ export default function LoginPage() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
         <div>
           <label
             htmlFor="email"
@@ -54,6 +74,7 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
             className={inputClass}
+            required
           />
         </div>
 
@@ -81,6 +102,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               className={`${inputClass} pr-12`}
+              required
             />
             <button
               type="button"
@@ -102,8 +124,13 @@ export default function LoginPage() {
           Keep me signed in
         </label>
 
-        <Button type="submit" variant="primary" className="w-full">
-          Sign In
+        <Button
+          type="submit"
+          variant="primary"
+          className="w-full"
+          disabled={loading}
+        >
+          {loading ? "Signing in…" : "Sign In"}
         </Button>
       </form>
     </AuthShell>

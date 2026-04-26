@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import { FormField, SelectField, TextAreaField } from "@/components/ui/FormField";
+import { createEvent } from "@/lib/api";
 
 const CATEGORY_OPTIONS = [
   { label: "Service", value: "Service" },
@@ -58,10 +59,38 @@ export default function AddEventPage() {
     setFormData((prev) => ({ ...prev, [name]: val }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Create event:", formData);
-    router.push("/event-management");
+    setError("");
+    setLoading(true);
+    try {
+      await createEvent({
+        name: formData.name,
+        topic: formData.topic || undefined,
+        eventDate: formData.eventDate,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        location: formData.location,
+        category: formData.category,
+        type: formData.type || undefined,
+        description: formData.description || undefined,
+        capacity: formData.capacity ? Number(formData.capacity) : undefined,
+        requiresRegistration: formData.requiresRegistration,
+        status: formData.status,
+        newConvertsCount: formData.newConvertsCount ? Number(formData.newConvertsCount) : undefined,
+        firstTimersCount: formData.firstTimersCount ? Number(formData.firstTimersCount) : undefined,
+        secondTimersCount: formData.secondTimersCount ? Number(formData.secondTimersCount) : undefined,
+        eMembersCount: formData.eMembersCount ? Number(formData.eMembersCount) : undefined,
+      });
+      router.push("/event-management");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to create event.";
+      setError(msg);
+      setLoading(false);
+    }
   };
 
   return (
@@ -217,6 +246,12 @@ export default function AddEventPage() {
             </label>
           </div>
 
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
           <div className="flex items-center justify-end gap-3 pt-4">
             <Button
               variant="secondary"
@@ -225,8 +260,8 @@ export default function AddEventPage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
-              Create Event
+            <Button variant="primary" type="submit" disabled={loading}>
+              {loading ? "Creating…" : "Create Event"}
             </Button>
           </div>
         </form>
