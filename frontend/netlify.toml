@@ -2,8 +2,14 @@
   command = "npm run build"
   publish = "out"
 
-# Proxy all /api/* calls through Netlify so the browser never
-# makes an HTTP request directly (avoids mixed-content block).
+# Edge function handles /api/v1/users/login specifically so it can
+# extract the JWT from the Authorization response header and inject
+# it into the JSON body (Netlify's redirect proxy strips that header).
+[[edge_functions]]
+  path     = "/api/v1/users/login"
+  function = "api-login"
+
+# Proxy all other /api/* calls through Netlify to avoid mixed-content block.
 [[redirects]]
   from   = "/api/*"
   to     = "http://137.184.72.16:6001/api/:splat"
