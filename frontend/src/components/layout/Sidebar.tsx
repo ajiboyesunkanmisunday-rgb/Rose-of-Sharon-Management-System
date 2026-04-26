@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { logoutUser } from "@/lib/api";
 import {
   ClipboardList,
   CircleUser,
@@ -382,7 +383,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         style={{ borderTop: "1px solid #E5E5E5" }}
       >
         <button
-          onClick={() => router.push("/login")}
+          onClick={() => logoutUser()}
           className="flex w-full items-center gap-3 rounded-lg px-3 transition-colors hover:bg-gray-100"
           style={{
             paddingTop: "14px",

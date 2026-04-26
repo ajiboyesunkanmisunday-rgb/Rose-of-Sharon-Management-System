@@ -8,6 +8,7 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import MultiSelect from "@/components/ui/MultiSelect";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
+import { createMember } from "@/lib/api";
 
 export default function AddMemberPage() {
   const router = useRouter();
@@ -32,27 +33,41 @@ export default function AddMemberPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [spouse, setSpouse] = useState<SpouseData | null>(null);
   const [showSpouseModal, setShowSpouseModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submit add member form", {
-      firstName,
-      middleName,
-      lastName,
-      countryCode,
-      phone,
-      email,
-      gender,
-      dob: `${dobDay}/${dobMonth}/${dobYear}`,
-      street,
-      city,
-      state,
-      country,
-      maritalStatus,
-      groups,
-      spouse,
-    });
-    router.push("/user-management/members");
+    setError("");
+    setLoading(true);
+
+    // Build dateOfBirth as YYYY-MM-DD if all three parts are set
+    let dateOfBirth: string | undefined;
+    if (dobYear && dobMonth && dobDay) {
+      dateOfBirth = `${dobYear}-${String(dobMonth).padStart(2, "0")}-${String(dobDay).padStart(2, "0")}`;
+    }
+
+    try {
+      await createMember({
+        firstName,
+        middleName: middleName || undefined,
+        lastName,
+        email,
+        phoneNumber: `${countryCode}${phone}`,
+        gender: gender || undefined,
+        dateOfBirth,
+        addressStreet: street || undefined,
+        addressCity: city || undefined,
+        addressState: state || undefined,
+        addressCountry: country || undefined,
+        maritalStatus: maritalStatus || undefined,
+      });
+      router.push("/user-management/members");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to save member.";
+      setError(msg);
+      setLoading(false);
+    }
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -411,10 +426,17 @@ export default function AddMemberPage() {
                 />
               </div>
 
+              {/* Error message */}
+              {error && (
+                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
+
               {/* Save Member Button */}
               <div className="mt-6 flex justify-end">
-                <Button type="submit" variant="primary">
-                  Save Member
+                <Button type="submit" variant="primary" disabled={loading}>
+                  {loading ? "Saving…" : "Save Member"}
                 </Button>
               </div>
             </div>

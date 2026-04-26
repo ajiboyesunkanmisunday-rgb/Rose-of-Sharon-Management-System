@@ -8,6 +8,7 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
+import { createEMember } from "@/lib/api";
 
 export default function AddEMemberPage() {
   const router = useRouter();
@@ -26,6 +27,8 @@ export default function AddEMemberPage() {
   const [photo, setPhoto] = useState<File | null>(null);
   const [spouse, setSpouse] = useState<SpouseData | null>(null);
   const [showSpouseModal, setShowSpouseModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const inputStyles =
     "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
@@ -41,22 +44,34 @@ export default function AddEMemberPage() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Add E-Member:", {
-      firstName,
-      middleName,
-      lastName,
-      countryCode,
-      phone,
-      email,
-      dob: `${dobDay}/${dobMonth}/${dobYear}`,
-      maritalStatus,
-      serviceAttended,
-      photo,
-      spouse,
-    });
-    router.push("/user-management/e-members");
+    setError("");
+    setLoading(true);
+
+    let dateOfBirth: string | undefined;
+    if (dobYear && dobMonth && dobDay) {
+      dateOfBirth = `${dobYear}-${String(dobMonth).padStart(2, "0")}-${String(dobDay).padStart(2, "0")}`;
+    }
+
+    try {
+      await createEMember({
+        firstName,
+        middleName: middleName || undefined,
+        lastName,
+        email,
+        phoneNumber: `${countryCode}${phone}`,
+        country: "Nigeria", // default; country field not in this form yet
+        dateOfBirth,
+        maritalStatus: maritalStatus || undefined,
+        serviceAttended: serviceAttended || undefined,
+      });
+      router.push("/user-management/e-members");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to save e-member.";
+      setError(msg);
+      setLoading(false);
+    }
   };
 
   return (
@@ -247,6 +262,13 @@ export default function AddEMemberPage() {
             />
           </div>
 
+          {/* Error */}
+          {error && (
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
           {/* Buttons */}
           <div className="mt-8 flex items-center justify-end gap-3">
             <Button
@@ -255,8 +277,8 @@ export default function AddEMemberPage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
-              Add E-Member
+            <Button variant="primary" type="submit" disabled={loading}>
+              {loading ? "Saving…" : "Add E-Member"}
             </Button>
           </div>
         </form>

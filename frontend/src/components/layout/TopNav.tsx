@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Menu } from "lucide-react";
+import { getStoredUser, logoutUser, type StoredUser } from "@/lib/api";
 
 interface TopNavProps {
   onMenuOpen?: () => void;
@@ -11,6 +12,19 @@ interface TopNavProps {
 export default function TopNav({ onMenuOpen }: TopNavProps) {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [user, setUser] = useState<StoredUser | null>(null);
+
+  useEffect(() => {
+    setUser(getStoredUser());
+  }, []);
+
+  const displayName = user
+    ? `${user.firstName} ${user.lastName}`.trim()
+    : "—";
+  const displayEmail = user?.email ?? "";
+  const initials = user
+    ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase()
+    : "?";
 
   return (
     <header className="fixed left-0 right-0 top-0 z-30 flex h-16 items-center border-b border-[#E5E7EB] bg-white px-4 lg:left-[322px] lg:px-6">
@@ -33,12 +47,12 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
           className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-50"
         >
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-bold text-[#1F2937]">John Cooper</p>
-            <p className="text-xs text-[#6B7280]">johncoopl23@gmail.com</p>
+            <p className="text-sm font-bold text-[#1F2937]">{displayName}</p>
+            <p className="text-xs text-[#6B7280]">{displayEmail}</p>
           </div>
           {/* Avatar initials on small screens */}
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#B5B5F3] text-xs font-bold text-[#000080] sm:hidden">
-            JC
+            {initials}
           </div>
           <ChevronDown
             className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
@@ -71,7 +85,7 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
               <button
                 onClick={() => {
                   setDropdownOpen(false);
-                  router.push("/login");
+                  logoutUser();
                 }}
                 className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50"
               >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
@@ -13,14 +13,26 @@ import QRCodeModal from "@/components/user-management/QRCodeModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import BulkImportModal from "@/components/user-management/BulkImportModal";
 import NoLongerMemberModal from "@/components/user-management/NoLongerMemberModal";
-import { eMembers } from "@/lib/mock-data";
-import type { EMember } from "@/lib/types";
+import {
+  getEMembers,
+  deleteEMembersBulk,
+  type UserResponse,
+} from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
 
 const ITEMS_PER_PAGE = 10;
 
 export default function EMembersPage() {
   const router = useRouter();
+
+  // Data
+  const [eMembers, setEMembers] = useState<UserResponse[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState("");
+
+  // UI state
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
@@ -40,80 +52,84 @@ export default function EMembersPage() {
   const [showFilter, setShowFilter] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [appliedStart, setAppliedStart] = useState("");
-  const [appliedEnd, setAppliedEnd] = useState("");
 
-  const filteredEMembers = useMemo(() => {
-    let list: EMember[] = eMembers;
-    if (search.trim()) {
-      const query = search.toLowerCase();
-      list = list.filter(
-        (m) =>
-          m.firstName.toLowerCase().includes(query) ||
-          m.lastName.toLowerCase().includes(query) ||
-          m.email.toLowerCase().includes(query) ||
-          m.phone.includes(query) ||
-          m.country.toLowerCase().includes(query)
-      );
+  const fetchEMembers = useCallback(async (page: number) => {
+    setLoading(true);
+    setApiError("");
+    try {
+      const res = await getEMembers(page - 1, ITEMS_PER_PAGE);
+      setEMembers(res.content);
+      setTotalPages(res.totalPages || 1);
+      setTotalItems(res.totalElements || 0);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to load e-members.";
+      setApiError(msg);
+    } finally {
+      setLoading(false);
     }
-    if (appliedStart || appliedEnd) {
-      list = list.filter((m) => {
-        const d =
-          (m as unknown as { date?: string }).date ?? m.dateOfBirth ?? "";
-        if (!d) return true;
-        if (appliedStart && d < appliedStart) return false;
-        if (appliedEnd && d > appliedEnd) return false;
-        return true;
-      });
-    }
-    return list;
-  }, [search, appliedStart, appliedEnd]);
+  }, []);
 
-  const totalPages = Math.ceil(filteredEMembers.length / ITEMS_PER_PAGE);
-  const paginatedEMembers = filteredEMembers.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  useEffect(() => {
+    fetchEMembers(currentPage);
+  }, [currentPage, fetchEMembers]);
 
-  const handleSearch = () => {
-    setCurrentPage(1);
-  };
+  const handleSearch = () => setCurrentPage(1);
+
+  const displayedEMembers = search.trim()
+    ? eMembers.filter((m) => {
+        const q = search.toLowerCase();
+        return (
+          m.firstName.toLowerCase().includes(q) ||
+          m.lastName.toLowerCase().includes(q) ||
+          m.email.toLowerCase().includes(q) ||
+          m.phoneNumber.includes(q) ||
+          (m.country ?? "").toLowerCase().includes(q)
+        );
+      })
+    : eMembers;
 
   const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      const newSelected = new Set(selectedRows);
-      paginatedEMembers.forEach((m) => newSelected.add(m.id));
-      setSelectedRows(newSelected);
-    } else {
-      const newSelected = new Set(selectedRows);
-      paginatedEMembers.forEach((m) => newSelected.delete(m.id));
-      setSelectedRows(newSelected);
-    }
+    const next = new Set(selectedRows);
+    displayedEMembers.forEach((m) => (checked ? next.add(m.id) : next.delete(m.id)));
+    setSelectedRows(next);
   };
 
   const handleSelectRow = (id: string) => {
-    const newSelected = new Set(selectedRows);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
-    setSelectedRows(newSelected);
+    const next = new Set(selectedRows);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setSelectedRows(next);
   };
 
   const allPageSelected =
-    paginatedEMembers.length > 0 &&
-    paginatedEMembers.every((m) => selectedRows.has(m.id));
+    displayedEMembers.length > 0 &&
+    displayedEMembers.every((m) => selectedRows.has(m.id));
 
   const handleDeleteClick = (id: string) => {
     setSelectedEMemberId(id);
     setShowDeleteModal(true);
   };
 
-  const handleConfirmDelete = () => {
-    console.log("Delete e-member:", selectedEMemberId);
-    setShowDeleteModal(false);
-    setSelectedEMemberId(null);
+  const handleConfirmDelete = async () => {
+    if (!selectedEMemberId) return;
+    try {
+      await deleteEMembersBulk([selectedEMemberId]);
+      setShowDeleteModal(false);
+      setSelectedEMemberId(null);
+      fetchEMembers(currentPage);
+    } catch (err) {
+      console.error("Delete failed:", err);
+    }
+  };
+
+  const handleBulkDeleteConfirm = async () => {
+    try {
+      await deleteEMembersBulk(Array.from(selectedRows));
+      setSelectedRows(new Set());
+      setShowBulkDeleteModal(false);
+      fetchEMembers(currentPage);
+    } catch (err) {
+      console.error("Bulk delete failed:", err);
+    }
   };
 
   const handleNoLongerMemberClick = (id: string) => {
@@ -122,81 +138,24 @@ export default function EMembersPage() {
   };
 
   const bulkActions = [
-    {
-      label: "Send SMS",
-      onClick: () => setShowSMSModal(true),
-    },
-    {
-      label: "Send Email",
-      onClick: () => setShowEmailModal(true),
-    },
-    {
-      label: "Mark as Inactive",
-      onClick: () => setShowNoLongerBulkModal(true),
-    },
-    {
-      label: "Delete",
-      onClick: () => setShowBulkDeleteModal(true),
-    },
+    { label: "Send SMS", onClick: () => setShowSMSModal(true) },
+    { label: "Send Email", onClick: () => setShowEmailModal(true) },
+    { label: "Mark as Inactive", onClick: () => setShowNoLongerBulkModal(true) },
+    { label: "Delete", onClick: () => setShowBulkDeleteModal(true) },
   ];
-
-  const handleBulkDeleteConfirm = () => {
-    console.log("Bulk delete e-members:", Array.from(selectedRows));
-    setSelectedRows(new Set());
-    setShowBulkDeleteModal(false);
-  };
-
-  const handleBulkNoLongerConfirm = (reason: string) => {
-    console.log(
-      "Bulk mark as no longer a member (e-members):",
-      Array.from(selectedRows),
-      "reason:",
-      reason
-    );
-    setSelectedRows(new Set());
-    setShowNoLongerBulkModal(false);
-  };
-
-  const handleSingleNoLongerConfirm = (reason: string) => {
-    console.log(
-      "Mark as no longer a member (e-member):",
-      selectedEMemberId,
-      "reason:",
-      reason
-    );
-    setShowNoLongerSingleModal(false);
-    setSelectedEMemberId(null);
-  };
 
   const handleExport = () => {
     const csv = toCSV(
-      filteredEMembers.map((m) => ({
+      eMembers.map((m) => ({
         id: m.id,
         firstName: m.firstName,
         lastName: m.lastName,
         email: m.email,
-        phone: m.phone,
-        country: m.country,
+        phone: m.phoneNumber,
+        country: m.country || "",
       }))
     );
-    downloadCSV(
-      csv,
-      `e-members-export-${new Date().toISOString().slice(0, 10)}.csv`
-    );
-  };
-
-  const handleApplyFilter = () => {
-    setAppliedStart(startDate);
-    setAppliedEnd(endDate);
-    setCurrentPage(1);
-  };
-
-  const handleClearFilter = () => {
-    setStartDate("");
-    setEndDate("");
-    setAppliedStart("");
-    setAppliedEnd("");
-    setCurrentPage(1);
+    downloadCSV(csv, `e-members-export-${new Date().toISOString().slice(0, 10)}.csv`);
   };
 
   return (
@@ -207,7 +166,7 @@ export default function EMembersPage() {
         <h2 className="text-[22px] font-bold text-[#000080]">E-Members</h2>
       </div>
 
-      {/* Top bar: search + actions */}
+      {/* Top bar */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="w-full sm:w-72">
           <SearchBar
@@ -219,45 +178,33 @@ export default function EMembersPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {selectedRows.size > 0 && (
-            <ActionDropdown actions={bulkActions} />
-          )}
+          {selectedRows.size > 0 && <ActionDropdown actions={bulkActions} />}
 
           <Button
             variant="primary"
             onClick={() => router.push("/user-management/e-members/add")}
             icon={
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             }
           >
             Add E-Member
           </Button>
 
-          <Button onClick={() => setShowQRCodeModal(true)}
+          <Button
+            onClick={() => setShowQRCodeModal(true)}
             icon={
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="7" height="7" />
-                <rect x="14" y="3" width="7" height="7" />
-                <rect x="3" y="14" width="7" height="7" />
-                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
               </svg>
             }
-          ><span className="hidden sm:inline">QR Code</span></Button>
+          >
+            <span className="hidden sm:inline">QR Code</span>
+          </Button>
 
-          <Button onClick={() => setShowFilter((s) => !s)}
+          <Button
+            onClick={() => setShowFilter((s) => !s)}
             icon={
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
@@ -267,24 +214,23 @@ export default function EMembersPage() {
             <span className="hidden sm:inline">Filter</span>
           </Button>
 
-          <Button onClick={handleExport}
+          <Button
+            onClick={handleExport}
             icon={
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
               </svg>
             }
-          ><span className="hidden sm:inline">Export</span></Button>
+          >
+            <span className="hidden sm:inline">Export</span>
+          </Button>
 
           <Button
             variant="primary"
             onClick={() => setShowBulkImportModal(true)}
             icon={
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
               </svg>
             }
           >
@@ -297,9 +243,7 @@ export default function EMembersPage() {
       {showFilter && (
         <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4">
           <div>
-            <label className="mb-1 block text-xs font-medium text-[#374151]">
-              Start Date
-            </label>
+            <label className="mb-1 block text-xs font-medium text-[#374151]">Start Date</label>
             <input
               type="date"
               value={startDate}
@@ -308,9 +252,7 @@ export default function EMembersPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-[#374151]">
-              End Date
-            </label>
+            <label className="mb-1 block text-xs font-medium text-[#374151]">End Date</label>
             <input
               type="date"
               value={endDate}
@@ -318,14 +260,11 @@ export default function EMembersPage() {
               className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
           </div>
-          <Button variant="primary" onClick={handleApplyFilter}>
-            Apply Filter
-          </Button>
           <Button onClick={handleExport}>Export CSV</Button>
-          {(appliedStart || appliedEnd || startDate || endDate) && (
+          {(startDate || endDate) && (
             <button
               type="button"
-              onClick={handleClearFilter}
+              onClick={() => { setStartDate(""); setEndDate(""); }}
               className="text-sm font-medium text-[#000080] underline hover:text-[#000066]"
             >
               Clear
@@ -334,10 +273,19 @@ export default function EMembersPage() {
         </div>
       )}
 
-      {/* Selected count indicator */}
       {selectedRows.size > 0 && (
         <div className="mb-2 text-sm text-gray-500">
           {selectedRows.size} e-member{selectedRows.size > 1 ? "s" : ""} selected
+        </div>
+      )}
+
+      {/* Error banner */}
+      {apiError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {apiError} —{" "}
+          <button className="font-medium underline" onClick={() => fetchEMembers(currentPage)}>
+            Retry
+          </button>
         </div>
       )}
 
@@ -354,85 +302,68 @@ export default function EMembersPage() {
                   className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
                 />
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
-                First Name
-              </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
-                Last Name
-              </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Country</th>
+              <th className="px-4 py-4"></th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080]">First Name</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Last Name</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Country</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Phone</th>
               <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Email</th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
           <tbody>
-            {paginatedEMembers.map((member) => (
-              <tr
-                key={member.id}
-                className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
-                style={{ height: "56px" }}
-                onDoubleClick={() => router.push(`/user-management/e-members/${member.id}`)}
-              >
-                <td className="px-4 py-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.has(member.id)}
-                    onChange={() => handleSelectRow(member.id)}
-                    className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
-                  />
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E5E7EB]">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
-                  {member.firstName}
-                </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{member.lastName}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{member.country}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{member.phone}</td>
-                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{member.email}</td>
-                <td className="px-4 py-3">
-                  <ActionDropdown
-                    actions={[
-                      {
-                        label: "View",
-                        onClick: () =>
-                          router.push(`/user-management/e-members/${member.id}`),
-                      },
-                      {
-                        label: "Edit",
-                        onClick: () =>
-                          router.push(`/user-management/e-members/${member.id}/edit`),
-                      },
-                      {
-                        label: "Mark as Inactive",
-                        onClick: () => handleNoLongerMemberClick(member.id),
-                      },
-                      {
-                        label: "Delete",
-                        onClick: () => handleDeleteClick(member.id),
-                      },
-                    ]}
-                  />
+            {loading ? (
+              <tr>
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
+                  Loading e-members…
                 </td>
               </tr>
-            ))}
-            {paginatedEMembers.length === 0 && (
+            ) : displayedEMembers.length === 0 ? (
               <tr>
-                <td
-                  colSpan={8}
-                  className="px-4 py-8 text-center text-gray-400"
-                >
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
                   No e-members found.
                 </td>
               </tr>
+            ) : (
+              displayedEMembers.map((member) => (
+                <tr
+                  key={member.id}
+                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
+                  style={{ height: "56px" }}
+                  onDoubleClick={() => router.push(`/user-management/e-members/${member.id}`)}
+                >
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.has(member.id)}
+                      onChange={() => handleSelectRow(member.id)}
+                      className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E5E7EB]">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                      </svg>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-[#374151]">{member.firstName}</td>
+                  <td className="px-4 py-3 text-sm text-[#374151]">{member.lastName}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{member.country || "—"}</td>
+                  <td className="px-4 py-3 text-sm text-[#374151]">{member.phoneNumber}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{member.email}</td>
+                  <td className="px-4 py-3">
+                    <ActionDropdown
+                      actions={[
+                        { label: "View", onClick: () => router.push(`/user-management/e-members/${member.id}`) },
+                        { label: "Edit", onClick: () => router.push(`/user-management/e-members/${member.id}/edit`) },
+                        { label: "Mark as Inactive", onClick: () => handleNoLongerMemberClick(member.id) },
+                        { label: "Delete", onClick: () => handleDeleteClick(member.id) },
+                      ]}
+                    />
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -443,32 +374,18 @@ export default function EMembersPage() {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={filteredEMembers.length}
-          onPageChange={setCurrentPage}
+          totalItems={totalItems}
+          onPageChange={(p) => { setCurrentPage(p); setSelectedRows(new Set()); }}
         />
       </div>
 
       {/* Modals */}
-      <SendSMSModal
-        isOpen={showSMSModal}
-        onClose={() => setShowSMSModal(false)}
-        selectedCount={selectedRows.size}
-      />
-      <SendEmailModal
-        isOpen={showEmailModal}
-        onClose={() => setShowEmailModal(false)}
-        selectedCount={selectedRows.size}
-      />
-      <QRCodeModal
-        isOpen={showQRCodeModal}
-        onClose={() => setShowQRCodeModal(false)}
-      />
+      <SendSMSModal isOpen={showSMSModal} onClose={() => setShowSMSModal(false)} selectedCount={selectedRows.size} />
+      <SendEmailModal isOpen={showEmailModal} onClose={() => setShowEmailModal(false)} selectedCount={selectedRows.size} />
+      <QRCodeModal isOpen={showQRCodeModal} onClose={() => setShowQRCodeModal(false)} />
       <DeleteConfirmModal
         isOpen={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false);
-          setSelectedEMemberId(null);
-        }}
+        onClose={() => { setShowDeleteModal(false); setSelectedEMemberId(null); }}
         onConfirm={handleConfirmDelete}
       />
       <DeleteConfirmModal
@@ -477,31 +394,22 @@ export default function EMembersPage() {
         onConfirm={handleBulkDeleteConfirm}
         message={`Are you sure you want to delete ${selectedRows.size} selected e-member${selectedRows.size === 1 ? "" : "s"}?`}
       />
-
       <NoLongerMemberModal
         isOpen={showNoLongerBulkModal}
         onClose={() => setShowNoLongerBulkModal(false)}
-        onConfirm={handleBulkNoLongerConfirm}
+        onConfirm={() => { setSelectedRows(new Set()); setShowNoLongerBulkModal(false); }}
         count={selectedRows.size}
       />
-
       <NoLongerMemberModal
         isOpen={showNoLongerSingleModal}
-        onClose={() => {
-          setShowNoLongerSingleModal(false);
-          setSelectedEMemberId(null);
-        }}
-        onConfirm={handleSingleNoLongerConfirm}
+        onClose={() => { setShowNoLongerSingleModal(false); setSelectedEMemberId(null); }}
+        onConfirm={() => { setShowNoLongerSingleModal(false); setSelectedEMemberId(null); }}
         count={1}
       />
-
       <BulkImportModal
         isOpen={showBulkImportModal}
         onClose={() => setShowBulkImportModal(false)}
-        onImport={(rows) => {
-          console.log("Bulk import E-Members:", rows);
-          setShowBulkImportModal(false);
-        }}
+        onImport={(rows) => { console.log("Bulk import E-Members:", rows); setShowBulkImportModal(false); }}
         module="E-Members"
         templateHeaders={["firstName","middleName","lastName","email","country","countryCode","phone","dateOfBirth","maritalStatus","serviceAttended"]}
         templateSampleRow={["Jane","","Smith","jane@example.com","United States","+1","5551234567","1992-05-20","Married","Sunday Service"]}

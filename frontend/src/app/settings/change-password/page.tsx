@@ -4,21 +4,46 @@ import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
+import { changePassword } from "@/lib/api";
 
 export default function ChangePasswordPage() {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [showToast, setShowToast] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const showToast = (type: "success" | "error", msg: string) => {
+    setToast({ type, msg });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Change password", { current, next, confirm });
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
-    setCurrent("");
-    setNext("");
-    setConfirm("");
+
+    if (next !== confirm) {
+      showToast("error", "New password and confirm password do not match.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await changePassword({
+        oldPassword: current,
+        newPassword: next,
+        confirmPassword: confirm,
+      });
+      showToast("success", "Password updated successfully.");
+      setCurrent("");
+      setNext("");
+      setConfirm("");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to update password.";
+      showToast("error", message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -30,9 +55,13 @@ export default function ChangePasswordPage() {
         <p className="text-sm text-[#6B7280]">Change Password</p>
       </div>
 
-      {showToast && (
-        <div className="fixed right-6 top-24 z-50 rounded-lg bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-lg">
-          Password updated successfully
+      {toast && (
+        <div
+          className={`fixed right-6 top-24 z-50 rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lg ${
+            toast.type === "success" ? "bg-green-500" : "bg-red-500"
+          }`}
+        >
+          {toast.msg}
         </div>
       )}
 
@@ -67,8 +96,8 @@ export default function ChangePasswordPage() {
           />
 
           <div className="flex justify-end pt-2">
-            <Button variant="primary" type="submit">
-              Update Password
+            <Button variant="primary" type="submit" disabled={loading}>
+              {loading ? "Updating…" : "Update Password"}
             </Button>
           </div>
         </form>
