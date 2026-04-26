@@ -1,3 +1,11 @@
 [build]
   command = "npm run build"
   publish = "out"
+
+# Proxy all /api/* calls through Netlify so the browser never
+# makes an HTTP request directly (avoids mixed-content block).
+[[redirects]]
+  from   = "/api/*"
+  to     = "http://137.184.72.16:6001/api/:splat"
+  status = 200
+  force  = true

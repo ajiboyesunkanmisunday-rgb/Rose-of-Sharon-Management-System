@@ -4,7 +4,10 @@
  * Sprint 1 endpoints: User Management, Settings, Groups, Events
  */
 
-const BASE_URL = "http://137.184.72.16:6001";
+// Empty string = relative URL, so requests go to /api/...
+// Netlify proxies /api/* → http://137.184.72.16:6001/api/* server-side,
+// avoiding the browser's mixed-content (HTTPS→HTTP) block.
+const BASE_URL = "";
 
 // ─── Token helpers ─────────────────────────────────────────────────────────────
 
