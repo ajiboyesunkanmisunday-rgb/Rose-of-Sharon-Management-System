@@ -1,17 +1,21 @@
 [build]
-  command = "npm run build"
-  publish = "out"
+  command   = "npm run build"
+  publish   = "out"
+  functions = "netlify/functions"
 
-# Edge function handles /api/v1/users/login specifically so it can
-# extract the JWT from the Authorization response header and inject
-# it into the JSON body (Netlify's redirect proxy strips that header).
-[[edge_functions]]
-  path     = "/api/v1/users/login"
-  function = "api-login"
-
-# Proxy all other /api/* calls through Netlify to avoid mixed-content block.
+# Login is handled by a serverless function so it can read the
+# Authorization response header from the backend and return the
+# JWT token inside the JSON body.
 [[redirects]]
-  from   = "/api/*"
-  to     = "http://137.184.72.16:6001/api/:splat"
+  from  = "/api/v1/users/login"
+  to    = "/.netlify/functions/login"
+  status = 200
+  force  = true
+
+# All other API calls are proxied through Netlify to avoid
+# mixed-content errors (frontend is HTTPS, backend is HTTP).
+[[redirects]]
+  from  = "/api/*"
+  to    = "http://137.184.72.16:6001/api/:splat"
   status = 200
   force  = true

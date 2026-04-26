@@ -192,36 +192,13 @@ export interface LoginRequest {
 }
 
 export async function loginUser(body: LoginRequest): Promise<UserResponse> {
-  // The Netlify edge function (netlify/edge-functions/api-login.ts) intercepts
-  // this request, pulls the JWT from the backend's Authorization response header,
-  // and injects it as `token` in the JSON body — so we just read response.token.
-  const { data: response, headers } = await apiFetchRaw<UserResponse & Record<string, unknown>>(
-    "/api/v1/users/login",
-    { method: "POST", body: JSON.stringify(body) }
-  );
+  const response = await apiFetch<UserResponse>("/api/v1/users/login", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
 
-  // Primary: token injected into body by edge function
-  // Fallbacks: direct header read, other common field names, JWT scan
-  const authHeader = headers.get("Authorization") || headers.get("authorization");
-  let token: string | null =
-    (response.token as string | undefined) ||
-    (response.accessToken as string | undefined) ||
-    (response.jwt as string | undefined) ||
-    (authHeader ? authHeader.replace(/^Bearer\s+/i, "").trim() : null) ||
-    null;
-
-  // Last resort: scan every string value in the body for a JWT signature
-  if (!token) {
-    for (const value of Object.values(response)) {
-      if (typeof value === "string" && value.startsWith("eyJ") && value.includes(".")) {
-        token = value;
-        break;
-      }
-    }
-  }
-
-  if (token) {
-    setToken(token);
+  if (response.token) {
+    setToken(response.token);
   }
 
   setStoredUser({
