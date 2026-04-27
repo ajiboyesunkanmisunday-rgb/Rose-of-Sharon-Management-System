@@ -60,10 +60,11 @@ export default function AddEMemberPage() {
         middleName: middleName || undefined,
         lastName,
         email,
-        phoneNumber: `${countryCode}${phone}`,
-        country: "Nigeria", // default; country field not in this form yet
+        phoneNumber: phone,
+        countryCode: countryCode.replace(/^\+/, ""),
+        country: "Nigeria",
         dateOfBirth,
-        maritalStatus: maritalStatus || undefined,
+        maritalStatus: maritalStatus ? maritalStatus.toUpperCase() : undefined,
         serviceAttended: serviceAttended || undefined,
       });
       router.push("/user-management/e-members");
