@@ -3,10 +3,10 @@ const http = require("http");
 /**
  * Serverless proxy for POST /api/v1/users/login
  *
- * The backend returns the JWT in the Authorization response header.
+ * The backend is configured to return the JWT in the Authorization
+ * response header (Access-Control-Expose-Headers: Authorization).
  * This function proxies the request server-side so it can read that
- * header and inject the token into the JSON response body before
- * it is returned to the browser.
+ * header and inject the token into the JSON response body.
  */
 exports.handler = async function (event) {
   if (event.httpMethod !== "POST") {
@@ -24,6 +24,10 @@ exports.handler = async function (event) {
       headers: {
         "Content-Type": "application/json",
         "Content-Length": Buffer.byteLength(postData),
+        // Include Origin so the backend enters CORS mode and returns
+        // Access-Control-Expose-Headers: Authorization (with the JWT).
+        "Origin": "https://aquamarine-chaja-11dedd.netlify.app",
+        "Accept": "application/json",
       },
     };
 
@@ -38,13 +42,30 @@ exports.handler = async function (event) {
           body = { message: raw };
         }
 
-        // Inject token from Authorization response header if not in body
-        const authHeader = res.headers["authorization"] || "";
+        const allHeaders = res.headers || {};
+
+        // 1. Check Authorization header
+        const authHeader = allHeaders["authorization"] || "";
         if (authHeader && !body.token) {
           body.token = authHeader.replace(/^Bearer\s+/i, "").trim();
         }
 
-        // Deep-scan every string value for a JWT signature as a fallback
+        // 2. Scan every response header for a Bearer token or raw JWT
+        if (!body.token) {
+          for (const [, val] of Object.entries(allHeaders)) {
+            const v = Array.isArray(val) ? val.join(",") : String(val || "");
+            if (v.toLowerCase().startsWith("bearer ")) {
+              body.token = v.replace(/^Bearer\s+/i, "").trim();
+              break;
+            }
+            if (v.startsWith("eyJ") && v.includes(".")) {
+              body.token = v.trim();
+              break;
+            }
+          }
+        }
+
+        // 3. Deep-scan body for any JWT-shaped string
         if (!body.token) {
           const extractJwt = (obj) => {
             for (const val of Object.values(obj)) {
@@ -70,7 +91,7 @@ exports.handler = async function (event) {
       });
     });
 
-    req.on("error", (err) => {
+    req.on("error", () => {
       resolve({
         statusCode: 503,
         headers: { "Content-Type": "application/json" },

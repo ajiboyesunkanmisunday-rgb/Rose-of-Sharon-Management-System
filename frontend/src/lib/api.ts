@@ -81,13 +81,19 @@ async function apiFetchRaw<T>(
     headers,
   });
 
-  // 401 → token expired or invalid → redirect to login
+  // 401 → only force logout when a real JWT is stored (starts with "eyJ").
+  // If the session was created before the backend began issuing tokens,
+  // just surface an auth error so the page can show it without looping.
   if (response.status === 401) {
-    removeToken();
-    if (typeof window !== "undefined") {
-      window.location.href = "/login";
+    const currentToken = getToken();
+    if (!currentToken || currentToken.startsWith("eyJ")) {
+      removeToken();
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+      throw new Error("Session expired. Please log in again.");
     }
-    throw new Error("Session expired. Please log in again.");
+    throw new Error("Authentication required. Please contact your administrator.");
   }
 
   if (!response.ok) {
@@ -192,13 +198,18 @@ export interface LoginRequest {
 }
 
 export async function loginUser(body: LoginRequest): Promise<UserResponse> {
-  const response = await apiFetch<UserResponse>("/api/v1/users/login", {
+  const response = await apiFetch<UserResponse>("/.netlify/functions/login", {
     method: "POST",
     body: JSON.stringify(body),
   });
 
   if (response.token) {
+    // Real JWT from backend — store directly
     setToken(response.token);
+  } else if (response.id) {
+    // Backend login succeeded but has not returned a JWT yet.
+    // Store a session marker so the UI remains accessible.
+    setToken(`session_${response.id}`);
   }
 
   setStoredUser({
@@ -227,12 +238,13 @@ export interface CreateMemberRequest {
   lastName: string;
   email: string;
   phoneNumber: string;
-  gender?: string;
+  countryCode: string;
+  sex?: string;
   dateOfBirth?: string;
-  addressStreet?: string;
-  addressCity?: string;
-  addressState?: string;
-  addressCountry?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
   maritalStatus?: string;
   profilePictureUrl?: string;
   groupIds?: string[];
@@ -278,6 +290,7 @@ export interface CreateEMemberRequest {
   lastName: string;
   email: string;
   phoneNumber: string;
+  countryCode: string;
   country: string;
   dateOfBirth?: string;
   maritalStatus?: string;

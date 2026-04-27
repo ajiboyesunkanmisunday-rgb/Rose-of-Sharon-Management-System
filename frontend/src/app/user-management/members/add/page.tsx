@@ -53,14 +53,15 @@ export default function AddMemberPage() {
         middleName: middleName || undefined,
         lastName,
         email,
-        phoneNumber: `${countryCode}${phone}`,
-        gender: gender || undefined,
+        phoneNumber: phone,
+        countryCode: countryCode.replace(/^\+/, ""),
+        sex: gender ? gender.toUpperCase() : undefined,
         dateOfBirth,
-        addressStreet: street || undefined,
-        addressCity: city || undefined,
-        addressState: state || undefined,
-        addressCountry: country || undefined,
-        maritalStatus: maritalStatus || undefined,
+        street: street || undefined,
+        city: city || undefined,
+        state: state || undefined,
+        country: country || undefined,
+        maritalStatus: maritalStatus ? maritalStatus.toUpperCase() : undefined,
       });
       router.push("/user-management/members");
     } catch (err) {
