@@ -9,58 +9,64 @@ import { FormField, SelectField, TextAreaField } from "@/components/ui/FormField
 import { createEvent } from "@/lib/api";
 
 const CATEGORY_OPTIONS = [
-  { label: "Service", value: "Service" },
-  { label: "Conference", value: "Conference" },
-  { label: "Training", value: "Training" },
-  { label: "Social", value: "Social" },
-  { label: "Wedding", value: "Wedding" },
-  { label: "Funeral", value: "Funeral" },
-  { label: "Outreach", value: "Outreach" },
+  { label: "Service", value: "SERVICE" },
+  { label: "Special Service", value: "SPECIAL_SERVICE" },
+  { label: "Conference", value: "CONFERENCE" },
+  { label: "Wedding", value: "WEDDING" },
+  { label: "Funeral", value: "FUNERAL" },
 ];
 
-const STATUS_OPTIONS = [
-  { label: "Upcoming", value: "Upcoming" },
-  { label: "Ongoing", value: "Ongoing" },
+const LOCATION_TYPE_OPTIONS = [
+  { label: "Physical", value: "PHYSICAL" },
+  { label: "Virtual", value: "VIRTUAL" },
+  { label: "Hybrid", value: "HYBRID" },
 ];
 
-const TYPE_OPTIONS = [
-  { label: "Virtual", value: "Virtual" },
-  { label: "Hybrid", value: "Hybrid" },
-  { label: "Physical", value: "Physical" },
+const NIGERIA_STATES = [
+  "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
+  "Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo",
+  "Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa",
+  "Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba",
+  "Yobe","Zamfara",
 ];
+
+function timeToEpochMs(date: string, time: string): number | undefined {
+  if (!date || !time) return undefined;
+  return new Date(`${date}T${time}:00`).getTime();
+}
 
 export default function AddEventPage() {
   const router = useRouter();
+
   const [formData, setFormData] = useState({
-    name: "",
+    title: "",
+    preacher: "",
     topic: "",
-    type: "",
     category: "",
-    eventDate: "",
+    date: "",
     startTime: "",
     endTime: "",
-    location: "",
-    capacity: "",
-    description: "",
-    status: "Upcoming",
+    locationType: "",
+    virtualMeetingLink: "",
+    street: "",
+    city: "",
+    state: "",
+    country: "Nigeria",
+    additionalInformation: "",
+    eFlyer: "",
     requiresRegistration: false,
-    newConvertsCount: "",
-    firstTimersCount: "",
-    secondTimersCount: "",
-    eMembersCount: "",
   });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type } = e.target;
-    const val =
-      type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
+    const val = type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
     setFormData((prev) => ({ ...prev, [name]: val }));
   };
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,22 +74,22 @@ export default function AddEventPage() {
     setLoading(true);
     try {
       await createEvent({
-        name: formData.name,
+        title: formData.title,
+        preacher: formData.preacher || undefined,
         topic: formData.topic || undefined,
-        eventDate: formData.eventDate,
-        startTime: formData.startTime,
-        endTime: formData.endTime,
-        location: formData.location,
-        category: formData.category,
-        type: formData.type || undefined,
-        description: formData.description || undefined,
-        capacity: formData.capacity ? Number(formData.capacity) : undefined,
-        requiresRegistration: formData.requiresRegistration,
-        status: formData.status,
-        newConvertsCount: formData.newConvertsCount ? Number(formData.newConvertsCount) : undefined,
-        firstTimersCount: formData.firstTimersCount ? Number(formData.firstTimersCount) : undefined,
-        secondTimersCount: formData.secondTimersCount ? Number(formData.secondTimersCount) : undefined,
-        eMembersCount: formData.eMembersCount ? Number(formData.eMembersCount) : undefined,
+        category: formData.category || undefined,
+        date: formData.date,
+        startTime: timeToEpochMs(formData.date, formData.startTime),
+        endTime: timeToEpochMs(formData.date, formData.endTime),
+        locationType: formData.locationType || undefined,
+        virtualMeetingLink: formData.virtualMeetingLink || undefined,
+        street: formData.street || undefined,
+        city: formData.city || undefined,
+        state: formData.state || undefined,
+        country: formData.country || undefined,
+        additionalInformation: formData.additionalInformation || undefined,
+        eFlyer: formData.eFlyer || undefined,
+        requiresRegistration: formData.requiresRegistration || undefined,
       });
       router.push("/event-management");
     } catch (err) {
@@ -92,6 +98,9 @@ export default function AddEventPage() {
       setLoading(false);
     }
   };
+
+  const isVirtual = formData.locationType === "VIRTUAL" || formData.locationType === "HYBRID";
+  const isPhysical = formData.locationType === "PHYSICAL" || formData.locationType === "HYBRID";
 
   return (
     <DashboardLayout>
@@ -103,24 +112,31 @@ export default function AddEventPage() {
 
       <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
-          <FormField
-            label="Event Name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Enter event name"
-            required
-          />
 
-          <FormField
-            label="Topic"
-            name="topic"
-            value={formData.topic}
-            onChange={handleChange}
-            placeholder="Event topic / theme"
-          />
-
+          {/* Basic Info */}
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
+            <FormField
+              label="Event Title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              placeholder="Enter event title"
+              required
+            />
+            <FormField
+              label="Preacher / Speaker"
+              name="preacher"
+              value={formData.preacher}
+              onChange={handleChange}
+              placeholder="Name of preacher or speaker"
+            />
+            <FormField
+              label="Topic / Theme"
+              name="topic"
+              value={formData.topic}
+              onChange={handleChange}
+              placeholder="Message topic or event theme"
+            />
             <SelectField
               label="Category"
               name="category"
@@ -129,18 +145,15 @@ export default function AddEventPage() {
               options={CATEGORY_OPTIONS}
               required
             />
-            <SelectField
-              label="Type"
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              options={TYPE_OPTIONS}
-            />
+          </div>
+
+          {/* Date & Time */}
+          <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-3">
             <FormField
               label="Event Date"
               type="date"
-              name="eventDate"
-              value={formData.eventDate}
+              name="date"
+              value={formData.date}
               onChange={handleChange}
               required
             />
@@ -150,7 +163,6 @@ export default function AddEventPage() {
               name="startTime"
               value={formData.startTime}
               onChange={handleChange}
-              required
             />
             <FormField
               label="End Time"
@@ -158,81 +170,79 @@ export default function AddEventPage() {
               name="endTime"
               value={formData.endTime}
               onChange={handleChange}
-              required
-            />
-            <FormField
-              label="Location / Venue"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              placeholder="Enter venue"
-              required
-            />
-            <FormField
-              label="Capacity"
-              type="number"
-              name="capacity"
-              value={formData.capacity}
-              onChange={handleChange}
-              placeholder="Maximum attendees"
-            />
-            <SelectField
-              label="Status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              options={STATUS_OPTIONS}
             />
           </div>
 
-          <TextAreaField
-            label="Description"
-            name="description"
-            value={formData.description}
+          {/* Location Type */}
+          <SelectField
+            label="Location Type"
+            name="locationType"
+            value={formData.locationType}
             onChange={handleChange}
-            placeholder="Event description and details"
-            rows={5}
+            options={LOCATION_TYPE_OPTIONS}
           />
 
-          <div className="pt-2">
-            <h3 className="mb-3 text-sm font-semibold text-[#111827]">Expected Attendance Breakdown</h3>
+          {isVirtual && (
+            <FormField
+              label="Virtual Meeting Link"
+              name="virtualMeetingLink"
+              value={formData.virtualMeetingLink}
+              onChange={handleChange}
+              placeholder="https://zoom.us/j/..."
+            />
+          )}
+
+          {isPhysical && (
             <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
               <FormField
-                label="New Converts"
-                type="number"
-                name="newConvertsCount"
-                value={formData.newConvertsCount}
+                label="Street / Venue"
+                name="street"
+                value={formData.street}
                 onChange={handleChange}
-                placeholder="0"
+                placeholder="Street address or venue name"
               />
               <FormField
-                label="First Timers"
-                type="number"
-                name="firstTimersCount"
-                value={formData.firstTimersCount}
+                label="City"
+                name="city"
+                value={formData.city}
                 onChange={handleChange}
-                placeholder="0"
+                placeholder="City"
+              />
+              <SelectField
+                label="State"
+                name="state"
+                value={formData.state}
+                onChange={handleChange}
+                options={NIGERIA_STATES.map((s) => ({ label: s, value: s }))}
               />
               <FormField
-                label="Second Timers"
-                type="number"
-                name="secondTimersCount"
-                value={formData.secondTimersCount}
+                label="Country"
+                name="country"
+                value={formData.country}
                 onChange={handleChange}
-                placeholder="0"
-              />
-              <FormField
-                label="E-Members"
-                type="number"
-                name="eMembersCount"
-                value={formData.eMembersCount}
-                onChange={handleChange}
-                placeholder="0"
+                placeholder="Country"
               />
             </div>
-          </div>
+          )}
 
-          <div className="flex items-center gap-2 pt-2">
+          <TextAreaField
+            label="Additional Information"
+            name="additionalInformation"
+            value={formData.additionalInformation}
+            onChange={handleChange}
+            placeholder="Event description, instructions, or notes"
+            rows={4}
+          />
+
+          <FormField
+            label="E-Flyer URL"
+            name="eFlyer"
+            value={formData.eFlyer}
+            onChange={handleChange}
+            placeholder="https://... (link to event flyer image)"
+          />
+
+          <div className="flex items-center gap-2 pt-1">
             <input
               type="checkbox"
               id="requiresRegistration"

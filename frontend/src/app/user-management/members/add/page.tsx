@@ -41,12 +41,6 @@ export default function AddMemberPage() {
     setError("");
     setLoading(true);
 
-    // Build dateOfBirth as YYYY-MM-DD if all three parts are set
-    let dateOfBirth: string | undefined;
-    if (dobYear && dobMonth && dobDay) {
-      dateOfBirth = `${dobYear}-${String(dobMonth).padStart(2, "0")}-${String(dobDay).padStart(2, "0")}`;
-    }
-
     try {
       await createMember({
         firstName,
@@ -56,7 +50,9 @@ export default function AddMemberPage() {
         phoneNumber: phone,
         countryCode: countryCode.replace(/^\+/, ""),
         sex: gender ? gender.toUpperCase() : undefined,
-        dateOfBirth,
+        dayOfBirth: dobDay ? Number(dobDay) : undefined,
+        monthOfBirth: dobMonth ? Number(dobMonth) : undefined,
+        yearOfBirth: dobYear ? Number(dobYear) : undefined,
         street: street || undefined,
         city: city || undefined,
         state: state || undefined,
