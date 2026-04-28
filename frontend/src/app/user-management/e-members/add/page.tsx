@@ -22,6 +22,7 @@ export default function AddEMemberPage() {
   const [dobDay, setDobDay] = useState("");
   const [dobMonth, setDobMonth] = useState("");
   const [dobYear, setDobYear] = useState("");
+  const [state, setState] = useState("");
   const [maritalStatus, setMaritalStatus] = useState("");
   const [serviceAttended, setServiceAttended] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
@@ -57,6 +58,7 @@ export default function AddEMemberPage() {
         email,
         phoneNumber: phone,
         countryCode: countryCode.replace(/^\+/, ""),
+        state: state || undefined,
         country: "Nigeria",
         dayOfBirth: dobDay ? Number(dobDay) : undefined,
         monthOfBirth: dobMonth ? Number(dobMonth) : undefined,
@@ -231,6 +233,27 @@ export default function AddEMemberPage() {
                   {spouse ? `Spouse: ${spouse.name} (change)` : "+ Link Spouse"}
                 </button>
               )}
+            </div>
+
+            {/* State */}
+            <div>
+              <label className={labelStyles}>State</label>
+              <select
+                value={state}
+                onChange={(e) => setState(e.target.value)}
+                className={selectStyles}
+              >
+                <option value="">Select State</option>
+                {[
+                  "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
+                  "Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo",
+                  "Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa",
+                  "Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba",
+                  "Yobe","Zamfara",
+                ].map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
             </div>
 
             {/* Service Attended */}
