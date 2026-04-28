@@ -12,30 +12,39 @@ import { getEvents, type EventResponse } from "@/lib/api";
 
 const ITEMS_PER_PAGE = 10;
 
-const statusColors: Record<string, string> = {
-  Upcoming: "bg-blue-100 text-blue-800",
-  Ongoing: "bg-green-100 text-green-800",
-  Completed: "bg-gray-100 text-gray-600",
-  Cancelled: "bg-red-100 text-red-800",
+const categoryColors: Record<string, string> = {
+  SERVICE: "bg-blue-100 text-blue-800",
+  SPECIAL_SERVICE: "bg-indigo-100 text-indigo-800",
+  CONFERENCE: "bg-purple-100 text-purple-800",
+  WEDDING: "bg-pink-100 text-pink-800",
+  FUNERAL: "bg-gray-100 text-gray-600",
 };
 
-const typeColors: Record<string, string> = {
-  Virtual: "bg-blue-100 text-blue-800",
-  Hybrid: "bg-purple-100 text-purple-800",
-  Physical: "bg-green-100 text-green-800",
+const locationTypeColors: Record<string, string> = {
+  VIRTUAL: "bg-blue-100 text-blue-800",
+  HYBRID: "bg-purple-100 text-purple-800",
+  PHYSICAL: "bg-green-100 text-green-800",
 };
+
+function categoryLabel(cat?: string): string {
+  if (!cat) return "—";
+  return cat.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function locationLabel(event: EventResponse): string {
+  if (event.locationType === "VIRTUAL") return "Virtual";
+  const parts = [event.city, event.state].filter(Boolean);
+  return parts.length ? parts.join(", ") : "—";
+}
 
 export default function EventManagementPage() {
   const router = useRouter();
 
-  // Data
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
-
-  // UI state
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -65,9 +74,10 @@ export default function EventManagementPage() {
     ? events.filter((e) => {
         const q = search.toLowerCase();
         return (
-          e.name.toLowerCase().includes(q) ||
-          (e.location ?? "").toLowerCase().includes(q) ||
-          (e.category ?? "").toLowerCase().includes(q)
+          (e.title ?? "").toLowerCase().includes(q) ||
+          (e.city ?? "").toLowerCase().includes(q) ||
+          (e.state ?? "").toLowerCase().includes(q) ||
+          (e.eventCategory ?? "").toLowerCase().includes(q)
         );
       })
     : events;
@@ -78,7 +88,6 @@ export default function EventManagementPage() {
   };
 
   const handleConfirmCancel = () => {
-    console.log("Cancel event:", selectedId);
     setShowCancelModal(false);
     setSelectedId(null);
   };
@@ -111,7 +120,6 @@ export default function EventManagementPage() {
         </Button>
       </div>
 
-      {/* Error banner */}
       {apiError && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {apiError} —{" "}
@@ -125,12 +133,12 @@ export default function EventManagementPage() {
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="bg-[#F3F4F6]">
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Event Name</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Event Title</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
               <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Location</th>
               <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Category</th>
               <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Type</th>
-              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Attendees</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Preacher</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
               <th className="px-4 py-4"></th>
             </tr>
@@ -138,15 +146,11 @@ export default function EventManagementPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
-                  Loading events…
-                </td>
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">Loading events…</td>
               </tr>
             ) : displayedEvents.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
-                  No events found.
-                </td>
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">No events found.</td>
               </tr>
             ) : (
               displayedEvents.map((event) => (
@@ -155,36 +159,37 @@ export default function EventManagementPage() {
                   className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50"
                   style={{ height: "56px" }}
                 >
-                  <td className="px-4 py-3 text-sm font-medium text-[#374151]">{event.name}</td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">{event.eventDate}</td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{event.location}</td>
+                  <td className="px-4 py-3 text-sm font-medium text-[#374151]">{event.title}</td>
+                  <td className="px-4 py-3 text-sm text-[#374151]">{event.date}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                    {locationLabel(event)}
+                  </td>
                   <td className="hidden sm:table-cell px-4 py-3">
-                    <span className="inline-block rounded-full bg-[#F3F4F6] px-3 py-1 text-xs font-medium text-[#374151]">
-                      {event.category}
+                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${categoryColors[event.eventCategory ?? ""] ?? "bg-gray-100 text-gray-600"}`}>
+                      {categoryLabel(event.eventCategory)}
                     </span>
                   </td>
                   <td className="hidden md:table-cell px-4 py-3">
-                    {event.type ? (
-                      <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${typeColors[event.type] ?? "bg-gray-100 text-gray-600"}`}>
-                        {event.type}
+                    {event.locationType ? (
+                      <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${locationTypeColors[event.locationType] ?? "bg-gray-100 text-gray-600"}`}>
+                        {event.locationType.charAt(0) + event.locationType.slice(1).toLowerCase()}
                       </span>
                     ) : (
                       <span className="text-xs text-[#9CA3AF]">—</span>
                     )}
                   </td>
                   <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">
-                    {(event.attendees ?? 0).toLocaleString()}
-                    {(event.capacity ?? 0) > 0 && (
-                      <span className="text-[#9CA3AF]"> / {event.capacity!.toLocaleString()}</span>
-                    )}
+                    {event.preacher ?? <span className="text-[#9CA3AF]">—</span>}
                   </td>
                   <td className="px-4 py-3">
-                    {event.status ? (
-                      <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${statusColors[event.status] ?? "bg-gray-100 text-gray-600"}`}>
-                        {event.status}
+                    {event.isCanceled ? (
+                      <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-800">
+                        Cancelled
                       </span>
                     ) : (
-                      <span className="text-xs text-[#9CA3AF]">—</span>
+                      <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
+                        Active
+                      </span>
                     )}
                   </td>
                   <td className="px-4 py-3">

@@ -49,11 +49,6 @@ export default function AddEMemberPage() {
     setError("");
     setLoading(true);
 
-    let dateOfBirth: string | undefined;
-    if (dobYear && dobMonth && dobDay) {
-      dateOfBirth = `${dobYear}-${String(dobMonth).padStart(2, "0")}-${String(dobDay).padStart(2, "0")}`;
-    }
-
     try {
       await createEMember({
         firstName,
@@ -63,7 +58,9 @@ export default function AddEMemberPage() {
         phoneNumber: phone,
         countryCode: countryCode.replace(/^\+/, ""),
         country: "Nigeria",
-        dateOfBirth,
+        dayOfBirth: dobDay ? Number(dobDay) : undefined,
+        monthOfBirth: dobMonth ? Number(dobMonth) : undefined,
+        yearOfBirth: dobYear ? Number(dobYear) : undefined,
         maritalStatus: maritalStatus ? maritalStatus.toUpperCase() : undefined,
         serviceAttended: serviceAttended || undefined,
       });

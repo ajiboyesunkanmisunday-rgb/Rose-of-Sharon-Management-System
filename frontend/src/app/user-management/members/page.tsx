@@ -161,7 +161,7 @@ export default function MembersPage() {
         lastName: m.lastName,
         email: m.email,
         phone: m.phoneNumber,
-        status: m.status || "",
+        userType: m.userType || "",
       }))
     );
     downloadCSV(csv, `members-export-${new Date().toISOString().slice(0, 10)}.csv`);

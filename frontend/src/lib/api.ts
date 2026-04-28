@@ -130,20 +130,22 @@ export interface UserResponse {
   lastName: string;
   email: string;
   phoneNumber: string;
-  gender?: string;
-  dateOfBirth?: string;
-  addressStreet?: string;
-  addressCity?: string;
-  addressState?: string;
-  addressCountry?: string;
+  countryCode?: string;
+  sex?: string;
+  dayOfBirth?: number;
+  monthOfBirth?: number;
+  yearOfBirth?: number;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
   maritalStatus?: string;
   profilePictureUrl?: string;
+  occupation?: string;
   userType?: string;
-  status?: string;
   groups?: GroupResponse[];
-  country?: string;
   serviceAttended?: string;
-  token?: string; // returned on login
+  token?: string;
 }
 
 export interface CustomPageResponse<T> {
@@ -170,24 +172,24 @@ export interface GroupResponse {
 
 export interface EventResponse {
   id: string;
-  name: string;
+  title: string;
+  preacher?: string;
   topic?: string;
-  eventDate: string;
-  startTime: string;
-  endTime: string;
-  location: string;
-  category: string;
-  type?: string;
-  description?: string;
-  capacity?: number;
-  attendees?: number;
-  status?: string;
+  eventCategory?: string;
+  date: string;
+  startTime?: number;
+  endTime?: number;
+  locationType?: string;
+  virtualMeetingLink?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  additionalInstructions?: string;
   requiresRegistration?: boolean;
-  newConvertsCount?: number;
-  firstTimersCount?: number;
-  secondTimersCount?: number;
-  eMembersCount?: number;
-  createdBy?: string;
+  isCanceled?: boolean;
+  eflyer?: string;
+  createdOn?: string;
 }
 
 // ─── Auth Endpoints ─────────────────────────────────────────────────────────────
@@ -240,12 +242,15 @@ export interface CreateMemberRequest {
   phoneNumber: string;
   countryCode: string;
   sex?: string;
-  dateOfBirth?: string;
+  dayOfBirth?: number;
+  monthOfBirth?: number;
+  yearOfBirth?: number;
   street?: string;
   city?: string;
   state?: string;
   country?: string;
   maritalStatus?: string;
+  occupation?: string;
   profilePictureUrl?: string;
   groupIds?: string[];
   spouseId?: string;
@@ -291,13 +296,19 @@ export interface CreateEMemberRequest {
   email: string;
   phoneNumber: string;
   countryCode: string;
+  state?: string;
   country: string;
-  dateOfBirth?: string;
+  sex?: string;
+  dayOfBirth?: number;
+  monthOfBirth?: number;
+  yearOfBirth?: number;
   maritalStatus?: string;
+  occupation?: string;
   profilePictureUrl?: string;
   serviceAttended?: string;
   spouseId?: string;
   couplePictureUrl?: string;
+  groupIds?: string[];
 }
 
 export async function getEMembers(
@@ -362,6 +373,9 @@ export async function assignSuperAdmin(
 export interface CreateGroupRequest {
   name: string;
   description?: string;
+  groupHeadId?: string;
+  whatsAppLink?: string;
+  whatsAppQRCode?: string;
 }
 
 export async function getGroups(
@@ -415,22 +429,22 @@ export async function deleteGroupsBulk(ids: string[]): Promise<OperationalRespon
 // ─── Events ─────────────────────────────────────────────────────────────────────
 
 export interface CreateEventRequest {
-  name: string;
+  title: string;
+  preacher?: string;
   topic?: string;
-  eventDate: string;
-  startTime: string;
-  endTime: string;
-  location: string;
-  category: string;
-  type?: string;
-  description?: string;
-  capacity?: number;
+  category?: string;
+  date: string;
+  startTime?: number;
+  endTime?: number;
+  locationType?: string;
+  virtualMeetingLink?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  additionalInformation?: string;
+  eFlyer?: string;
   requiresRegistration?: boolean;
-  status?: string;
-  newConvertsCount?: number;
-  firstTimersCount?: number;
-  secondTimersCount?: number;
-  eMembersCount?: number;
 }
 
 export async function getEvents(
