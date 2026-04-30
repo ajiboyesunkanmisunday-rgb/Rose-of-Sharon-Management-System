@@ -1,4 +1,4 @@
-export type ServiceType = 'Sunday' | 'Wednesday' | 'Friday' | 'Special Service';
+export type ServiceType = 'Sunday' | 'Tuesday' | 'Thursday' | 'Special Service';
 
 export interface SpouseLink {
   memberId?: string;
@@ -373,7 +373,7 @@ export interface ChurchEvent {
   eMembersCount?: number;
 }
 
-export type MinistryProgram = 'Fresh Anointing' | 'Sunday Sermon' | 'Tuesday Digging Deep' | 'Friday Prayer' | 'Other';
+export type MinistryProgram = 'Fresh Anointing' | 'Sunday Sermon' | 'Tuesday Digging Deep' | 'Thursday Prayer' | 'Other';
 
 export interface MinisterOnDuty {
   id: string;

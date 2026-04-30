@@ -79,7 +79,7 @@ export default function AddEMemberPage() {
         monthOfBirth: dobMonth ? Number(dobMonth) : undefined,
         yearOfBirth: dobYear ? Number(dobYear) : undefined,
         maritalStatus: maritalStatus ? maritalStatus.toUpperCase() : undefined,
-        serviceAttended: serviceAttended || undefined,
+        // serviceAttended is display-only; backend links via eventId (UUID)
         spouseId: spouse?.memberId || undefined,
         dayOfWedding,
         monthOfWedding,
@@ -299,8 +299,8 @@ export default function AddEMemberPage() {
               >
                 <option value="">Select Service</option>
                 <option value="Sunday">Sunday</option>
-                <option value="Wednesday">Wednesday</option>
-                <option value="Friday">Friday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Thursday">Thursday</option>
                 <option value="Special Service">Special Service</option>
               </select>
             </div>

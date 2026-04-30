@@ -12,7 +12,7 @@ const PROGRAM_COLORS: Record<MinistryProgram, string> = {
   "Fresh Anointing": "bg-purple-100 text-purple-800",
   "Sunday Sermon": "bg-[#000080] text-white",
   "Tuesday Digging Deep": "bg-green-100 text-green-800",
-  "Friday Prayer": "bg-orange-100 text-orange-800",
+  "Thursday Prayer": "bg-orange-100 text-orange-800",
   Other: "bg-gray-100 text-gray-700",
 };
 
@@ -21,7 +21,7 @@ const PROGRAM_OPTIONS: Array<MinistryProgram | "All"> = [
   "Fresh Anointing",
   "Sunday Sermon",
   "Tuesday Digging Deep",
-  "Friday Prayer",
+  "Thursday Prayer",
   "Other",
 ];
 
