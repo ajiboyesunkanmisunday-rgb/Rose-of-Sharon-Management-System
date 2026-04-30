@@ -53,14 +53,14 @@ const attendanceData = [
     positive: true,
   },
   {
-    service: "Wednesday Bible Study",
+    service: "Tuesday Bible Study",
     date: "Apr 8, 2026",
     attendance: 345,
     growth: "+2.1%",
     positive: true,
   },
   {
-    service: "Friday Prayer Meeting",
+    service: "Thursday Prayer Meeting",
     date: "Apr 10, 2026",
     attendance: 278,
     growth: "-1.3%",

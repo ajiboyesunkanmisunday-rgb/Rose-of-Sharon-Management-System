@@ -139,7 +139,7 @@ export default function GeneralSettingsPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-[#374151]">
-                Wednesday Bible Study
+                Tuesday Bible Study
               </label>
               <input
                 type="text"
@@ -155,7 +155,7 @@ export default function GeneralSettingsPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-[#374151]">
-                Friday Prayer Meeting
+                Thursday Prayer Meeting
               </label>
               <input
                 type="text"

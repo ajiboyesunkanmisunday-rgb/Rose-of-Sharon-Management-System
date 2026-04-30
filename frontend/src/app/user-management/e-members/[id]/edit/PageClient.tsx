@@ -212,8 +212,8 @@ export default function EditEMemberPage() {
               >
                 <option value="">Select Service</option>
                 <option value="Sunday">Sunday</option>
-                <option value="Wednesday">Wednesday</option>
-                <option value="Friday">Friday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Thursday">Thursday</option>
                 <option value="Special Service">Special Service</option>
               </select>
             </div>

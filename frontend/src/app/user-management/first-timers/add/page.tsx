@@ -395,8 +395,8 @@ export default function AddFirstTimerPage() {
               >
                 <option value="">Select Service</option>
                 <option value="Sunday Service">Sunday Service</option>
-                <option value="Wednesday Bible Study">Wednesday Bible Study</option>
-                <option value="Friday Prayer Meeting">Friday Prayer Meeting</option>
+                <option value="Tuesday Bible Study">Tuesday Bible Study</option>
+                <option value="Thursday Prayer Meeting">Thursday Prayer Meeting</option>
                 <option value="Special Service">Special Service</option>
               </select>
             </div>

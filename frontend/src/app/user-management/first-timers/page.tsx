@@ -317,8 +317,8 @@ export default function FirstTimersPage() {
             >
               <option value="">All Services</option>
               <option value="Sunday Service">Sunday Service</option>
-              <option value="Wednesday Service">Wednesday Service</option>
-              <option value="Friday Service">Friday Service</option>
+              <option value="Tuesday Service">Tuesday Service</option>
+              <option value="Thursday Service">Thursday Service</option>
             </select>
           </div>
           <div className="flex flex-col">

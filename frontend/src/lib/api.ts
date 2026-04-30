@@ -757,11 +757,58 @@ export async function createEvent(
 }
 
 export async function getEvent(id: string): Promise<EventResponse> {
-  return apiFetch<EventResponse>(`/api/v1/events/${id}`, {
-    method: "POST",
-  });
+  return apiFetch<EventResponse>(`/api/v1/events/${id}`);
 }
 
 export async function getEventForms(id: string): Promise<unknown> {
   return apiFetch<unknown>(`/api/v1/events/${id}/forms`);
+}
+
+// ─── Event Attendees ─────────────────────────────────────────────────────────
+
+export async function getEventFirstTimers(
+  eventId: string,
+  pageNo = 0,
+  pageSize = 20
+): Promise<CustomPageResponse<UserResponse>> {
+  return apiFetch<CustomPageResponse<UserResponse>>(
+    `/api/v1/events/${eventId}/first-timers?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function getEventEMembers(
+  eventId: string,
+  pageNo = 0,
+  pageSize = 20
+): Promise<CustomPageResponse<UserResponse>> {
+  return apiFetch<CustomPageResponse<UserResponse>>(
+    `/api/v1/events/${eventId}/e-members?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function getEventNewConverts(
+  eventId: string,
+  pageNo = 0,
+  pageSize = 20
+): Promise<CustomPageResponse<NewConvertResponse>> {
+  return apiFetch<CustomPageResponse<NewConvertResponse>>(
+    `/api/v1/events/${eventId}/new-converts?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+// Mark E-Member attendance for an event
+export async function markEMemberEventAttendance(
+  eventId: string,
+  eMemberId: string
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/events/${eventId}/e-members/${eMemberId}/attend`,
+    { method: "POST" }
+  );
+}
+
+export async function cancelEvent(id: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/events/${id}/cancel`, {
+    method: "PATCH",
+  });
 }
