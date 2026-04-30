@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import PhoneInput from "@/components/ui/PhoneInput";
+import { createNewConvert } from "@/lib/api";
 
 export default function AddNewConvertPage() {
   const router = useRouter();
@@ -21,24 +22,33 @@ export default function AddNewConvertPage() {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [country, setCountry] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submit new convert form", {
-      firstName,
-      middleName,
-      lastName,
-      gender,
-      countryCode,
-      phone,
-      email,
-      serviceAttended,
-      street,
-      city,
-      state,
-      country,
-    });
-    router.push("/user-management/new-converts");
+    setError("");
+    setLoading(true);
+    try {
+      await createNewConvert({
+        firstName,
+        middleName: middleName || undefined,
+        lastName,
+        email: email || undefined,
+        phoneNumber: phone,
+        countryCode: countryCode.replace(/^\+/, ""),
+        sex: gender ? gender.toUpperCase() : undefined,
+        street: street || undefined,
+        city: city || undefined,
+        state: state || undefined,
+        country: country || undefined,
+        // serviceAttended maps to eventId on the backend - link via event later
+      });
+      router.push("/user-management/new-converts");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save new convert.");
+      setLoading(false);
+    }
   };
 
   const inputStyles =
@@ -227,9 +237,15 @@ export default function AddNewConvertPage() {
           </div>
         </div>
 
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
         <div className="flex justify-end">
-          <Button type="submit" variant="primary">
-            Save
+          <Button type="submit" variant="primary" disabled={loading}>
+            {loading ? "Saving…" : "Save"}
           </Button>
         </div>
       </form>

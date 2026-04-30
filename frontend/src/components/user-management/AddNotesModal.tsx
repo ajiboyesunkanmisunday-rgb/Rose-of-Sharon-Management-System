@@ -6,15 +6,25 @@ import Modal from "@/components/ui/Modal";
 interface AddNotesModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSave?: (note: string) => void | Promise<void>;
 }
 
-export default function AddNotesModal({ isOpen, onClose }: AddNotesModalProps) {
+export default function AddNotesModal({ isOpen, onClose, onSave }: AddNotesModalProps) {
   const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    console.log("Save note:", note);
-    setNote("");
-    onClose();
+  const handleSave = async () => {
+    if (!note.trim()) return;
+    setSaving(true);
+    try {
+      if (onSave) {
+        await onSave(note);
+      }
+      setNote("");
+      onClose();
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -29,14 +39,15 @@ export default function AddNotesModal({ isOpen, onClose }: AddNotesModalProps) {
             onChange={(e) => setNote(e.target.value)}
             placeholder="Enter Note"
             rows={5}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-gray-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
           />
         </div>
         <button
           onClick={handleSave}
-          className="w-full rounded-lg bg-[#2563EB] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+          disabled={saving || !note.trim()}
+          className="w-full rounded-lg bg-[#000080] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#000066] disabled:opacity-50"
         >
-          Save
+          {saving ? "Saving…" : "Save"}
         </button>
       </div>
     </Modal>

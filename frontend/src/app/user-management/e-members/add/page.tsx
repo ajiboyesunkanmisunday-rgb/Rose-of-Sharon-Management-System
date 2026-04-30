@@ -16,6 +16,7 @@ export default function AddEMemberPage() {
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [gender, setGender] = useState("");
   const [countryCode, setCountryCode] = useState("+234");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -50,6 +51,19 @@ export default function AddEMemberPage() {
     setError("");
     setLoading(true);
 
+    // Parse wedding date from spouse data when married
+    let dayOfWedding: number | undefined;
+    let monthOfWedding: number | undefined;
+    let yearOfWedding: number | undefined;
+    if (maritalStatus === "Married" && spouse?.weddingDate) {
+      const parts = spouse.weddingDate.split("-");
+      if (parts.length === 3) {
+        yearOfWedding = Number(parts[0]);
+        monthOfWedding = Number(parts[1]);
+        dayOfWedding = Number(parts[2]);
+      }
+    }
+
     try {
       await createEMember({
         firstName,
@@ -58,6 +72,7 @@ export default function AddEMemberPage() {
         email,
         phoneNumber: phone,
         countryCode: countryCode.replace(/^\+/, ""),
+        sex: gender ? gender.toUpperCase() : undefined,
         state: state || undefined,
         country: "Nigeria",
         dayOfBirth: dobDay ? Number(dobDay) : undefined,
@@ -65,6 +80,10 @@ export default function AddEMemberPage() {
         yearOfBirth: dobYear ? Number(dobYear) : undefined,
         maritalStatus: maritalStatus ? maritalStatus.toUpperCase() : undefined,
         serviceAttended: serviceAttended || undefined,
+        spouseId: spouse?.memberId || undefined,
+        dayOfWedding,
+        monthOfWedding,
+        yearOfWedding,
       });
       router.push("/user-management/e-members");
     } catch (err) {
@@ -147,6 +166,20 @@ export default function AddEMemberPage() {
                 className={inputStyles}
                 required
               />
+            </div>
+
+            {/* Gender */}
+            <div>
+              <label className={labelStyles}>Gender</label>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className={selectStyles}
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
             </div>
 
             {/* Phone */}

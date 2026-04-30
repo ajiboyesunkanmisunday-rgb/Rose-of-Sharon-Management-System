@@ -8,6 +8,7 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
+import { createFirstTimer } from "@/lib/api";
 
 export default function AddFirstTimerPage() {
   const router = useRouter();
@@ -39,36 +40,47 @@ export default function AddFirstTimerPage() {
   const [photo, setPhoto] = useState<File | null>(null);
   const [spouse, setSpouse] = useState<SpouseData | null>(null);
   const [showSpouseModal, setShowSpouseModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submit first timer form", {
-      firstName,
-      middleName,
-      lastName,
-      gender,
-      email,
-      countryCode,
-      phone,
-      whatsappCode,
-      whatsappNumber,
-      dob: `${dobDay}/${dobMonth}/${dobYear}`,
-      street,
-      city,
-      state,
-      country,
-      maritalStatus,
-      occupation,
-      serviceAttended,
-      isVisiting,
-      howDidYouHear,
-      howWasService,
-      favouriteParts,
-      worshippedOnline,
-      photo,
-      spouse,
-    });
-    router.push("/user-management/first-timers");
+    setError("");
+    setLoading(true);
+    try {
+      // Map service rating label to integer (1–5)
+      const ratingMap: Record<string, number> = {
+        Excellent: 5, Good: 4, Fair: 3, Poor: 2,
+      };
+
+      await createFirstTimer({
+        firstName,
+        middleName: middleName || undefined,
+        lastName,
+        email: email || undefined,
+        phoneNumber: phone,
+        countryCode: countryCode.replace(/^\+/, ""),
+        sex: gender ? gender.toUpperCase() : undefined,
+        dayOfBirth: dobDay ? Number(dobDay) : undefined,
+        monthOfBirth: dobMonth ? Number(dobMonth) : undefined,
+        yearOfBirth: dobYear ? Number(dobYear) : undefined,
+        street: street || undefined,
+        city: city || undefined,
+        state: state || undefined,
+        country: country || undefined,
+        maritalStatus: maritalStatus ? maritalStatus.toUpperCase() : undefined,
+        occupation: occupation || undefined,
+        isVisiting: isVisiting || undefined,
+        mediumOfInvitation: howDidYouHear || undefined,
+        serviceRating: howWasService ? ratingMap[howWasService] : undefined,
+        favouritePartOfService: favouriteParts || undefined,
+        fromOnline: worshippedOnline || undefined,
+      });
+      router.push("/user-management/first-timers");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save first timer.");
+      setLoading(false);
+    }
   };
 
   const inputStyles =
@@ -478,10 +490,17 @@ export default function AddFirstTimerPage() {
           </div>
         </div>
 
+        {/* Error */}
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
         {/* Submit Button */}
         <div className="flex justify-end">
-          <Button type="submit" variant="primary">
-            Submit
+          <Button type="submit" variant="primary" disabled={loading}>
+            {loading ? "Saving…" : "Submit"}
           </Button>
         </div>
       </form>

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import PhotoUpload from "@/components/ui/PhotoUpload";
-import { members } from "@/lib/mock-data";
+import { getMembers, type UserResponse } from "@/lib/api";
 
 interface SpouseData {
   memberId?: string;
@@ -31,34 +31,47 @@ export default function SpouseLinkModal({
 }: SpouseLinkModalProps) {
   const [mode, setMode] = useState<Mode>("search");
   const [search, setSearch] = useState("");
+  const [members, setMembers] = useState<UserResponse[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
   const [selectedMember, setSelectedMember] = useState<{ id: string; name: string } | null>(
-    initial.memberId
-      ? {
-          id: initial.memberId,
-          name: initial.name || "",
-        }
-      : null
+    initial.memberId ? { id: initial.memberId, name: initial.name || "" } : null
   );
   const [name, setName] = useState(initial.name || "");
   const [weddingDate, setWeddingDate] = useState(initial.weddingDate || "");
   const [photo, setPhoto] = useState<File | null>(initial.anniversaryPhoto || null);
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return members.slice(0, 6);
-    const q = search.toLowerCase();
-    return members
-      .filter(
-        (m) =>
-          `${m.firstName} ${m.lastName}`.toLowerCase().includes(q) ||
-          m.phone.includes(q) ||
-          m.email.toLowerCase().includes(q)
-      )
-      .slice(0, 10);
-  }, [search]);
+  // Load members when modal opens or search changes
+  useEffect(() => {
+    if (!isOpen || mode !== "search") return;
+    const timer = setTimeout(async () => {
+      setLoadingMembers(true);
+      try {
+        const res = await getMembers(0, 20);
+        setMembers(res.content);
+      } catch {
+        // silently ignore — user can still add by name
+      } finally {
+        setLoadingMembers(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [isOpen, mode, search]);
 
-  const handleSelect = (m: (typeof members)[number]) => {
-    setSelectedMember({ id: m.id, name: `${m.firstName} ${m.lastName}` });
-    setName(`${m.firstName} ${m.lastName}`);
+  const filteredMembers = members.filter((m) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    const full = `${m.firstName} ${m.lastName}`.toLowerCase();
+    return (
+      full.includes(q) ||
+      (m.email ?? "").toLowerCase().includes(q) ||
+      (m.phoneNumber ?? "").includes(q)
+    );
+  }).slice(0, 10);
+
+  const handleSelect = (m: UserResponse) => {
+    const full = `${m.firstName} ${m.lastName}`;
+    setSelectedMember({ id: m.id, name: full });
+    setName(full);
   };
 
   const handleSubmit = () => {
@@ -108,10 +121,12 @@ export default function SpouseLinkModal({
               placeholder="Search by name, phone, or email..."
             />
             <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-[#E5E7EB]">
-              {filtered.length === 0 ? (
-                <p className="p-3 text-center text-sm text-[#6B7280]">No matches</p>
+              {loadingMembers ? (
+                <p className="p-3 text-center text-sm text-[#6B7280]">Loading…</p>
+              ) : filteredMembers.length === 0 ? (
+                <p className="p-3 text-center text-sm text-[#6B7280]">No matches found</p>
               ) : (
-                filtered.map((m) => {
+                filteredMembers.map((m) => {
                   const full = `${m.firstName} ${m.lastName}`;
                   const isSelected = selectedMember?.id === m.id;
                   return (
@@ -171,7 +186,11 @@ export default function SpouseLinkModal({
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleSubmit}>
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={!name || !weddingDate}
+          >
             Save Spouse
           </Button>
         </div>
