@@ -80,9 +80,14 @@ export default function PhoneInput({
           type="tel"
           name={numberName}
           value={number}
-          onChange={(e) => onNumberChange(e.target.value)}
+          onChange={(e) => {
+            // Strip non-digit characters and enforce max 15 digits (E.164 standard)
+            const digits = e.target.value.replace(/\D/g, "").slice(0, 15);
+            onNumberChange(digits);
+          }}
           placeholder={placeholder}
           required={required}
+          maxLength={15}
           className={`${sharedStyles} w-full px-4`}
         />
       </div>

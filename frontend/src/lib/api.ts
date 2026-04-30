@@ -146,6 +146,26 @@ export interface UserResponse {
   groups?: GroupResponse[];
   serviceAttended?: string;
   token?: string;
+  // Follow-up tracking fields
+  noOfCalls?: number;
+  noOfVisits?: number;
+  assignedFollowUp?: UserResponse;
+  // Visitor / first-timer specific fields
+  howDidYouHear?: string;
+  howWasService?: string;
+  favouriteParts?: string;
+  isVisiting?: boolean;
+  worshippedOnline?: boolean;
+  // New convert specific
+  believersClass?: string;
+  // Service history
+  firstTimeService?: EventResponse;
+  secondTimeService?: EventResponse;
+  // Spouse / couple info
+  spouse?: UserResponse;
+  couplePictureUrl?: string;
+  // Record timestamps
+  createdOn?: string;
 }
 
 export interface CustomPageResponse<T> {
@@ -254,6 +274,10 @@ export interface CreateMemberRequest {
   profilePictureUrl?: string;
   groupIds?: string[];
   spouseId?: string;
+  // Required when maritalStatus === "MARRIED"
+  dayOfWedding?: number;
+  monthOfWedding?: number;
+  yearOfWedding?: number;
 }
 
 export async function getMembers(
@@ -282,9 +306,7 @@ export async function deleteMembersBulk(ids: string[]): Promise<OperationalRespo
 }
 
 export async function getUser(id: string): Promise<UserResponse> {
-  return apiFetch<UserResponse>(`/api/v1/users/${id}`, {
-    method: "POST",
-  });
+  return apiFetch<UserResponse>(`/api/v1/users/${id}`);
 }
 
 // ─── User Management — E-Members ───────────────────────────────────────────────
@@ -309,6 +331,10 @@ export interface CreateEMemberRequest {
   spouseId?: string;
   couplePictureUrl?: string;
   groupIds?: string[];
+  // Required when maritalStatus === "MARRIED"
+  dayOfWedding?: number;
+  monthOfWedding?: number;
+  yearOfWedding?: number;
 }
 
 export async function getEMembers(
@@ -333,6 +359,271 @@ export async function deleteEMembersBulk(ids: string[]): Promise<OperationalResp
   return apiFetch<OperationalResponse>("/api/v1/users/e-member", {
     method: "DELETE",
     body: JSON.stringify({ ids }),
+  });
+}
+
+// ─── User Management — First Timers ────────────────────────────────────────────
+
+export interface CreateFirstTimerRequest {
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  email?: string;
+  phoneNumber: string;
+  countryCode: string;
+  sex?: string;
+  dayOfBirth?: number;
+  monthOfBirth?: number;
+  yearOfBirth?: number;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  maritalStatus?: string;
+  occupation?: string;
+  profilePictureUrl?: string;
+  // Event/service the person attended (UUID of the event record)
+  eventId?: string;
+  // Visitor-specific fields
+  isVisiting?: boolean;
+  mediumOfInvitation?: string;   // how they heard about the church
+  serviceRating?: number;        // 1–5 numeric rating of the service
+  favouritePartOfService?: string;
+  fromOnline?: boolean;          // worshipped online before
+}
+
+export async function getFirstTimers(
+  pageNo = 0,
+  pageSize = 10
+): Promise<CustomPageResponse<UserResponse>> {
+  return apiFetch<CustomPageResponse<UserResponse>>(
+    `/api/v1/users/first-timer?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function createFirstTimer(
+  body: CreateFirstTimerRequest
+): Promise<UserResponse> {
+  return apiFetch<UserResponse>("/api/v1/users/first-timer", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteFirstTimersBulk(ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/users/first-timer", {
+    method: "DELETE",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+// ─── User Management — Second Timers ───────────────────────────────────────────
+
+// Second timers share the same request shape as first timers
+export type CreateSecondTimerRequest = CreateFirstTimerRequest;
+
+export async function getSecondTimers(
+  pageNo = 0,
+  pageSize = 10
+): Promise<CustomPageResponse<UserResponse>> {
+  return apiFetch<CustomPageResponse<UserResponse>>(
+    `/api/v1/users/second-timer?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function createSecondTimer(
+  body: CreateSecondTimerRequest
+): Promise<UserResponse> {
+  return apiFetch<UserResponse>("/api/v1/users/second-timer", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteSecondTimersBulk(ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/users/second-timer", {
+    method: "DELETE",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+// ─── User Management — New Converts ────────────────────────────────────────────
+
+export interface CreateNewConvertRequest {
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  email?: string;
+  phoneNumber: string;
+  countryCode: string;
+  sex?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  // Event/service the person attended (UUID of the event record)
+  eventId?: string;
+}
+
+// New converts have their own dedicated response type
+export interface NewConvertResponse {
+  id: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  email: string;
+  sex?: string;
+  believerClassStage?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  countryCode?: string;
+  phoneNumber: string;
+  service?: EventResponse;
+  createdOn?: string;
+}
+
+export async function getNewConverts(
+  pageNo = 0,
+  pageSize = 10
+): Promise<CustomPageResponse<NewConvertResponse>> {
+  return apiFetch<CustomPageResponse<NewConvertResponse>>(
+    `/api/v1/new-converts?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function createNewConvert(
+  body: CreateNewConvertRequest
+): Promise<NewConvertResponse> {
+  return apiFetch<NewConvertResponse>("/api/v1/new-converts", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteNewConvertsBulk(ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/new-converts", {
+    method: "DELETE",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export async function markNewConvertsAsAttended(ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/new-converts/mark-as-attended", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+// ─── Follow-up Actions ──────────────────────────────────────────────────────────
+
+export async function addNote(
+  userId: string,
+  note: string
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/notes`, {
+    method: "POST",
+    body: JSON.stringify({ note }),
+  });
+}
+
+export async function addCallReport(
+  userId: string,
+  report: string
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/call-report`, {
+    method: "POST",
+    body: JSON.stringify({ report }),
+  });
+}
+
+export async function addVisitReport(
+  userId: string,
+  report: string
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/visit-report`, {
+    method: "POST",
+    body: JSON.stringify({ report }),
+  });
+}
+
+export async function assignFollowUp(
+  userId: string,
+  officerId: string,
+  note?: string
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/assign-follow-up`, {
+    method: "POST",
+    body: JSON.stringify({ officerId, note }),
+  });
+}
+
+export async function convertToSecondTimer(
+  userId: string
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/users/${userId}/convert-to-second-timer`
+  );
+}
+
+export async function convertToFullMember(
+  userId: string
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/users/${userId}/convert-to-full-member`
+  );
+}
+
+// Alias kept for backward compatibility with pages that imported the old name
+export const convertToMember = convertToFullMember;
+
+export async function linkSpouse(
+  userId: string,
+  spouseId: string
+): Promise<UserResponse> {
+  return apiFetch<UserResponse>(
+    `/api/v1/users/${userId}/link-spouse/${spouseId}`
+  );
+}
+
+export async function markUserAsInactive(
+  userId: string,
+  reason: string
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/mark-as-inactive`, {
+    method: "PATCH",
+    body: JSON.stringify({ text: reason }),
+  });
+}
+
+export interface GuestInformationResponse {
+  id: string;
+  userId: string;
+  isVisiting?: boolean;
+  mediumOfInvitation?: string;
+  serviceRating?: number;
+  favouritePartOfService?: string;
+  fromOnline?: boolean;
+}
+
+export async function getGuestInformation(
+  userId: string
+): Promise<GuestInformationResponse> {
+  return apiFetch<GuestInformationResponse>(
+    `/api/v1/users/${userId}/guest-information`
+  );
+}
+
+// Note: believers-class update endpoint not yet available on backend.
+// Stubbed for when backend team adds it.
+export async function updateBelieversClass(
+  userId: string,
+  believersClass: string
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/new-converts/${userId}/believers-class`, {
+    method: "PUT",
+    body: JSON.stringify({ believerClassStage: believersClass }),
   });
 }
 

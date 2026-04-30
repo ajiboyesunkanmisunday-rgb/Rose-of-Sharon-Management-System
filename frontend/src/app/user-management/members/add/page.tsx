@@ -41,6 +41,19 @@ export default function AddMemberPage() {
     setError("");
     setLoading(true);
 
+    // Parse wedding date from spouse data when married
+    let dayOfWedding: number | undefined;
+    let monthOfWedding: number | undefined;
+    let yearOfWedding: number | undefined;
+    if (maritalStatus === "Married" && spouse?.weddingDate) {
+      const parts = spouse.weddingDate.split("-");
+      if (parts.length === 3) {
+        yearOfWedding = Number(parts[0]);
+        monthOfWedding = Number(parts[1]);
+        dayOfWedding = Number(parts[2]);
+      }
+    }
+
     try {
       await createMember({
         firstName,
@@ -58,6 +71,10 @@ export default function AddMemberPage() {
         state: state || undefined,
         country: country || undefined,
         maritalStatus: maritalStatus ? maritalStatus.toUpperCase() : undefined,
+        spouseId: spouse?.memberId || undefined,
+        dayOfWedding,
+        monthOfWedding,
+        yearOfWedding,
       });
       router.push("/user-management/members");
     } catch (err) {
@@ -344,14 +361,15 @@ export default function AddMemberPage() {
                     className={selectStyles}
                   >
                     <option value="">Select State</option>
-                    <option value="Lagos">Lagos</option>
-                    <option value="Abuja">Abuja</option>
-                    <option value="Rivers">Rivers</option>
-                    <option value="Oyo">Oyo</option>
-                    <option value="Kano">Kano</option>
-                    <option value="Enugu">Enugu</option>
-                    <option value="Delta">Delta</option>
-                    <option value="Ogun">Ogun</option>
+                    {[
+                      "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
+                      "Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo",
+                      "Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa",
+                      "Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba",
+                      "Yobe","Zamfara",
+                    ].map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
                   </select>
                 </div>
 
