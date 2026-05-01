@@ -62,6 +62,28 @@ interface ApiFetchResult<T> {
   headers: Headers;
 }
 
+/** Decode a JWT and return the payload, or null if it cannot be parsed. */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(atob(payload)) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+/** Returns true if the JWT is structurally valid and not yet expired. */
+function isTokenValid(token: string): boolean {
+  const payload = decodeJwtPayload(token);
+  if (!payload) return false; // not a real JWT — don't send it
+  if (typeof payload.exp === "number") {
+    return payload.exp * 1000 > Date.now();
+  }
+  return true; // no exp claim → treat as valid
+}
+
 async function apiFetchRaw<T>(
   path: string,
   options: RequestInit = {}
@@ -73,7 +95,19 @@ async function apiFetchRaw<T>(
   };
 
   if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+    // Only send the JWT if it is a valid, non-expired token.
+    // Sending a malformed or expired token causes the backend to crash with
+    // 500 instead of returning 401, so we intercept it here.
+    if (isTokenValid(token)) {
+      headers["Authorization"] = `Bearer ${token}`;
+    } else {
+      // Token is invalid or expired — clear it and redirect to login.
+      removeToken();
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+      throw new Error("Session expired. Please log in again.");
+    }
   }
 
   const response = await fetch(`${BASE_URL}${path}`, {
@@ -81,26 +115,20 @@ async function apiFetchRaw<T>(
     headers,
   });
 
-  // 401 → only force logout when a real JWT is stored (starts with "eyJ").
-  // If the session was created before the backend began issuing tokens,
-  // just surface an auth error so the page can show it without looping.
   if (response.status === 401) {
-    const currentToken = getToken();
-    if (!currentToken || currentToken.startsWith("eyJ")) {
-      removeToken();
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
-      }
-      throw new Error("Session expired. Please log in again.");
+    removeToken();
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
     }
-    throw new Error("Authentication required. Please contact your administrator.");
+    throw new Error("Session expired. Please log in again.");
   }
 
   if (!response.ok) {
-    let errorMessage = `Request failed: ${response.status} ${response.statusText}`;
+    let errorMessage = `Request failed: ${response.status}`;
     try {
       const errBody = await response.json();
       if (errBody?.message) errorMessage = errBody.message;
+      else if (errBody?.error) errorMessage = errBody.error;
     } catch {
       // ignore parse errors
     }
