@@ -182,14 +182,6 @@ export interface OperationalResponse {
   success: boolean;
 }
 
-export interface GroupResponse {
-  id: string;
-  name: string;
-  description?: string;
-  membersCount?: number;
-  groupHead?: string;
-}
-
 export interface EventResponse {
   id: string;
   title: string;
@@ -659,64 +651,6 @@ export async function assignSuperAdmin(
   });
 }
 
-// ─── Groups ─────────────────────────────────────────────────────────────────────
-
-export interface CreateGroupRequest {
-  name: string;
-  description?: string;
-  groupHeadId?: string;
-  whatsAppLink?: string;
-  whatsAppQRCode?: string;
-}
-
-export async function getGroups(
-  pageNo = 0,
-  pageSize = 10
-): Promise<CustomPageResponse<GroupResponse>> {
-  return apiFetch<CustomPageResponse<GroupResponse>>(
-    `/api/v1/groups?pageNo=${pageNo}&pageSize=${pageSize}`
-  );
-}
-
-export async function getAllGroups(): Promise<GroupResponse[]> {
-  return apiFetch<GroupResponse[]>("/api/v1/groups/all");
-}
-
-export async function createGroup(
-  body: CreateGroupRequest
-): Promise<GroupResponse> {
-  return apiFetch<GroupResponse>("/api/v1/groups", {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
-}
-
-export async function updateGroup(
-  id: string,
-  body: CreateGroupRequest
-): Promise<GroupResponse> {
-  return apiFetch<GroupResponse>(`/api/v1/groups/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(body),
-  });
-}
-
-export async function setGroupHead(
-  groupId: string,
-  memberId: string
-): Promise<GroupResponse> {
-  return apiFetch<GroupResponse>(`/api/v1/groups/${groupId}/${memberId}`, {
-    method: "PUT",
-  });
-}
-
-export async function deleteGroupsBulk(ids: string[]): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>("/api/v1/groups", {
-    method: "DELETE",
-    body: JSON.stringify({ ids }),
-  });
-}
-
 // ─── Events ─────────────────────────────────────────────────────────────────────
 
 export interface CreateEventRequest {
@@ -757,7 +691,8 @@ export async function createEvent(
 }
 
 export async function getEvent(id: string): Promise<EventResponse> {
-  return apiFetch<EventResponse>(`/api/v1/events/${id}`);
+  // Backend uses POST /api/v1/events/{id} (per Swagger spec)
+  return apiFetch<EventResponse>(`/api/v1/events/${id}`, { method: "POST" });
 }
 
 export async function getEventForms(id: string): Promise<unknown> {
@@ -810,5 +745,388 @@ export async function markEMemberEventAttendance(
 export async function cancelEvent(id: string): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(`/api/v1/events/${id}/cancel`, {
     method: "PATCH",
+  });
+}
+
+// ─── Search helpers ──────────────────────────────────────────────────────────
+
+export async function searchMembers(
+  text: string, pageNo = 0, pageSize = 10
+): Promise<CustomPageResponse<UserResponse>> {
+  return apiFetch<CustomPageResponse<UserResponse>>(
+    `/api/v1/users/member/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ text }) }
+  );
+}
+
+export async function searchEMembers(
+  text: string, pageNo = 0, pageSize = 10
+): Promise<CustomPageResponse<UserResponse>> {
+  return apiFetch<CustomPageResponse<UserResponse>>(
+    `/api/v1/users/e-member/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ text }) }
+  );
+}
+
+// ─── Groups ──────────────────────────────────────────────────────────────────
+
+export interface GroupResponse {
+  id: string;
+  name: string;
+  description?: string;
+  groupHead?: { id: string; firstName?: string; middleName?: string; lastName?: string };
+  totalMembers?: number;
+  whatsAppLink?: string;
+  whatsAppQRCode?: string;
+  createdOn?: string;
+}
+
+export interface CreateGroupRequest {
+  name: string;
+  description?: string;
+  groupHeadId?: string;
+  whatsAppLink?: string;
+  whatsAppQRCode?: string;
+}
+
+export async function getGroups(
+  pageNo = 0, pageSize = 10
+): Promise<CustomPageResponse<GroupResponse>> {
+  return apiFetch<CustomPageResponse<GroupResponse>>(
+    `/api/v1/groups?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function getAllGroups(): Promise<GroupResponse[]> {
+  return apiFetch<GroupResponse[]>("/api/v1/groups/all");
+}
+
+export async function getGroup(id: string): Promise<GroupResponse> {
+  return apiFetch<GroupResponse>(`/api/v1/groups/${id}`, { method: "POST" });
+}
+
+export async function createGroup(body: CreateGroupRequest): Promise<GroupResponse> {
+  return apiFetch<GroupResponse>("/api/v1/groups", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateGroup(
+  id: string, body: Partial<CreateGroupRequest>
+): Promise<GroupResponse> {
+  return apiFetch<GroupResponse>(`/api/v1/groups/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateGroupHead(
+  groupId: string, groupHeadId: string
+): Promise<GroupResponse> {
+  return apiFetch<GroupResponse>(`/api/v1/groups/${groupId}/${groupHeadId}`, {
+    method: "PUT",
+  });
+}
+
+export async function deleteGroupsBulk(ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/groups", {
+    method: "DELETE",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export async function searchGroups(
+  text: string, pageNo = 0, pageSize = 10
+): Promise<CustomPageResponse<GroupResponse>> {
+  return apiFetch<CustomPageResponse<GroupResponse>>(
+    `/api/v1/groups/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ text }) }
+  );
+}
+
+// ─── Roles ───────────────────────────────────────────────────────────────────
+
+export interface RoleResponse {
+  id: string;
+  name: string;
+  description?: string;
+  createdOn?: string;
+}
+
+export async function getRoles(
+  pageNo = 0, pageSize = 50
+): Promise<CustomPageResponse<RoleResponse>> {
+  return apiFetch<CustomPageResponse<RoleResponse>>(
+    `/api/v1/roles?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function createRole(body: { name: string; description?: string }): Promise<RoleResponse> {
+  return apiFetch<RoleResponse>("/api/v1/roles", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateRole(
+  id: string, body: { name: string; description?: string }
+): Promise<RoleResponse> {
+  return apiFetch<RoleResponse>(`/api/v1/roles/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+// ─── Testimonies ─────────────────────────────────────────────────────────────
+
+export interface TestimonyResponse {
+  id: string;
+  subject: string;
+  content: string;
+  owner?: { id: string; firstName?: string; middleName?: string; lastName?: string };
+  isFeatured?: boolean;
+  featureDate?: string;
+  state?: string;
+  country?: string;
+  testimonyStatus?: string;
+  createdOn?: string;
+}
+
+export async function getTestimonies(
+  pageNo = 0, pageSize = 10
+): Promise<CustomPageResponse<TestimonyResponse>> {
+  return apiFetch<CustomPageResponse<TestimonyResponse>>(
+    `/api/v1/testimonies?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function getFeaturedTestimonies(): Promise<TestimonyResponse[]> {
+  return apiFetch<TestimonyResponse[]>("/api/v1/testimonies/featured");
+}
+
+export async function createTestimony(body: {
+  subject: string; content: string; userId: string; state?: string; country?: string;
+}): Promise<TestimonyResponse> {
+  return apiFetch<TestimonyResponse>("/api/v1/testimonies", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function markTestimonyAsFeatured(ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/testimonies/mark-as-featured", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export async function markTestimonyAsNotFeatured(ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/testimonies/mark-as-not-featured", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export async function markTestimonyAsRead(ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/testimonies/mark-as-read", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+// ─── Requests (Counseling / Prayer / Suggestion) ─────────────────────────────
+
+export interface RequestResponse {
+  id: string;
+  subject: string;
+  content: string;
+  assignedTo?: { id: string; firstName?: string; middleName?: string; lastName?: string };
+  owner?: { id: string; firstName?: string; middleName?: string; lastName?: string };
+  requestType?: string;
+  requestStatus?: string;
+  createdBy?: { id: string; firstName?: string; lastName?: string };
+  createdOn?: string;
+}
+
+export interface CreateRequestBody {
+  userId: string;
+  assignedTo?: string;
+  subject: string;
+  content: string;
+}
+
+export async function getAllRequests(
+  pageNo = 0, pageSize = 10
+): Promise<CustomPageResponse<RequestResponse>> {
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function getCounselingRequests(
+  pageNo = 0, pageSize = 10
+): Promise<CustomPageResponse<RequestResponse>> {
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests/counseling?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function getPrayerRequests(
+  pageNo = 0, pageSize = 10
+): Promise<CustomPageResponse<RequestResponse>> {
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests/prayer?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function getSuggestions(
+  pageNo = 0, pageSize = 10
+): Promise<CustomPageResponse<RequestResponse>> {
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests/suggestion?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function createCounselingRequest(body: CreateRequestBody): Promise<RequestResponse> {
+  return apiFetch<RequestResponse>("/api/v1/requests/counseling", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function createPrayerRequest(body: CreateRequestBody): Promise<RequestResponse> {
+  return apiFetch<RequestResponse>("/api/v1/requests/prayer", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function createSuggestion(body: CreateRequestBody): Promise<RequestResponse> {
+  return apiFetch<RequestResponse>("/api/v1/requests/suggestion", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function changeRequestStatus(
+  id: string, status: string
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/requests/${id}/change-status?status=${encodeURIComponent(status)}`,
+    { method: "PATCH" }
+  );
+}
+
+export async function getUserRequests(
+  userId: string, pageNo = 0, pageSize = 10
+): Promise<CustomPageResponse<RequestResponse>> {
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests/${userId}/user?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+// ─── Celebrations ─────────────────────────────────────────────────────────────
+
+export interface CelebrationResponse {
+  id: string;
+  requester?: { id: string; firstName?: string; middleName?: string; lastName?: string };
+  celebrationType?: string;
+  celebrationStatus?: string;
+  date?: string;
+  notes?: string;
+  createdOn?: string;
+}
+
+export async function getCelebrations(
+  pageNo = 0, pageSize = 10
+): Promise<CustomPageResponse<CelebrationResponse>> {
+  return apiFetch<CustomPageResponse<CelebrationResponse>>(
+    `/api/v1/celebrations?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function createCelebration(body: {
+  userId: string; type: string; date: string; notes?: string;
+}): Promise<CelebrationResponse> {
+  return apiFetch<CelebrationResponse>("/api/v1/celebrations", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function markCelebrationsAsTreated(ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/celebrations/mark-as-treated", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export async function updateCelebration(
+  id: string, body: { type?: string; date?: string; notes?: string }
+): Promise<CelebrationResponse> {
+  return apiFetch<CelebrationResponse>(`/api/v1/celebrations/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+// ─── Birthdays & Weddings ─────────────────────────────────────────────────────
+
+export async function getBirthdays(
+  startDay: number, startMonth: number,
+  endDay: number, endMonth: number,
+  pageNo = 0, pageSize = 50
+): Promise<CustomPageResponse<UserResponse>> {
+  return apiFetch<CustomPageResponse<UserResponse>>(
+    `/api/v1/users/birthdays?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ startDay, startMonth, endDay, endMonth }) }
+  );
+}
+
+export async function getWeddingAnniversaries(
+  startDay: number, startMonth: number,
+  endDay: number, endMonth: number,
+  pageNo = 0, pageSize = 50
+): Promise<CustomPageResponse<UserResponse>> {
+  return apiFetch<CustomPageResponse<UserResponse>>(
+    `/api/v1/users/weddings?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ startDay, startMonth, endDay, endMonth }) }
+  );
+}
+
+// ─── Media ────────────────────────────────────────────────────────────────────
+
+export interface MediaResponse {
+  id: string;
+  title?: string;
+  description?: string;
+  url?: string;
+  category?: string;
+  fileType?: string;
+  fileSize?: number;
+  createdOn?: string;
+}
+
+export async function getMedia(
+  pageNo = 0, pageSize = 10
+): Promise<CustomPageResponse<MediaResponse>> {
+  return apiFetch<CustomPageResponse<MediaResponse>>(
+    `/api/v1/media?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function getMediaCategories(): Promise<string[]> {
+  return apiFetch<string[]>("/api/v1/media/category");
+}
+
+export async function getMediaItem(id: string): Promise<MediaResponse> {
+  return apiFetch<MediaResponse>(`/api/v1/media/${id}`);
+}
+
+export async function deleteMediaBulk(ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/media", {
+    method: "DELETE",
+    body: JSON.stringify({ ids }),
   });
 }

@@ -57,13 +57,18 @@ export default function GroupsPage() {
 
   const handleSearch = () => setCurrentPage(1);
 
+  const groupHeadName = (gh: GroupResponse["groupHead"]): string => {
+    if (!gh) return "";
+    return [gh.firstName, gh.middleName, gh.lastName].filter(Boolean).join(" ");
+  };
+
   const displayedGroups = search.trim()
     ? groups.filter((g) => {
         const q = search.toLowerCase();
         return (
           g.name.toLowerCase().includes(q) ||
           (g.description ?? "").toLowerCase().includes(q) ||
-          (g.groupHead ?? "").toLowerCase().includes(q)
+          groupHeadName(g.groupHead).toLowerCase().includes(q)
         );
       })
     : groups;
@@ -174,10 +179,10 @@ export default function GroupsPage() {
                     {group.description || "—"}
                   </td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
-                    {group.membersCount ?? "—"}
+                    {group.totalMembers ?? "—"}
                   </td>
                   <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">
-                    {group.groupHead || "—"}
+                    {groupHeadName(group.groupHead) || "—"}
                   </td>
                   <td className="px-4 py-3">
                     <ActionDropdown
