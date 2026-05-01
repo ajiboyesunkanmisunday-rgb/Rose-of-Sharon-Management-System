@@ -266,11 +266,14 @@ export default function AddMemberPage() {
 
                 {/* Gender */}
                 <div>
-                  <label className={labelStyles}>Gender</label>
+                  <label className={labelStyles}>
+                    Gender <span className="text-red-500">*</span>
+                  </label>
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
                     className={selectStyles}
+                    required
                   >
                     <option value="">Select Gender</option>
                     <option value="Male">Male</option>

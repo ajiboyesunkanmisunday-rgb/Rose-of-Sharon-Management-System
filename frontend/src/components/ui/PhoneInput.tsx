@@ -63,6 +63,7 @@ export default function PhoneInput({
         className="grid items-stretch gap-2"
         style={{ gridTemplateColumns: "92px minmax(0, 1fr)" }}
       >
+
         <select
           name={codeName}
           value={code}
@@ -81,8 +82,11 @@ export default function PhoneInput({
           name={numberName}
           value={number}
           onChange={(e) => {
-            // Strip non-digit characters and enforce max 15 digits (E.164 standard)
-            const digits = e.target.value.replace(/\D/g, "").slice(0, 15);
+            // Strip non-digit chars, remove leading trunk '0' (E.164 drops it),
+            // and enforce max 15 digits
+            let digits = e.target.value.replace(/\D/g, "");
+            if (digits.startsWith("0")) digits = digits.slice(1);
+            digits = digits.slice(0, 15);
             onNumberChange(digits);
           }}
           placeholder={placeholder}
@@ -90,6 +94,9 @@ export default function PhoneInput({
           maxLength={15}
           className={`${sharedStyles} w-full px-4`}
         />
+        <p className="col-span-full mt-1 text-xs text-[#9CA3AF]">
+          Do not include the leading 0 (e.g. enter 8132577456 not 08132577456)
+        </p>
       </div>
     </div>
   );
