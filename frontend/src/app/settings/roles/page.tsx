@@ -1,142 +1,106 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import ActionDropdown from "@/components/ui/ActionDropdown";
+import { getRoles, createRole, updateRole, type RoleResponse } from "@/lib/api";
 
-interface Role {
-  id: string;
-  name: string;
-  description: string;
-  usersCount: number;
+function fmtDate(s?: string) {
+  if (!s) return "—";
+  return new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-interface Permission {
-  module: string;
-  view: boolean;
-  create: boolean;
-  edit: boolean;
-  delete: boolean;
-}
-
-const mockRoles: Role[] = [
-  {
-    id: "1",
-    name: "Admin",
-    description: "Full system access and configuration",
-    usersCount: 2,
-  },
-  {
-    id: "2",
-    name: "Pastor",
-    description: "Pastoral oversight and management",
-    usersCount: 1,
-  },
-  {
-    id: "3",
-    name: "Associate Pastor",
-    description: "Assist in pastoral duties and member care",
-    usersCount: 3,
-  },
-  {
-    id: "4",
-    name: "Follow-up Officer",
-    description: "Manage follow-ups and new member integration",
-    usersCount: 5,
-  },
-  {
-    id: "5",
-    name: "Department Head",
-    description: "Oversee department activities and members",
-    usersCount: 8,
-  },
-  {
-    id: "6",
-    name: "Member",
-    description: "Basic member access",
-    usersCount: 150,
-  },
-];
-
-const defaultPermissions: Permission[] = [
-  { module: "Dashboard", view: true, create: false, edit: false, delete: false },
-  { module: "User Management", view: true, create: true, edit: true, delete: false },
-  { module: "Communication", view: true, create: true, edit: false, delete: false },
-  { module: "Workflows", view: true, create: false, edit: false, delete: false },
-  { module: "Requests", view: true, create: true, edit: true, delete: false },
-  { module: "Reports", view: true, create: false, edit: false, delete: false },
-  { module: "Settings", view: false, create: false, edit: false, delete: false },
-];
+const inputClass =
+  "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none transition-colors focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
 
 export default function RolesPage() {
-  const router = useRouter();
-  const [roles] = useState<Role[]>(mockRoles);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
-  const [permissions, setPermissions] = useState<Permission[]>(defaultPermissions);
+  const [roles,      setRoles]      = useState<RoleResponse[]>([]);
+  const [loading,    setLoading]    = useState(true);
+  const [apiError,   setApiError]   = useState("");
 
-  const [newRole, setNewRole] = useState({ name: "", description: "" });
+  const [showAddModal,  setShowAddModal]  = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editing,       setEditing]       = useState<RoleResponse | null>(null);
+  const [saving,        setSaving]        = useState(false);
+  const [saveError,     setSaveError]     = useState("");
 
-  const handleAddRole = () => {
-    console.log("Adding role:", newRole);
-    setShowAddModal(false);
-    setNewRole({ name: "", description: "" });
+  const [formData, setFormData] = useState({ name: "", description: "" });
+
+  const fetchRoles = useCallback(async () => {
+    setLoading(true);
+    setApiError("");
+    try {
+      const res = await getRoles(0, 100);
+      setRoles(res.content ?? []);
+    } catch (err) {
+      setApiError(err instanceof Error ? err.message : "Failed to load roles.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchRoles(); }, [fetchRoles]);
+
+  const openAdd = () => {
+    setFormData({ name: "", description: "" });
+    setSaveError("");
+    setShowAddModal(true);
   };
 
-  const handleEditPermissions = (role: Role) => {
-    setSelectedRole(role);
-    setPermissions([...defaultPermissions]);
-    setShowPermissionsModal(true);
+  const openEdit = (role: RoleResponse) => {
+    setEditing(role);
+    setFormData({ name: role.name, description: role.description ?? "" });
+    setSaveError("");
+    setShowEditModal(true);
   };
 
-  const togglePermission = (
-    moduleIndex: number,
-    field: "view" | "create" | "edit" | "delete"
-  ) => {
-    const updated = [...permissions];
-    updated[moduleIndex] = {
-      ...updated[moduleIndex],
-      [field]: !updated[moduleIndex][field],
-    };
-    setPermissions(updated);
+  const handleAdd = async () => {
+    if (!formData.name.trim()) return;
+    setSaving(true);
+    setSaveError("");
+    try {
+      await createRole({ name: formData.name, description: formData.description || undefined });
+      setShowAddModal(false);
+      fetchRoles();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to create role.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const inputClass =
-    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none transition-colors focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  const handleEdit = async () => {
+    if (!editing || !formData.name.trim()) return;
+    setSaving(true);
+    setSaveError("");
+    try {
+      await updateRole(editing.id, { name: formData.name, description: formData.description || undefined });
+      setShowEditModal(false);
+      setEditing(null);
+      fetchRoles();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to update role.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <DashboardLayout>
-      {/* Page Header */}
       <div className="mb-6">
         <h1 className="text-[28px] font-bold text-[#000000]">Settings</h1>
-        <h2 className="text-[22px] font-bold text-[#000080]">
-          Roles &amp; Permissions
-        </h2>
+        <h2 className="text-[22px] font-bold text-[#000080]">Roles &amp; Permissions</h2>
       </div>
 
-      {/* Top bar */}
       <div className="mb-4 flex items-center justify-end">
         <Button
           variant="primary"
-          onClick={() => setShowAddModal(true)}
+          onClick={openAdd}
           icon={
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
             </svg>
           }
         >
@@ -144,61 +108,43 @@ export default function RolesPage() {
         </Button>
       </div>
 
-      {/* Roles Table */}
+      {apiError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {apiError} — <button className="font-medium underline" onClick={fetchRoles}>Retry</button>
+        </div>
+      )}
+
       <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="bg-[#F3F4F6]">
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
-                Role Name
-              </th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
-                Description
-              </th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
-                Users Count
-              </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
-                Actions
-              </th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Role Name</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Description</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Created</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {roles.map((role) => (
-              <tr
-                key={role.id}
-                className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50"
-                style={{ height: "56px" }}
-              >
-                <td className="px-4 py-3 text-sm font-medium text-[#374151]">
-                  {role.name}
-                </td>
-                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
-                  {role.description}
-                </td>
-                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
-                  {role.usersCount}
-                </td>
-                <td className="px-4 py-3">
-                  <ActionDropdown
-                    actions={[
-                      {
-                        label: "Edit Permissions",
-                        onClick: () => handleEditPermissions(role),
-                      },
-                      {
-                        label: "Edit",
-                        onClick: () => router.push(`/settings/roles/${role.id}/edit`),
-                      },
-                      {
-                        label: "Delete",
-                        onClick: () => console.log("Delete role:", role.id),
-                      },
-                    ]}
-                  />
-                </td>
-              </tr>
-            ))}
+            {loading ? (
+              <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-400">Loading…</td></tr>
+            ) : roles.length === 0 ? (
+              <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-400">No roles found.</td></tr>
+            ) : (
+              roles.map((role) => (
+                <tr key={role.id} className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50" style={{ height: "56px" }}>
+                  <td className="px-4 py-3 text-sm font-medium text-[#374151]">{role.name}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{role.description || "—"}</td>
+                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{fmtDate(role.createdOn)}</td>
+                  <td className="px-4 py-3">
+                    <ActionDropdown
+                      actions={[
+                        { label: "Edit", onClick: () => openEdit(role) },
+                      ]}
+                    />
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -206,135 +152,82 @@ export default function RolesPage() {
       {/* Add Role Modal */}
       <Modal
         isOpen={showAddModal}
-        onClose={() => {
-          setShowAddModal(false);
-          setNewRole({ name: "", description: "" });
-        }}
+        onClose={() => { setShowAddModal(false); setSaveError(""); }}
         title="Add Role"
       >
         <div className="space-y-4">
+          {saveError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{saveError}</div>
+          )}
           <div>
             <label className="mb-1 block text-sm font-medium text-[#374151]">
-              Role Name
+              Role Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
-              value={newRole.name}
-              onChange={(e) =>
-                setNewRole({ ...newRole, name: e.target.value })
-              }
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Enter role name"
               className={inputClass}
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[#374151]">
-              Description
-            </label>
+            <label className="mb-1 block text-sm font-medium text-[#374151]">Description</label>
             <textarea
-              value={newRole.description}
-              onChange={(e) =>
-                setNewRole({ ...newRole, description: e.target.value })
-              }
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Enter role description"
               rows={3}
               className={inputClass}
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setShowAddModal(false);
-                setNewRole({ name: "", description: "" });
-              }}
-            >
-              Cancel
-            </Button>
-            <Button variant="primary" onClick={handleAddRole}>
-              Save
+            <Button variant="secondary" onClick={() => { setShowAddModal(false); setSaveError(""); }}>Cancel</Button>
+            <Button variant="primary" onClick={handleAdd} disabled={saving || !formData.name.trim()}>
+              {saving ? "Saving…" : "Save"}
             </Button>
           </div>
         </div>
       </Modal>
 
-      {/* Permissions Modal */}
+      {/* Edit Role Modal */}
       <Modal
-        isOpen={showPermissionsModal}
-        onClose={() => {
-          setShowPermissionsModal(false);
-          setSelectedRole(null);
-        }}
-        title={`Permissions - ${selectedRole?.name ?? ""}`}
-        size="lg"
+        isOpen={showEditModal}
+        onClose={() => { setShowEditModal(false); setEditing(null); setSaveError(""); }}
+        title="Edit Role"
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="bg-[#F3F4F6]">
-                <th className="px-4 py-3 text-sm font-bold text-[#000080]">
-                  Module
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-bold text-[#000080]">
-                  View
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-bold text-[#000080]">
-                  Create
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-bold text-[#000080]">
-                  Edit
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-bold text-[#000080]">
-                  Delete
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {permissions.map((perm, index) => (
-                <tr
-                  key={perm.module}
-                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50"
-                >
-                  <td className="px-4 py-3 text-sm font-medium text-[#374151]">
-                    {perm.module}
-                  </td>
-                  {(["view", "create", "edit", "delete"] as const).map(
-                    (field) => (
-                      <td key={field} className="px-4 py-3 text-center">
-                        <input
-                          type="checkbox"
-                          checked={perm[field]}
-                          onChange={() => togglePermission(index, field)}
-                          className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
-                        />
-                      </td>
-                    )
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="mt-4 flex justify-end gap-2">
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setShowPermissionsModal(false);
-              setSelectedRole(null);
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => {
-              console.log("Saving permissions for:", selectedRole?.name, permissions);
-              setShowPermissionsModal(false);
-              setSelectedRole(null);
-            }}
-          >
-            Save Permissions
-          </Button>
+        <div className="space-y-4">
+          {saveError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{saveError}</div>
+          )}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-[#374151]">
+              Role Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Enter role name"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-[#374151]">Description</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Enter role description"
+              rows={3}
+              className={inputClass}
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => { setShowEditModal(false); setEditing(null); setSaveError(""); }}>Cancel</Button>
+            <Button variant="primary" onClick={handleEdit} disabled={saving || !formData.name.trim()}>
+              {saving ? "Saving…" : "Update"}
+            </Button>
+          </div>
         </div>
       </Modal>
     </DashboardLayout>
