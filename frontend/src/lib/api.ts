@@ -62,26 +62,37 @@ interface ApiFetchResult<T> {
   headers: Headers;
 }
 
-/** Decode a JWT and return the payload, or null if it cannot be parsed. */
+/**
+ * Decode a JWT payload. Returns the claims object, or null if the token is
+ * not a structurally valid JWT (wrong number of segments or non-base64 data).
+ * JWTs use base64url (no padding, `-` and `_` instead of `+` and `/`).
+ */
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return null;
-    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(atob(payload)) as Record<string, unknown>;
+    // base64url → base64, then add `=` padding so atob() doesn't throw
+    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+    return JSON.parse(atob(padded)) as Record<string, unknown>;
   } catch {
     return null;
   }
 }
 
-/** Returns true if the JWT is structurally valid and not yet expired. */
-function isTokenValid(token: string): boolean {
+/**
+ * Returns false ONLY when we are certain the token is expired (we decoded
+ * it successfully and the exp claim is in the past). If we cannot decode the
+ * payload we let the token through — the backend will reject it with 401 if
+ * it is truly invalid.
+ */
+function isTokenExpired(token: string): boolean {
   const payload = decodeJwtPayload(token);
-  if (!payload) return false; // not a real JWT — don't send it
+  if (!payload) return false; // can't decode → assume not expired, let backend decide
   if (typeof payload.exp === "number") {
-    return payload.exp * 1000 > Date.now();
+    return payload.exp * 1000 < Date.now();
   }
-  return true; // no exp claim → treat as valid
+  return false; // no exp claim → not expired
 }
 
 async function apiFetchRaw<T>(
@@ -95,19 +106,16 @@ async function apiFetchRaw<T>(
   };
 
   if (token) {
-    // Only send the JWT if it is a valid, non-expired token.
-    // Sending a malformed or expired token causes the backend to crash with
-    // 500 instead of returning 401, so we intercept it here.
-    if (isTokenValid(token)) {
-      headers["Authorization"] = `Bearer ${token}`;
-    } else {
-      // Token is invalid or expired — clear it and redirect to login.
+    // If we can confirm the token is expired, clear it and redirect now
+    // rather than letting the backend crash with 500.
+    if (isTokenExpired(token)) {
       removeToken();
       if (typeof window !== "undefined") {
         window.location.href = "/login";
       }
       throw new Error("Session expired. Please log in again.");
     }
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   const response = await fetch(`${BASE_URL}${path}`, {
