@@ -350,7 +350,7 @@ export async function updateMember(
   id: string,
   body: Partial<CreateMemberRequest>
 ): Promise<UserResponse> {
-  return apiFetch<UserResponse>(`/api/v1/users/member/${id}`, {
+  return apiFetch<UserResponse>(`/api/v1/users/${id}`, {
     method: "PATCH",
     body: JSON.stringify(body),
   });
@@ -417,7 +417,7 @@ export async function updateEMember(
   id: string,
   body: Partial<CreateEMemberRequest>
 ): Promise<UserResponse> {
-  return apiFetch<UserResponse>(`/api/v1/users/e-member/${id}`, {
+  return apiFetch<UserResponse>(`/api/v1/users/${id}`, {
     method: "PATCH",
     body: JSON.stringify(body),
   });
@@ -482,7 +482,7 @@ export async function updateFirstTimer(
   id: string,
   body: Partial<CreateFirstTimerRequest>
 ): Promise<UserResponse> {
-  return apiFetch<UserResponse>(`/api/v1/users/first-timer/${id}`, {
+  return apiFetch<UserResponse>(`/api/v1/users/${id}`, {
     method: "PATCH",
     body: JSON.stringify(body),
   });
@@ -522,7 +522,7 @@ export async function updateSecondTimer(
   id: string,
   body: Partial<CreateSecondTimerRequest>
 ): Promise<UserResponse> {
-  return apiFetch<UserResponse>(`/api/v1/users/second-timer/${id}`, {
+  return apiFetch<UserResponse>(`/api/v1/users/${id}`, {
     method: "PATCH",
     body: JSON.stringify(body),
   });

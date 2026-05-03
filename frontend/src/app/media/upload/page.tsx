@@ -57,11 +57,18 @@ export default function UploadMediaPage() {
     e.preventDefault();
     if (!title.trim() || !category) return;
 
+    const hasUrl  = !!mediaUrl.trim();
+    const hasFile = !!mediaFile;
+
     // Require at least a file or a URL
-    if (!mediaFile && !mediaUrl.trim()) {
-      setError("Please either select a file or enter a media URL.");
+    if (!hasFile && !hasUrl) {
+      setError("Please either select a file to upload or enter a media URL (YouTube, Drive, etc.).");
       return;
     }
+
+    // When a URL is provided, use it alone — don't send a file too.
+    // The backend expects either a file OR a url, sending both causes "File is missing".
+    const fileToSend = hasUrl ? null : mediaFile;
 
     setSaving(true);
     setError("");
@@ -70,7 +77,7 @@ export default function UploadMediaPage() {
         title:       title.trim(),
         description: description.trim() || undefined,
         category,
-        file:        mediaFile,
+        file:        fileToSend,
         url:         mediaUrl.trim() || undefined,
       });
       router.push("/media");
