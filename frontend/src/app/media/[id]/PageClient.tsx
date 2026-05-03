@@ -85,10 +85,12 @@ export default function MediaDetailClient() {
     );
   }
 
-  const category = item.category ?? "";
-  const fileType = item.fileType ?? "";
-  const isPicture = fileType.toLowerCase().includes("image") || category.toLowerCase() === "picture";
-  const isPodcast = fileType.toLowerCase().includes("audio") || category.toLowerCase() === "podcast";
+  // Backend sends mediaCategory/type (not category); displayUrl (not url); size (not fileSize)
+  const category = item.mediaCategory ?? item.type ?? item.category ?? "";
+  const mediaUrl = item.displayUrl ?? item.url ?? "";
+  const mediaSize = item.size ?? item.fileSize;
+  const isPicture = category.toUpperCase().includes("IMAGE") || category.toUpperCase() === "THUMBNAIL";
+  const isPodcast = category.toUpperCase().includes("PODCAST") || category.toUpperCase().includes("AUDIO");
 
   return (
     <DashboardLayout>
@@ -105,13 +107,13 @@ export default function MediaDetailClient() {
               {isPicture ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={item.url || "/rccg-logo.png"}
+                  src={mediaUrl || "/rccg-logo.png"}
                   alt={item.title ?? "Media"}
                   className="h-full w-full object-contain"
                 />
               ) : isPodcast ? (
                 <audio controls className="w-full max-w-md">
-                  <source src={item.url || ""} />
+                  <source src={mediaUrl} />
                   Your browser does not support the audio tag.
                 </audio>
               ) : (
@@ -132,9 +134,9 @@ export default function MediaDetailClient() {
                     {category}
                   </span>
                 )}
-                {item.fileSize != null && (
+                {mediaSize != null && (
                   <span className="text-xs text-[#6B7280]">
-                    Size: {(item.fileSize / 1024).toFixed(1)} KB
+                    Size: {(mediaSize / 1024).toFixed(1)} KB
                   </span>
                 )}
               </div>
@@ -156,16 +158,16 @@ export default function MediaDetailClient() {
             Details
           </h3>
           <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-3">
-            {item.fileType && (
+            {category && (
               <div>
-                <p className="text-xs font-medium text-[#6B7280]">File Type</p>
-                <p className="mt-1 text-sm text-[#111827]">{item.fileType}</p>
+                <p className="text-xs font-medium text-[#6B7280]">Media Type</p>
+                <p className="mt-1 text-sm text-[#111827]">{category}</p>
               </div>
             )}
-            {item.fileSize != null && (
+            {mediaSize != null && (
               <div>
                 <p className="text-xs font-medium text-[#6B7280]">File Size</p>
-                <p className="mt-1 text-sm text-[#111827]">{(item.fileSize / 1024).toFixed(1)} KB</p>
+                <p className="mt-1 text-sm text-[#111827]">{(mediaSize / 1_048_576).toFixed(2)} MB</p>
               </div>
             )}
             {item.createdOn && (
