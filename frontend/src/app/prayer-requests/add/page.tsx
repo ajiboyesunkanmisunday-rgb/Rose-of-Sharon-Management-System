@@ -19,7 +19,6 @@ const CATEGORY_OPTIONS = [
 export default function AddPrayerRequestPage() {
   const router = useRouter();
 
-  const [isAnonymous, setIsAnonymous] = useState(false);
   const [form, setForm] = useState({
     category: "",
     request: "",
@@ -40,7 +39,6 @@ export default function AddPrayerRequestPage() {
 
   // Debounced member search
   useEffect(() => {
-    if (isAnonymous) return;
     if (searchDebounce.current) clearTimeout(searchDebounce.current);
     if (!memberQuery.trim() || selectedMember) {
       setMemberResults([]);
@@ -61,7 +59,7 @@ export default function AddPrayerRequestPage() {
       if (searchDebounce.current) clearTimeout(searchDebounce.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [memberQuery, isAnonymous]);
+  }, [memberQuery]);
 
   const handleSelectMember = (member: UserResponse) => {
     setSelectedMember(member);
@@ -75,24 +73,19 @@ export default function AddPrayerRequestPage() {
     setMemberResults([]);
   };
 
-  const handleToggleAnonymous = (checked: boolean) => {
-    setIsAnonymous(checked);
-    if (checked) handleClearMember();
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!isAnonymous && !selectedMember) {
-      setError("Please search for and select a member, or enable anonymous submission.");
+    if (!selectedMember) {
+      setError("Please search for and select the member submitting this request.");
       return;
     }
 
     setSubmitting(true);
     try {
       await createPrayerRequest({
-        userId: selectedMember?.id ?? "",
+        userId: selectedMember.id,
         subject: form.category || "Prayer Request",
         content: form.request,
       });
@@ -132,26 +125,9 @@ export default function AddPrayerRequestPage() {
       <form onSubmit={handleSubmit}>
         <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
 
-          {/* Anonymous toggle */}
-          <div className="mb-6 flex items-center gap-3">
-            <label className="relative inline-flex cursor-pointer items-center">
-              <input
-                type="checkbox"
-                checked={isAnonymous}
-                onChange={(e) => handleToggleAnonymous(e.target.checked)}
-                className="sr-only"
-              />
-              <div className={`h-6 w-11 rounded-full transition-colors ${isAnonymous ? "bg-[#000080]" : "bg-gray-300"}`}>
-                <div className={`mt-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${isAnonymous ? "translate-x-5 ml-0.5" : "translate-x-0.5"}`} />
-              </div>
-            </label>
-            <span className="text-sm font-medium text-[#374151]">Submit Anonymously</span>
-          </div>
-
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            {/* Member search — shown when not anonymous */}
-            {!isAnonymous && (
-              <div className="relative sm:col-span-2">
+            {/* Member search */}
+            <div className="relative sm:col-span-2">
                 <label className="mb-1.5 block text-sm font-medium text-[#374151]">
                   Submitted By <span className="text-red-500">*</span>
                 </label>
@@ -203,8 +179,7 @@ export default function AddPrayerRequestPage() {
                 {!searchLoading && memberQuery.length > 1 && !selectedMember && memberResults.length === 0 && (
                   <p className="mt-1 text-xs text-gray-400">No members found.</p>
                 )}
-              </div>
-            )}
+            </div>
 
             {/* Category */}
             <div>
