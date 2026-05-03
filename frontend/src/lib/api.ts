@@ -118,8 +118,28 @@ async function apiFetchRaw<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${BASE_URL}${path}`, {
+  // PATCH and PUT requests are blocked by the backend CORS policy when the
+  // browser's Origin header is forwarded by Netlify's reverse-proxy redirect.
+  // Route them through a serverless function that strips Origin so the call
+  // arrives at the backend as a plain server-to-server request (no CORS check).
+  const method = (options.method ?? "GET").toUpperCase();
+  let fetchUrl = `${BASE_URL}${path}`;
+  let fetchMethod = method;
+  if (
+    typeof window !== "undefined" &&
+    (method === "PATCH" || method === "PUT")
+  ) {
+    // Separate the path from any query string the caller already attached
+    const [basePath, existingQs] = path.split("?");
+    let proxyUrl = `/.netlify/functions/api-proxy?_path=${encodeURIComponent(basePath)}&_method=${method}`;
+    if (existingQs) proxyUrl += `&_qs=${encodeURIComponent(existingQs)}`;
+    fetchUrl   = proxyUrl;
+    fetchMethod = "POST"; // transport method to the function; actual method sent via _method param
+  }
+
+  const response = await fetch(fetchUrl, {
     ...options,
+    method: fetchMethod,
     headers,
   });
 
@@ -1256,6 +1276,8 @@ export async function uploadMedia(fields: {
   form.append("title", fields.title);
   if (fields.description) form.append("description", fields.description);
   form.append("type", fields.category);   // backend multipart field is "type" not "category"
+  // "size" is required by the backend DTO — send file size in bytes (0 for URL-only entries)
+  form.append("size", String(fields.file ? fields.file.size : 0));
   if (fields.file) form.append("file", fields.file);
   if (fields.url) form.append("url", fields.url);
 
