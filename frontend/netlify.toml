@@ -19,3 +19,124 @@
   to    = "http://137.184.72.16:6001/api/:splat"
   status = 200
   force  = true
+
+# ── Dynamic [id] routes ──────────────────────────────────────────────────────
+# Next.js static export only pre-builds mock IDs (m-1, em-1, etc.).
+# Real backend IDs are UUIDs. These rules serve the pre-built placeholder HTML
+# for any UUID path; the Next.js client router then reads the real ID from the
+# URL via useParams() and fetches the correct data from the API.
+
+[[redirects]]
+  from   = "/user-management/members/:id/"
+  to     = "/user-management/members/m-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/members/:id/edit/"
+  to     = "/user-management/members/m-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/members/:id/link-spouse/"
+  to     = "/user-management/members/m-1/link-spouse/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/e-members/:id/"
+  to     = "/user-management/e-members/em-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/e-members/:id/edit/"
+  to     = "/user-management/e-members/em-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/first-timers/:id/"
+  to     = "/user-management/first-timers/ft-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/first-timers/:id/edit/"
+  to     = "/user-management/first-timers/ft-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/second-timers/:id/"
+  to     = "/user-management/second-timers/st-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/second-timers/:id/edit/"
+  to     = "/user-management/second-timers/st-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/new-converts/:id/"
+  to     = "/user-management/new-converts/nc-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/event-management/:id/"
+  to     = "/event-management/ev-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/event-management/:id/edit/"
+  to     = "/event-management/ev-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/celebrations/:id/"
+  to     = "/celebrations/cel-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/settings/groups/:id/"
+  to     = "/settings/groups/grp-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/settings/groups/:id/edit/"
+  to     = "/settings/groups/grp-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/workflows/active/:id/"
+  to     = "/workflows/active/aw-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/workflows/templates/:id/edit/"
+  to     = "/workflows/templates/wft-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/prayer-requests/:id/"
+  to     = "/prayer-requests/pr-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/media/:id/"
+  to     = "/media/med-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/settings/roles/:id/edit/"
+  to     = "/settings/roles/r-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/requests/:id/"
+  to     = "/requests/req-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/requests/:id/edit/"
+  to     = "/requests/req-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/testimonies/:id/"
+  to     = "/testimonies/t-1/"
+  status = 200
