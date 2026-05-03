@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
-import { prayerRequests } from "@/lib/mock-data";
-import { PrayerStatus } from "@/lib/types";
+import { getRequest, type RequestResponse } from "@/lib/api";
 
 interface Note {
   id: string;
@@ -14,7 +13,7 @@ interface Note {
   date: string;
 }
 
-const statusOptions: PrayerStatus[] = ["Pending", "Assigned", "Prayed For", "Closed"];
+const statusOptions = ["Pending", "Assigned", "Prayed For", "Closed"];
 
 const statusBadgeClass: Record<string, string> = {
   "Pending": "bg-yellow-100 text-yellow-800",
@@ -23,20 +22,85 @@ const statusBadgeClass: Record<string, string> = {
   "Closed": "bg-gray-100 text-gray-600",
 };
 
+function fullName(u?: { firstName?: string; middleName?: string; lastName?: string }): string {
+  if (!u) return "—";
+  return [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—";
+}
+
 export default function PrayerRequestDetailClient() {
   const router = useRouter();
   const params = useParams();
-  const id = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
+  const paramId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
+  const [id, setId] = useState(paramId);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const parts = window.location.pathname.replace(/\/$/, "").split("/");
+      const urlId = parts[parts.length - 1] ?? "";
+      if (urlId && urlId !== id) setId(urlId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const request = prayerRequests.find((r) => r.id === id) ?? prayerRequests[0];
-  const [status, setStatus] = useState<PrayerStatus>(request.status);
-  const [assignedTo, setAssignedTo] = useState(request.assignedTo ?? "");
+  const [request, setRequest] = useState<RequestResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [status, setStatus] = useState("Pending");
+  const [assignedTo, setAssignedTo] = useState("");
   const [notes, setNotes] = useState<Note[]>([]);
   const [newNote, setNewNote] = useState("");
   const [addingNote, setAddingNote] = useState(false);
 
+  const loadRequest = useCallback(async () => {
+    if (!id || id.startsWith("pr-")) return;
+    setLoading(true);
+    setError("");
+    try {
+      const data = await getRequest(id);
+      setRequest(data);
+      setStatus(data.requestStatus ?? "Pending");
+      setAssignedTo(fullName(data.assignedTo));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load prayer request.");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => { loadRequest(); }, [loadRequest]);
+
   const inputClass =
     "h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="mb-6">
+          <h1 className="text-[28px] font-bold text-[#000000]">Prayer Requests</h1>
+        </div>
+        <div className="py-12 text-center text-sm text-gray-400">Loading prayer request…</div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error || !request) {
+    return (
+      <DashboardLayout>
+        <div className="mb-6">
+          <h1 className="text-[28px] font-bold text-[#000000]">Prayer Requests</h1>
+        </div>
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error || "Prayer request not found."}
+          <button className="ml-2 font-medium underline" onClick={loadRequest}>Retry</button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const submittedBy = fullName(request.owner ?? request.createdBy);
+  const date = request.createdOn
+    ? new Date(request.createdOn).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+    : "—";
+  const category = request.requestType ?? "";
 
   return (
     <DashboardLayout>
@@ -58,50 +122,33 @@ export default function PrayerRequestDetailClient() {
       {/* Request Details */}
       <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
         <div className="mb-4 flex flex-wrap items-center gap-2">
-          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadgeClass[status]}`}>
+          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadgeClass[status] ?? "bg-gray-100 text-gray-600"}`}>
             {status}
           </span>
-          <span className="inline-flex items-center rounded-full bg-[#B5B5F3] px-2.5 py-0.5 text-xs font-medium text-[#000080]">
-            {request.category}
-          </span>
-          {request.isAnonymous && (
-            <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
-              Anonymous
+          {category && (
+            <span className="inline-flex items-center rounded-full bg-[#B5B5F3] px-2.5 py-0.5 text-xs font-medium text-[#000080]">
+              {category}
             </span>
           )}
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-          {!request.isAnonymous && (
-            <>
-              <div>
-                <p className="text-xs font-medium text-[#6B7280]">Submitted By</p>
-                <p className="mt-1 text-sm text-[#111827]">{request.submittedBy}</p>
-              </div>
-              {request.phone && (
-                <div>
-                  <p className="text-xs font-medium text-[#6B7280]">Phone</p>
-                  <p className="mt-1 text-sm text-[#111827]">{request.phone}</p>
-                </div>
-              )}
-              {request.email && (
-                <div>
-                  <p className="text-xs font-medium text-[#6B7280]">Email</p>
-                  <p className="mt-1 text-sm text-[#111827]">{request.email}</p>
-                </div>
-              )}
-            </>
+          {submittedBy && submittedBy !== "—" && (
+            <div>
+              <p className="text-xs font-medium text-[#6B7280]">Submitted By</p>
+              <p className="mt-1 text-sm text-[#111827]">{submittedBy}</p>
+            </div>
           )}
           <div>
             <p className="text-xs font-medium text-[#6B7280]">Date Submitted</p>
-            <p className="mt-1 text-sm text-[#111827]">{request.date}</p>
+            <p className="mt-1 text-sm text-[#111827]">{date}</p>
           </div>
         </div>
 
         <div className="mt-4">
           <p className="text-xs font-medium text-[#6B7280]">Prayer Request</p>
           <p className="mt-2 rounded-lg bg-[#F9FAFB] p-4 text-sm leading-relaxed text-[#374151]">
-            {request.request}
+            {request.content}
           </p>
         </div>
       </div>
@@ -114,7 +161,7 @@ export default function PrayerRequestDetailClient() {
             <label className="mb-1.5 text-xs font-medium text-[#374151]">Update Status</label>
             <select
               value={status}
-              onChange={(e) => setStatus(e.target.value as PrayerStatus)}
+              onChange={(e) => setStatus(e.target.value)}
               className={inputClass}
             >
               {statusOptions.map((s) => (
