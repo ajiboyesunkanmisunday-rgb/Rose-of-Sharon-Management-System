@@ -31,19 +31,15 @@ export default function UploadMediaPage() {
   const [category,    setCategory]    = useState("");
   const [description, setDescription] = useState("");
   const [mediaFile,   setMediaFile]   = useState<File | null>(null);
-  const [mediaUrl,    setMediaUrl]    = useState("");
   const [saving,      setSaving]      = useState(false);
   const [error,       setError]       = useState("");
-
-  // Video/audio files are typically large — nudge user toward URL for these
-  const isLargeMediaType = category === "VIDEOS" || category === "PODCAST";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (file && file.size > MAX_FILE_BYTES) {
       setError(
         `"${file.name}" is ${(file.size / 1_048_576).toFixed(1)} MB — the server only accepts files up to 10 MB. ` +
-        `For videos and podcasts, please upload to YouTube, Vimeo, or Google Drive and paste the link below.`
+        `Please compress the file or contact the admin to increase the upload limit.`
       );
       e.target.value = "";
       setMediaFile(null);
@@ -57,18 +53,10 @@ export default function UploadMediaPage() {
     e.preventDefault();
     if (!title.trim() || !category) return;
 
-    const hasUrl  = !!mediaUrl.trim();
-    const hasFile = !!mediaFile;
-
-    // Require at least a file or a URL
-    if (!hasFile && !hasUrl) {
-      setError("Please either select a file to upload or enter a media URL (YouTube, Drive, etc.).");
+    if (!mediaFile) {
+      setError("Please select a file to upload.");
       return;
     }
-
-    // When a URL is provided, use it alone — don't send a file too.
-    // The backend expects either a file OR a url, sending both causes "File is missing".
-    const fileToSend = hasUrl ? null : mediaFile;
 
     setSaving(true);
     setError("");
@@ -77,17 +65,14 @@ export default function UploadMediaPage() {
         title:       title.trim(),
         description: description.trim() || undefined,
         category,
-        file:        fileToSend,
-        url:         mediaUrl.trim() || undefined,
+        file:        mediaFile,
       });
       router.push("/media");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Upload failed.";
-      // Give a friendlier explanation for size errors
       if (msg.includes("413") || msg.toLowerCase().includes("too large") || msg.toLowerCase().includes("payload")) {
         setError(
-          "File too large for the server (max ~10 MB). For videos and podcasts, please " +
-          "upload to YouTube, Vimeo, or Google Drive first, then paste the URL below."
+          "File too large for the server (max ~10 MB). Please compress the file before uploading."
         );
       } else {
         setError(msg);
@@ -156,36 +141,17 @@ export default function UploadMediaPage() {
             />
           </div>
 
-          {/* URL field — shown always, prominent for video/podcast */}
+          {/* File upload */}
           <div>
             <label className={labelClass}>
-              Media URL
-              {isLargeMediaType && <span className="ml-1 text-xs font-normal text-[#6B7280]">(recommended for videos &amp; podcasts)</span>}
-            </label>
-            <input
-              type="url"
-              value={mediaUrl}
-              onChange={(e) => setMediaUrl(e.target.value)}
-              placeholder="https://youtube.com/watch?v=... or https://drive.google.com/..."
-              className={inputClass}
-            />
-            {isLargeMediaType && !mediaUrl && (
-              <p className="mt-1 text-xs text-amber-600">
-                ⚠ Video/podcast files over 10 MB must be hosted externally. Upload to YouTube, Vimeo, or Google Drive and paste the link here.
-              </p>
-            )}
-          </div>
-
-          {/* File upload — for smaller files / images */}
-          <div>
-            <label className={labelClass}>
-              Upload File
-              <span className="ml-1 text-xs font-normal text-[#6B7280]">(max 10 MB — for images &amp; short audio)</span>
+              Upload File <span className="text-red-500">*</span>
+              <span className="ml-1 text-xs font-normal text-[#6B7280]">(max 10 MB)</span>
             </label>
             <input
               type="file"
               accept="audio/*,video/*,image/*"
               onChange={handleFileChange}
+              required
               className="block w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] file:mr-3 file:rounded-lg file:border-0 file:bg-[#000080] file:px-3 file:py-1 file:text-xs file:font-medium file:text-white"
             />
             {mediaFile && (
@@ -200,7 +166,7 @@ export default function UploadMediaPage() {
             <Button
               variant="primary"
               type="submit"
-              disabled={saving || !title.trim() || !category}
+              disabled={saving || !title.trim() || !category || !mediaFile}
             >
               {saving ? "Uploading…" : "Upload Media"}
             </Button>

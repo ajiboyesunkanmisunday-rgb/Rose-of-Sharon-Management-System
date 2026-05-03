@@ -81,13 +81,15 @@ export default function MediaPage() {
 
   // Client-side tab + search filter
   const displayed = items.filter((item) => {
-    if (activeTab !== "ALL" && toTab(item.category) !== activeTab) return false;
+    // Backend sends "type" or "mediaCategory"; support both for compatibility
+    const cat = item.mediaCategory ?? item.type ?? item.category;
+    if (activeTab !== "ALL" && toTab(cat) !== activeTab) return false;
     if (search.trim()) {
       const q = search.toLowerCase();
       return (
         (item.title ?? "").toLowerCase().includes(q) ||
         (item.description ?? "").toLowerCase().includes(q) ||
-        (item.category ?? "").toLowerCase().includes(q)
+        (cat ?? "").toLowerCase().includes(q)
       );
     }
     return true;
@@ -155,17 +157,20 @@ export default function MediaPage() {
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {displayed.map((item) => {
-            const tabKey = toTab(item.category);
+            const cat = item.mediaCategory ?? item.type ?? item.category;
+            const tabKey = toTab(cat);
             const isImage = tabKey === "PICTURES";
+            const mediaUrl = item.displayUrl ?? item.url;
+            const mediaSize = item.size ?? item.fileSize;
             return (
               <div
                 key={item.id}
                 className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white transition-shadow hover:shadow-md"
               >
                 <div className="flex h-[160px] items-center justify-center overflow-hidden bg-[#F3F4F6]">
-                  {isImage && item.url ? (
+                  {isImage && mediaUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.url} alt={item.title ?? ""} className="h-full w-full object-cover" />
+                    <img src={mediaUrl} alt={item.title ?? ""} className="h-full w-full object-cover" />
                   ) : (
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#9CA3AF" stroke="#9CA3AF" strokeWidth="1">
                       <polygon points="5 3 19 12 5 21 5 3" />
@@ -174,15 +179,15 @@ export default function MediaPage() {
                 </div>
                 <div className="p-4">
                   <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${categoryColors[tabKey] ?? categoryColors.OTHER}`}>
-                    {item.category ?? tabKey}
+                    {cat ?? tabKey}
                   </span>
-                  <h3 className="mt-3 text-sm font-semibold text-[#111827]">{item.title ?? "Untitled"}</h3>
+                  <h3 className="mt-3 text-sm font-semibold text-[#111827]">{item.title ?? item.displayName ?? "Untitled"}</h3>
                   {item.description && (
                     <p className="mt-1 line-clamp-2 text-xs text-[#6B7280]">{item.description}</p>
                   )}
                   <div className="mt-1 flex items-center gap-2 text-xs text-[#9CA3AF]">
                     <span>{fmtDate(item.createdOn)}</span>
-                    {fileSizeFmt(item.fileSize) && <span>· {fileSizeFmt(item.fileSize)}</span>}
+                    {fileSizeFmt(mediaSize) && <span>· {fileSizeFmt(mediaSize)}</span>}
                   </div>
                   <Button
                     variant="secondary"

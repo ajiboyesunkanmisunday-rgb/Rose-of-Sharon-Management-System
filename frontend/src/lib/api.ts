@@ -1243,13 +1243,25 @@ export async function getWeddingAnniversaries(
 
 export interface MediaResponse {
   id: string;
+  name?: string;
+  displayName?: string;
+  type?: string;           // media type enum: SERMON, PODCAST, VIDEOS, IMAGES, THUMBNAIL
+  size?: number;
+  displayUrl?: string;     // URL to access the uploaded media
+  url?: string;            // alias — some callers use .url
   title?: string;
+  duration?: number;
+  speaker?: string;
+  date?: string;
   description?: string;
-  url?: string;
+  thumbnailUrl?: string;
+  mediaCategory?: string;
+  tags?: string[];
+  createdOn?: string;
+  // legacy aliases (kept for compatibility)
   category?: string;
   fileType?: string;
   fileSize?: number;
-  createdOn?: string;
 }
 
 export async function getMedia(
@@ -1283,8 +1295,7 @@ export async function uploadMedia(fields: {
   title: string;
   description?: string;
   category: string;
-  file?: File | null;
-  url?: string;
+  file: File;
 }): Promise<MediaResponse> {
   const token = getToken();
   if (token && isTokenExpired(token)) {
@@ -1296,11 +1307,11 @@ export async function uploadMedia(fields: {
   const form = new FormData();
   form.append("title", fields.title);
   if (fields.description) form.append("description", fields.description);
-  form.append("type", fields.category);   // backend multipart field is "type" not "category"
-  // "size" is required by the backend DTO — send file size in bytes (0 for URL-only entries)
+  form.append("type", fields.category);   // backend field is "type", not "category"
+  // "size" is required by the backend DTO — send file size in bytes
   form.append("size", String(fields.file ? fields.file.size : 0));
-  if (fields.file) form.append("file", fields.file);
-  if (fields.url) form.append("url", fields.url);
+  // Backend multipart field name is "multipartFile" (from UploadMediaRequest DTO)
+  if (fields.file) form.append("multipartFile", fields.file);
 
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -1341,6 +1352,7 @@ export async function uploadProfilePicture(file: File): Promise<string> {
     category: "IMAGES",
     file,
   });
-  if (!result.url) throw new Error("Photo uploaded but no URL was returned. Please try again.");
-  return result.url;
+  const photoUrl = result.displayUrl ?? result.url;
+  if (!photoUrl) throw new Error("Photo uploaded but no URL was returned. Please try again.");
+  return photoUrl;
 }
