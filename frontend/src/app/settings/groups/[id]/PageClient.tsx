@@ -1,137 +1,120 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
-import { groups } from "@/lib/mock-data";
+import { getGroup, deleteGroupsBulk, type GroupResponse } from "@/lib/api";
 
-type Tab = "members" | "meetings";
-
-const mockMembers = [
-  { id: "m1", name: "John Michael", role: "Member", joinedDate: "01/15/2025" },
-  { id: "m2", name: "Sarah Bamidele", role: "Assistant Lead", joinedDate: "02/20/2025" },
-  { id: "m3", name: "David Okonkwo", role: "Member", joinedDate: "03/10/2025" },
-  { id: "m4", name: "Grace Adeyemi", role: "Secretary", joinedDate: "04/05/2025" },
-  { id: "m5", name: "Emmanuel Nwosu", role: "Member", joinedDate: "05/12/2025" },
-];
-
-const mockMeetings = [
-  { id: "mt1", title: "Weekly Practice", date: "04/19/2026", time: "4:00 PM" },
-  { id: "mt2", title: "Planning Meeting", date: "04/22/2026", time: "6:00 PM" },
-];
+function fullName(u?: { firstName?: string; middleName?: string; lastName?: string } | null) {
+  if (!u) return "—";
+  return [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—";
+}
 
 export default function GroupDetailClient() {
   const router = useRouter();
   const params = useParams();
-  const id = params.id as string;
-  const [activeTab, setActiveTab] = useState<Tab>("members");
+  const paramId = params.id as string;
+  const [id, setId] = useState(paramId);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const parts = window.location.pathname.replace(/\/$/, "").split("/");
+      const urlId = parts[parts.length - 1] ?? "";
+      if (urlId && urlId !== id) setId(urlId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [group,   setGroup]   = useState<GroupResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  const group = groups.find((g) => g.id === id) || groups[0];
+  const fetchGroup = useCallback(async () => {
+    if (!id || id.startsWith("grp-")) return;
+    setLoading(true);
+    setError("");
+    try {
+      const data = await getGroup(id);
+      setGroup(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load group.");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
 
-  const handleDelete = () => {
-    console.log("Delete group:", group.id);
-    setShowDeleteModal(false);
-    router.push("/settings/groups");
+  useEffect(() => { fetchGroup(); }, [fetchGroup]);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteGroupsBulk([id]);
+      setShowDeleteModal(false);
+      router.push("/settings/groups");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete group.");
+      setShowDeleteModal(false);
+      setDeleting(false);
+    }
   };
-
-  const tabs: { key: Tab; label: string }[] = [
-    { key: "members", label: `Members (${group.membersCount})` },
-    { key: "meetings", label: "Meetings" },
-  ];
 
   return (
     <DashboardLayout>
       <PageHeader
         title="Settings"
-        subtitle={group.name}
+        subtitle={group?.name ?? "Group"}
         backHref="/settings/groups"
       />
 
-      <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
-        <h2 className="text-xl font-bold text-[#111827]">{group.name}</h2>
-        <p className="mt-1 text-sm text-[#6B7280]">{group.description}</p>
-
-        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div>
-            <p className="text-xs font-medium text-[#6B7280]">Leader</p>
-            <p className="mt-1 text-sm font-medium text-[#111827]">{group.leader}</p>
-          </div>
-          <div>
-            <p className="text-xs font-medium text-[#6B7280]">Members</p>
-            <p className="mt-1 text-sm font-medium text-[#111827]">{group.membersCount}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="mb-6 flex items-center gap-8 border-b border-[#E5E7EB]">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setActiveTab(t.key)}
-            className={`pb-3 text-sm font-medium transition-colors ${
-              activeTab === t.key
-                ? "border-b-2 border-[#000080] text-[#000080]"
-                : "text-[#6B7280] hover:text-[#374151]"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === "members" && (
-        <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="bg-[#F3F4F6]">
-                <th className="px-4 py-3 text-sm font-bold text-[#000080]">Name</th>
-                <th className="px-4 py-3 text-sm font-bold text-[#000080]">Role</th>
-                <th className="px-4 py-3 text-sm font-bold text-[#000080]">Joined</th>
-              </tr>
-            </thead>
-            <tbody>
-              {mockMembers.map((m) => (
-                <tr key={m.id} className="border-b border-[#F3F4F6]">
-                  <td className="px-4 py-3 font-medium text-[#111827]">{m.name}</td>
-                  <td className="px-4 py-3 text-[#374151]">{m.role}</td>
-                  <td className="px-4 py-3 text-[#374151]">{m.joinedDate}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error} — <button className="font-medium underline" onClick={fetchGroup}>Retry</button>
         </div>
       )}
 
-      {activeTab === "meetings" && (
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
-          <ul className="space-y-3">
-            {mockMeetings.map((mt) => (
-              <li key={mt.id} className="flex items-center justify-between border-b border-[#F3F4F6] pb-3 last:border-0 last:pb-0">
+      {loading ? (
+        <div className="flex h-48 items-center justify-center text-gray-400">Loading…</div>
+      ) : group ? (
+        <>
+          <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
+            <h2 className="text-xl font-bold text-[#111827]">{group.name}</h2>
+            {group.description && (
+              <p className="mt-1 text-sm text-[#6B7280]">{group.description}</p>
+            )}
+
+            <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div>
+                <p className="text-xs font-medium text-[#6B7280]">Group Head</p>
+                <p className="mt-1 text-sm font-medium text-[#111827]">{fullName(group.groupHead)}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-[#6B7280]">Total Members</p>
+                <p className="mt-1 text-sm font-medium text-[#111827]">{group.totalMembers ?? "—"}</p>
+              </div>
+              {group.whatsAppLink && (
                 <div>
-                  <p className="text-sm font-semibold text-[#111827]">{mt.title}</p>
-                  <p className="mt-0.5 text-xs text-[#6B7280]">{mt.date} · {mt.time}</p>
+                  <p className="text-xs font-medium text-[#6B7280]">WhatsApp Group</p>
+                  <a href={group.whatsAppLink} target="_blank" rel="noopener noreferrer"
+                    className="mt-1 block truncate text-sm font-medium text-[#000080] underline hover:text-[#000066]">
+                    Join Group
+                  </a>
                 </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+              )}
+            </div>
+          </div>
 
-      <div className="mt-6 flex items-center justify-end gap-3">
-        <Button variant="secondary" onClick={() => router.push("/settings/groups")}>
-          Back
-        </Button>
-        <Button variant="primary" onClick={() => router.push(`/settings/groups/${id}/edit`)}>
-          Edit
-        </Button>
-        <Button variant="danger" onClick={() => setShowDeleteModal(true)}>
-          Delete
-        </Button>
-      </div>
+          <div className="mt-6 flex items-center justify-end gap-3">
+            <Button variant="secondary" onClick={() => router.push("/settings/groups")}>Back</Button>
+            <Button variant="primary" onClick={() => router.push(`/settings/groups/${id}/edit`)}>Edit</Button>
+            <Button variant="danger" onClick={() => setShowDeleteModal(true)} disabled={deleting}>Delete</Button>
+          </div>
+        </>
+      ) : null}
 
       <DeleteConfirmModal
         isOpen={showDeleteModal}

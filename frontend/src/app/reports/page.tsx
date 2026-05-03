@@ -89,69 +89,6 @@ const followUpData = [
   { category: "Prayer Requests", total: 67, completed: 58, pending: 9 },
 ];
 
-const activityLog = [
-  {
-    date: "Apr 15, 2026",
-    action: "Generated attendance report",
-    performedBy: "Admin",
-    details: "Weekly attendance summary exported",
-  },
-  {
-    date: "Apr 15, 2026",
-    action: "New member registered",
-    performedBy: "Shola Damson",
-    details: "John Adebayo added as first timer",
-  },
-  {
-    date: "Apr 14, 2026",
-    action: "Follow-up completed",
-    performedBy: "Aisha Bello",
-    details: "Called Grace Omotola - second timer",
-  },
-  {
-    date: "Apr 14, 2026",
-    action: "SMS campaign sent",
-    performedBy: "Admin",
-    details: "Easter service reminder to 456 members",
-  },
-  {
-    date: "Apr 13, 2026",
-    action: "Attendance recorded",
-    performedBy: "David Okoro",
-    details: "Sunday Service - 892 attendees logged",
-  },
-  {
-    date: "Apr 13, 2026",
-    action: "Member profile updated",
-    performedBy: "Grace Adeyemi",
-    details: "Updated contact info for Sarah Bamidele",
-  },
-  {
-    date: "Apr 12, 2026",
-    action: "Follow-up assigned",
-    performedBy: "Admin",
-    details: "7 new first timers assigned to team leads",
-  },
-  {
-    date: "Apr 12, 2026",
-    action: "Report exported",
-    performedBy: "Samuel Eze",
-    details: "Monthly growth report downloaded as CSV",
-  },
-  {
-    date: "Apr 11, 2026",
-    action: "New convert recorded",
-    performedBy: "Aisha Bello",
-    details: "Funmi Adekoya moved to new converts",
-  },
-  {
-    date: "Apr 11, 2026",
-    action: "Visit report submitted",
-    performedBy: "David Okoro",
-    details: "Home visit to Chinedu Nwankwo completed",
-  },
-];
-
 const reportTypes = [
   "All",
   "Attendance",
@@ -184,17 +121,6 @@ export default function ReportsPage() {
     });
   }, [startDate, endDate]);
 
-  const filteredActivity = useMemo(() => {
-    if (!startDate && !endDate) return activityLog;
-    return activityLog.filter((row) => {
-      const iso = toISO(row.date);
-      if (!iso) return true;
-      if (startDate && iso < startDate) return false;
-      if (endDate && iso > endDate) return false;
-      return true;
-    });
-  }, [startDate, endDate]);
-
   const reportSummary = useMemo(() => {
     const totalAttendance = filteredAttendance.reduce((sum, r) => sum + r.attendance, 0);
     const totalFollowUps = followUpData.reduce((sum, r) => sum + r.total, 0);
@@ -205,9 +131,8 @@ export default function ReportsPage() {
       completedFollowUps,
       completionRate: totalFollowUps > 0 ? Math.round((completedFollowUps / totalFollowUps) * 100) : 0,
       servicesIncluded: filteredAttendance.length,
-      activityEntries: filteredActivity.length,
     };
-  }, [filteredAttendance, filteredActivity]);
+  }, [filteredAttendance]);
 
   const handleGenerateReport = () => {
     setShowReportModal(true);
@@ -396,50 +321,6 @@ export default function ReportsPage() {
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-
-      {/* Recent Activity Log */}
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">
-          Recent Activity Log
-        </h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[#E5E7EB]">
-                <th className="pb-3 text-left font-medium text-gray-500">
-                  Date
-                </th>
-                <th className="pb-3 text-left font-medium text-gray-500">
-                  Action
-                </th>
-                <th className="hidden sm:table-cell pb-3 text-left font-medium text-gray-500">
-                  Performed By
-                </th>
-                <th className="hidden sm:table-cell pb-3 text-left font-medium text-gray-500">
-                  Details
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredActivity.map((row, index) => (
-                <tr
-                  key={index}
-                  className="border-b border-[#E5E7EB] last:border-0"
-                >
-                  <td className="whitespace-nowrap py-3 text-gray-500">
-                    {row.date}
-                  </td>
-                  <td className="py-3 font-medium text-gray-900">
-                    {row.action}
-                  </td>
-                  <td className="hidden sm:table-cell py-3 text-gray-700">{row.performedBy}</td>
-                  <td className="hidden sm:table-cell py-3 text-gray-500">{row.details}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
 
