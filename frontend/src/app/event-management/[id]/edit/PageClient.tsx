@@ -1,85 +1,149 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import { FormField, SelectField, TextAreaField } from "@/components/ui/FormField";
-import { allEvents } from "@/lib/mock-data";
+import { getEvent, updateEvent } from "@/lib/api";
 
 const CATEGORY_OPTIONS = [
-  { label: "Service", value: "Service" },
-  { label: "Conference", value: "Conference" },
-  { label: "Training", value: "Training" },
-  { label: "Social", value: "Social" },
-  { label: "Wedding", value: "Wedding" },
-  { label: "Funeral", value: "Funeral" },
-  { label: "Outreach", value: "Outreach" },
+  { label: "Service",         value: "SERVICE"         },
+  { label: "Special Service", value: "SPECIAL_SERVICE" },
+  { label: "Conference",      value: "CONFERENCE"      },
+  { label: "Wedding",         value: "WEDDING"         },
+  { label: "Funeral",         value: "FUNERAL"         },
 ];
 
-const STATUS_OPTIONS = [
-  { label: "Upcoming", value: "Upcoming" },
-  { label: "Ongoing", value: "Ongoing" },
-  { label: "Completed", value: "Completed" },
-  { label: "Cancelled", value: "Cancelled" },
+const LOCATION_TYPE_OPTIONS = [
+  { label: "Physical", value: "PHYSICAL" },
+  { label: "Virtual",  value: "VIRTUAL"  },
+  { label: "Hybrid",   value: "HYBRID"   },
 ];
 
-const TYPE_OPTIONS = [
-  { label: "Virtual", value: "Virtual" },
-  { label: "Hybrid", value: "Hybrid" },
-  { label: "Physical", value: "Physical" },
+const NIGERIA_STATES = [
+  "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
+  "Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo",
+  "Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa",
+  "Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba",
+  "Yobe","Zamfara",
 ];
 
-function toInputDate(value: string): string {
-  if (!value) return "";
-  if (value.includes("-")) return value;
-  const parts = value.split("/");
-  if (parts.length !== 3) return "";
-  const [m, d, y] = parts;
-  return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+function epochToTimeInput(ms?: number): string {
+  if (!ms) return "";
+  const d = new Date(ms);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+function timeToEpochMs(date: string, time: string): number | undefined {
+  if (!date || !time) return undefined;
+  return new Date(`${date}T${time}:00`).getTime();
 }
 
 export default function EditEventClient() {
   const router = useRouter();
   const params = useParams();
-  const id = params.id as string;
-
-  const existing = allEvents.find((e) => e.id === id) || allEvents[0];
+  const paramId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
+  const [id, setId] = useState(paramId);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const parts = window.location.pathname.replace(/\/$/, "").split("/");
+      const urlId = parts[parts.length - 2] ?? "";
+      if (urlId && urlId !== id) setId(urlId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [formData, setFormData] = useState({
-    name: existing.name,
-    topic: existing.topic || "",
-    type: existing.type || "",
-    category: existing.category,
-    eventDate: toInputDate(existing.eventDate || existing.date),
-    startTime: existing.startTime,
-    endTime: existing.endTime,
-    location: existing.location,
-    capacity: String(existing.capacity),
-    description: existing.description,
-    status: existing.status,
-    requiresRegistration: existing.requiresRegistration,
-    newConvertsCount: String(existing.newConvertsCount ?? ""),
-    firstTimersCount: String(existing.firstTimersCount ?? ""),
-    secondTimersCount: String(existing.secondTimersCount ?? ""),
-    eMembersCount: String(existing.eMembersCount ?? ""),
+    title: "",
+    preacher: "",
+    topic: "",
+    category: "",
+    date: "",
+    startTime: "",
+    endTime: "",
+    locationType: "",
+    virtualMeetingLink: "",
+    street: "",
+    city: "",
+    state: "",
+    country: "Nigeria",
+    additionalInstructions: "",
+    eFlyer: "",
+    requiresRegistration: false,
   });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const populate = useCallback(async () => {
+    if (!id || id.startsWith("ev-")) return;
+    try {
+      const ev = await getEvent(id);
+      setFormData({
+        title:                  ev.title ?? "",
+        preacher:               ev.preacher ?? "",
+        topic:                  ev.topic ?? "",
+        category:               ev.eventCategory ?? "",
+        date:                   ev.date ?? "",
+        startTime:              epochToTimeInput(ev.startTime),
+        endTime:                epochToTimeInput(ev.endTime),
+        locationType:           ev.locationType ?? "",
+        virtualMeetingLink:     ev.virtualMeetingLink ?? "",
+        street:                 ev.street ?? "",
+        city:                   ev.city ?? "",
+        state:                  ev.state ?? "",
+        country:                ev.country ?? "Nigeria",
+        additionalInstructions: ev.additionalInstructions ?? "",
+        eFlyer:                 ev.eflyer ?? "",
+        requiresRegistration:   ev.requiresRegistration ?? false,
+      });
+    } catch { /* silently fall back to empty fields */ }
+  }, [id]);
+
+  useEffect(() => { populate(); }, [populate]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type } = e.target;
-    const val =
-      type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
+    const val = type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
     setFormData((prev) => ({ ...prev, [name]: val }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Update event:", id, formData);
-    router.push(`/event-management/${id}`);
+    setError("");
+    setLoading(true);
+    try {
+      await updateEvent(id, {
+        title:                  formData.title,
+        preacher:               formData.preacher || undefined,
+        topic:                  formData.topic || undefined,
+        category:               formData.category || undefined,
+        date:                   formData.date,
+        startTime:              timeToEpochMs(formData.date, formData.startTime),
+        endTime:                timeToEpochMs(formData.date, formData.endTime),
+        locationType:           formData.locationType || undefined,
+        virtualMeetingLink:     formData.virtualMeetingLink || undefined,
+        street:                 formData.street || undefined,
+        city:                   formData.city || undefined,
+        state:                  formData.state || undefined,
+        country:                formData.country || undefined,
+        additionalInstructions: formData.additionalInstructions || undefined,
+        eFlyer:                 formData.eFlyer || undefined,
+        requiresRegistration:   formData.requiresRegistration,
+      });
+      router.push(`/event-management/${id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update event.");
+      setLoading(false);
+    }
   };
+
+  const isVirtual  = formData.locationType === "VIRTUAL"  || formData.locationType === "HYBRID";
+  const isPhysical = formData.locationType === "PHYSICAL" || formData.locationType === "HYBRID";
 
   return (
     <DashboardLayout>
@@ -89,157 +153,57 @@ export default function EditEventClient() {
         backHref={`/event-management/${id}`}
       />
 
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+      )}
+
       <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
-          <FormField
-            label="Event Name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
-
-          <FormField
-            label="Topic"
-            name="topic"
-            value={formData.topic}
-            onChange={handleChange}
-          />
-
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
-            <SelectField
-              label="Category"
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              options={CATEGORY_OPTIONS}
-              required
-            />
-            <SelectField
-              label="Type"
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              options={TYPE_OPTIONS}
-            />
-            <FormField
-              label="Event Date"
-              type="date"
-              name="eventDate"
-              value={formData.eventDate}
-              onChange={handleChange}
-              required
-            />
-            <FormField
-              label="Start Time"
-              type="time"
-              name="startTime"
-              value={formData.startTime}
-              onChange={handleChange}
-              required
-            />
-            <FormField
-              label="End Time"
-              type="time"
-              name="endTime"
-              value={formData.endTime}
-              onChange={handleChange}
-              required
-            />
-            <FormField
-              label="Location / Venue"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              required
-            />
-            <FormField
-              label="Capacity"
-              type="number"
-              name="capacity"
-              value={formData.capacity}
-              onChange={handleChange}
-            />
-            <SelectField
-              label="Status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              options={STATUS_OPTIONS}
-            />
+            <FormField label="Event Title" name="title" value={formData.title} onChange={handleChange} placeholder="Enter event title" required />
+            <FormField label="Preacher / Speaker" name="preacher" value={formData.preacher} onChange={handleChange} placeholder="Name of preacher or speaker" />
+            <FormField label="Topic / Theme" name="topic" value={formData.topic} onChange={handleChange} placeholder="Message topic or event theme" />
+            <SelectField label="Category" name="category" value={formData.category} onChange={handleChange} options={CATEGORY_OPTIONS} required />
           </div>
 
-          <TextAreaField
-            label="Description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            rows={5}
-          />
+          <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-3">
+            <FormField label="Event Date" type="date" name="date" value={formData.date} onChange={handleChange} required />
+            <FormField label="Start Time" type="time" name="startTime" value={formData.startTime} onChange={handleChange} required />
+            <FormField label="End Time"   type="time" name="endTime"   value={formData.endTime}   onChange={handleChange} required />
+          </div>
 
-          <div className="pt-2">
-            <h3 className="mb-3 text-sm font-semibold text-[#111827]">Expected Attendance Breakdown</h3>
+          <SelectField label="Location Type" name="locationType" value={formData.locationType} onChange={handleChange} options={LOCATION_TYPE_OPTIONS} />
+
+          {isVirtual && (
+            <FormField label="Virtual Meeting Link" name="virtualMeetingLink" value={formData.virtualMeetingLink} onChange={handleChange} placeholder="https://zoom.us/j/..." />
+          )}
+
+          {isPhysical && (
             <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
-              <FormField
-                label="New Converts"
-                type="number"
-                name="newConvertsCount"
-                value={formData.newConvertsCount}
-                onChange={handleChange}
-                placeholder="0"
-              />
-              <FormField
-                label="First Timers"
-                type="number"
-                name="firstTimersCount"
-                value={formData.firstTimersCount}
-                onChange={handleChange}
-                placeholder="0"
-              />
-              <FormField
-                label="Second Timers"
-                type="number"
-                name="secondTimersCount"
-                value={formData.secondTimersCount}
-                onChange={handleChange}
-                placeholder="0"
-              />
-              <FormField
-                label="E-Members"
-                type="number"
-                name="eMembersCount"
-                value={formData.eMembersCount}
-                onChange={handleChange}
-                placeholder="0"
-              />
+              <FormField label="Street / Venue"  name="street"  value={formData.street}  onChange={handleChange} placeholder="Street address or venue name" />
+              <FormField label="City"             name="city"    value={formData.city}    onChange={handleChange} placeholder="City" />
+              <SelectField label="State" name="state" value={formData.state} onChange={handleChange}
+                options={NIGERIA_STATES.map((s) => ({ label: s, value: s }))} />
+              <FormField label="Country" name="country" value={formData.country} onChange={handleChange} placeholder="Country" />
             </div>
-          </div>
+          )}
 
-          <div className="flex items-center gap-2 pt-2">
-            <input
-              type="checkbox"
-              id="requiresRegistration"
-              name="requiresRegistration"
-              checked={formData.requiresRegistration}
-              onChange={handleChange}
+          <TextAreaField label="Additional Information" name="additionalInstructions" value={formData.additionalInstructions} onChange={handleChange}
+            placeholder="Event description, instructions, or notes" rows={4} />
+
+          <FormField label="E-Flyer URL" name="eFlyer" value={formData.eFlyer} onChange={handleChange} placeholder="https://... (link to event flyer image)" />
+
+          <div className="flex items-center gap-2 pt-1">
+            <input type="checkbox" id="requiresRegistration" name="requiresRegistration"
+              checked={formData.requiresRegistration} onChange={handleChange}
               className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
             />
-            <label htmlFor="requiresRegistration" className="text-sm text-[#374151]">
-              Requires registration
-            </label>
+            <label htmlFor="requiresRegistration" className="text-sm text-[#374151]">Requires registration</label>
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-4">
-            <Button
-              variant="secondary"
-              type="button"
-              onClick={() => router.push(`/event-management/${id}`)}
-            >
-              Cancel
-            </Button>
-            <Button variant="primary" type="submit">
-              Save Changes
-            </Button>
+            <Button variant="secondary" type="button" onClick={() => router.push(`/event-management/${id}`)}>Cancel</Button>
+            <Button variant="primary" type="submit" disabled={loading}>{loading ? "Saving…" : "Save Changes"}</Button>
           </div>
         </form>
       </div>

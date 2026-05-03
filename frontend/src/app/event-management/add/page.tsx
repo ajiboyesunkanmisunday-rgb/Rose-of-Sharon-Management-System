@@ -52,7 +52,7 @@ export default function AddEventPage() {
     city: "",
     state: "",
     country: "Nigeria",
-    additionalInformation: "",
+    additionalInstructions: "",
     eFlyer: "",
     requiresRegistration: false,
   });
@@ -87,7 +87,7 @@ export default function AddEventPage() {
         city: formData.city || undefined,
         state: formData.state || undefined,
         country: formData.country || undefined,
-        additionalInformation: formData.additionalInformation || undefined,
+        additionalInstructions: formData.additionalInstructions || undefined,
         eFlyer: formData.eFlyer || undefined,
         requiresRegistration: formData.requiresRegistration || undefined,
       });
@@ -163,6 +163,7 @@ export default function AddEventPage() {
               name="startTime"
               value={formData.startTime}
               onChange={handleChange}
+              required
             />
             <FormField
               label="End Time"
@@ -170,6 +171,7 @@ export default function AddEventPage() {
               name="endTime"
               value={formData.endTime}
               onChange={handleChange}
+              required
             />
           </div>
 
@@ -227,8 +229,8 @@ export default function AddEventPage() {
 
           <TextAreaField
             label="Additional Information"
-            name="additionalInformation"
-            value={formData.additionalInformation}
+            name="additionalInstructions"
+            value={formData.additionalInstructions}
             onChange={handleChange}
             placeholder="Event description, instructions, or notes"
             rows={4}

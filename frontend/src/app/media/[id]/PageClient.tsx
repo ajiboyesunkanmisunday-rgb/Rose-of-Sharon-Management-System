@@ -1,15 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
-import { mediaItems } from "@/lib/mock-data";
-import { MediaType } from "@/lib/types";
+import { getMediaItem, deleteMediaBulk, type MediaResponse } from "@/lib/api";
 
-const typeColors: Record<MediaType, string> = {
+const typeColors: Record<string, string> = {
   Sermon: "bg-[#000080] text-white",
   Podcast: "bg-[#7C3AED] text-white",
   Video: "bg-[#16A34A] text-white",
@@ -19,25 +18,83 @@ const typeColors: Record<MediaType, string> = {
 export default function MediaDetailClient() {
   const router = useRouter();
   const params = useParams();
-  const id = params.id as string;
+  const paramId = params.id as string;
+  const [id, setId] = useState(paramId);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const parts = window.location.pathname.replace(/\/$/, "").split("/");
+      const urlId = parts[parts.length - 1] ?? "";
+      if (urlId && urlId !== id) setId(urlId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [item, setItem] = useState<MediaResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  const item = mediaItems.find((m) => m.id === id) || mediaItems[0];
-  const related = mediaItems
-    .filter((m) => m.id !== item.id && m.type === item.type)
-    .slice(0, 3);
+  const loadItem = useCallback(async () => {
+    if (!id || id.startsWith("med-")) return;
+    setLoading(true);
+    setError("");
+    try {
+      const data = await getMediaItem(id);
+      setItem(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load media item.");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
 
-  const handleDelete = () => {
-    console.log("Delete media:", item.id);
-    setShowDeleteModal(false);
-    router.push("/media");
+  useEffect(() => { loadItem(); }, [loadItem]);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteMediaBulk([id]);
+    } catch {
+      // ignore — still navigate away
+    } finally {
+      setDeleting(false);
+      setShowDeleteModal(false);
+      router.push("/media");
+    }
   };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <PageHeader title="Media" subtitle="Loading…" backHref="/media" />
+        <div className="py-12 text-center text-sm text-gray-400">Loading media details…</div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error || !item) {
+    return (
+      <DashboardLayout>
+        <PageHeader title="Media" subtitle="Error" backHref="/media" />
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error || "Media item not found."}
+          <button className="ml-2 font-medium underline" onClick={loadItem}>Retry</button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const category = item.category ?? "";
+  const fileType = item.fileType ?? "";
+  const isPicture = fileType.toLowerCase().includes("image") || category.toLowerCase() === "picture";
+  const isPodcast = fileType.toLowerCase().includes("audio") || category.toLowerCase() === "podcast";
 
   return (
     <DashboardLayout>
       <PageHeader
         title="Media"
-        subtitle={item.title}
+        subtitle={item.title ?? "Media Item"}
         backHref="/media"
       />
 
@@ -45,14 +102,14 @@ export default function MediaDetailClient() {
         <div className="lg:col-span-2">
           <div className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white">
             <div className="flex aspect-video items-center justify-center overflow-hidden bg-[#F3F4F6]">
-              {item.type === "Picture" ? (
+              {isPicture ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={item.thumbnail || "/rccg-logo.png"}
-                  alt={item.title}
+                  src={item.url || "/rccg-logo.png"}
+                  alt={item.title ?? "Media"}
                   className="h-full w-full object-contain"
                 />
-              ) : item.type === "Podcast" ? (
+              ) : isPodcast ? (
                 <audio controls className="w-full max-w-md">
                   <source src={item.url || ""} />
                   Your browser does not support the audio tag.
@@ -70,27 +127,25 @@ export default function MediaDetailClient() {
             </div>
             <div className="p-5">
               <div className="flex items-center gap-3">
-                <span className={`rounded-full px-3 py-1 text-xs font-medium ${typeColors[item.type]}`}>
-                  {item.type}
-                </span>
-                <span className="text-xs text-[#6B7280]">Duration: {item.duration}</span>
+                {category && (
+                  <span className={`rounded-full px-3 py-1 text-xs font-medium ${typeColors[category] ?? "bg-gray-200 text-gray-700"}`}>
+                    {category}
+                  </span>
+                )}
+                {item.fileSize != null && (
+                  <span className="text-xs text-[#6B7280]">
+                    Size: {(item.fileSize / 1024).toFixed(1)} KB
+                  </span>
+                )}
               </div>
               <h2 className="mt-3 text-xl font-bold text-[#111827]">{item.title}</h2>
-              <p className="mt-1 text-sm text-[#6B7280]">
-                {item.speaker} · {item.date}
-              </p>
-              <p className="mt-4 text-sm text-[#374151]">{item.description}</p>
-              {item.tags && item.tags.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {item.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full bg-[#F3F4F6] px-3 py-1 text-xs text-[#6B7280]"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
+              {item.createdOn && (
+                <p className="mt-1 text-sm text-[#6B7280]">
+                  {new Date(item.createdOn).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                </p>
+              )}
+              {item.description && (
+                <p className="mt-4 text-sm text-[#374151]">{item.description}</p>
               )}
             </div>
           </div>
@@ -98,28 +153,30 @@ export default function MediaDetailClient() {
 
         <aside>
           <h3 className="mb-3 text-sm font-semibold text-[#111827]">
-            Related {item.type}s
+            Details
           </h3>
-          {related.length === 0 ? (
-            <p className="rounded-xl border border-[#E5E7EB] bg-white p-6 text-sm text-[#6B7280]">
-              No related items.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {related.map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => router.push(`/media/${r.id}`)}
-                  className="block w-full rounded-xl border border-[#E5E7EB] bg-white p-4 text-left transition-colors hover:border-[#000080]"
-                >
-                  <p className="text-sm font-semibold text-[#111827]">{r.title}</p>
-                  <p className="mt-1 text-xs text-[#6B7280]">
-                    {r.speaker} · {r.duration}
-                  </p>
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-3">
+            {item.fileType && (
+              <div>
+                <p className="text-xs font-medium text-[#6B7280]">File Type</p>
+                <p className="mt-1 text-sm text-[#111827]">{item.fileType}</p>
+              </div>
+            )}
+            {item.fileSize != null && (
+              <div>
+                <p className="text-xs font-medium text-[#6B7280]">File Size</p>
+                <p className="mt-1 text-sm text-[#111827]">{(item.fileSize / 1024).toFixed(1)} KB</p>
+              </div>
+            )}
+            {item.createdOn && (
+              <div>
+                <p className="text-xs font-medium text-[#6B7280]">Uploaded</p>
+                <p className="mt-1 text-sm text-[#111827]">
+                  {new Date(item.createdOn).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                </p>
+              </div>
+            )}
+          </div>
         </aside>
       </div>
 
@@ -127,8 +184,8 @@ export default function MediaDetailClient() {
         <Button variant="secondary" onClick={() => router.push("/media")}>
           Back
         </Button>
-        <Button variant="danger" onClick={() => setShowDeleteModal(true)}>
-          Delete
+        <Button variant="danger" onClick={() => setShowDeleteModal(true)} disabled={deleting}>
+          {deleting ? "Deleting…" : "Delete"}
         </Button>
       </div>
 
