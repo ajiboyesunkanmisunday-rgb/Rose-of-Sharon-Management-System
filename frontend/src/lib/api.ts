@@ -326,6 +326,16 @@ export async function createMember(
   });
 }
 
+export async function updateMember(
+  id: string,
+  body: Partial<CreateMemberRequest>
+): Promise<UserResponse> {
+  return apiFetch<UserResponse>(`/api/v1/users/member/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
 export async function deleteMembersBulk(ids: string[]): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/users/member", {
     method: "DELETE",
@@ -379,6 +389,16 @@ export async function createEMember(
 ): Promise<UserResponse> {
   return apiFetch<UserResponse>("/api/v1/users/e-member", {
     method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateEMember(
+  id: string,
+  body: Partial<CreateEMemberRequest>
+): Promise<UserResponse> {
+  return apiFetch<UserResponse>(`/api/v1/users/e-member/${id}`, {
+    method: "PATCH",
     body: JSON.stringify(body),
   });
 }
@@ -438,6 +458,16 @@ export async function createFirstTimer(
   });
 }
 
+export async function updateFirstTimer(
+  id: string,
+  body: Partial<CreateFirstTimerRequest>
+): Promise<UserResponse> {
+  return apiFetch<UserResponse>(`/api/v1/users/first-timer/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
 export async function deleteFirstTimersBulk(ids: string[]): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/users/first-timer", {
     method: "DELETE",
@@ -464,6 +494,16 @@ export async function createSecondTimer(
 ): Promise<UserResponse> {
   return apiFetch<UserResponse>("/api/v1/users/second-timer", {
     method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateSecondTimer(
+  id: string,
+  body: Partial<CreateSecondTimerRequest>
+): Promise<UserResponse> {
+  return apiFetch<UserResponse>(`/api/v1/users/second-timer/${id}`, {
+    method: "PATCH",
     body: JSON.stringify(body),
   });
 }
@@ -519,6 +559,10 @@ export async function getNewConverts(
   return apiFetch<CustomPageResponse<NewConvertResponse>>(
     `/api/v1/new-converts?pageNo=${pageNo}&pageSize=${pageSize}`
   );
+}
+
+export async function getNewConvert(id: string): Promise<NewConvertResponse> {
+  return apiFetch<NewConvertResponse>(`/api/v1/new-converts/${id}`);
 }
 
 export async function createNewConvert(
@@ -611,7 +655,8 @@ export async function linkSpouse(
   spouseId: string
 ): Promise<UserResponse> {
   return apiFetch<UserResponse>(
-    `/api/v1/users/${userId}/link-spouse/${spouseId}`
+    `/api/v1/users/${userId}/link-spouse/${spouseId}`,
+    { method: "POST" }
   );
 }
 
@@ -703,7 +748,7 @@ export interface CreateEventRequest {
   city?: string;
   state?: string;
   country?: string;
-  additionalInformation?: string;
+  additionalInstructions?: string;
   eFlyer?: string;
   requiresRegistration?: boolean;
 }
@@ -776,6 +821,16 @@ export async function markEMemberEventAttendance(
     `/api/v1/events/${eventId}/e-members/${eMemberId}/attend`,
     { method: "POST" }
   );
+}
+
+export async function updateEvent(
+  id: string,
+  body: Partial<CreateEventRequest>
+): Promise<EventResponse> {
+  return apiFetch<EventResponse>(`/api/v1/events/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
 }
 
 export async function cancelEvent(id: string): Promise<OperationalResponse> {
@@ -903,6 +958,10 @@ export async function createRole(body: { name: string; description?: string }): 
     method: "POST",
     body: JSON.stringify(body),
   });
+}
+
+export async function getRole(id: string): Promise<RoleResponse> {
+  return apiFetch<RoleResponse>(`/api/v1/roles/${id}`);
 }
 
 export async function updateRole(
@@ -1054,6 +1113,10 @@ export async function changeRequestStatus(
   );
 }
 
+export async function getRequest(id: string): Promise<RequestResponse> {
+  return apiFetch<RequestResponse>(`/api/v1/requests/${id}`);
+}
+
 export async function getUserRequests(
   userId: string, pageNo = 0, pageSize = 10
 ): Promise<CustomPageResponse<RequestResponse>> {
@@ -1096,6 +1159,10 @@ export async function markCelebrationsAsTreated(ids: string[]): Promise<Operatio
     method: "POST",
     body: JSON.stringify({ ids }),
   });
+}
+
+export async function getCelebration(id: string): Promise<CelebrationResponse> {
+  return apiFetch<CelebrationResponse>(`/api/v1/celebrations/${id}`);
 }
 
 export async function updateCelebration(
@@ -1165,4 +1232,72 @@ export async function deleteMediaBulk(ids: string[]): Promise<OperationalRespons
     method: "DELETE",
     body: JSON.stringify({ ids }),
   });
+}
+
+/**
+ * Upload a media item. Uses multipart/form-data so the browser sets the
+ * Content-Type header automatically (with the correct boundary).
+ */
+export async function uploadMedia(fields: {
+  title: string;
+  description?: string;
+  category: string;
+  file?: File | null;
+  url?: string;
+}): Promise<MediaResponse> {
+  const token = getToken();
+  if (token && isTokenExpired(token)) {
+    removeToken();
+    if (typeof window !== "undefined") window.location.href = "/login";
+    throw new Error("Session expired. Please log in again.");
+  }
+
+  const form = new FormData();
+  form.append("title", fields.title);
+  if (fields.description) form.append("description", fields.description);
+  form.append("type", fields.category);   // backend multipart field is "type" not "category"
+  if (fields.file) form.append("file", fields.file);
+  if (fields.url) form.append("url", fields.url);
+
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const response = await fetch(`${BASE_URL}/api/v1/media`, {
+    method: "POST",
+    headers,
+    body: form,
+  });
+
+  if (response.status === 401) {
+    removeToken();
+    if (typeof window !== "undefined") window.location.href = "/login";
+    throw new Error("Session expired. Please log in again.");
+  }
+
+  if (!response.ok) {
+    let errorMessage = `Request failed: ${response.status}`;
+    try {
+      const errBody = await response.json();
+      if (errBody?.message) errorMessage = errBody.message;
+      else if (errBody?.error) errorMessage = errBody.error;
+    } catch { /* ignore */ }
+    throw new Error(errorMessage);
+  }
+
+  const text = await response.text();
+  return text ? (JSON.parse(text) as MediaResponse) : ({} as MediaResponse);
+}
+
+/**
+ * Upload a profile picture and return the hosted URL.
+ * Uses /api/v1/media with category IMAGES.
+ */
+export async function uploadProfilePicture(file: File): Promise<string> {
+  const result = await uploadMedia({
+    title: `profile-${Date.now()}`,
+    category: "IMAGES",
+    file,
+  });
+  if (!result.url) throw new Error("Photo uploaded but no URL was returned. Please try again.");
+  return result.url;
 }
