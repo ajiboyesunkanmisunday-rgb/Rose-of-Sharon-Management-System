@@ -1140,7 +1140,22 @@ export async function changeRequestStatus(
 }
 
 export async function getRequest(id: string): Promise<RequestResponse> {
-  return apiFetch<RequestResponse>(`/api/v1/requests/${id}`);
+  // Backend has no GET /api/v1/requests/{id} endpoint.
+  // Fetch the full list and find by ID across all request types.
+  const [allReqs, prayerReqs, counselingReqs, suggestionReqs] = await Promise.allSettled([
+    getAllRequests(0, 200),
+    getPrayerRequests(0, 200),
+    getCounselingRequests(0, 200),
+    getSuggestions(0, 200),
+  ]);
+
+  const lists = [allReqs, prayerReqs, counselingReqs, suggestionReqs]
+    .filter((r): r is PromiseFulfilledResult<CustomPageResponse<RequestResponse>> => r.status === "fulfilled")
+    .flatMap((r) => r.value.content ?? []);
+
+  const found = lists.find((r) => r.id === id);
+  if (!found) throw new Error("Request not found.");
+  return found;
 }
 
 export async function getUserRequests(
