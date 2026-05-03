@@ -142,6 +142,7 @@ const navItems: NavItem[] = [
     label: "Settings",
     icon: Settings,
     children: [
+      { label: "My Settings", href: "/settings" },
       { label: "General", href: "/settings/general" },
       { label: "Roles & Permissions", href: "/settings/roles" },
       { label: "Groups", href: "/settings/groups" },
@@ -185,7 +186,9 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     );
   };
 
-  const isChildActive = (href: string) => pathname.startsWith(href);
+  // Use exact match for the /settings root to avoid it matching all sub-pages.
+  const isChildActive = (href: string) =>
+    href === "/settings" ? pathname === "/settings" : pathname.startsWith(href);
 
   const isParentActive = (item: NavItem) => {
     if (item.children) {
