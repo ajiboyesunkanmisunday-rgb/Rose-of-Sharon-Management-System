@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
-import { allRequests } from "@/lib/mock-data";
+import { getRequest, changeRequestStatus, type RequestResponse } from "@/lib/api";
 
 const categoryBadgeColors: Record<string, string> = {
   Prayer: "bg-[#16A34A] text-white",
@@ -14,6 +14,9 @@ const categoryBadgeColors: Record<string, string> = {
   Suggestion: "bg-[#CA8A04] text-white",
   Celebration: "bg-[#7C3AED] text-white",
   Testimony: "bg-[#7C3AED] text-white",
+  PRAYER: "bg-[#16A34A] text-white",
+  COUNSELING: "bg-[#000080] text-white",
+  SUGGESTION: "bg-[#CA8A04] text-white",
 };
 
 const statusBadgeColors: Record<string, string> = {
@@ -21,46 +24,98 @@ const statusBadgeColors: Record<string, string> = {
   Assigned: "bg-[#DBEAFE] text-[#1D4ED8]",
   "In Progress": "bg-[#FEF9C3] text-[#CA8A04]",
   Resolved: "bg-[#DCFCE7] text-[#16A34A]",
+  RECEIVED: "bg-[#F3F4F6] text-[#6B7280]",
+  ASSIGNED: "bg-[#DBEAFE] text-[#1D4ED8]",
+  IN_PROGRESS: "bg-[#FEF9C3] text-[#CA8A04]",
+  RESOLVED: "bg-[#DCFCE7] text-[#16A34A]",
 };
 
 const statusOptions = ["Received", "Assigned", "In Progress", "Resolved"] as const;
 
+function fullName(u?: { firstName?: string; middleName?: string; lastName?: string }): string {
+  if (!u) return "—";
+  return [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—";
+}
+
 export default function RequestDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const paramId = params.id as string;
+  const [id, setId] = useState(paramId);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const parts = window.location.pathname.replace(/\/$/, "").split("/");
+      const urlId = parts[parts.length - 1] ?? "";
+      if (urlId && urlId !== id) setId(urlId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [request, setRequest] = useState<RequestResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showAssignDropdown, setShowAssignDropdown] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState("Received");
+  const [currentAssignee, setCurrentAssignee] = useState("");
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
-  const request = allRequests.find((r) => r.id === params.id);
+  const loadRequest = useCallback(async () => {
+    if (!id || id.startsWith("req-")) return;
+    setLoading(true);
+    setError("");
+    try {
+      const data = await getRequest(id);
+      setRequest(data);
+      setCurrentStatus(data.requestStatus ?? "Received");
+      setCurrentAssignee(fullName(data.assignedTo));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load request.");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
 
-  const [currentStatus, setCurrentStatus] = useState(
-    request?.status || "Received"
-  );
-  const [currentAssignee, setCurrentAssignee] = useState(
-    request?.assignedTo || ""
-  );
+  useEffect(() => { loadRequest(); }, [loadRequest]);
 
-  if (!request) {
+  if (loading) {
     return (
       <DashboardLayout>
         <div className="flex h-64 items-center justify-center">
-          <p className="text-gray-400">Request not found.</p>
+          <p className="text-gray-400">Loading…</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error || !request) {
+    return (
+      <DashboardLayout>
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error || "Request not found."}
+          <button className="ml-2 font-medium underline" onClick={loadRequest}>Retry</button>
         </div>
       </DashboardLayout>
     );
   }
 
   const handleConfirmDelete = () => {
-    console.log("Delete request:", params.id);
     setShowDeleteModal(false);
     router.push("/requests");
   };
 
-  const handleStatusChange = (status: string) => {
-    setCurrentStatus(status as typeof currentStatus);
+  const handleStatusChange = async (status: string) => {
     setShowStatusDropdown(false);
-    console.log("Status updated to:", status);
+    setUpdatingStatus(true);
+    try {
+      await changeRequestStatus(id, status);
+      setCurrentStatus(status);
+    } catch {
+      // silently keep old status
+    } finally {
+      setUpdatingStatus(false);
+    }
   };
 
   const assignees = [
@@ -73,8 +128,13 @@ export default function RequestDetailPage() {
   const handleAssignChange = (assignee: string) => {
     setCurrentAssignee(assignee);
     setShowAssignDropdown(false);
-    console.log("Assigned to:", assignee);
   };
+
+  const category = request.requestType ?? "";
+  const submittedBy = fullName(request.owner ?? request.createdBy);
+  const date = request.createdOn
+    ? new Date(request.createdOn).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+    : "—";
 
   return (
     <DashboardLayout>
@@ -111,11 +171,10 @@ export default function RequestDetailPage() {
         <div className="mb-4 flex items-center gap-3">
           <span
             className={`rounded-full px-3 py-1 text-xs font-medium ${
-              categoryBadgeColors[request.category] ||
-              "bg-gray-200 text-gray-700"
+              categoryBadgeColors[category] || "bg-gray-200 text-gray-700"
             }`}
           >
-            {request.category}
+            {category}
           </span>
           <span
             className={`rounded-full px-3 py-1 text-xs font-medium ${
@@ -127,7 +186,7 @@ export default function RequestDetailPage() {
         </div>
 
         <h3 className="mb-3 text-lg font-bold text-[#111827]">
-          {request.title}
+          {request.subject}
         </h3>
 
         <p className="mb-4 text-sm leading-relaxed text-[#374151]">
@@ -137,10 +196,10 @@ export default function RequestDetailPage() {
         <div className="flex flex-wrap items-center gap-4 text-xs text-[#6B7280]">
           <span>
             <span className="font-medium">Submitted by:</span>{" "}
-            {request.submittedBy}
+            {submittedBy}
           </span>
           <span>
-            <span className="font-medium">Date:</span> {request.date}
+            <span className="font-medium">Date:</span> {date}
           </span>
         </div>
       </div>
@@ -159,9 +218,10 @@ export default function RequestDetailPage() {
           <div className="relative">
             <button
               onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-              className="rounded-xl border border-[#E5E7EB] px-4 py-2 text-sm text-[#374151] transition-colors hover:bg-gray-50"
+              disabled={updatingStatus}
+              className="rounded-xl border border-[#E5E7EB] px-4 py-2 text-sm text-[#374151] transition-colors hover:bg-gray-50 disabled:opacity-50"
             >
-              Update Status
+              {updatingStatus ? "Updating…" : "Update Status"}
             </button>
             {showStatusDropdown && (
               <div className="absolute left-0 z-10 mt-1 min-w-[180px] rounded-lg border border-[#E5E7EB] bg-white py-1 shadow-lg">
@@ -226,7 +286,7 @@ export default function RequestDetailPage() {
         </Button>
         <Button
           variant="primary"
-          onClick={() => router.push(`/requests/${params.id}/edit`)}
+          onClick={() => router.push(`/requests/${id}/edit`)}
         >
           Edit
         </Button>

@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
-import { prayerRequests as initialData } from "@/lib/mock-data";
-import { PrayerRequest } from "@/lib/types";
+import { getPrayerRequests, type RequestResponse } from "@/lib/api";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -16,36 +15,58 @@ export default function PrayerRequestsPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [list, setList] = useState<PrayerRequest[]>(initialData);
+  const [list, setList] = useState<RequestResponse[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
   const [showFilter, setShowFilter] = useState(false);
 
-  const filtered = useMemo(() => {
-    let result = list;
-    if (filterStatus) result = result.filter((r) => r.status === filterStatus);
-    if (filterCategory) result = result.filter((r) => r.category === filterCategory);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (r) =>
-          r.submittedBy.toLowerCase().includes(q) ||
-          r.request.toLowerCase().includes(q) ||
-          r.category.toLowerCase().includes(q)
-      );
+  const loadRequests = useCallback(async (page: number) => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await getPrayerRequests(page - 1, ITEMS_PER_PAGE);
+      setList(res.content ?? []);
+      setTotalPages(res.totalPages ?? 1);
+      setTotalItems(res.totalElements ?? 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load prayer requests.");
+    } finally {
+      setLoading(false);
     }
-    return result;
-  }, [list, search, filterStatus, filterCategory]);
+  }, []);
 
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paginated = filtered.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  useEffect(() => { loadRequests(currentPage); }, [loadRequests, currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const handleDelete = (id: string) => {
     setList((prev) => prev.filter((r) => r.id !== id));
   };
+
+  // Client-side filter on the current page results
+  const filtered = list.filter((r) => {
+    if (filterStatus && r.requestStatus !== filterStatus) return false;
+    if (filterCategory && r.requestType !== filterCategory) return false;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      const name = [r.owner?.firstName, r.owner?.lastName].filter(Boolean).join(" ").toLowerCase();
+      if (
+        !name.includes(q) &&
+        !(r.content ?? "").toLowerCase().includes(q) &&
+        !(r.requestType ?? "").toLowerCase().includes(q) &&
+        !(r.subject ?? "").toLowerCase().includes(q)
+      ) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   const statusBadge = (status: string) => {
     const styles: Record<string, string> = {
@@ -66,6 +87,23 @@ export default function PrayerRequestsPage() {
       {cat}
     </span>
   );
+
+  const getSubmittedBy = (r: RequestResponse) => {
+    const u = r.owner ?? r.createdBy;
+    if (!u) return "—";
+    return [u.firstName, u.lastName].filter(Boolean).join(" ") || "—";
+  };
+
+  const getAssignedTo = (r: RequestResponse) => {
+    const u = r.assignedTo;
+    if (!u) return "—";
+    return [u.firstName, u.lastName].filter(Boolean).join(" ") || "—";
+  };
+
+  const getDate = (r: RequestResponse) =>
+    r.createdOn
+      ? new Date(r.createdOn).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+      : "—";
 
   return (
     <DashboardLayout>
@@ -144,6 +182,13 @@ export default function PrayerRequestsPage() {
         </div>
       )}
 
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+          <button className="ml-2 font-medium underline" onClick={() => loadRequests(currentPage)}>Retry</button>
+        </div>
+      )}
+
       <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
         <table className="w-full text-left text-sm">
           <thead>
@@ -158,7 +203,11 @@ export default function PrayerRequestsPage() {
             </tr>
           </thead>
           <tbody>
-            {paginated.map((req) => (
+            {loading ? (
+              <tr>
+                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">Loading…</td>
+              </tr>
+            ) : filtered.map((req) => (
               <tr
                 key={req.id}
                 className="border-b border-[#F3F4F6] hover:bg-gray-50 cursor-pointer"
@@ -166,19 +215,15 @@ export default function PrayerRequestsPage() {
                 onDoubleClick={() => router.push(`/prayer-requests/${req.id}`)}
               >
                 <td className="px-4 py-3 text-sm font-medium text-[#111827]">
-                  {req.isAnonymous ? (
-                    <span className="italic text-[#6B7280]">Anonymous</span>
-                  ) : (
-                    req.submittedBy
-                  )}
+                  {getSubmittedBy(req)}
                 </td>
-                <td className="hidden sm:table-cell px-4 py-3">{categoryBadge(req.category)}</td>
+                <td className="hidden sm:table-cell px-4 py-3">{req.requestType ? categoryBadge(req.requestType) : "—"}</td>
                 <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">
-                  <span className="line-clamp-1">{req.request.slice(0, 60)}{req.request.length > 60 ? "…" : ""}</span>
+                  <span className="line-clamp-1">{(req.content ?? "").slice(0, 60)}{(req.content ?? "").length > 60 ? "…" : ""}</span>
                 </td>
-                <td className="px-4 py-3">{statusBadge(req.status)}</td>
-                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{req.assignedTo ?? "—"}</td>
-                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{req.date}</td>
+                <td className="px-4 py-3">{statusBadge(req.requestStatus ?? "—")}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{getAssignedTo(req)}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{getDate(req)}</td>
                 <td className="px-4 py-3">
                   <ActionDropdown
                     actions={[
@@ -189,7 +234,7 @@ export default function PrayerRequestsPage() {
                 </td>
               </tr>
             ))}
-            {paginated.length === 0 && (
+            {!loading && filtered.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
                   No prayer requests found.
@@ -201,7 +246,7 @@ export default function PrayerRequestsPage() {
       </div>
 
       <div className="mt-4">
-        <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filtered.length} onPageChange={setCurrentPage} />
+        <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} onPageChange={handlePageChange} />
       </div>
     </DashboardLayout>
   );

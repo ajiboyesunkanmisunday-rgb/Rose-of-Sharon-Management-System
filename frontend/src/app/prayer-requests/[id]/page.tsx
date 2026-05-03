@@ -1,8 +1,11 @@
-import { prayerRequests } from "@/lib/mock-data";
 import PrayerRequestDetailClient from "./PageClient";
 
+// Static export: pre-build one placeholder HTML shell.
+// Netlify redirects /prayer-requests/:id/ → /prayer-requests/pr-1/
+// so the pre-built page is served; the client reads the real ID from
+// window.location.pathname and fetches from the API.
 export function generateStaticParams() {
-  return prayerRequests.map((r) => ({ id: r.id }));
+  return [{ id: "pr-1" }];
 }
 
 export default function PrayerRequestDetailPage() {
