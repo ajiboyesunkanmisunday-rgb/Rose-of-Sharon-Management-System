@@ -8,7 +8,7 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { createSecondTimer } from "@/lib/api";
+import { createSecondTimer, uploadProfilePicture } from "@/lib/api";
 
 export default function AddSecondTimerPage() {
   const router = useRouter();
@@ -52,6 +52,11 @@ export default function AddSecondTimerPage() {
         Excellent: 5, Good: 4, Fair: 3, Poor: 2,
       };
 
+      let profilePictureUrl: string | undefined;
+      if (photo) {
+        profilePictureUrl = await uploadProfilePicture(photo);
+      }
+
       await createSecondTimer({
         firstName,
         middleName: middleName || undefined,
@@ -59,7 +64,7 @@ export default function AddSecondTimerPage() {
         email: email || undefined,
         phoneNumber: phone,
         countryCode: countryCode.replace(/^\+/, ""),
-        sex: gender ? gender.toUpperCase() : undefined,
+        sex: gender || undefined,
         dayOfBirth: dobDay ? Number(dobDay) : undefined,
         monthOfBirth: dobMonth ? Number(dobMonth) : undefined,
         yearOfBirth: dobYear ? Number(dobYear) : undefined,
@@ -67,8 +72,9 @@ export default function AddSecondTimerPage() {
         city: city || undefined,
         state: state || undefined,
         country: country || undefined,
-        maritalStatus: maritalStatus ? maritalStatus.toUpperCase() : undefined,
+        maritalStatus: maritalStatus || undefined,
         occupation: occupation || undefined,
+        profilePictureUrl,
         isVisiting: isVisiting || undefined,
         mediumOfInvitation: howDidYouHear || undefined,
         serviceRating: howWasService ? ratingMap[howWasService] : undefined,
@@ -215,8 +221,8 @@ export default function AddSecondTimerPage() {
                 required
               >
                 <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
               </select>
             </div>
             <div>
@@ -370,12 +376,12 @@ export default function AddSecondTimerPage() {
                 className={selectStyles}
               >
                 <option value="">Select Marital Status</option>
-                <option value="Single">Single</option>
-                <option value="Married">Married</option>
-                <option value="Divorced">Divorced</option>
-                <option value="Widowed">Widowed</option>
+                <option value="SINGLE">Single</option>
+                <option value="MARRIED">Married</option>
+                <option value="DIVORCED">Divorced</option>
+                <option value="WIDOWED">Widowed</option>
               </select>
-              {maritalStatus === "Married" && (
+              {maritalStatus === "MARRIED" && (
                 <button
                   type="button"
                   onClick={() => setShowSpouseModal(true)}

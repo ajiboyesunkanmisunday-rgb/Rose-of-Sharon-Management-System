@@ -8,7 +8,7 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { createEMember } from "@/lib/api";
+import { createEMember, uploadProfilePicture } from "@/lib/api";
 
 export default function AddEMemberPage() {
   const router = useRouter();
@@ -55,7 +55,7 @@ export default function AddEMemberPage() {
     let dayOfWedding: number | undefined;
     let monthOfWedding: number | undefined;
     let yearOfWedding: number | undefined;
-    if (maritalStatus === "Married" && spouse?.weddingDate) {
+    if (maritalStatus === "MARRIED" && spouse?.weddingDate) {
       const parts = spouse.weddingDate.split("-");
       if (parts.length === 3) {
         yearOfWedding = Number(parts[0]);
@@ -65,6 +65,10 @@ export default function AddEMemberPage() {
     }
 
     try {
+      let profilePictureUrl: string | undefined;
+      if (photo) {
+        profilePictureUrl = await uploadProfilePicture(photo);
+      }
       await createEMember({
         firstName,
         middleName: middleName || undefined,
@@ -72,13 +76,14 @@ export default function AddEMemberPage() {
         email,
         phoneNumber: phone,
         countryCode: countryCode.replace(/^\+/, ""),
-        sex: gender ? gender.toUpperCase() : undefined,
+        sex: gender || undefined,
         state: state || undefined,
         country: "Nigeria",
         dayOfBirth: dobDay ? Number(dobDay) : undefined,
         monthOfBirth: dobMonth ? Number(dobMonth) : undefined,
         yearOfBirth: dobYear ? Number(dobYear) : undefined,
-        maritalStatus: maritalStatus ? maritalStatus.toUpperCase() : undefined,
+        maritalStatus: maritalStatus || undefined,
+        profilePictureUrl,
         // serviceAttended is display-only; backend links via eventId (UUID)
         spouseId: spouse?.memberId || undefined,
         dayOfWedding,
@@ -180,8 +185,8 @@ export default function AddEMemberPage() {
                 required
               >
                 <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
               </select>
             </div>
 
@@ -255,12 +260,12 @@ export default function AddEMemberPage() {
                 className={selectStyles}
               >
                 <option value="">Select Marital Status</option>
-                <option value="Single">Single</option>
-                <option value="Married">Married</option>
-                <option value="Widowed">Widowed</option>
-                <option value="Divorced">Divorced</option>
+                <option value="SINGLE">Single</option>
+                <option value="MARRIED">Married</option>
+                <option value="WIDOWED">Widowed</option>
+                <option value="DIVORCED">Divorced</option>
               </select>
-              {maritalStatus === "Married" && (
+              {maritalStatus === "MARRIED" && (
                 <button
                   type="button"
                   onClick={() => setShowSpouseModal(true)}
