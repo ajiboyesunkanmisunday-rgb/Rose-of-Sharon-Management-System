@@ -160,6 +160,11 @@ async function apiFetchRaw<T>(
     } catch {
       // ignore parse errors
     }
+    // 405 on a user profile update means the backend hasn't implemented
+    // the update endpoint yet — surface a clear message instead of raw HTTP status.
+    if (response.status === 405 && (method === "PATCH" || method === "PUT" || method === "POST")) {
+      errorMessage = "Profile updates are not yet available on the server. Please contact the backend team to enable this feature.";
+    }
     throw new Error(errorMessage);
   }
 
@@ -847,8 +852,9 @@ export async function updateEvent(
   id: string,
   body: Partial<CreateEventRequest>
 ): Promise<EventResponse> {
+  // Backend uses POST /api/v1/events/{id} for updates (no PUT endpoint exists)
   return apiFetch<EventResponse>(`/api/v1/events/${id}`, {
-    method: "PUT",
+    method: "POST",
     body: JSON.stringify(body),
   });
 }
