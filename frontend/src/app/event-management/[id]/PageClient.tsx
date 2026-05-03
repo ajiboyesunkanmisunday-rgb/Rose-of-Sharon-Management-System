@@ -52,7 +52,19 @@ type Tab = "first-timers" | "e-members" | "new-converts";
 export default function EventDetailClient() {
   const router = useRouter();
   const params = useParams();
-  const id = params.id as string;
+  const paramId = params.id as string;
+  const [id, setId] = useState(paramId);
+
+  // Read real ID from the browser URL — handles Netlify static rewrites where
+  // the pre-built placeholder HTML is served for a real UUID path.
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const parts = window.location.pathname.replace(/\/$/, "").split("/");
+      const urlId = parts[parts.length - 1] ?? "";
+      if (urlId && urlId !== id) setId(urlId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [event,        setEvent]        = useState<EventResponse | null>(null);
   const [loadingEvent, setLoadingEvent] = useState(true);
