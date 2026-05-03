@@ -1,291 +1,302 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
-import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
-import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { eMembers } from "@/lib/mock-data";
+import { getUser, addNote, addCallReport, addVisitReport, type UserResponse } from "@/lib/api";
 
-interface Note {
-  id: string;
-  content: string;
-  addedBy: string;
-  date: string;
+type Tab = "details" | "activity";
+
+function fullName(u?: { firstName?: string; middleName?: string; lastName?: string } | null) {
+  if (!u) return "—";
+  return [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—";
 }
+
+function fmtDate(s?: string) {
+  if (!s) return "—";
+  return new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function fmtDOB(day?: number, month?: number, year?: number) {
+  if (!day || !month) return "—";
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${months[month - 1] ?? "?"} ${day}${year ? `, ${year}` : ""}`;
+}
+
+const BackArrow = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+  </svg>
+);
+
+const UserIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+  </svg>
+);
 
 export default function EMemberProfilePage() {
   const router = useRouter();
   const params = useParams();
-  const id = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
+  const paramId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
+  const [id, setId] = useState(paramId);
 
-  const eMember = eMembers.find((m) => m.id === id) || eMembers[0];
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const parts = window.location.pathname.replace(/\/$/, "").split("/");
+      const urlId = parts[parts.length - 1] ?? "";
+      if (urlId && urlId !== id) setId(urlId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [user,    setUser]    = useState<UserResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState("");
+
+  const [activeTab, setActiveTab] = useState<Tab>("details");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showSpouseModal, setShowSpouseModal] = useState(false);
-  const [spouse, setSpouse] = useState<SpouseData | null>(
-    eMember.spouse ? { name: eMember.spouse.name, weddingDate: "" } : null
-  );
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [newNote, setNewNote] = useState("");
-  const [addingNote, setAddingNote] = useState(false);
+
+  const [noteText,   setNoteText]   = useState("");
+  const [callText,   setCallText]   = useState("");
+  const [visitText,  setVisitText]  = useState("");
+  const [saving,     setSaving]     = useState(false);
+  const [saveMsg,    setSaveMsg]    = useState("");
+
+  const fetchUser = useCallback(async () => {
+    if (!id || id.startsWith("em-")) return;
+    setLoading(true);
+    setError("");
+    try {
+      const data = await getUser(id);
+      setUser(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load profile.");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => { fetchUser(); }, [fetchUser]);
 
   const handleConfirmDelete = () => {
-    console.log("Delete e-member:", eMember.id);
     setShowDeleteModal(false);
     router.push("/user-management/e-members");
   };
 
-  const details: { label: string; value: string | undefined }[] = [
-    { label: "First Name", value: eMember.firstName },
-    ...(eMember.middleName
-      ? [{ label: "Middle Name", value: eMember.middleName }]
-      : []),
-    { label: "Last Name", value: eMember.lastName },
-    { label: "Email", value: eMember.email },
-    { label: "Country", value: eMember.country },
-    { label: "Country Code", value: eMember.countryCode },
-    { label: "Phone", value: eMember.phone },
-    { label: "Date of Birth", value: eMember.dateOfBirth },
-    { label: "Marital Status", value: eMember.maritalStatus },
-    { label: "Service Attended", value: eMember.serviceAttended },
-  ];
+  const handleSaveActivity = async (type: "note" | "call" | "visit") => {
+    if (!id) return;
+    const text = type === "note" ? noteText : type === "call" ? callText : visitText;
+    if (!text.trim()) return;
+    setSaving(true);
+    setSaveMsg("");
+    try {
+      if (type === "note")  await addNote(id, text.trim());
+      if (type === "call")  await addCallReport(id, text.trim());
+      if (type === "visit") await addVisitReport(id, text.trim());
+      if (type === "note")  setNoteText("");
+      if (type === "call")  setCallText("");
+      if (type === "visit") setVisitText("");
+      setSaveMsg("Saved successfully.");
+      setTimeout(() => setSaveMsg(""), 3000);
+    } catch (err) {
+      setSaveMsg(err instanceof Error ? err.message : "Failed to save.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
-  const showAnniversaryPhoto =
-    eMember.maritalStatus === "Married" && eMember.spouse?.anniversaryPhoto;
+  const address = user
+    ? [user.street, user.city, user.state, user.country].filter(Boolean).join(", ") || "—"
+    : "—";
+
+  const phone = user
+    ? `+${user.countryCode ?? ""} ${user.phoneNumber}`.trim()
+    : "—";
+
+  const groupNames = user?.groups?.map((g) => g.name).join(", ") || "—";
+
+  const tabs: { key: Tab; label: string }[] = [
+    { key: "details",  label: "Details"  },
+    { key: "activity", label: "Activity" },
+  ];
 
   return (
     <DashboardLayout>
-      {/* Page Header */}
       <div className="mb-6">
         <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => router.push("/user-management/e-members")}
-            className="flex items-center text-[#000080] transition-colors hover:text-[#000066]"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
+          <button onClick={() => router.push("/user-management/e-members")} className="flex items-center text-[#000080] transition-colors hover:text-[#000066]">
+            <BackArrow />
           </button>
-          <h2 className="text-[22px] font-bold text-[#000080]">
-            E-Member Profile
-          </h2>
+          <h2 className="text-[22px] font-bold text-[#000080]">E-Member Profile</h2>
         </div>
       </div>
 
-      {/* Profile Section */}
-      <div className="mb-8 rounded-xl border border-[#E5E7EB] bg-white p-6">
-        <div className="flex flex-col gap-6 md:flex-row">
-          {/* Profile Photo Placeholder */}
-          <div className="relative flex h-[250px] w-[200px] shrink-0 items-center justify-center rounded-xl bg-[#E5E7EB]">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="64"
-              height="64"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#9CA3AF"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error} — <button className="font-medium underline" onClick={fetchUser}>Retry</button>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex h-48 items-center justify-center text-gray-400">Loading…</div>
+      ) : (
+        <>
+          {/* Profile Card */}
+          <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
+            <div className="flex flex-col gap-6 md:flex-row">
+              {/* Photo */}
+              <div className="relative flex h-[180px] w-[150px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] sm:h-[250px] sm:w-[200px]">
+                {user?.profilePictureUrl
+                  ? <img src={user.profilePictureUrl} alt="" className="h-full w-full object-cover" />
+                  : <UserIcon />}
+              </div>
+
+              {/* Details */}
+              <div className="flex-1">
+                <h2 className="mb-5 text-lg font-bold text-[#000000]">Basic Details</h2>
+                <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-3">
+                  {[
+                    { label: "First Name",      value: user?.firstName },
+                    { label: "Middle Name",     value: user?.middleName },
+                    { label: "Last Name",       value: user?.lastName },
+                    { label: "Email",           value: user?.email },
+                    { label: "Phone",           value: phone },
+                    { label: "Address",         value: address },
+                    { label: "Gender",          value: user?.sex },
+                    { label: "Date of Birth",   value: fmtDOB(user?.dayOfBirth, user?.monthOfBirth, user?.yearOfBirth) },
+                    { label: "Marital Status",  value: user?.maritalStatus },
+                    { label: "Occupation",      value: user?.occupation },
+                    { label: "Service Attended",value: user?.serviceAttended },
+                    { label: "Group",           value: groupNames },
+                    { label: "Date Joined",     value: fmtDate(user?.createdOn) },
+                  ].map(({ label, value }) => value ? (
+                    <div key={label}>
+                      <p className="text-xs font-medium text-[#6B7280]">{label}</p>
+                      <p className="mt-1 text-sm text-[#111827]">{value}</p>
+                    </div>
+                  ) : null)}
+
+                  {/* Spouse */}
+                  <div>
+                    <p className="text-xs font-medium text-[#6B7280]">Spouse</p>
+                    {user?.spouse ? (
+                      <button
+                        onClick={() => router.push(`/user-management/members/${user.spouse!.id}`)}
+                        className="mt-1 text-sm font-medium text-[#000080] underline hover:text-[#000066]"
+                      >
+                        {fullName(user.spouse)}
+                      </button>
+                    ) : (
+                      <p className="mt-1 text-sm text-[#9CA3AF]">—</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Anniversary Photo (if married + available) */}
-          {showAnniversaryPhoto && (
-            <div className="flex h-[250px] w-[200px] shrink-0 flex-col items-center">
-              <div className="h-full w-full overflow-hidden rounded-xl bg-[#E5E7EB]">
-                <img
-                  src={eMember.spouse!.anniversaryPhoto}
-                  alt="Anniversary"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <p className="mt-2 text-xs font-medium text-[#6B7280]">
-                Anniversary Photo
-              </p>
-            </div>
-          )}
-
-          {/* Basic Details */}
-          <div className="flex-1">
-            <h2 className="mb-6 text-lg font-bold text-[#000000]">
-              Basic Details
-            </h2>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">
-              {details.map((item) => (
-                <div key={item.label}>
-                  <p className="text-xs font-medium text-[#6B7280]">
-                    {item.label}
-                  </p>
-                  <p className="mt-1 text-sm text-[#111827]">
-                    {item.value || "—"}
-                  </p>
-                </div>
+          {/* Tabs */}
+          <div className="mb-4 border-b border-[#E5E7EB]">
+            <div className="flex gap-8">
+              {tabs.map((tab) => (
+                <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+                  className={`pb-3 text-sm font-medium transition-colors ${activeTab === tab.key ? "border-b-2 border-[#000080] text-[#000080]" : "text-[#6B7280] hover:text-[#374151]"}`}>
+                  {tab.label}
+                </button>
               ))}
+            </div>
+          </div>
 
-              {eMember.maritalStatus === "Married" && (
-                <div>
-                  <p className="text-xs font-medium text-[#6B7280]">Spouse</p>
-                  {spouse ? (
-                    <p className="mt-1 text-sm text-[#111827]">
-                      {spouse.name}{" "}
-                      <button
-                        onClick={() => setShowSpouseModal(true)}
-                        className="text-xs font-medium text-[#000080] underline transition-colors hover:text-[#000066]"
-                      >
-                        (change)
-                      </button>
-                    </p>
-                  ) : (
-                    <button
-                      onClick={() => setShowSpouseModal(true)}
-                      className="mt-1 text-xs font-medium text-[#000080] underline transition-colors hover:text-[#000066]"
-                    >
-                      + Link Spouse
-                    </button>
-                  )}
-                </div>
+          {activeTab === "details" && user && (
+            <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 text-sm text-center text-gray-400">
+              Assigned Follow-Up:{" "}
+              <span className="font-medium text-[#374151]">{fullName(user.assignedFollowUp) || "Not assigned"}</span>
+              {(user.noOfCalls !== undefined || user.noOfVisits !== undefined) && (
+                <span className="ml-4 text-[#374151]">
+                  · Calls: <strong>{user.noOfCalls ?? 0}</strong>
+                  &nbsp;· Visits: <strong>{user.noOfVisits ?? 0}</strong>
+                </span>
               )}
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Notes Section */}
-      <div className="mb-8 rounded-xl border border-[#E5E7EB] bg-white p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[#000000]">Notes</h2>
-          {!addingNote && (
-            <button
-              onClick={() => setAddingNote(true)}
-              className="flex items-center gap-1 text-sm font-medium text-[#000080] transition-colors hover:text-[#000066]"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              Add Note
-            </button>
           )}
-        </div>
 
-        {addingNote && (
-          <div className="mb-4">
-            <textarea
-              value={newNote}
-              onChange={(e) => setNewNote(e.target.value)}
-              placeholder="Enter note..."
-              rows={3}
-              className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
-              autoFocus
-            />
-            <div className="mt-2 flex gap-2">
-              <Button
-                variant="primary"
-                onClick={() => {
-                  if (newNote.trim()) {
-                    setNotes((prev) => [
-                      ...prev,
-                      {
-                        id: `note-${Date.now()}`,
-                        content: newNote.trim(),
-                        addedBy: "Admin",
-                        date: new Date().toLocaleDateString("en-GB"),
-                      },
-                    ]);
-                    setNewNote("");
-                    setAddingNote(false);
-                  }
-                }}
-              >
-                Save Note
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => { setNewNote(""); setAddingNote(false); }}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {notes.length === 0 && !addingNote ? (
-          <p className="text-sm text-[#9CA3AF]">No notes yet. Click &ldquo;Add Note&rdquo; to add one.</p>
-        ) : (
-          <div className="space-y-3">
-            {notes.map((note) => (
-              <div key={note.id} className="rounded-lg border border-[#F3F4F6] bg-[#F9FAFB] p-4">
-                <div className="flex items-start justify-between">
-                  <p className="flex-1 text-sm text-[#374151]">{note.content}</p>
-                  <button
-                    onClick={() => setNotes((prev) => prev.filter((n) => n.id !== note.id))}
-                    className="ml-4 shrink-0 text-red-400 transition-colors hover:text-red-600"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    </svg>
-                  </button>
+          {activeTab === "activity" && (
+            <div className="space-y-4">
+              {saveMsg && (
+                <div className={`rounded-lg px-4 py-3 text-sm ${saveMsg.startsWith("Failed") ? "bg-red-50 text-red-700 border border-red-200" : "bg-green-50 text-green-700 border border-green-200"}`}>
+                  {saveMsg}
                 </div>
-                <div className="mt-2 text-xs text-[#9CA3AF]">
-                  Added by: {note.addedBy} &bull; {note.date}
+              )}
+
+              {/* Add Note */}
+              <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
+                <h3 className="mb-3 text-sm font-bold text-[#111827]">Add Note</h3>
+                <textarea
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  placeholder="Enter note…"
+                  rows={3}
+                  className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+                />
+                <div className="mt-2 flex justify-end">
+                  <Button variant="primary" onClick={() => handleSaveActivity("note")} disabled={saving || !noteText.trim()}>
+                    {saving ? "Saving…" : "Save Note"}
+                  </Button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
 
-      {/* Action Buttons */}
-      <div className="mt-6 flex items-center justify-end gap-3">
-        <Button
-          variant="secondary"
-          onClick={() => router.push("/user-management/e-members")}
-        >
-          Back
-        </Button>
-        <Button
-          variant="primary"
-          onClick={() =>
-            router.push(`/user-management/e-members/${eMember.id}/edit`)
-          }
-        >
-          Edit
-        </Button>
-        <Button variant="danger" onClick={() => setShowDeleteModal(true)}>
-          Delete
-        </Button>
-      </div>
+              {/* Add Call Report */}
+              <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
+                <h3 className="mb-3 text-sm font-bold text-[#111827]">Log Call</h3>
+                <textarea
+                  value={callText}
+                  onChange={(e) => setCallText(e.target.value)}
+                  placeholder="Describe the call…"
+                  rows={3}
+                  className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+                />
+                <div className="mt-2 flex justify-end">
+                  <Button variant="primary" onClick={() => handleSaveActivity("call")} disabled={saving || !callText.trim()}>
+                    {saving ? "Saving…" : "Save Call"}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Add Visit Report */}
+              <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
+                <h3 className="mb-3 text-sm font-bold text-[#111827]">Log Visit</h3>
+                <textarea
+                  value={visitText}
+                  onChange={(e) => setVisitText(e.target.value)}
+                  placeholder="Describe the visit…"
+                  rows={3}
+                  className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+                />
+                <div className="mt-2 flex justify-end">
+                  <Button variant="primary" onClick={() => handleSaveActivity("visit")} disabled={saving || !visitText.trim()}>
+                    {saving ? "Saving…" : "Save Visit"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="mt-6 flex items-center justify-end gap-3">
+            <Button variant="secondary" onClick={() => router.push(`/user-management/e-members/${id}/edit`)}>Edit</Button>
+            <Button variant="danger"    onClick={() => setShowDeleteModal(true)}>Delete</Button>
+          </div>
+        </>
+      )}
 
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleConfirmDelete}
-      />
-
-      <SpouseLinkModal
-        isOpen={showSpouseModal}
-        onClose={() => setShowSpouseModal(false)}
-        onSave={(data) => setSpouse(data)}
-        initial={spouse || undefined}
       />
     </DashboardLayout>
   );

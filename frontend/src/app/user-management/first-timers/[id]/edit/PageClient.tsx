@@ -1,28 +1,38 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { profileDetails } from "@/lib/mock-data";
+import { getUser, updateFirstTimer, uploadProfilePicture } from "@/lib/api";
 
 export default function EditFirstTimerPage() {
   const router = useRouter();
+  const params = useParams();
+  const paramId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
+  const [id, setId] = useState(paramId);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const parts = window.location.pathname.replace(/\/$/, "").split("/");
+      const urlId = parts[parts.length - 2] ?? "";
+      if (urlId && urlId !== id) setId(urlId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Pre-populate with mock data
-  const [firstName, setFirstName] = useState(profileDetails.firstName || "");
+  const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
-  const [lastName, setLastName] = useState(profileDetails.lastName || "");
-  const [gender, setGender] = useState(profileDetails.gender || "");
-  const [email, setEmail] = useState(profileDetails.email || "");
+  const [lastName, setLastName] = useState("");
+  const [gender, setGender] = useState("");
+  const [email, setEmail] = useState("");
   const [countryCode, setCountryCode] = useState("+234");
-  const [phone, setPhone] = useState(profileDetails.phoneNumber || "");
+  const [phone, setPhone] = useState("");
   const [whatsappCode, setWhatsappCode] = useState("+234");
-  const [whatsappNumber, setWhatsappNumber] = useState(profileDetails.whatsappNumber || "");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [dobDay, setDobDay] = useState("");
   const [dobMonth, setDobMonth] = useState("");
   const [dobYear, setDobYear] = useState("");
@@ -30,8 +40,33 @@ export default function EditFirstTimerPage() {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [country, setCountry] = useState("");
-  const [maritalStatus, setMaritalStatus] = useState(profileDetails.maritalStatus || "");
-  const [occupation, setOccupation] = useState(profileDetails.occupation || "");
+  const [maritalStatus, setMaritalStatus] = useState("");
+  const [occupation, setOccupation] = useState("");
+
+  const populate = useCallback(async () => {
+    if (!id || id.startsWith("ft-")) return;
+    try {
+      const u = await getUser(id);
+      setFirstName(u.firstName ?? "");
+      setMiddleName(u.middleName ?? "");
+      setLastName(u.lastName ?? "");
+      setGender(u.sex ?? "");
+      setEmail(u.email ?? "");
+      setCountryCode(u.countryCode ? `+${u.countryCode}` : "+234");
+      setPhone(u.phoneNumber ?? "");
+      setDobDay(u.dayOfBirth?.toString() ?? "");
+      setDobMonth(u.monthOfBirth?.toString() ?? "");
+      setDobYear(u.yearOfBirth?.toString() ?? "");
+      setStreet(u.street ?? "");
+      setCity(u.city ?? "");
+      setState(u.state ?? "");
+      setCountry(u.country ?? "");
+      setMaritalStatus(u.maritalStatus ?? "");
+      setOccupation(u.occupation ?? "");
+    } catch { /* silently fall back to empty fields */ }
+  }, [id]);
+
+  useEffect(() => { populate(); }, [populate]);
   const [serviceAttended, setServiceAttended] = useState("");
   const [isVisiting, setIsVisiting] = useState(false);
   const [howDidYouHear, setHowDidYouHear] = useState("");
@@ -41,18 +76,46 @@ export default function EditFirstTimerPage() {
   const [photo, setPhoto] = useState<File | null>(null);
   const [spouse, setSpouse] = useState<SpouseData | null>(null);
   const [showSpouseModal, setShowSpouseModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Update first timer", {
-      firstName, middleName, lastName, gender, email,
-      countryCode, phone, whatsappCode, whatsappNumber,
-      dob: `${dobDay}/${dobMonth}/${dobYear}`,
-      street, city, state, country, maritalStatus, occupation,
-      serviceAttended, isVisiting, howDidYouHear, howWasService,
-      favouriteParts, worshippedOnline, photo, spouse,
-    });
-    router.back();
+    setSubmitError("");
+    setSubmitting(true);
+    try {
+      const rawCode = countryCode.replace("+", "");
+      let profilePictureUrl: string | undefined;
+      if (photo) {
+        profilePictureUrl = await uploadProfilePicture(photo);
+      }
+      await updateFirstTimer(id, {
+        firstName: firstName || undefined,
+        middleName: middleName || undefined,
+        lastName: lastName || undefined,
+        sex: gender || undefined,
+        email: email || undefined,
+        countryCode: rawCode || undefined,
+        phoneNumber: phone || undefined,
+        dayOfBirth: dobDay ? Number(dobDay) : undefined,
+        monthOfBirth: dobMonth ? Number(dobMonth) : undefined,
+        yearOfBirth: dobYear ? Number(dobYear) : undefined,
+        street: street || undefined,
+        city: city || undefined,
+        state: state || undefined,
+        country: country || undefined,
+        maritalStatus: maritalStatus || undefined,
+        occupation: occupation || undefined,
+        isVisiting: isVisiting || undefined,
+        mediumOfInvitation: howDidYouHear || undefined,
+        favouritePartOfService: favouriteParts || undefined,
+        profilePictureUrl,
+      });
+      router.back();
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Failed to update first timer.");
+      setSubmitting(false);
+    }
   };
 
   const inputStyles =
@@ -127,8 +190,8 @@ export default function EditFirstTimerPage() {
               <label className={labelStyles}>Gender</label>
               <select value={gender} onChange={(e) => setGender(e.target.value)} className={selectStyles}>
                 <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
               </select>
             </div>
             <div>
@@ -205,12 +268,12 @@ export default function EditFirstTimerPage() {
               <label className={labelStyles}>Marital Status</label>
               <select value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} className={selectStyles}>
                 <option value="">Select Marital Status</option>
-                <option value="Single">Single</option>
-                <option value="Married">Married</option>
-                <option value="Divorced">Divorced</option>
-                <option value="Widowed">Widowed</option>
+                <option value="SINGLE">Single</option>
+                <option value="MARRIED">Married</option>
+                <option value="DIVORCED">Divorced</option>
+                <option value="WIDOWED">Widowed</option>
               </select>
-              {maritalStatus === "Married" && (
+              {maritalStatus === "MARRIED" && (
                 <button type="button" onClick={() => setShowSpouseModal(true)} className="mt-2 text-xs font-medium text-[#000080] underline hover:text-[#000066]">
                   {spouse ? `Spouse: ${spouse.name} (change)` : "+ Link Spouse"}
                 </button>
@@ -281,9 +344,12 @@ export default function EditFirstTimerPage() {
           </div>
         </div>
 
+        {submitError && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{submitError}</div>
+        )}
         <div className="flex justify-end gap-3">
           <Button type="button" variant="secondary" onClick={() => router.back()}>Cancel</Button>
-          <Button type="submit" variant="primary">Save Changes</Button>
+          <Button type="submit" variant="primary" disabled={submitting}>{submitting ? "Saving…" : "Save Changes"}</Button>
         </div>
       </form>
 

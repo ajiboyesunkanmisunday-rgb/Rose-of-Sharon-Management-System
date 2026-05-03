@@ -8,7 +8,7 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import MultiSelect from "@/components/ui/MultiSelect";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { createMember } from "@/lib/api";
+import { createMember, uploadProfilePicture } from "@/lib/api";
 
 export default function AddMemberPage() {
   const router = useRouter();
@@ -31,6 +31,7 @@ export default function AddMemberPage() {
   const [maritalStatus, setMaritalStatus] = useState("");
   const [groups, setGroups] = useState<string[]>([]);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [spouse, setSpouse] = useState<SpouseData | null>(null);
   const [showSpouseModal, setShowSpouseModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -45,7 +46,7 @@ export default function AddMemberPage() {
     let dayOfWedding: number | undefined;
     let monthOfWedding: number | undefined;
     let yearOfWedding: number | undefined;
-    if (maritalStatus === "Married" && spouse?.weddingDate) {
+    if (maritalStatus === "MARRIED" && spouse?.weddingDate) {
       const parts = spouse.weddingDate.split("-");
       if (parts.length === 3) {
         yearOfWedding = Number(parts[0]);
@@ -55,6 +56,10 @@ export default function AddMemberPage() {
     }
 
     try {
+      let profilePictureUrl: string | undefined;
+      if (photoFile) {
+        profilePictureUrl = await uploadProfilePicture(photoFile);
+      }
       await createMember({
         firstName,
         middleName: middleName || undefined,
@@ -62,7 +67,7 @@ export default function AddMemberPage() {
         email,
         phoneNumber: phone,
         countryCode: countryCode.replace(/^\+/, ""),
-        sex: gender ? gender.toUpperCase() : undefined,
+        sex: gender || undefined,
         dayOfBirth: dobDay ? Number(dobDay) : undefined,
         monthOfBirth: dobMonth ? Number(dobMonth) : undefined,
         yearOfBirth: dobYear ? Number(dobYear) : undefined,
@@ -70,7 +75,8 @@ export default function AddMemberPage() {
         city: city || undefined,
         state: state || undefined,
         country: country || undefined,
-        maritalStatus: maritalStatus ? maritalStatus.toUpperCase() : undefined,
+        maritalStatus: maritalStatus || undefined,
+        profilePictureUrl,
         spouseId: spouse?.memberId || undefined,
         dayOfWedding,
         monthOfWedding,
@@ -87,6 +93,7 @@ export default function AddMemberPage() {
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setPhotoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPhotoPreview(reader.result as string);
@@ -276,8 +283,8 @@ export default function AddMemberPage() {
                     required
                   >
                     <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
                   </select>
                 </div>
               </div>
@@ -404,12 +411,12 @@ export default function AddMemberPage() {
                     className={selectStyles}
                   >
                     <option value="">Select Marital Status</option>
-                    <option value="Single">Single</option>
-                    <option value="Married">Married</option>
-                    <option value="Widowed">Widowed</option>
-                    <option value="Divorced">Divorced</option>
+                    <option value="SINGLE">Single</option>
+                    <option value="MARRIED">Married</option>
+                    <option value="WIDOWED">Widowed</option>
+                    <option value="DIVORCED">Divorced</option>
                   </select>
-                  {maritalStatus === "Married" && (
+                  {maritalStatus === "MARRIED" && (
                     <button
                       type="button"
                       onClick={() => setShowSpouseModal(true)}

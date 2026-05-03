@@ -1,41 +1,105 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import MultiSelect from "@/components/ui/MultiSelect";
-import { profileDetails } from "@/lib/mock-data";
+import { getUser, updateMember, uploadProfilePicture } from "@/lib/api";
 
 export default function EditMemberPage() {
   const router = useRouter();
+  const params = useParams();
+  const paramId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
+  const [id, setId] = useState(paramId);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const parts = window.location.pathname.replace(/\/$/, "").split("/");
+      const urlId = parts[parts.length - 2] ?? "";
+      if (urlId && urlId !== id) setId(urlId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [firstName, setFirstName] = useState(profileDetails.firstName);
-  const [lastName, setLastName] = useState(profileDetails.lastName);
-  const [phone, setPhone] = useState(profileDetails.phoneNumber);
-  const [email, setEmail] = useState(profileDetails.email);
-  const [gender, setGender] = useState(profileDetails.gender);
-  const [dobDay, setDobDay] = useState("1");
-  const [dobMonth, setDobMonth] = useState("3");
-  const [dobYear, setDobYear] = useState("1976");
-  const [street, setStreet] = useState("123 Salami Street");
-  const [city, setCity] = useState("Ikotun");
-  const [state, setState] = useState("Lagos");
-  const [country, setCountry] = useState("Nigeria");
-  const [maritalStatus, setMaritalStatus] = useState(profileDetails.maritalStatus);
-  const [groups, setGroups] = useState<string[]>(["Youth"]);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [gender, setGender] = useState("");
+  const [dobDay, setDobDay] = useState("");
+  const [dobMonth, setDobMonth] = useState("");
+  const [dobYear, setDobYear] = useState("");
+  const [street, setStreet] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [country, setCountry] = useState("");
+  const [maritalStatus, setMaritalStatus] = useState("");
+  const [groups, setGroups] = useState<string[]>([]);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  const populate = useCallback(async () => {
+    if (!id || id.startsWith("m-")) return;
+    try {
+      const u = await getUser(id);
+      setFirstName(u.firstName ?? "");
+      setLastName(u.lastName ?? "");
+      setPhone(u.phoneNumber ?? "");
+      setEmail(u.email ?? "");
+      setGender(u.sex ?? "");
+      setDobDay(u.dayOfBirth?.toString() ?? "");
+      setDobMonth(u.monthOfBirth?.toString() ?? "");
+      setDobYear(u.yearOfBirth?.toString() ?? "");
+      setStreet(u.street ?? "");
+      setCity(u.city ?? "");
+      setState(u.state ?? "");
+      setCountry(u.country ?? "");
+      setMaritalStatus(u.maritalStatus ?? "");
+      setGroups(u.groups?.map((g) => g.name) ?? []);
+    } catch { /* silently fall back to empty fields */ }
+  }, [id]);
+
+  useEffect(() => { populate(); }, [populate]);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submit edit member form");
-    router.push("/user-management/members");
+    setSubmitError("");
+    setSubmitting(true);
+    try {
+      let profilePictureUrl: string | undefined;
+      if (photoFile) {
+        profilePictureUrl = await uploadProfilePicture(photoFile);
+      }
+      await updateMember(id, {
+        firstName: firstName || undefined,
+        lastName: lastName || undefined,
+        email: email || undefined,
+        phoneNumber: phone || undefined,
+        sex: gender || undefined,
+        dayOfBirth: dobDay ? Number(dobDay) : undefined,
+        monthOfBirth: dobMonth ? Number(dobMonth) : undefined,
+        yearOfBirth: dobYear ? Number(dobYear) : undefined,
+        street: street || undefined,
+        city: city || undefined,
+        state: state || undefined,
+        country: country || undefined,
+        maritalStatus: maritalStatus || undefined,
+        profilePictureUrl,
+      });
+      router.push(`/user-management/members/${id}`);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Failed to update member.");
+      setSubmitting(false);
+    }
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setPhotoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPhotoPreview(reader.result as string);
@@ -152,8 +216,8 @@ export default function EditMemberPage() {
                     className={selectStyles}
                   >
                     <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
                   </select>
                 </div>
 
@@ -291,10 +355,10 @@ export default function EditMemberPage() {
                     className={selectStyles}
                   >
                     <option value="">Select Marital Status</option>
-                    <option value="Single">Single</option>
-                    <option value="Married">Married</option>
-                    <option value="Widowed">Widowed</option>
-                    <option value="Divorced">Divorced</option>
+                    <option value="SINGLE">Single</option>
+                    <option value="MARRIED">Married</option>
+                    <option value="WIDOWED">Widowed</option>
+                    <option value="DIVORCED">Divorced</option>
                   </select>
                 </div>
 
@@ -323,9 +387,12 @@ export default function EditMemberPage() {
               </div>
 
               {/* Update Member Button */}
+              {submitError && (
+                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{submitError}</div>
+              )}
               <div className="mt-6 flex justify-end">
-                <Button type="submit" variant="primary">
-                  Update Member
+                <Button type="submit" variant="primary" disabled={submitting}>
+                  {submitting ? "Saving…" : "Update Member"}
                 </Button>
               </div>
             </div>

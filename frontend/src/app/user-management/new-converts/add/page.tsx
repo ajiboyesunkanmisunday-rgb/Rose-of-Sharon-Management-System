@@ -37,7 +37,7 @@ export default function AddNewConvertPage() {
         email: email || undefined,
         phoneNumber: phone,
         countryCode: countryCode.replace(/^\+/, ""),
-        sex: gender ? gender.toUpperCase() : undefined,
+        sex: gender || undefined,
         street: street || undefined,
         city: city || undefined,
         state: state || undefined,
@@ -152,8 +152,8 @@ export default function AddNewConvertPage() {
                 className={selectStyles}
               >
                 <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
               </select>
             </div>
 
