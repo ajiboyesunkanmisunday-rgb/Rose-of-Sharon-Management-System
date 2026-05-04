@@ -95,6 +95,16 @@ export default function EditCalendarEventClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    const dateEl = document.getElementById("event-date-input") as HTMLInputElement | null;
+    const date = dateEl?.value || formData.date || "";
+
+    if (!date) {
+      setError("Please select a date for the event.");
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       await updateEvent(id, {
@@ -102,9 +112,9 @@ export default function EditCalendarEventClient() {
         preacher:               formData.preacher || undefined,
         topic:                  formData.topic || undefined,
         category:               formData.category || undefined,
-        date:                   formData.date,
-        startTime:              timeToEpochMs(formData.date, formData.startTime),
-        endTime:                timeToEpochMs(formData.date, formData.endTime),
+        date,
+        startTime:              timeToEpochMs(date, formData.startTime),
+        endTime:                timeToEpochMs(date, formData.endTime),
         locationType:           formData.locationType || undefined,
         virtualMeetingLink:     formData.virtualMeetingLink || undefined,
         additionalInformation: formData.description || undefined,
@@ -133,7 +143,7 @@ export default function EditCalendarEventClient() {
           <FormField label="Event Name" name="title" value={formData.title} onChange={handleChange} required />
 
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
-            <FormField label="Date" type="date" name="date" value={formData.date} onChange={handleChange} required />
+            <FormField id="event-date-input" label="Date" type="date" name="date" value={formData.date} onChange={handleChange} onInput={handleChange as React.FormEventHandler} required />
             <FormField label="Start Time" type="time" name="startTime" value={formData.startTime} onChange={handleChange} />
             <FormField label="End Time" type="time" name="endTime" value={formData.endTime} onChange={handleChange} />
             <SelectField label="Category" name="category" value={formData.category} onChange={handleChange} options={CATEGORY_OPTIONS} required />
