@@ -71,6 +71,13 @@ export default function AddEventPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Explicit date guard — Safari can show a date visually without updating state
+    if (!formData.date) {
+      setError("Please select a date for the event.");
+      return;
+    }
+
     setLoading(true);
     try {
       await createEvent({
@@ -87,7 +94,7 @@ export default function AddEventPage() {
         city: formData.city || undefined,
         state: formData.state || undefined,
         country: formData.country || undefined,
-        additionalInstructions: formData.additionalInstructions || undefined,
+        additionalInformation: formData.additionalInstructions || undefined,
         eFlyer: formData.eFlyer || undefined,
         requiresRegistration: formData.requiresRegistration || undefined,
       });

@@ -107,7 +107,7 @@ export default function EditCalendarEventClient() {
         endTime:                timeToEpochMs(formData.date, formData.endTime),
         locationType:           formData.locationType || undefined,
         virtualMeetingLink:     formData.virtualMeetingLink || undefined,
-        additionalInstructions: formData.description || undefined,
+        additionalInformation: formData.description || undefined,
       });
       router.push(`/calendar/events/${id}`);
     } catch (err) {

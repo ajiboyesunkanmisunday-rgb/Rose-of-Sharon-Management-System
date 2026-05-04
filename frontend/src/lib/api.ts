@@ -773,7 +773,7 @@ export interface CreateEventRequest {
   city?: string;
   state?: string;
   country?: string;
-  additionalInstructions?: string;
+  additionalInformation?: string;  // backend DTO field name (EventResponse uses additionalInstructions)
   eFlyer?: string;
   requiresRegistration?: boolean;
 }
