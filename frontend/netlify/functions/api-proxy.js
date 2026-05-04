@@ -1,4 +1,4 @@
-const http = require("http");
+const https = require("https");
 
 /**
  * General API proxy for PATCH / PUT JSON requests.
@@ -49,14 +49,14 @@ exports.handler = async function (event) {
 
   return new Promise((resolve) => {
     const options = {
-      hostname: "137.184.72.16",
-      port: 6001,
+      hostname: "api.rccgros.org",
+      port: 443,
       path: backendPath,
       method,
       headers: forwardHeaders,
     };
 
-    const req = http.request(options, (res) => {
+    const req = https.request(options, (res) => {
       let raw = "";
       res.on("data", (chunk) => { raw += chunk; });
       res.on("end", () => {

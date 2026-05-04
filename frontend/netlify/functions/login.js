@@ -1,4 +1,4 @@
-const http = require("http");
+const https = require("https");
 
 /**
  * Serverless proxy for POST /api/v1/users/login
@@ -17,8 +17,8 @@ exports.handler = async function (event) {
     const postData = event.body || "{}";
 
     const options = {
-      hostname: "137.184.72.16",
-      port: 6001,
+      hostname: "api.rccgros.org",
+      port: 443,
       path: "/api/v1/users/login",
       method: "POST",
       headers: {
@@ -31,7 +31,7 @@ exports.handler = async function (event) {
       },
     };
 
-    const req = http.request(options, (res) => {
+    const req = https.request(options, (res) => {
       let raw = "";
       res.on("data", (chunk) => { raw += chunk; });
       res.on("end", () => {

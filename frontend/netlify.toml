@@ -12,11 +12,10 @@
   status = 200
   force  = true
 
-# All other API calls are proxied through Netlify to avoid
-# mixed-content errors (frontend is HTTPS, backend is HTTP).
+# All other API calls are proxied through Netlify to avoid CORS issues.
 [[redirects]]
   from  = "/api/*"
-  to    = "http://137.184.72.16:6001/api/:splat"
+  to    = "https://api.rccgros.org/api/:splat"
   status = 200
   force  = true
 
