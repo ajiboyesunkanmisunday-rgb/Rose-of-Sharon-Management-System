@@ -115,6 +115,13 @@ export default function EditEventClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!formData.date) {
+      setError("Please select a date for the event.");
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       await updateEvent(id, {
@@ -131,7 +138,7 @@ export default function EditEventClient() {
         city:                   formData.city || undefined,
         state:                  formData.state || undefined,
         country:                formData.country || undefined,
-        additionalInstructions: formData.additionalInstructions || undefined,
+        additionalInformation:  formData.additionalInstructions || undefined,
         eFlyer:                 formData.eFlyer || undefined,
         requiresRegistration:   formData.requiresRegistration,
       });
