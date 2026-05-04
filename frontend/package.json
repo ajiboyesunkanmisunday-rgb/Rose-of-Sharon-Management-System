@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "deploy": "bash ../deploy.sh",
+    "deploy:fast": "bash ../deploy.sh --skip-build"
   },
   "dependencies": {
     "lucide-react": "^1.8.0",
