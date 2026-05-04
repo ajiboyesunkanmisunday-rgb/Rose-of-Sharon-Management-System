@@ -1316,7 +1316,11 @@ export async function uploadMedia(fields: {
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const response = await fetch(`${BASE_URL}/api/v1/media`, {
+  // Upload directly to the backend to bypass Netlify's 10 MB proxy-redirect limit.
+  // The backend allows all origins (Access-Control-Allow-Origin: *) and Bearer-token
+  // auth works without Access-Control-Allow-Credentials, so CORS is fine.
+  const BACKEND_URL = "https://api.rccgros.org";
+  const response = await fetch(`${BACKEND_URL}/api/v1/media`, {
     method: "POST",
     headers,
     body: form,
