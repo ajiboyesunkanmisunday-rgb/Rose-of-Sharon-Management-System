@@ -19,6 +19,12 @@
   status = 200
   force  = true
 
+# Forgot-password — static page, ensure trailing-slash variant is served too
+[[redirects]]
+  from   = "/forgot-password/"
+  to     = "/forgot-password/index.html"
+  status = 200
+
 # ── Dynamic [id] routes ──────────────────────────────────────────────────────
 # Next.js static export only pre-builds mock IDs (m-1, em-1, etc.).
 # Real backend IDs are UUIDs. These rules serve the pre-built placeholder HTML
