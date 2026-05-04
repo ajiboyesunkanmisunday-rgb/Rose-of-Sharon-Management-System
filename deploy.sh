@@ -194,11 +194,14 @@ tail_pids+=($!)
 wait $GH_PID;  GH_STATUS=$?
 wait $NL_PID;  NL_STATUS=$?
 
-# Give tails a moment to flush, then stop them
+# Give tails a moment to flush, then stop them quietly
 sleep 1
+set +m  # suppress "Terminated" job-control messages
 for p in "${tail_pids[@]}"; do
   kill "$p" 2>/dev/null || true
 done
+wait "${tail_pids[@]}" 2>/dev/null || true
+set -m
 
 # ── Parse outcomes ────────────────────────────────────────────────────────────
 GH_OK=false;  NL_OK=false
