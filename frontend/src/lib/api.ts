@@ -1320,11 +1320,19 @@ export async function uploadMedia(fields: {
   // The backend allows all origins (Access-Control-Allow-Origin: *) and Bearer-token
   // auth works without Access-Control-Allow-Credentials, so CORS is fine.
   const BACKEND_URL = "https://api.rccgros.org";
-  const response = await fetch(`${BACKEND_URL}/api/v1/media`, {
-    method: "POST",
-    headers,
-    body: form,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${BACKEND_URL}/api/v1/media`, {
+      method: "POST",
+      headers,
+      body: form,
+    });
+  } catch {
+    // TypeError — usually a CORS preflight rejection or network failure
+    throw new Error(
+      "Media upload could not reach the server. This may be a CORS issue — please ask the backend team to allow uploads from the Netlify domain, or try again on a stable connection."
+    );
+  }
 
   if (response.status === 401) {
     removeToken();

@@ -72,8 +72,12 @@ export default function AddEventPage() {
     e.preventDefault();
     setError("");
 
-    // Explicit date guard — Safari can show a date visually without updating state
-    if (!formData.date) {
+    // Safari's native date picker updates the DOM without always firing React's onChange.
+    // Read directly from the DOM element as the authoritative value, falling back to state.
+    const dateEl = document.getElementById("event-date-input") as HTMLInputElement | null;
+    const date = dateEl?.value || formData.date || "";
+
+    if (!date) {
       setError("Please select a date for the event.");
       return;
     }
@@ -85,9 +89,9 @@ export default function AddEventPage() {
         preacher: formData.preacher || undefined,
         topic: formData.topic || undefined,
         category: formData.category || undefined,
-        date: formData.date,
-        startTime: timeToEpochMs(formData.date, formData.startTime),
-        endTime: timeToEpochMs(formData.date, formData.endTime),
+        date,
+        startTime: timeToEpochMs(date, formData.startTime),
+        endTime: timeToEpochMs(date, formData.endTime),
         locationType: formData.locationType || undefined,
         virtualMeetingLink: formData.virtualMeetingLink || undefined,
         street: formData.street || undefined,
@@ -157,11 +161,13 @@ export default function AddEventPage() {
           {/* Date & Time */}
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-3">
             <FormField
+              id="event-date-input"
               label="Event Date"
               type="date"
               name="date"
               value={formData.date}
               onChange={handleChange}
+              onInput={handleChange as React.FormEventHandler}
               required
             />
             <FormField
