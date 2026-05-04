@@ -9,6 +9,12 @@ import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal"
 import { getMediaItem, deleteMediaBulk, type MediaResponse } from "@/lib/api";
 
 const typeColors: Record<string, string> = {
+  SERMON:    "bg-[#000080] text-white",
+  PODCAST:   "bg-[#7C3AED] text-white",
+  VIDEOS:    "bg-[#16A34A] text-white",
+  IMAGES:    "bg-[#F59E0B] text-white",
+  THUMBNAIL: "bg-[#6B7280] text-white",
+  // legacy lowercase variants
   Sermon: "bg-[#000080] text-white",
   Podcast: "bg-[#7C3AED] text-white",
   Video: "bg-[#16A34A] text-white",
