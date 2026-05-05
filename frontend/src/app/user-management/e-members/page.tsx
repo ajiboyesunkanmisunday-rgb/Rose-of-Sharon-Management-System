@@ -58,7 +58,7 @@ export default function EMembersPage() {
     setApiError("");
     try {
       const res = await getEMembers(page - 1, ITEMS_PER_PAGE);
-      setEMembers(res.content);
+      setEMembers(res.content ?? []);
       setTotalPages(res.totalPages || 1);
       setTotalItems(res.totalElements || 0);
     } catch (err) {
