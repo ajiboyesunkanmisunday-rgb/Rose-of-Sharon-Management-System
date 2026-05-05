@@ -163,9 +163,17 @@ async function apiFetchRaw<T>(
     throw new Error(errorMessage);
   }
 
-  // Some endpoints return empty body on success
+  // Some endpoints return empty body on success; some return malformed JSON
+  // even on a successful 2xx. Guard so a bad response body never masks a
+  // successful operation.
   const text = await response.text();
-  const data = text ? (JSON.parse(text) as T) : ({} as T);
+  let data: T;
+  try {
+    data = text ? (JSON.parse(text) as T) : ({} as T);
+  } catch {
+    // Backend returned 2xx but non-parseable body — treat as success
+    data = {} as T;
+  }
   return { data, headers: response.headers };
 }
 
