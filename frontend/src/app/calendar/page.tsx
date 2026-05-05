@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
-import { getEvents, type EventResponse } from "@/lib/api";
+import { getCalendarEvents, getUpcomingEvents, type EventResponse } from "@/lib/api";
 
 // ─── Category colours (Teams-style pill colours) ────────────────────────────
 const categoryColor: Record<string, string> = {
@@ -76,24 +76,60 @@ export default function CalendarPage() {
   });
 
   const [events,   setEvents]   = useState<EventResponse[]>([]);
+  const [upcoming, setUpcoming] = useState<EventResponse[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [apiError, setApiError] = useState("");
 
-  // Load all events (generous page to cover a full month view)
+  function isoDate(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }
+  function isoDateTime(d: Date): string {
+    return `${isoDate(d)}T${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}:${String(d.getSeconds()).padStart(2,"0")}`;
+  }
+
+  // Fetch events for the currently visible date range (month or week)
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     setApiError("");
     try {
-      const res = await getEvents(0, 200);
-      setEvents(res.content ?? []);
+      let startDay: string;
+      let endDay: string;
+      if (viewMode === "Month") {
+        const first = new Date(currentYear, currentMonth, 1, 0, 0, 0);
+        const last  = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59);
+        startDay = isoDateTime(first);
+        endDay   = isoDateTime(last);
+      } else {
+        const ws = new Date(weekStart); ws.setHours(0, 0, 0);
+        const we = new Date(weekStart); we.setDate(we.getDate() + 6); we.setHours(23, 59, 59);
+        startDay = isoDateTime(ws);
+        endDay   = isoDateTime(we);
+      }
+      const result = await getCalendarEvents(startDay, endDay);
+      setEvents(result ?? []);
     } catch (err) {
       setApiError(err instanceof Error ? err.message : "Failed to load events.");
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentYear, currentMonth, viewMode, weekStart]);
+
+  // Fetch upcoming events for sidebar (today → +90 days), independent of view
+  const fetchUpcoming = useCallback(async () => {
+    try {
+      const start = new Date();
+      const end   = new Date(); end.setDate(end.getDate() + 90);
+      const result = await getUpcomingEvents(isoDate(start), isoDate(end));
+      setUpcoming(result ?? []);
+    } catch {
+      // sidebar failure is non-critical
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
+  useEffect(() => { fetchUpcoming(); }, [fetchUpcoming]);
 
   // Events keyed by ISO date string
   const eventsByDate = events.reduce<Record<string, EventResponse[]>>((acc, ev) => {
@@ -132,9 +168,8 @@ export default function CalendarPage() {
 
   const todayISO = toISO(today.getFullYear(), today.getMonth(), today.getDate());
 
-  // Upcoming events
-  const upcoming = [...events]
-    .filter(ev => ev.date && ev.date >= todayISO)
+  // Sidebar shows upcoming events from dedicated fetch (sorted, capped at 6)
+  const sidebarUpcoming = [...upcoming]
     .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""))
     .slice(0, 6);
 
@@ -231,10 +266,10 @@ export default function CalendarPage() {
           <div className="space-y-3">
             {loading ? (
               <p className="rounded-xl border border-[#E5E7EB] bg-white p-6 text-sm text-[#6B7280]">Loading…</p>
-            ) : upcoming.length === 0 ? (
+            ) : sidebarUpcoming.length === 0 ? (
               <p className="rounded-xl border border-[#E5E7EB] bg-white p-6 text-sm text-[#6B7280]">No upcoming events.</p>
             ) : (
-              upcoming.map(ev => (
+              sidebarUpcoming.map(ev => (
                 <button
                   key={ev.id}
                   onClick={() => router.push(`/event-management/${ev.id}`)}
