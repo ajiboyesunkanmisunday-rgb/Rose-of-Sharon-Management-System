@@ -61,9 +61,9 @@ export default function MembersPage() {
     setApiError("");
     try {
       const res = await getMembers(page - 1, ITEMS_PER_PAGE);
-      setMembers(res.content);
-      setTotalPages(res.totalPages || 1);
-      setTotalItems(res.totalElements || 0);
+      setMembers(res.content ?? []);
+      setTotalPages(res.totalPages ?? 1);
+      setTotalItems(res.totalElements ?? 0);
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : "Failed to load members.";

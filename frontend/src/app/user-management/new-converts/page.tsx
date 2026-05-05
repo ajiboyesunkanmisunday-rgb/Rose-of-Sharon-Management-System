@@ -67,7 +67,7 @@ export default function NewConvertsPage() {
     setApiError("");
     try {
       const res = await getNewConverts(page - 1, ITEMS_PER_PAGE);
-      setConverts(res.content);
+      setConverts(res.content ?? []);
       setTotalPages(res.totalPages || 1);
       setTotalItems(res.totalElements || 0);
     } catch (err) {

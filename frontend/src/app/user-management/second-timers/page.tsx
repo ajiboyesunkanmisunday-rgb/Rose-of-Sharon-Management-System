@@ -66,7 +66,7 @@ export default function SecondTimersPage() {
     setApiError("");
     try {
       const res = await getSecondTimers(page - 1, ITEMS_PER_PAGE);
-      setTimers(res.content);
+      setTimers(res.content ?? []);
       setTotalPages(res.totalPages || 1);
       setTotalItems(res.totalElements || 0);
     } catch (err) {
