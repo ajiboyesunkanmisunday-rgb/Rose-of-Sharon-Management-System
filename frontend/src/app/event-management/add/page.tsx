@@ -176,7 +176,6 @@ export default function AddEventPage() {
               name="startTime"
               value={formData.startTime}
               onChange={handleChange}
-              required
             />
             <FormField
               label="End Time"
@@ -184,7 +183,6 @@ export default function AddEventPage() {
               name="endTime"
               value={formData.endTime}
               onChange={handleChange}
-              required
             />
           </div>
 

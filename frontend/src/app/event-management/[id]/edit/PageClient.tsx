@@ -178,8 +178,8 @@ export default function EditEventClient() {
 
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-3">
             <FormField id="event-date-input" label="Event Date" type="date" name="date" value={formData.date} onChange={handleChange} onInput={handleChange as React.FormEventHandler} required />
-            <FormField label="Start Time" type="time" name="startTime" value={formData.startTime} onChange={handleChange} required />
-            <FormField label="End Time"   type="time" name="endTime"   value={formData.endTime}   onChange={handleChange} required />
+            <FormField label="Start Time" type="time" name="startTime" value={formData.startTime} onChange={handleChange} />
+            <FormField label="End Time"   type="time" name="endTime"   value={formData.endTime}   onChange={handleChange} />
           </div>
 
           <SelectField label="Location Type" name="locationType" value={formData.locationType} onChange={handleChange} options={LOCATION_TYPE_OPTIONS} />
