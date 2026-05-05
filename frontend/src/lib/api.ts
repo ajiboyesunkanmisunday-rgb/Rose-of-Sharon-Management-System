@@ -160,11 +160,6 @@ async function apiFetchRaw<T>(
     } catch {
       // ignore parse errors
     }
-    // 405 on a user profile update means the backend hasn't implemented
-    // the update endpoint yet — surface a clear message instead of raw HTTP status.
-    if (response.status === 405 && (method === "PATCH" || method === "PUT" || method === "POST")) {
-      errorMessage = "Profile updates are not yet available on the server. Please contact the backend team to enable this feature.";
-    }
     throw new Error(errorMessage);
   }
 
@@ -355,8 +350,8 @@ export async function updateMember(
   id: string,
   body: Partial<CreateMemberRequest>
 ): Promise<UserResponse> {
-  return apiFetch<UserResponse>(`/api/v1/users/${id}`, {
-    method: "PATCH",
+  return apiFetch<UserResponse>(`/api/v1/users/member/${id}`, {
+    method: "PUT",
     body: JSON.stringify(body),
   });
 }
@@ -422,8 +417,8 @@ export async function updateEMember(
   id: string,
   body: Partial<CreateEMemberRequest>
 ): Promise<UserResponse> {
-  return apiFetch<UserResponse>(`/api/v1/users/${id}`, {
-    method: "PATCH",
+  return apiFetch<UserResponse>(`/api/v1/users/e-member/${id}`, {
+    method: "PUT",
     body: JSON.stringify(body),
   });
 }
@@ -487,8 +482,8 @@ export async function updateFirstTimer(
   id: string,
   body: Partial<CreateFirstTimerRequest>
 ): Promise<UserResponse> {
-  return apiFetch<UserResponse>(`/api/v1/users/${id}`, {
-    method: "PATCH",
+  return apiFetch<UserResponse>(`/api/v1/users/first-timer/${id}`, {
+    method: "PUT",
     body: JSON.stringify(body),
   });
 }
@@ -527,8 +522,8 @@ export async function updateSecondTimer(
   id: string,
   body: Partial<CreateSecondTimerRequest>
 ): Promise<UserResponse> {
-  return apiFetch<UserResponse>(`/api/v1/users/${id}`, {
-    method: "PATCH",
+  return apiFetch<UserResponse>(`/api/v1/users/second-timer/${id}`, {
+    method: "PUT",
     body: JSON.stringify(body),
   });
 }
@@ -784,6 +779,26 @@ export async function getEvents(
 ): Promise<CustomPageResponse<EventResponse>> {
   return apiFetch<CustomPageResponse<EventResponse>>(
     `/api/v1/events?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+// GET /api/v1/events/calendar?startDay=...&endDay=... (date-time format)
+export async function getCalendarEvents(
+  startDay: string,
+  endDay: string
+): Promise<EventResponse[]> {
+  return apiFetch<EventResponse[]>(
+    `/api/v1/events/calendar?startDay=${encodeURIComponent(startDay)}&endDay=${encodeURIComponent(endDay)}`
+  );
+}
+
+// GET /api/v1/events/calendar/upcoming?startDay=...&endDay=... (date format YYYY-MM-DD)
+export async function getUpcomingEvents(
+  startDay: string,
+  endDay: string
+): Promise<EventResponse[]> {
+  return apiFetch<EventResponse[]>(
+    `/api/v1/events/calendar/upcoming?startDay=${encodeURIComponent(startDay)}&endDay=${encodeURIComponent(endDay)}`
   );
 }
 
