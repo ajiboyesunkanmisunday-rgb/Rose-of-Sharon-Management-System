@@ -781,7 +781,7 @@ export async function getEvents(
   );
 }
 
-// GET /api/v1/events/calendar?startDay=...&endDay=... (date-time format)
+// GET /api/v1/events/calendar?startDay=...&endDay=... (YYYY-MM-DD)
 export async function getCalendarEvents(
   startDay: string,
   endDay: string

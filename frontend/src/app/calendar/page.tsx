@@ -83,9 +83,6 @@ export default function CalendarPage() {
   function isoDate(d: Date): string {
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
   }
-  function isoDateTime(d: Date): string {
-    return `${isoDate(d)}T${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}:${String(d.getSeconds()).padStart(2,"0")}`;
-  }
 
   // Fetch events for the currently visible date range (month or week)
   const fetchEvents = useCallback(async () => {
@@ -95,15 +92,12 @@ export default function CalendarPage() {
       let startDay: string;
       let endDay: string;
       if (viewMode === "Month") {
-        const first = new Date(currentYear, currentMonth, 1, 0, 0, 0);
-        const last  = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59);
-        startDay = isoDateTime(first);
-        endDay   = isoDateTime(last);
+        startDay = isoDate(new Date(currentYear, currentMonth, 1));
+        endDay   = isoDate(new Date(currentYear, currentMonth + 1, 0));
       } else {
-        const ws = new Date(weekStart); ws.setHours(0, 0, 0);
-        const we = new Date(weekStart); we.setDate(we.getDate() + 6); we.setHours(23, 59, 59);
-        startDay = isoDateTime(ws);
-        endDay   = isoDateTime(we);
+        const we = new Date(weekStart); we.setDate(we.getDate() + 6);
+        startDay = isoDate(weekStart);
+        endDay   = isoDate(we);
       }
       const result = await getCalendarEvents(startDay, endDay);
       setEvents(result ?? []);
