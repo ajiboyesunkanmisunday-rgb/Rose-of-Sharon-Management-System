@@ -19,7 +19,7 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
   }, []);
 
   const displayName = user
-    ? `${user.firstName} ${user.lastName}`.trim()
+    ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email || "User"
     : "—";
   const displayEmail = user?.email ?? "";
   const initials = user
