@@ -37,8 +37,9 @@ function epochToTimeInput(ms?: number): string {
 }
 
 function timeToEpochMs(date: string, time: string): number | undefined {
-  if (!date || !time) return undefined;
-  return new Date(`${date}T${time}:00`).getTime();
+  if (!date) return undefined;
+  const t = time || "00:00";
+  return new Date(`${date}T${t}:00`).getTime();
 }
 
 export default function EditEventClient() {
