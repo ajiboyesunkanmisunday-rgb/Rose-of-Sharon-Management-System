@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import MultiSelect from "@/components/ui/MultiSelect";
-import { getUser, updateMember, uploadProfilePicture } from "@/lib/api";
+import { getUser, updateMember, uploadProfilePicture, getAllGroups } from "@/lib/api";
 
 export default function EditMemberPage() {
   const router = useRouter();
@@ -35,7 +35,8 @@ export default function EditMemberPage() {
   const [state, setState] = useState("");
   const [country, setCountry] = useState("");
   const [maritalStatus, setMaritalStatus] = useState("");
-  const [groups, setGroups] = useState<string[]>([]);
+  const [allGroups, setAllGroups]       = useState<{ id: string; name: string }[]>([]);
+  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -57,11 +58,18 @@ export default function EditMemberPage() {
       setState(u.state ?? "");
       setCountry(u.country ?? "");
       setMaritalStatus(u.maritalStatus ?? "");
-      setGroups(u.groups?.map((g) => g.name) ?? []);
+      setSelectedGroupIds(u.groups?.map((g) => g.id) ?? []);
     } catch { /* silently fall back to empty fields */ }
   }, [id]);
 
   useEffect(() => { populate(); }, [populate]);
+
+  useEffect(() => {
+    getAllGroups()
+      .then((gs) => setAllGroups(gs.map((g) => ({ id: g.id, name: g.name }))))
+      .catch(() => { /* non-critical */ });
+  }, []);
+
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,6 +96,7 @@ export default function EditMemberPage() {
         country: country || undefined,
         maritalStatus: maritalStatus || undefined,
         profilePictureUrl,
+        groupIds: selectedGroupIds.length > 0 ? selectedGroupIds : undefined,
       });
       router.push(`/user-management/members/${id}`);
     } catch (err) {
@@ -365,22 +374,17 @@ export default function EditMemberPage() {
                 {/* Groups (multi-select dropdown) */}
                 <MultiSelect
                   label="Groups"
-                  options={[
-                    "Youth",
-                    "Men",
-                    "Women",
-                    "Children",
-                    "Teenagers",
-                    "Young Adults",
-                    "Choir",
-                    "Ushering",
-                    "Protocol",
-                    "Media",
-                    "Prayer",
-                    "Evangelism",
-                  ]}
-                  value={groups}
-                  onChange={setGroups}
+                  options={allGroups.map((g) => g.name)}
+                  value={selectedGroupIds.map(
+                    (id) => allGroups.find((g) => g.id === id)?.name ?? id
+                  )}
+                  onChange={(names) =>
+                    setSelectedGroupIds(
+                      names
+                        .map((n) => allGroups.find((g) => g.name === n)?.id ?? "")
+                        .filter(Boolean)
+                    )
+                  }
                   placeholder="Select Groups"
                   name="groups"
                 />
