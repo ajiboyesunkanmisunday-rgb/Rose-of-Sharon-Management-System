@@ -675,8 +675,7 @@ export async function linkSpouse(
   spouseId: string
 ): Promise<UserResponse> {
   return apiFetch<UserResponse>(
-    `/api/v1/users/${userId}/link-spouse/${spouseId}`,
-    { method: "POST" }
+    `/api/v1/users/${userId}/link-spouse/${spouseId}`
   );
 }
 
