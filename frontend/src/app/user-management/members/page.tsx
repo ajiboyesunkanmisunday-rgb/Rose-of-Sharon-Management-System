@@ -14,17 +14,16 @@ import AddNotesModal from "@/components/user-management/AddNotesModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import BulkImportModal from "@/components/user-management/BulkImportModal";
 import NoLongerMemberModal from "@/components/user-management/NoLongerMemberModal";
-import {
-  getMembers,
-  deleteMembersBulk,
-  type UserResponse,
-} from "@/lib/api";
+import { getMembers, deleteMembersBulk, type UserResponse } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
-
+import { useAssignSuperAdmin } from "@/hooks/member/useAssignSuperAdmin";
+import { toast } from "sonner";
+import AssignSuperAdminModal from "@/components/user-management/AssignSuperAdminModal";
 const ITEMS_PER_PAGE = 10;
 
 export default function MembersPage() {
   const router = useRouter();
+  const { mutate, isPending, error, isSuccess } = useAssignSuperAdmin();
 
   // Data
   const [members, setMembers] = useState<UserResponse[]>([]);
@@ -49,6 +48,8 @@ export default function MembersPage() {
   const [showNoLongerBulkModal, setShowNoLongerBulkModal] = useState(false);
   const [showNoLongerSingleModal, setShowNoLongerSingleModal] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [showAssignSuperAdminModal, setShowAssignSuperAdminModal] =
+    useState(false);
 
   // Inline filter state
   const [showFilter, setShowFilter] = useState(false);
@@ -64,7 +65,8 @@ export default function MembersPage() {
       setTotalPages(res.totalPages || 1);
       setTotalItems(res.totalElements || 0);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to load members.";
+      const msg =
+        err instanceof Error ? err.message : "Failed to load members.";
       setApiError(msg);
     } finally {
       setLoading(false);
@@ -94,7 +96,9 @@ export default function MembersPage() {
 
   const handleSelectAll = (checked: boolean) => {
     const next = new Set(selectedRows);
-    displayedMembers.forEach((m) => (checked ? next.add(m.id) : next.delete(m.id)));
+    displayedMembers.forEach((m) =>
+      checked ? next.add(m.id) : next.delete(m.id),
+    );
     setSelectedRows(next);
   };
 
@@ -149,7 +153,10 @@ export default function MembersPage() {
   const bulkActions = [
     { label: "Send SMS", onClick: () => setShowSMSModal(true) },
     { label: "Send Email", onClick: () => setShowEmailModal(true) },
-    { label: "Mark as Inactive", onClick: () => setShowNoLongerBulkModal(true) },
+    {
+      label: "Mark as Inactive",
+      onClick: () => setShowNoLongerBulkModal(true),
+    },
     { label: "Delete", onClick: () => setShowBulkDeleteModal(true) },
   ];
 
@@ -162,16 +169,21 @@ export default function MembersPage() {
         email: m.email,
         phone: m.phoneNumber,
         userType: m.userType || "",
-      }))
+      })),
     );
-    downloadCSV(csv, `members-export-${new Date().toISOString().slice(0, 10)}.csv`);
+    downloadCSV(
+      csv,
+      `members-export-${new Date().toISOString().slice(0, 10)}.csv`,
+    );
   };
 
   return (
     <DashboardLayout>
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
+        <h1 className="text-[28px] font-bold text-[#000000]">
+          User Management
+        </h1>
         <h2 className="text-[22px] font-bold text-[#000080]">Members</h2>
       </div>
 
@@ -187,16 +199,25 @@ export default function MembersPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {selectedRows.size > 0 && (
-            <ActionDropdown actions={bulkActions} />
-          )}
+          {selectedRows.size > 0 && <ActionDropdown actions={bulkActions} />}
 
           <Button
             variant="primary"
             onClick={() => router.push("/user-management/members/add")}
             icon={
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             }
           >
@@ -206,8 +227,21 @@ export default function MembersPage() {
           <Button
             onClick={() => setShowQRCodeModal(true)}
             icon={
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
               </svg>
             }
           >
@@ -217,7 +251,17 @@ export default function MembersPage() {
           <Button
             onClick={() => setShowFilter((s) => !s)}
             icon={
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
               </svg>
             }
@@ -228,8 +272,20 @@ export default function MembersPage() {
           <Button
             onClick={handleExport}
             icon={
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
             }
           >
@@ -240,8 +296,20 @@ export default function MembersPage() {
             variant="primary"
             onClick={() => setShowBulkImportModal(true)}
             icon={
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
             }
           >
@@ -254,7 +322,9 @@ export default function MembersPage() {
       {showFilter && (
         <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4">
           <div>
-            <label className="mb-1 block text-xs font-medium text-[#374151]">Start Date</label>
+            <label className="mb-1 block text-xs font-medium text-[#374151]">
+              Start Date
+            </label>
             <input
               type="date"
               value={startDate}
@@ -263,7 +333,9 @@ export default function MembersPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-[#374151]">End Date</label>
+            <label className="mb-1 block text-xs font-medium text-[#374151]">
+              End Date
+            </label>
             <input
               type="date"
               value={endDate}
@@ -275,7 +347,10 @@ export default function MembersPage() {
           {(startDate || endDate) && (
             <button
               type="button"
-              onClick={() => { setStartDate(""); setEndDate(""); }}
+              onClick={() => {
+                setStartDate("");
+                setEndDate("");
+              }}
               className="text-sm font-medium text-[#000080] underline hover:text-[#000066]"
             >
               Clear
@@ -317,10 +392,18 @@ export default function MembersPage() {
                 />
               </th>
               <th className="px-4 py-4"></th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">First Name</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Last Name</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Phone</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Email</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+                First Name
+              </th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+                Last Name
+              </th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+                Phone
+              </th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
+                Email
+              </th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
@@ -343,7 +426,9 @@ export default function MembersPage() {
                   key={member.id}
                   className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
                   style={{ height: "56px" }}
-                  onDoubleClick={() => router.push(`/user-management/members/${member.id}`)}
+                  onDoubleClick={() =>
+                    router.push(`/user-management/members/${member.id}`)
+                  }
                 >
                   <td className="px-4 py-3">
                     <input
@@ -355,24 +440,77 @@ export default function MembersPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E5E7EB]">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#9CA3AF"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
                       </svg>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">{member.firstName}</td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">{member.lastName}</td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">{member.phoneNumber}</td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{member.email}</td>
+                  <td className="px-4 py-3 text-sm text-[#374151]">
+                    {member.firstName}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-[#374151]">
+                    {member.lastName}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-[#374151]">
+                    {member.phoneNumber}
+                  </td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                    {member.email}
+                  </td>
                   <td className="px-4 py-3">
                     <ActionDropdown
                       actions={[
-                        { label: "View Profile", onClick: () => router.push(`/user-management/members/${member.id}`) },
-                        { label: "Edit", onClick: () => router.push(`/user-management/members/${member.id}/edit`) },
-                        { label: "Add Notes", onClick: () => handleAddNotesClick(member.id) },
-                        { label: "Link Spouse", onClick: () => router.push(`/user-management/members/${member.id}/link-spouse`) },
-                        { label: "Mark as Inactive", onClick: () => handleNoLongerMemberClick(member.id) },
-                        { label: "Delete", onClick: () => handleDeleteClick(member.id) },
+                        {
+                          label: "View Profile",
+                          onClick: () =>
+                            router.push(
+                              `/user-management/members/${member.id}`,
+                            ),
+                        },
+                        {
+                          label: "Edit",
+                          onClick: () =>
+                            router.push(
+                              `/user-management/members/${member.id}/edit`,
+                            ),
+                        },
+                        {
+                          label: "Add Notes",
+                          onClick: () => handleAddNotesClick(member.id),
+                        },
+                        {
+                          label: "Link Spouse",
+                          onClick: () =>
+                            router.push(
+                              `/user-management/members/${member.id}/link-spouse`,
+                            ),
+                        },
+                        {
+                          label: "Mark as Inactive",
+                          onClick: () => handleNoLongerMemberClick(member.id),
+                        },
+                        {
+                          label: "Delete",
+                          onClick: () => handleDeleteClick(member.id),
+                        },
+                        {
+                          label: "Assign Super Admin",
+                          onClick: () => {
+                            setSelectedMemberId(member.id);
+                            setShowAssignSuperAdminModal(true);
+                          },
+                        },
                       ]}
                     />
                   </td>
@@ -389,21 +527,75 @@ export default function MembersPage() {
           currentPage={currentPage}
           totalPages={totalPages}
           totalItems={totalItems}
-          onPageChange={(p) => { setCurrentPage(p); setSelectedRows(new Set()); }}
+          onPageChange={(p) => {
+            setCurrentPage(p);
+            setSelectedRows(new Set());
+          }}
         />
       </div>
 
       {/* Modals */}
-      <SendSMSModal isOpen={showSMSModal} onClose={() => setShowSMSModal(false)} selectedCount={selectedRows.size} />
-      <SendEmailModal isOpen={showEmailModal} onClose={() => setShowEmailModal(false)} selectedCount={selectedRows.size} />
-      <QRCodeModal isOpen={showQRCodeModal} onClose={() => setShowQRCodeModal(false)} />
+
+      <AssignSuperAdminModal
+        isOpen={showAssignSuperAdminModal}
+        isLoading={isPending}
+        member={members.find((m) => m.id === selectedMemberId) ?? null}
+        onClose={() => {
+          setShowAssignSuperAdminModal(false);
+          setSelectedMemberId(null);
+        }}
+        onConfirm={(userId, password, confirmPassword) => {
+          mutate(
+            { userId, password, confirmPassword },
+            {
+              onSuccess: (res) => {
+                toast.success(
+                  res?.message ?? "Assigned super admin successfully",
+                );
+                setShowAssignSuperAdminModal(false);
+                setSelectedMemberId(null);
+                fetchMembers(currentPage);
+              },
+              onError: (err: unknown) => {
+                const msg =
+                  err instanceof Error
+                    ? err.message
+                    : "Failed to assign super admin";
+                toast.error(msg);
+                console.error("Assign super admin failed:", err);
+              },
+            },
+          );
+        }}
+      />
+
+      <SendSMSModal
+        isOpen={showSMSModal}
+        onClose={() => setShowSMSModal(false)}
+        selectedCount={selectedRows.size}
+      />
+      <SendEmailModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        selectedCount={selectedRows.size}
+      />
+      <QRCodeModal
+        isOpen={showQRCodeModal}
+        onClose={() => setShowQRCodeModal(false)}
+      />
       <AddNotesModal
         isOpen={showNotesModal}
-        onClose={() => { setShowNotesModal(false); setSelectedMemberId(null); }}
+        onClose={() => {
+          setShowNotesModal(false);
+          setSelectedMemberId(null);
+        }}
       />
       <DeleteConfirmModal
         isOpen={showDeleteModal}
-        onClose={() => { setShowDeleteModal(false); setSelectedMemberId(null); }}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setSelectedMemberId(null);
+        }}
         onConfirm={handleConfirmDelete}
       />
       <DeleteConfirmModal
@@ -415,22 +607,54 @@ export default function MembersPage() {
       <NoLongerMemberModal
         isOpen={showNoLongerBulkModal}
         onClose={() => setShowNoLongerBulkModal(false)}
-        onConfirm={() => { setSelectedRows(new Set()); setShowNoLongerBulkModal(false); }}
+        onConfirm={() => {
+          setSelectedRows(new Set());
+          setShowNoLongerBulkModal(false);
+        }}
         count={selectedRows.size}
       />
       <NoLongerMemberModal
         isOpen={showNoLongerSingleModal}
-        onClose={() => { setShowNoLongerSingleModal(false); setSelectedMemberId(null); }}
-        onConfirm={() => { setShowNoLongerSingleModal(false); setSelectedMemberId(null); }}
+        onClose={() => {
+          setShowNoLongerSingleModal(false);
+          setSelectedMemberId(null);
+        }}
+        onConfirm={() => {
+          setShowNoLongerSingleModal(false);
+          setSelectedMemberId(null);
+        }}
         count={1}
       />
       <BulkImportModal
         isOpen={showBulkImportModal}
         onClose={() => setShowBulkImportModal(false)}
-        onImport={(rows) => { console.log("Bulk import Members:", rows); setShowBulkImportModal(false); }}
+        onImport={(rows) => {
+          console.log("Bulk import Members:", rows);
+          setShowBulkImportModal(false);
+        }}
         module="Members"
-        templateHeaders={["firstName","middleName","lastName","email","countryCode","phone","gender","dateOfBirth","maritalStatus"]}
-        templateSampleRow={["John","","Doe","john@example.com","+1","5551234567","Male","1990-01-15","Single"]}
+        templateHeaders={[
+          "firstName",
+          "middleName",
+          "lastName",
+          "email",
+          "countryCode",
+          "phone",
+          "gender",
+          "dateOfBirth",
+          "maritalStatus",
+        ]}
+        templateSampleRow={[
+          "John",
+          "",
+          "Doe",
+          "john@example.com",
+          "+1",
+          "5551234567",
+          "Male",
+          "1990-01-15",
+          "Single",
+        ]}
       />
     </DashboardLayout>
   );
