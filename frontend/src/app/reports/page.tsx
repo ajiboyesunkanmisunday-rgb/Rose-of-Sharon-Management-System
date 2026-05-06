@@ -50,6 +50,9 @@ interface ReportRow {
   group:       string;
   userType:    string;
   extra:       string;     // type-specific extra field
+  // Raw birthday values for filtering (not shown in table)
+  bdayDay?:   number;
+  bdayMonth?: number;
 }
 
 // ─── Catalogue ───────────────────────────────────────────────────────────────
@@ -177,6 +180,8 @@ function userToRow(u: UserResponse, type: string): ReportRow {
     group:      u.groups?.map((g) => g.name).join(", ") || "—",
     userType:   type,
     extra:      u.maritalStatus ?? "",
+    bdayDay:    u.dayOfBirth,
+    bdayMonth:  u.monthOfBirth,
   };
 }
 
@@ -446,33 +451,61 @@ function FilterSection({ title, icon, children }: { title: string; icon: React.R
 function MembershipFilters({
   search, onSearch,
   gender, onGender,
-  group, onGroup,
-  groups,
+  group, onGroup, groups,
+  bdayFrom, onBdayFrom,
+  bdayTo, onBdayTo,
+  joinedYear, onJoinedYear,
 }: {
   search: string; onSearch: (v: string) => void;
   gender: string; onGender: (v: string) => void;
-  group:  string; onGroup:  (v: string) => void;
-  groups: GroupResponse[];
+  group:  string; onGroup:  (v: string) => void; groups: GroupResponse[];
+  bdayFrom:   { day: number; month: number } | null;
+  onBdayFrom: (v: { day: number; month: number } | null) => void;
+  bdayTo:     { day: number; month: number } | null;
+  onBdayTo:   (v: { day: number; month: number } | null) => void;
+  joinedYear: string; onJoinedYear: (v: string) => void;
 }) {
-  const hasFilters = search || gender !== "All" || group;
+  const [bdayOpen, setBdayOpen] = useState(false);
+  const hasFilters = search || gender !== "All" || group || bdayFrom || bdayTo || joinedYear;
+
+  const searchIcon = (
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  );
+  const calIcon = (
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+      <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+  );
+  const personIcon = (
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+    </svg>
+  );
+  const groupIcon = (
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+  );
+
+  const bdaySummary = bdayFrom
+    ? `${MONTH_NAMES[bdayFrom.month-1]} ${bdayFrom.day}${bdayTo ? ` — ${MONTH_NAMES[bdayTo.month-1]} ${bdayTo.day}` : ""}`
+    : null;
+
   return (
     <div className="rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-5">
       <div className="space-y-5">
-        {/* Search */}
-        <FilterSection
-          title="Search"
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-          }
-        >
+
+        {/* Row 1: Search */}
+        <FilterSection title="Search" icon={searchIcon}>
           <div className="relative">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <input
-              type="text" value={search} onChange={(e) => onSearch(e.target.value)}
+            <input type="text" value={search} onChange={(e) => onSearch(e.target.value)}
               placeholder="Search by name or email…"
               className={`${inputCls} pl-9`}
             />
@@ -484,16 +517,9 @@ function MembershipFilters({
           </div>
         </FilterSection>
 
-        {/* Narrow filters */}
+        {/* Row 2: Gender + Group */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FilterSection
-            title="Gender"
-            icon={
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-              </svg>
-            }
-          >
+          <FilterSection title="Gender" icon={personIcon}>
             <div className="flex gap-2">
               {GENDERS.map((g) => (
                 <button key={g} onClick={() => onGender(g)}
@@ -508,15 +534,7 @@ function MembershipFilters({
             </div>
           </FilterSection>
 
-          <FilterSection
-            title="Group / Department"
-            icon={
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-            }
-          >
+          <FilterSection title="Group / Department" icon={groupIcon}>
             <select value={group} onChange={(e) => onGroup(e.target.value)} className={selectCls}>
               <option value="">All Groups</option>
               {groups.map((g) => <option key={g.id} value={g.name}>{g.name}</option>)}
@@ -524,11 +542,97 @@ function MembershipFilters({
           </FilterSection>
         </div>
 
-        {hasFilters && (
-          <div className="flex justify-end">
+        {/* Row 3: Birthday range + Date Joined */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* Birthday range */}
+          <FilterSection title="Birthday Range" icon={calIcon}>
             <button
-              onClick={() => { onSearch(""); onGender("All"); onGroup(""); }}
-              className="text-xs font-medium text-[#000080] underline underline-offset-2 hover:text-[#000066]">
+              onClick={() => setBdayOpen((o) => !o)}
+              className={`flex w-full items-center justify-between rounded-lg border px-3.5 py-2.5 text-sm shadow-sm transition ${
+                bdaySummary
+                  ? "border-[#000080] bg-[#EEF2FF] text-[#000080] font-medium"
+                  : "border-[#D1D5DB] bg-white text-[#9CA3AF] hover:border-[#000080]"
+              }`}>
+              <span>{bdaySummary ?? "Select birthday range…"}</span>
+              <svg className={`h-4 w-4 transition-transform ${bdayOpen ? "rotate-180" : ""}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+
+            {bdayOpen && (
+              <div className="mt-2 rounded-xl border border-[#000080]/20 bg-white p-4 shadow-md">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[#6B7280]">From</p>
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <label className="mb-1 block text-[10px] text-[#9CA3AF]">Day</label>
+                        <input type="number" min={1} max={31}
+                          value={bdayFrom?.day ?? ""}
+                          onChange={(e) => onBdayFrom({ day: Number(e.target.value), month: bdayFrom?.month ?? 1 })}
+                          placeholder="1" className={inputCls} />
+                      </div>
+                      <div className="flex-[2]">
+                        <label className="mb-1 block text-[10px] text-[#9CA3AF]">Month</label>
+                        <select value={bdayFrom?.month ?? ""}
+                          onChange={(e) => onBdayFrom({ day: bdayFrom?.day ?? 1, month: Number(e.target.value) })}
+                          className={selectCls}>
+                          <option value="">Month</option>
+                          {MONTH_NAMES.map((m, i) => <option key={m} value={i+1}>{m}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[#6B7280]">To</p>
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <label className="mb-1 block text-[10px] text-[#9CA3AF]">Day</label>
+                        <input type="number" min={1} max={31}
+                          value={bdayTo?.day ?? ""}
+                          onChange={(e) => onBdayTo({ day: Number(e.target.value), month: bdayTo?.month ?? 12 })}
+                          placeholder="31" className={inputCls} />
+                      </div>
+                      <div className="flex-[2]">
+                        <label className="mb-1 block text-[10px] text-[#9CA3AF]">Month</label>
+                        <select value={bdayTo?.month ?? ""}
+                          onChange={(e) => onBdayTo({ day: bdayTo?.day ?? 31, month: Number(e.target.value) })}
+                          className={selectCls}>
+                          <option value="">Month</option>
+                          {MONTH_NAMES.map((m, i) => <option key={m} value={i+1}>{m}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 flex justify-between">
+                  <button onClick={() => { onBdayFrom(null); onBdayTo(null); setBdayOpen(false); }}
+                    className="text-xs text-red-500 underline hover:text-red-700">
+                    Clear
+                  </button>
+                  <button onClick={() => setBdayOpen(false)}
+                    className="rounded-lg bg-[#000080] px-3 py-1 text-xs font-semibold text-white hover:bg-[#000066]">
+                    Apply
+                  </button>
+                </div>
+              </div>
+            )}
+          </FilterSection>
+
+          {/* Date Joined year */}
+          <FilterSection title="Year Joined" icon={calIcon}>
+            <input type="number" min={1990} max={new Date().getFullYear()}
+              value={joinedYear} onChange={(e) => onJoinedYear(e.target.value)}
+              placeholder={`e.g. ${new Date().getFullYear()}`}
+              className={inputCls} />
+            <p className="mt-1 text-[11px] text-[#9CA3AF]">Filter by the year the person joined</p>
+          </FilterSection>
+        </div>
+
+        {hasFilters && (
+          <div className="flex justify-end border-t border-[#E5E7EB] pt-3">
+            <button
+              onClick={() => { onSearch(""); onGender("All"); onGroup(""); onBdayFrom(null); onBdayTo(null); onJoinedYear(""); setBdayOpen(false); }}
+              className="flex items-center gap-1.5 text-xs font-medium text-[#000080] underline underline-offset-2 hover:text-[#000066]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               Clear all filters
             </button>
           </div>
@@ -671,9 +775,12 @@ export default function ReportsPage() {
   const [allGroups, setAllGroups] = useState<GroupResponse[]>([]);
 
   // Membership filters
-  const [memSearch, setMemSearch] = useState("");
-  const [memGender, setMemGender] = useState("All");
-  const [memGroup,  setMemGroup]  = useState("");
+  const [memSearch,      setMemSearch]      = useState("");
+  const [memGender,      setMemGender]      = useState("All");
+  const [memGroup,       setMemGroup]       = useState("");
+  const [memBdayFrom,    setMemBdayFrom]    = useState<{ day: number; month: number } | null>(null);
+  const [memBdayTo,      setMemBdayTo]      = useState<{ day: number; month: number } | null>(null);
+  const [memJoinedYear,  setMemJoinedYear]  = useState("");
 
   // Celebration filters
   const [dateRange, setDateRange] = useState<DateRange>(thisMonthRange());
@@ -707,12 +814,27 @@ export default function ReportsPage() {
       if (memGroup) {
         rows = rows.filter((r) => r.group.includes(memGroup));
       }
+      // Birthday range filter
+      if (memBdayFrom || memBdayTo) {
+        rows = rows.filter((r) => {
+          if (!r.bdayDay || !r.bdayMonth) return false;
+          const bVal = r.bdayMonth * 100 + r.bdayDay;
+          const fVal = memBdayFrom ? memBdayFrom.month * 100 + memBdayFrom.day : 0;
+          const tVal = memBdayTo   ? memBdayTo.month   * 100 + memBdayTo.day   : 9999;
+          return bVal >= fVal && bVal <= tVal;
+        });
+      }
+      // Date joined year filter
+      if (memJoinedYear.trim()) {
+        rows = rows.filter((r) => r.joinedDate.includes(memJoinedYear.trim()));
+      }
     }
     if (isCelebration && celebGender !== "All") {
       rows = rows.filter((r) => r.gender.toLowerCase() === celebGender.toLowerCase());
     }
     return rows;
-  }, [rawRows, isMembership, isCelebration, memSearch, memGender, memGroup, celebGender]);
+  }, [rawRows, isMembership, isCelebration, memSearch, memGender, memGroup,
+      memBdayFrom, memBdayTo, memJoinedYear, celebGender]);
 
   // ── Fetch groups once ──
   const ensureGroups = useCallback(async () => {
@@ -772,6 +894,7 @@ export default function ReportsPage() {
     setSelectedReport(id);
     setRawRows([]); setHasGenerated(false); setError("");
     setMemSearch(""); setMemGender("All"); setMemGroup("");
+    setMemBdayFrom(null); setMemBdayTo(null); setMemJoinedYear("");
     setDateRange(thisMonthRange()); setCelebGender("All");
     if (MEMBERSHIP_REPORT_IDS.includes(id)) ensureGroups();
   };
@@ -822,10 +945,12 @@ export default function ReportsPage() {
                 <h2 className="text-base font-bold text-[#111827]">Filters</h2>
               </div>
               <MembershipFilters
-                search={memSearch} onSearch={setMemSearch}
-                gender={memGender} onGender={setMemGender}
-                group={memGroup}   onGroup={setMemGroup}
-                groups={allGroups}
+                search={memSearch}     onSearch={setMemSearch}
+                gender={memGender}     onGender={setMemGender}
+                group={memGroup}       onGroup={setMemGroup}       groups={allGroups}
+                bdayFrom={memBdayFrom} onBdayFrom={setMemBdayFrom}
+                bdayTo={memBdayTo}     onBdayTo={setMemBdayTo}
+                joinedYear={memJoinedYear} onJoinedYear={setMemJoinedYear}
               />
               <div className="mt-5 flex flex-wrap items-center gap-4">
                 <button onClick={generate} disabled={loading}
