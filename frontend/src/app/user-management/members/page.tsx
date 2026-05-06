@@ -19,6 +19,7 @@ import { toCSV, downloadCSV } from "@/lib/csv";
 import { useAssignSuperAdmin } from "@/hooks/member/useAssignSuperAdmin";
 import { toast } from "sonner";
 import AssignSuperAdminModal from "@/components/user-management/AssignSuperAdminModal";
+import { Users } from "lucide-react";
 const ITEMS_PER_PAGE = 10;
 
 export default function MembersPage() {
@@ -180,11 +181,14 @@ export default function MembersPage() {
   return (
     <DashboardLayout>
       {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">
-          User Management
-        </h1>
-        <h2 className="text-[22px] font-bold text-[#000080]">Members</h2>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF]">
+          <Users className="h-6 w-6 text-[#000080]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Members</h1>
+          <p className="text-sm text-[#6B7280]">View and manage all registered church members</p>
+        </div>
       </div>
 
       {/* Top bar */}

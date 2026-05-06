@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
+import { Bell } from "lucide-react";
 
 type FilterTab = "all" | "unread" | "read";
 type NotifType = "info" | "success" | "warning" | "alert" | "birthday" | "anniversary" | "system";
@@ -255,7 +256,11 @@ export default function NotificationsPage() {
     <DashboardLayout>
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <div>
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF]">
+            <Bell className="h-6 w-6 text-[#000080]" />
+          </div>
+          <div>
           <h1 className="text-[28px] font-bold text-[#000000]">Notifications</h1>
           <p className="mt-1 text-sm text-[#6B7280]">
             {unreadCount > 0 ? (
@@ -266,6 +271,7 @@ export default function NotificationsPage() {
               "All notifications have been read"
             )}
           </p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" onClick={handleMarkAllRead} disabled={unreadCount === 0}>

@@ -23,6 +23,7 @@ import {
   type UserResponse,
 } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
+import { UserPlus } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -233,9 +234,14 @@ export default function FirstTimersPage() {
   return (
     <DashboardLayout>
       {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
-        <h2 className="text-[22px] font-bold text-[#000080]">First Timers</h2>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FFF7ED]">
+          <UserPlus className="h-6 w-6 text-[#EA580C]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">First Timers</h1>
+          <p className="text-sm text-[#6B7280]">Track and follow up with first-time visitors</p>
+        </div>
       </div>
 
       {/* Top bar */}

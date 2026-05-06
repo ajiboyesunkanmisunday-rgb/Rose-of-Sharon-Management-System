@@ -19,6 +19,7 @@ import {
   type UserResponse,
 } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
+import { UserCheck } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -161,9 +162,14 @@ export default function EMembersPage() {
   return (
     <DashboardLayout>
       {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
-        <h2 className="text-[22px] font-bold text-[#000080]">E-Members</h2>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F0FDF4]">
+          <UserCheck className="h-6 w-6 text-[#16A34A]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">E-Members</h1>
+          <p className="text-sm text-[#6B7280]">Manage electronic church membership records</p>
+        </div>
       </div>
 
       {/* Top bar */}
