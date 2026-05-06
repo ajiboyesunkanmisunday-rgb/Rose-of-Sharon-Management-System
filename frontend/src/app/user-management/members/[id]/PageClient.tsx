@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
-import { getUser, getUserRequests, type UserResponse, type RequestResponse } from "@/lib/api";
+import { getUser, getUserRequests, resetPassword, removeAdmin, markUserAsInactive, type UserResponse, type RequestResponse } from "@/lib/api";
 
 type Tab = "details" | "requests";
 
@@ -102,9 +102,54 @@ export default function ViewMemberProfilePage() {
   useEffect(() => { fetchUser(); }, [fetchUser]);
   useEffect(() => { if (activeTab === "requests") fetchRequests(); }, [activeTab, fetchRequests]);
 
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionMsg, setActionMsg] = useState("");
+
   const handleConfirmDelete = () => {
     setShowDeleteModal(false);
     router.push("/user-management/members");
+  };
+
+  const handleResetPassword = async () => {
+    if (!id) return;
+    setActionLoading("reset");
+    setActionMsg("");
+    try {
+      await resetPassword(id);
+      setActionMsg("Password reset successfully.");
+    } catch (err) {
+      setActionMsg(err instanceof Error ? err.message : "Failed to reset password.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRemoveAdmin = async () => {
+    if (!id) return;
+    setActionLoading("removeAdmin");
+    setActionMsg("");
+    try {
+      await removeAdmin(id);
+      setActionMsg("Admin access removed.");
+    } catch (err) {
+      setActionMsg(err instanceof Error ? err.message : "Failed to remove admin.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleMarkInactive = async () => {
+    if (!id) return;
+    setActionLoading("inactive");
+    setActionMsg("");
+    try {
+      await markUserAsInactive(id, "Marked inactive by admin");
+      setActionMsg("Member marked as inactive.");
+    } catch (err) {
+      setActionMsg(err instanceof Error ? err.message : "Failed to mark inactive.");
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const address = user
@@ -254,9 +299,21 @@ export default function ViewMemberProfilePage() {
           )}
 
           {/* Actions */}
-          <div className="mt-6 flex items-center justify-end gap-3">
+          {actionMsg && (
+            <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700">{actionMsg}</div>
+          )}
+          <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
             <Button variant="secondary" onClick={() => router.push(`/user-management/members/${id}/edit`)}>Edit</Button>
             <Button variant="primary"   onClick={() => router.push(`/user-management/members/${id}/link-spouse`)}>Link Spouse</Button>
+            <Button variant="secondary" onClick={handleResetPassword} disabled={actionLoading === "reset"}>
+              {actionLoading === "reset" ? "Resetting…" : "Reset Password"}
+            </Button>
+            <Button variant="secondary" onClick={handleRemoveAdmin} disabled={actionLoading === "removeAdmin"}>
+              {actionLoading === "removeAdmin" ? "Removing…" : "Remove Admin"}
+            </Button>
+            <Button variant="secondary" onClick={handleMarkInactive} disabled={actionLoading === "inactive"}>
+              {actionLoading === "inactive" ? "Marking…" : "Mark Inactive"}
+            </Button>
             <Button variant="danger"    onClick={() => setShowDeleteModal(true)}>Delete</Button>
           </div>
         </>
