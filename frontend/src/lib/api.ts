@@ -683,7 +683,28 @@ export async function linkSpouse(
   spouseId: string
 ): Promise<UserResponse> {
   return apiFetch<UserResponse>(
-    `/api/v1/users/${userId}/link-spouse/${spouseId}`
+    `/api/v1/users/${userId}/link-spouse/${spouseId}`,
+    { method: "PUT" }
+  );
+}
+
+export async function resetPassword(userId: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/reset-password`);
+}
+
+export async function removeAdmin(userId: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/remove-admin`, {
+    method: "DELETE",
+  });
+}
+
+export async function markEventAttendance(
+  eventId: string,
+  userId: string
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/events/${eventId}/attendance/${userId}`,
+    { method: "PATCH" }
   );
 }
 
