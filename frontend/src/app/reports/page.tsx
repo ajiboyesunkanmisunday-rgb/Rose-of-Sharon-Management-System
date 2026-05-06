@@ -15,7 +15,11 @@ import {
   type NewConvertResponse,
   type GroupResponse,
 } from "@/lib/api";
-import { ChevronRight, ChevronLeft, Download, FileText, FileSpreadsheet, Printer, RefreshCw } from "lucide-react";
+import {
+  ChevronRight, ChevronLeft, Download, FileText, FileSpreadsheet,
+  Printer, RefreshCw, Users, UserCheck, UserPlus, HeartHandshake,
+  Cake, Heart, Church, Building2, CalendarDays,
+} from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type ReportTab = "membership" | "celebrations" | "attendance";
@@ -24,8 +28,15 @@ type ReportId  =
   | "birthdays" | "weddings" | "church-anniversary" | "departmental"
   | "event-attendance";
 
-interface ReportDef   { id: ReportId; title: string; description: string; }
-interface CategoryDef { title: string; description: string; reports: ReportDef[]; }
+interface ReportDef   {
+  id: ReportId;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  iconBg: string;
+  iconColor: string;
+}
+interface CategoryDef { title: string; description: string; icon: React.ReactNode; reports: ReportDef[]; }
 
 /** Normalised row used by every membership report table */
 interface ReportRow {
@@ -46,29 +57,72 @@ const CATALOGUE: Record<ReportTab, CategoryDef[]> = {
   membership: [{
     title: "Membership",
     description: "Generate membership reports and track the growth of your church members.",
+    icon: <Users className="h-5 w-5" />,
     reports: [
-      { id: "members",       title: "Members Report",        description: "Full list of all registered members in the ministry." },
-      { id: "e-members",     title: "E-Members Report",      description: "Full list of all registered e-members in the ministry." },
-      { id: "first-timers",  title: "First Timers Report",   description: "All first-time visitors and their service attendance details." },
-      { id: "second-timers", title: "Second Timers Report",  description: "All second-time visitors and follow-up information." },
-      { id: "new-converts",  title: "New Converts Report",   description: "All new converts, including believer class progression." },
+      {
+        id: "members", title: "Members Report",
+        description: "Full list of all registered members in the ministry.",
+        icon: <Users className="h-5 w-5" />, iconBg: "bg-[#EEF2FF]", iconColor: "text-[#000080]",
+      },
+      {
+        id: "e-members", title: "E-Members Report",
+        description: "Full list of all registered e-members in the ministry.",
+        icon: <UserCheck className="h-5 w-5" />, iconBg: "bg-[#F0FDF4]", iconColor: "text-[#16A34A]",
+      },
+      {
+        id: "first-timers", title: "First Timers Report",
+        description: "All first-time visitors and their service attendance details.",
+        icon: <UserPlus className="h-5 w-5" />, iconBg: "bg-[#FFF7ED]", iconColor: "text-[#EA580C]",
+      },
+      {
+        id: "second-timers", title: "Second Timers Report",
+        description: "All second-time visitors and follow-up information.",
+        icon: <UserPlus className="h-5 w-5" />, iconBg: "bg-[#FDF4FF]", iconColor: "text-[#9333EA]",
+      },
+      {
+        id: "new-converts", title: "New Converts Report",
+        description: "All new converts, including believer class progression.",
+        icon: <HeartHandshake className="h-5 w-5" />, iconBg: "bg-[#FFF1F2]", iconColor: "text-[#E11D48]",
+      },
     ],
   }],
   celebrations: [{
     title: "Celebrations",
     description: "Identify and minister to members celebrating birthdays, anniversaries, and milestones.",
+    icon: <Cake className="h-5 w-5" />,
     reports: [
-      { id: "birthdays",          title: "Birthday Report",            description: "Members celebrating birthdays within the selected period." },
-      { id: "weddings",           title: "Wedding Anniversary Report", description: "Members celebrating wedding anniversaries within the selected period." },
-      { id: "church-anniversary", title: "Church Anniversary Report",  description: "Annual celebration report — Rose of Sharon, est. June 1996." },
-      { id: "departmental",       title: "Departmental Anniversary",   description: "Departments and their founding anniversaries." },
+      {
+        id: "birthdays", title: "Birthday Report",
+        description: "Members celebrating birthdays within the selected period.",
+        icon: <Cake className="h-5 w-5" />, iconBg: "bg-[#FCE7F3]", iconColor: "text-[#DB2777]",
+      },
+      {
+        id: "weddings", title: "Wedding Anniversary Report",
+        description: "Members celebrating wedding anniversaries within the selected period.",
+        icon: <Heart className="h-5 w-5" />, iconBg: "bg-[#FEF3C7]", iconColor: "text-[#D97706]",
+      },
+      {
+        id: "church-anniversary", title: "Church Anniversary Report",
+        description: "Annual celebration report — Rose of Sharon, est. June 1996.",
+        icon: <Church className="h-5 w-5" />, iconBg: "bg-[#EEF2FF]", iconColor: "text-[#000080]",
+      },
+      {
+        id: "departmental", title: "Departmental Anniversary",
+        description: "Departments and their founding anniversaries.",
+        icon: <Building2 className="h-5 w-5" />, iconBg: "bg-[#F0FDF4]", iconColor: "text-[#16A34A]",
+      },
     ],
   }],
   attendance: [{
     title: "Attendance",
     description: "Track and review attendance records across all services and events.",
+    icon: <CalendarDays className="h-5 w-5" />,
     reports: [
-      { id: "event-attendance", title: "Event Attendance Report", description: "Attendance records for services and events within a date range." },
+      {
+        id: "event-attendance", title: "Event Attendance Report",
+        description: "Attendance records for services and events within a date range.",
+        icon: <CalendarDays className="h-5 w-5" />, iconBg: "bg-[#F0FDF4]", iconColor: "text-[#0891B2]",
+      },
     ],
   }],
 };
@@ -740,11 +794,16 @@ export default function ReportsPage() {
     return (
       <DashboardLayout>
         {/* Back nav */}
-        <div className="mb-6 flex items-center gap-3">
+        <div className="mb-6 flex items-center gap-4">
           <button onClick={back}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-[#374151] transition hover:bg-[#F3F4F6]">
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-[#374151] transition hover:bg-[#F3F4F6]">
             <ChevronLeft className="h-5 w-5" />
           </button>
+          {currentDef && (
+            <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${currentDef.iconBg}`}>
+              <span className={currentDef.iconColor}>{currentDef.icon}</span>
+            </div>
+          )}
           <div>
             <p className="text-xs font-medium text-[#6B7280]">Reports</p>
             <h1 className="text-[22px] font-bold text-[#000000]">{currentDef?.title}</h1>
@@ -979,15 +1038,27 @@ export default function ReportsPage() {
         {CATALOGUE[activeTab].map((cat) => (
           <div key={cat.title} className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-sm">
             <div className="border-b-2 border-[#000080] bg-[#F0F2FF] px-6 py-5">
-              <h2 className="text-lg font-bold text-[#000080]">{cat.title}</h2>
-              <p className="mt-1 text-sm text-[#4B5563]">{cat.description}</p>
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#000080] text-white">
+                  {cat.icon}
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-[#000080]">{cat.title}</h2>
+                  <p className="text-sm text-[#4B5563]">{cat.description}</p>
+                </div>
+              </div>
             </div>
             <div className="divide-y divide-[#E5E7EB]">
               {cat.reports.map((r) => (
                 <button key={r.id} onClick={() => openReport(r.id)}
-                  className="group flex w-full items-center gap-4 px-6 py-4 text-left transition hover:bg-[#F9FAFB]">
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-[#000080] group-hover:underline">{r.title}</p>
+                  className="group flex w-full items-center gap-4 px-5 py-4 text-left transition hover:bg-[#F9FAFB]">
+                  {/* Icon box */}
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${r.iconBg}`}>
+                    <span className={r.iconColor}>{r.icon}</span>
+                  </div>
+                  {/* Text */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-[#111827] group-hover:text-[#000080]">{r.title}</p>
                     <p className="mt-0.5 text-xs text-[#6B7280]">{r.description}</p>
                   </div>
                   <ChevronRight className="h-4 w-4 shrink-0 text-[#9CA3AF] transition group-hover:translate-x-0.5 group-hover:text-[#000080]" />
