@@ -1,106 +1,75 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-
-type Status = "On Track" | "Overdue" | "Pending";
-
-const statusColors: Record<Status, string> = {
-  "On Track": "bg-[#DCFCE7] text-[#16A34A]",
-  Overdue: "bg-[#FEE2E2] text-[#DC2626]",
-  Pending: "bg-[#FEF9C3] text-[#CA8A04]",
-};
-
-interface Card {
-  id: string;
-  name: string;
-  note: string;
-  assignedTo: string;
-  dateAdded: string;
-  status: Status;
-}
-
-const columns: { title: string; headerBg: string; cards: Card[] }[] = [
-  {
-    title: "Received",
-    headerBg: "bg-blue-50",
-    cards: [
-      { id: "co-1", name: "John Michael", note: "Personal counseling request", assignedTo: "Unassigned", dateAdded: "04/19/2026", status: "Pending" },
-      { id: "co-2", name: "Sarah Bamidele", note: "Premarital counseling", assignedTo: "Unassigned", dateAdded: "04/18/2026", status: "Pending" },
-    ],
-  },
-  {
-    title: "Scheduled",
-    headerBg: "bg-yellow-50",
-    cards: [
-      { id: "co-3", name: "David Okonkwo", note: "Session on 04/25 at 3pm", assignedTo: "Pastor David", dateAdded: "04/16/2026", status: "On Track" },
-      { id: "co-4", name: "Grace Adeyemi", note: "Session on 04/24 at 10am", assignedTo: "Pastor James", dateAdded: "04/15/2026", status: "On Track" },
-    ],
-  },
-  {
-    title: "In Session",
-    headerBg: "bg-purple-50",
-    cards: [
-      { id: "co-5", name: "Emmanuel Nwosu", note: "Week 2 of sessions", assignedTo: "Pastor David", dateAdded: "04/08/2026", status: "On Track" },
-      { id: "co-6", name: "Blessing Okoro", note: "Ongoing family counseling", assignedTo: "Deaconess Grace", dateAdded: "04/05/2026", status: "Overdue" },
-    ],
-  },
-  {
-    title: "Resolved",
-    headerBg: "bg-green-50",
-    cards: [
-      { id: "co-7", name: "Peter Adewale", note: "Completed 4 sessions", assignedTo: "Pastor David", dateAdded: "03/28/2026", status: "On Track" },
-      { id: "co-8", name: "Ruth Balogun", note: "Closed with follow-up plan", assignedTo: "Pastor James", dateAdded: "03/22/2026", status: "On Track" },
-    ],
-  },
-];
+import KanbanBoard, { COUNSELING_COLUMNS } from "@/components/workflows/KanbanBoard";
+import { getCounselingWorkflow, type BoardColumn } from "@/lib/api";
+import { HeartHandshake } from "lucide-react";
 
 export default function CounselingWorkflowPage() {
+  const [boardData, setBoardData] = useState<BoardColumn[]>([]);
+  const [loading,   setLoading]   = useState(true);
+  const [error,     setError]     = useState("");
+
+  const fetchBoard = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await getCounselingWorkflow();
+      setBoardData(res.columns ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load counseling workflow.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchBoard(); }, [fetchBoard]);
+
+  const totalCount = boardData.reduce((sum, col) => sum + (col.totalCount ?? col.requests?.length ?? 0), 0);
+
   return (
     <DashboardLayout>
+      {/* Header */}
       <div className="mb-6">
         <h1 className="text-[28px] font-bold text-[#000000]">Workflows</h1>
-        <h2 className="text-[22px] font-bold text-[#000080]">Counseling Workflow</h2>
+        <div className="mt-1 flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#DBEAFE]">
+            <HeartHandshake className="h-5 w-5 text-[#1D4ED8]" />
+          </div>
+          <div>
+            <h2 className="text-[20px] font-bold text-[#000080]">Counseling Workflow</h2>
+            {!loading && (
+              <p className="text-xs text-[#6B7280]">
+                {totalCount} active counseling session{totalCount !== 1 ? "s" : ""} · Drag cards between columns to update status
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:overflow-x-auto sm:pb-4">
-        {columns.map((col) => (
-          <div
-            key={col.title}
-            className="flex w-full flex-col rounded-xl border border-[#E5E7EB] bg-white sm:min-w-[260px] sm:w-auto"
-          >
-            <div className={`rounded-t-xl ${col.headerBg} px-4 py-3`}>
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-[#000080]">{col.title}</h3>
-                <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-[#000080]">
-                  {col.cards.length}
-                </span>
-              </div>
-            </div>
-            <div className="flex-1 space-y-3 p-3">
-              {col.cards.map((card) => (
-                <div
-                  key={card.id}
-                  className="rounded-lg border border-[#E5E7EB] bg-white p-3"
-                >
-                  <p className="text-sm font-semibold text-[#111827]">{card.name}</p>
-                  <p className="mt-1 text-xs text-[#6B7280]">{card.note}</p>
-                  <p className="mt-2 text-xs text-[#6B7280]">
-                    Assigned to: <strong>{card.assignedTo}</strong>
-                  </p>
-                  <p className="text-xs text-[#9CA3AF]">Added {card.dateAdded}</p>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColors[card.status]}`}
-                    >
-                      {card.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}{" "}
+          <button className="font-medium underline" onClick={fetchBoard}>Retry</button>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex h-64 items-center justify-center">
+          <div className="flex flex-col items-center gap-3 text-[#6B7280]">
+            <HeartHandshake className="h-8 w-8 animate-pulse text-[#1D4ED8]" />
+            <p className="text-sm">Loading counseling sessions…</p>
           </div>
-        ))}
-      </div>
+        </div>
+      ) : (
+        <KanbanBoard
+          columns={COUNSELING_COLUMNS}
+          boardData={boardData}
+          onRefresh={fetchBoard}
+          loading={loading}
+        />
+      )}
     </DashboardLayout>
   );
 }

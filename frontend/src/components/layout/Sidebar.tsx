@@ -71,7 +71,6 @@ const navItems: NavItem[] = [
       { label: "Guest Workflow", href: "/workflows/guest" },
       { label: "Prayer Request Workflow", href: "/workflows/prayer" },
       { label: "Counseling Workflow", href: "/workflows/counseling" },
-      { label: "Celebration Request Workflow", href: "/workflows/celebration" },
     ],
   },
   {

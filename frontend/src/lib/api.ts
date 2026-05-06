@@ -1182,6 +1182,26 @@ export async function changeRequestStatus(
   );
 }
 
+// ─── Workflow Board ────────────────────────────────────────────────────────────
+
+export interface BoardColumn {
+  status: string;
+  totalCount: number;
+  requests: RequestResponse[];
+}
+
+export interface BoardResponse {
+  columns: BoardColumn[];
+}
+
+export async function getPrayerWorkflow(): Promise<BoardResponse> {
+  return apiFetch<BoardResponse>("/api/v1/requests/prayer/workflow");
+}
+
+export async function getCounselingWorkflow(): Promise<BoardResponse> {
+  return apiFetch<BoardResponse>("/api/v1/requests/counseling/workflow");
+}
+
 export async function getRequest(id: string): Promise<RequestResponse> {
   // Backend has no GET /api/v1/requests/{id} endpoint.
   // Fetch the full list and find by ID across all request types.
