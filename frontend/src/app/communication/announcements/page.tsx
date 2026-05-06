@@ -10,6 +10,7 @@ import ActionDropdown from "@/components/ui/ActionDropdown";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { allAnnouncements } from "@/lib/mock-data";
 import { AnnouncementStatus } from "@/lib/types";
+import { Megaphone } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -56,9 +57,14 @@ export default function AnnouncementsPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Communication</h1>
-        <h2 className="text-[22px] font-bold text-[#000080]">Announcements</h2>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FEF3C7]">
+          <Megaphone className="h-6 w-6 text-[#D97706]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Announcements</h1>
+          <p className="text-sm text-[#6B7280]">Publish and schedule church announcements</p>
+        </div>
       </div>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

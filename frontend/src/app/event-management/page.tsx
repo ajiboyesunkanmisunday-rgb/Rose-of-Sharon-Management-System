@@ -9,6 +9,7 @@ import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { getEvents, type EventResponse } from "@/lib/api";
+import { CalendarClock } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -94,8 +95,14 @@ export default function EventManagementPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Event Management</h1>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EDE9FE]">
+          <CalendarClock className="h-6 w-6 text-[#7C3AED]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Event Management</h1>
+          <p className="text-sm text-[#6B7280]">Create, manage, and track church events and services</p>
+        </div>
       </div>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

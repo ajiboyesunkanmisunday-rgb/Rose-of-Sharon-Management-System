@@ -23,6 +23,7 @@ import {
   type NewConvertResponse,
 } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
+import { Sparkles } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -214,9 +215,14 @@ export default function NewConvertsPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
-        <h2 className="text-[22px] font-bold text-[#000080]">New Converts</h2>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FDF4FF]">
+          <Sparkles className="h-6 w-6 text-[#A21CAF]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">New Converts</h1>
+          <p className="text-sm text-[#6B7280]">Disciple and track growth of newly saved members</p>
+        </div>
       </div>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

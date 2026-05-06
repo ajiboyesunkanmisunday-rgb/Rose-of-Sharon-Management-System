@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import { getCalendarEvents, getUpcomingEvents, type EventResponse } from "@/lib/api";
+import { CalendarDays } from "lucide-react";
 
 // ─── Category colours (Teams-style pill colours) ────────────────────────────
 const categoryColor: Record<string, string> = {
@@ -170,7 +171,15 @@ export default function CalendarPage() {
   return (
     <DashboardLayout>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-[28px] font-bold text-[#000000]">Calendar</h1>
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EFF6FF]">
+            <CalendarDays className="h-6 w-6 text-[#2563EB]" />
+          </div>
+          <div>
+            <h1 className="text-[28px] font-bold text-[#000000]">Calendar</h1>
+            <p className="text-sm text-[#6B7280]">View and manage church schedule</p>
+          </div>
+        </div>
         <div className="flex flex-wrap items-center gap-3">
           {/* Today button */}
           <button

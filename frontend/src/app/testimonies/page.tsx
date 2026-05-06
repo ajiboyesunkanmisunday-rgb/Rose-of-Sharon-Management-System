@@ -14,6 +14,7 @@ import {
   markTestimonyAsNotFeatured,
   type TestimonyResponse,
 } from "@/lib/api";
+import { Heart } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -151,8 +152,14 @@ export default function TestimoniesPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FCE7F3]">
+          <Heart className="h-6 w-6 text-[#DB2777]" />
+        </div>
+        <div>
         <h1 className="text-[28px] font-bold text-[#000000]">Testimonies</h1>
+        <p className="text-sm text-[#6B7280]">Read and manage testimonies shared by the congregation</p>
+        </div>
       </div>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

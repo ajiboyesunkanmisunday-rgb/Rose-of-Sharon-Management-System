@@ -7,6 +7,7 @@ import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
 import { getMedia, type MediaResponse } from "@/lib/api";
+import { Film } from "lucide-react";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -97,8 +98,14 @@ export default function MediaPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Media</h1>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F0FDF4]">
+          <Film className="h-6 w-6 text-[#059669]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Media</h1>
+          <p className="text-sm text-[#6B7280]">Sermons, podcasts, videos, and pictures</p>
+        </div>
       </div>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

@@ -23,6 +23,7 @@ import {
   type UserResponse,
 } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
+import { Users2 } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -228,9 +229,14 @@ export default function SecondTimersPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
-        <h2 className="text-[22px] font-bold text-[#000080]">Second Timers</h2>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EFF6FF]">
+          <Users2 className="h-6 w-6 text-[#2563EB]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Second Timers</h1>
+          <p className="text-sm text-[#6B7280]">Engage returning visitors before they become members</p>
+        </div>
       </div>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

@@ -18,6 +18,7 @@ import {
   changeRequestStatus,
   type RequestResponse,
 } from "@/lib/api";
+import { Inbox } from "lucide-react";
 
 type CategoryFilter = "All" | "Prayer" | "Counseling" | "Suggestion";
 type StatusFilter = "All" | "RECEIVED" | "ASSIGNED" | "IN_PROGRESS" | "RESOLVED";
@@ -151,8 +152,14 @@ export default function RequestsPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Requests</h1>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF]">
+          <Inbox className="h-6 w-6 text-[#000080]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Requests</h1>
+          <p className="text-sm text-[#6B7280]">Prayer, counseling, and suggestion requests from members</p>
+        </div>
       </div>
 
       {/* Category Tabs */}

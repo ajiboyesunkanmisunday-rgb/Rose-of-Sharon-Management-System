@@ -19,6 +19,7 @@ import {
   type UserResponse,
   type CelebrationResponse,
 } from "@/lib/api";
+import { PartyPopper } from "lucide-react";
 
 type Tab = "birthdays" | "anniversaries" | "thanksgiving";
 type ThanksgivingStatus = "All" | "PENDING" | "TREATED";
@@ -217,7 +218,15 @@ export default function CelebrationsPage() {
     <DashboardLayout>
       <div className="mb-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-[28px] font-bold text-[#000000]">Celebrations</h1>
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FEF3C7]">
+              <PartyPopper className="h-6 w-6 text-[#D97706]" />
+            </div>
+            <div>
+              <h1 className="text-[28px] font-bold text-[#000000]">Celebrations</h1>
+              <p className="text-sm text-[#6B7280]">Birthdays, anniversaries, and thanksgiving celebrations</p>
+            </div>
+          </div>
           {activeTab === "thanksgiving" ? (
             <Button
               variant="primary"

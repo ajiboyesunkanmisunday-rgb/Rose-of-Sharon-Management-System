@@ -10,6 +10,7 @@ import ActionDropdown from "@/components/ui/ActionDropdown";
 import Modal from "@/components/ui/Modal";
 import { messages as messagesData } from "@/lib/mock-data";
 import { Message } from "@/lib/types";
+import { MessageSquare } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 type MessageTab = "Sent" | "Scheduled";
@@ -109,9 +110,14 @@ export default function MessagesPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Communication</h1>
-        <h2 className="text-[22px] font-bold text-[#000080]">Messages</h2>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF]">
+          <MessageSquare className="h-6 w-6 text-[#000080]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Messages</h1>
+          <p className="text-sm text-[#6B7280]">Send and manage SMS and email communications</p>
+        </div>
       </div>
 
       {/* Tabs */}
