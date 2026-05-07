@@ -153,8 +153,8 @@ function countVisiting(users: UserResponse[]) {
     else notVisiting++;
   });
   return [
-    { name: "First-time Visitors", value: visiting,    color: C.orange },
-    { name: "Regular / Members",   value: notVisiting, color: C.navy   },
+    { name: "Came first time & indicated they are visiting",     value: visiting,    color: C.orange },
+    { name: "Came first time but did NOT indicate they are visiting", value: notVisiting, color: C.navy   },
   ];
 }
 
@@ -265,17 +265,16 @@ export default function AnalyticsDashboard() {
     .slice(0, 12)
     .map((g) => ({ name: g.name.length > 16 ? g.name.slice(0, 14) + "…" : g.name, Members: g.totalMembers ?? 0 }));
 
-  // 3. Conversion funnel
-  const totalFT    = firstTimers.length;
-  const totalST    = secondTimers.length;
-  const totalMem   = members.length;
-  const ftToSt     = secondTimers.length; // approximation — second timers count
-  const stToMem    = members.length;      // approximation — members count
-  const convRate   = totalFT > 0 ? ((totalMem / totalFT) * 100).toFixed(1) : "0.0";
-  const funnelData = [
-    { name: "First Timers",  count: totalFT  },
-    { name: "Second Timers", count: totalST  },
-    { name: "Members",       count: totalMem },
+  // 3. Conversion rates (2 bars)
+  const totalFT  = firstTimers.length;
+  const totalST  = secondTimers.length;
+  const totalMem = members.length;
+  const convRate = totalFT > 0 ? ((totalMem / totalFT) * 100).toFixed(1) : "0.0";
+  const ftToStRate  = totalFT  > 0 ? +((totalST  / totalFT)  * 100).toFixed(1) : 0;
+  const stToMemRate = totalST  > 0 ? +((totalMem / totalST)  * 100).toFixed(1) : 0;
+  const conversionRateData = [
+    { name: "First Timer → Second Timer", rate: ftToStRate,  fill: C.orange },
+    { name: "Second Timer → Full Member", rate: stToMemRate, fill: C.navy   },
   ];
 
   // 4. Gender breakdown — all users combined
@@ -320,6 +319,31 @@ export default function AnalyticsDashboard() {
     }
   });
   const leftData = MONTH_SHORT.map((m, i) => ({ month: m, Left: leftByMonth[i] }));
+
+  // 20. Followups per month (calls + visits totalled by joining month)
+  const followupByMonth = Array(12).fill(0);
+  [...firstTimers, ...secondTimers].forEach((u) => {
+    if (u.createdOn) {
+      const m = new Date(u.createdOn).getMonth();
+      followupByMonth[m] += (u.noOfCalls ?? 0) + (u.noOfVisits ?? 0);
+    }
+  });
+  const followupMonthData = MONTH_SHORT.map((m, i) => ({ month: m, "Follow-ups": followupByMonth[i] }));
+
+  // 21. Average response time (avg days since joining for contacted visitors)
+  const contactedVisitors = [...firstTimers, ...secondTimers].filter(
+    (u) => (u.noOfCalls ?? 0) > 0 || (u.noOfVisits ?? 0) > 0
+  );
+  const avgResponseDays = contactedVisitors.length > 0
+    ? Math.round(
+        contactedVisitors.reduce((sum, u) => {
+          const days = u.createdOn
+            ? (Date.now() - new Date(u.createdOn).getTime()) / 86_400_000
+            : 0;
+          return sum + days;
+        }, 0) / contactedVisitors.length
+      )
+    : 0;
 
   // 17. Favourite parts of service — first timers
   const favouritePartsData = countByFavouriteParts(firstTimers);
@@ -436,38 +460,42 @@ export default function AnalyticsDashboard() {
         </ChartCard>
       </div>
 
-      {/* ── Row 3: Conversion Funnel + Rate Card ──────────────────── */}
+      {/* ── Row 3: Conversion Rates + KPI ────────────────────────── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Funnel chart */}
+        {/* Chart 3: 2-bar conversion rates */}
         <div className="lg:col-span-2">
-          <ChartCard title="3. Visitor Conversion Funnel (First Timer → Second Timer → Member)">
+          <ChartCard title="3. Visitor Conversion Rates">
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={funnelData} margin={{ top: 4, right: 10, left: -10, bottom: 0 }}>
+              <BarChart data={conversionRateData} margin={{ top: 4, right: 10, left: -10, bottom: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                <Tooltip {...TOOLTIP_STYLE} />
-                <Bar dataKey="count" name="Total Count" radius={[4, 4, 0, 0]}>
-                  <Cell fill={C.orange} />
-                  <Cell fill={C.purple} />
-                  <Cell fill={C.navy} />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} />
+                <YAxis tick={{ fontSize: 11 }} unit="%" domain={[0, 100]} />
+                <Tooltip {...TOOLTIP_STYLE} formatter={(v) => `${v}%`} />
+                <Bar dataKey="rate" name="Conversion Rate" radius={[4, 4, 0, 0]} maxBarSize={80}>
+                  {conversionRateData.map((entry, i) => (
+                    <Cell key={i} fill={entry.fill} />
+                  ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            <div className="mt-2 flex gap-6 text-xs text-[#6B7280]">
+              <span><span className="font-semibold text-[#EA580C]">{ftToStRate}%</span> of first timers returned as second timers</span>
+              <span><span className="font-semibold text-[#000080]">{stToMemRate}%</span> of second timers became full members</span>
+            </div>
           </ChartCard>
         </div>
 
-        {/* Rate cards */}
+        {/* KPI cards */}
         <div className="flex flex-col gap-4">
           <KpiCard
-            label="4. Conversion Rate"
+            label="4. Overall Conversion Rate"
             value={`${convRate}%`}
             sub={`${totalMem} members from ${totalFT} first timers`}
             color={C.green}
           />
           <KpiCard
             label="FT → ST Rate"
-            value={totalFT > 0 ? `${((totalST / totalFT) * 100).toFixed(1)}%` : "—"}
+            value={`${ftToStRate}%`}
             sub={`${totalST} second timers from ${totalFT} first timers`}
             color={C.purple}
           />
@@ -666,7 +694,7 @@ export default function AnalyticsDashboard() {
       </div>
 
       {/* Chart 18: Visitor pie */}
-      <ChartCard title="18. First Timers — Visitors vs Regular Attendees">
+      <ChartCard title="18. First Timers — Indicated Visiting vs Did Not Indicate Visiting">
         <div className="flex items-center gap-8">
           <ResponsiveContainer width="50%" height={220}>
             <PieChart>
@@ -698,9 +726,32 @@ export default function AnalyticsDashboard() {
         </div>
       </ChartCard>
 
-      {/* ── Row 11: Urgent Followup + Attention Rate ─────────────── */}
+      {/* ── Row 11: Charts 20 & 21 ───────────────────────────────── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* 16: Attention rate card */}
+        <KpiCard
+          label="21. Avg. Days Before First Contact"
+          value={avgResponseDays > 0 ? `${avgResponseDays}d` : "—"}
+          sub={`Based on ${contactedVisitors.length} visitors who were contacted`}
+          color={avgResponseDays <= 14 ? C.green : avgResponseDays <= 30 ? C.amber : C.red}
+        />
+        <div className="lg:col-span-2">
+          <ChartCard title="20. Total Follow-up Actions per Month (Calls + Visits)">
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={followupMonthData} margin={{ top: 4, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+                <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                <Tooltip {...TOOLTIP_STYLE} />
+                <Bar dataKey="Follow-ups" fill={C.teal} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+      </div>
+
+      {/* ── Row 12: Urgent Followup + Attention Rate ─────────────── */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* KPI cards */}
         <div className="flex flex-col gap-4">
           <KpiCard
             label="16. Followup Attention Rate"
@@ -716,10 +767,10 @@ export default function AnalyticsDashboard() {
           />
         </div>
 
-        {/* 15: Urgent followup list */}
+        {/* 15: Urgent followup table */}
         <div className="lg:col-span-2">
           <ChartCard title="15. People Needing Urgent Followup (No Calls or Visits Yet)">
-            <div className="max-h-[280px] overflow-y-auto">
+            <div className="max-h-[300px] overflow-y-auto">
               {urgentList.length === 0 ? (
                 <p className="py-8 text-center text-xs text-[#9CA3AF]">All visitors have been contacted.</p>
               ) : (
@@ -730,15 +781,21 @@ export default function AnalyticsDashboard() {
                       <th className="px-3 py-2 text-left text-[#6B7280]">Name</th>
                       <th className="px-3 py-2 text-left text-[#6B7280]">Type</th>
                       <th className="px-3 py-2 text-left text-[#6B7280]">Phone</th>
+                      <th className="px-3 py-2 text-left text-[#6B7280]">Assigned To</th>
                       <th className="px-3 py-2 text-left text-[#6B7280]">Added</th>
                     </tr>
                   </thead>
                   <tbody>
                     {urgentList.map((u, i) => {
-                      const name = [u.firstName, u.lastName].filter(Boolean).join(" ") || "—";
-                      const type = u.userType ?? "Visitor";
+                      const name  = [u.firstName, u.lastName].filter(Boolean).join(" ") || "—";
+                      const type  = u.userType ?? "Visitor";
                       const phone = u.phoneNumber ? `+${u.countryCode ?? ""} ${u.phoneNumber}` : "—";
-                      const added = u.createdOn ? new Date(u.createdOn).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+                      const added = u.createdOn
+                        ? new Date(u.createdOn).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+                        : "—";
+                      const assigned = u.assignedFollowUp
+                        ? [u.assignedFollowUp.firstName, u.assignedFollowUp.lastName].filter(Boolean).join(" ") || "—"
+                        : "—";
                       return (
                         <tr key={u.id} className="border-b border-[#F3F4F6] hover:bg-[#FAFAFA]">
                           <td className="px-3 py-2 text-[#9CA3AF]">{i + 1}</td>
@@ -747,6 +804,7 @@ export default function AnalyticsDashboard() {
                             <span className="rounded-full bg-[#FEF3C7] px-2 py-0.5 text-[10px] font-medium text-[#92400E]">{type}</span>
                           </td>
                           <td className="px-3 py-2 text-[#374151]">{phone}</td>
+                          <td className="px-3 py-2 text-[#374151]">{assigned}</td>
                           <td className="px-3 py-2 text-[#374151]">{added}</td>
                         </tr>
                       );
@@ -755,6 +813,16 @@ export default function AnalyticsDashboard() {
                 </table>
               )}
             </div>
+            {urgentList.length > 0 && (
+              <div className="mt-3 flex justify-end border-t border-[#F3F4F6] pt-3">
+                <a
+                  href="/reports/followup"
+                  className="text-xs font-semibold text-[#000080] underline hover:text-[#000066]"
+                >
+                  View all {[...firstTimers, ...secondTimers].filter((u) => (u.noOfCalls ?? 0) === 0 && (u.noOfVisits ?? 0) === 0).length} people needing followup →
+                </a>
+              </div>
+            )}
           </ChartCard>
         </div>
       </div>
