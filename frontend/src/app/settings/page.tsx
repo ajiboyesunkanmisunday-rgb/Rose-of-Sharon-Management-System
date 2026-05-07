@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -16,70 +15,6 @@ import {
   Mail,
   BadgeCheck,
 } from "lucide-react";
-
-// ─── Recent Activity Log Data ────────────────────────────────────────────────
-const activityLog = [
-  {
-    date: "Apr 15, 2026",
-    action: "Generated attendance report",
-    performedBy: "Admin",
-    details: "Weekly attendance summary exported",
-  },
-  {
-    date: "Apr 15, 2026",
-    action: "New member registered",
-    performedBy: "Shola Damson",
-    details: "John Adebayo added as first timer",
-  },
-  {
-    date: "Apr 14, 2026",
-    action: "Follow-up completed",
-    performedBy: "Aisha Bello",
-    details: "Called Grace Omotola - second timer",
-  },
-  {
-    date: "Apr 14, 2026",
-    action: "SMS campaign sent",
-    performedBy: "Admin",
-    details: "Easter service reminder to 456 members",
-  },
-  {
-    date: "Apr 13, 2026",
-    action: "Attendance recorded",
-    performedBy: "David Okoro",
-    details: "Sunday Service - 892 attendees logged",
-  },
-  {
-    date: "Apr 13, 2026",
-    action: "Member profile updated",
-    performedBy: "Grace Adeyemi",
-    details: "Updated contact info for Sarah Bamidele",
-  },
-  {
-    date: "Apr 12, 2026",
-    action: "Follow-up assigned",
-    performedBy: "Admin",
-    details: "7 new first timers assigned to team leads",
-  },
-  {
-    date: "Apr 12, 2026",
-    action: "Report exported",
-    performedBy: "Samuel Eze",
-    details: "Monthly growth report downloaded as CSV",
-  },
-  {
-    date: "Apr 11, 2026",
-    action: "New convert recorded",
-    performedBy: "Aisha Bello",
-    details: "Funmi Adekoya moved to new converts",
-  },
-  {
-    date: "Apr 11, 2026",
-    action: "Visit report submitted",
-    performedBy: "David Okoro",
-    details: "Home visit to Chinedu Nwankwo completed",
-  },
-];
 
 // ─── Quick-access settings cards ─────────────────────────────────────────────
 const settingsCards = [
@@ -128,18 +63,6 @@ const settingsCards = [
 export default function MySettingsPage() {
   const router = useRouter();
   const user = getStoredUser();
-  const [search, setSearch] = useState("");
-
-  const filtered = useMemo(() => {
-    if (!search.trim()) return activityLog;
-    const q = search.toLowerCase();
-    return activityLog.filter(
-      (r) =>
-        r.action.toLowerCase().includes(q) ||
-        r.performedBy.toLowerCase().includes(q) ||
-        r.details.toLowerCase().includes(q)
-    );
-  }, [search]);
 
   const fullName = user
     ? [user.firstName, user.lastName].filter(Boolean).join(" ")
@@ -218,88 +141,6 @@ export default function MySettingsPage() {
         })}
       </div>
 
-      {/* ── Recent Activity Log ── */}
-      <div className="rounded-xl border border-[#E5E7EB] bg-white">
-        {/* Table header bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E5E7EB] px-6 py-4">
-          <h2 className="text-[18px] font-bold text-[#000000]">Recent Activity Log</h2>
-          <div className="flex items-center gap-3">
-            {/* Search */}
-            <div className="relative">
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search activity…"
-                className="w-52 rounded-lg border border-[#E5E7EB] py-2 pl-9 pr-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
-              />
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="absolute left-3 top-1/2 -translate-y-1/2"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#9CA3AF"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </div>
-            <Link
-              href="/settings/activity-logs"
-              className="whitespace-nowrap text-sm font-medium text-[#000080] hover:underline"
-            >
-              View all →
-            </Link>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="bg-[#F3F4F6]">
-                <th className="px-6 py-4 text-sm font-bold text-[#000080]">Date</th>
-                <th className="px-6 py-4 text-sm font-bold text-[#000080]">Action</th>
-                <th className="hidden sm:table-cell px-6 py-4 text-sm font-bold text-[#000080]">Performed By</th>
-                <th className="hidden md:table-cell px-6 py-4 text-sm font-bold text-[#000080]">Details</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((row, i) => (
-                <tr
-                  key={i}
-                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50"
-                  style={{ height: "56px" }}
-                >
-                  <td className="whitespace-nowrap px-6 py-3 text-sm text-[#6B7280]">
-                    {row.date}
-                  </td>
-                  <td className="px-6 py-3 text-sm font-medium text-[#000000]">
-                    {row.action}
-                  </td>
-                  <td className="hidden sm:table-cell px-6 py-3 text-sm text-[#374151]">
-                    {row.performedBy}
-                  </td>
-                  <td className="hidden md:table-cell px-6 py-3 text-sm text-[#6B7280]">
-                    {row.details}
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-6 py-10 text-center text-sm text-[#9CA3AF]">
-                    No activity matches your search.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </DashboardLayout>
   );
 }
