@@ -1544,6 +1544,169 @@ export async function getAdminUsers(
   );
 }
 
+// ─── Workers-in-Training ─────────────────────────────────────────────────────
+
+export interface WorkersInTrainingResponse {
+  id: string;
+  userId?: string;
+  set?: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  maidenName?: string;
+  email?: string;
+  profilePictureUrl?: string;
+  sex?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+  otherPhoneNumber?: string;
+  dateOfBirth?: string;
+  maritalStatus?: string;
+  spouseName?: string;
+  noOfChildren?: number;
+  nextOfKinName?: string;
+  nextOfKinRelationship?: string;
+  nextOfKinPhoneNumber?: string;
+  nextOfKinFullAddress?: string;
+  occupation?: string;
+  employer?: string;
+  officeFullAddress?: string;
+  officePhoneNumber?: string;
+  officeEmail?: string;
+  salvationDate?: string;
+  salvationLocation?: string;
+  waterBaptismDate?: string;
+  waterBaptismLocation?: string;
+  holySpiritBaptismDate?: string;
+  holySpiritBaptismLocation?: string;
+  reasonForLeavingPastChurch?: string;
+  lifeCenterAttended?: string;
+  nonRCCGChristianGroups?: string[];
+  yourMinistry?: string;
+  giftsManifesting?: string[];
+  reasonForApplying?: string;
+  consent?: boolean;
+  officialRemarks?: string;
+  graduationDate?: string;
+  createdOn?: string;
+}
+
+export interface CreateWorkersInTrainingRequest {
+  userId?: string;
+  set?: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  maidenName?: string;
+  countryCode: string;
+  phoneNumber: string;
+  email?: string;
+  profilePictureUrl?: string;
+  sex?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  otherPhoneNumber?: string;
+  dateOfBirth?: string;
+  noOfChildren?: number;
+  spouseName?: string;
+  maritalStatus?: string;
+  nextOfKinName?: string;
+  nextOfKinRelationship?: string;
+  nextOfKinPhoneNumber?: string;
+  nextOfKinFullAddress?: string;
+  employer?: string;
+  officeFullAddress?: string;
+  officePhoneNumber?: string;
+  officeEmail?: string;
+  occupation?: string;
+  salvationDate?: string;
+  salvationLocation?: string;
+  waterBaptismDate?: string;
+  waterBaptismLocation?: string;
+  holySpiritBaptismDate?: string;
+  holySpiritBaptismLocation?: string;
+  reasonForLeavingPastChurch?: string;
+  lifeCenterAttended?: string;
+  nonRCCGChristianGroups?: string[];
+  yourMinistry?: string;
+  giftsManifesting?: string[];
+  reasonForApplying?: string;
+  consent?: boolean;
+}
+
+export async function getWorkersInTraining(
+  pageNo = 0,
+  pageSize = 20,
+  set?: string
+): Promise<CustomPageResponse<WorkersInTrainingResponse>> {
+  const qs = set ? `&set=${encodeURIComponent(set)}` : "";
+  return apiFetch<CustomPageResponse<WorkersInTrainingResponse>>(
+    `/api/v1/workers-in-training?pageNo=${pageNo}&pageSize=${pageSize}${qs}`
+  );
+}
+
+export async function getWorkerInTraining(
+  id: string
+): Promise<WorkersInTrainingResponse> {
+  return apiFetch<WorkersInTrainingResponse>(`/api/v1/workers-in-training/${id}`);
+}
+
+export async function searchWorkersInTraining(
+  text: string,
+  pageNo = 0,
+  pageSize = 20,
+  set?: string
+): Promise<CustomPageResponse<WorkersInTrainingResponse>> {
+  const qs = set ? `&set=${encodeURIComponent(set)}` : "";
+  return apiFetch<CustomPageResponse<WorkersInTrainingResponse>>(
+    `/api/v1/workers-in-training/search?pageNo=${pageNo}&pageSize=${pageSize}${qs}`,
+    { method: "POST", body: JSON.stringify({ text }) }
+  );
+}
+
+export async function createWorkerInTraining(
+  body: CreateWorkersInTrainingRequest
+): Promise<WorkersInTrainingResponse> {
+  return apiFetch<WorkersInTrainingResponse>("/api/v1/workers-in-training", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function markWorkersAsGraduated(
+  ids: string[]
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/workers-in-training/mark-as-graduated", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export async function giveOfficialRemark(
+  id: string,
+  text: string
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/workers-in-training/${id}/give-official-remark`,
+    { method: "PATCH", body: JSON.stringify({ text }) }
+  );
+}
+
+export async function deleteWorkersInTrainingBulk(
+  ids: string[]
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/workers-in-training", {
+    method: "DELETE",
+    body: JSON.stringify({ ids }),
+  });
+}
+
 /**
  * Upload a profile picture and return the hosted URL.
  * Uses /api/v1/media with category IMAGES.
