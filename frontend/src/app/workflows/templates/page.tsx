@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { LayoutTemplate } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
@@ -48,9 +49,14 @@ export default function WorkflowTemplatesPage() {
   return (
     <DashboardLayout>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Workflows</h1>
-          <h2 className="text-[22px] font-bold text-[#000080]">Templates</h2>
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FDF4FF]">
+            <LayoutTemplate className="h-6 w-6 text-[#A21CAF]" />
+          </div>
+          <div>
+            <h1 className="text-[28px] font-bold text-[#000000]">Workflow Templates</h1>
+            <p className="text-sm text-[#6B7280]">Reusable step sequences for guest follow-up workflows</p>
+          </div>
         </div>
         <Button
           variant="primary"

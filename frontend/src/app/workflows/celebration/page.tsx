@@ -1,6 +1,7 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { PartyPopper } from "lucide-react";
 
 type Status = "On Track" | "Overdue" | "Pending";
 
@@ -57,9 +58,14 @@ const columns: { title: string; headerBg: string; cards: Card[] }[] = [
 export default function CelebrationWorkflowPage() {
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Workflows</h1>
-        <h2 className="text-[22px] font-bold text-[#000080]">Celebration Request Workflow</h2>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FFF7ED]">
+          <PartyPopper className="h-6 w-6 text-[#D97706]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Celebration Request Workflow</h1>
+          <p className="text-sm text-[#6B7280]">Manage birthday, anniversary and celebration requests</p>
+        </div>
       </div>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:overflow-x-auto sm:pb-4">

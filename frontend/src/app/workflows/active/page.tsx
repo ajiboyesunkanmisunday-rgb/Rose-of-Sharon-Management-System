@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { Activity } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { activeWorkflowCards } from "@/lib/mock-data";
 import { ActiveWorkflowStage, WorkflowCardStatus } from "@/lib/types";
@@ -34,9 +35,14 @@ export default function ActiveWorkflowsPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Workflows</h1>
-        <h2 className="text-[22px] font-bold text-[#000080]">Guest Follow-up Pipeline</h2>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F0FDF4]">
+          <Activity className="h-6 w-6 text-[#16A34A]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Guest Follow-up Pipeline</h1>
+          <p className="text-sm text-[#6B7280]">Active guest cards moving through each follow-up stage</p>
+        </div>
       </div>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:overflow-x-auto sm:pb-4">
