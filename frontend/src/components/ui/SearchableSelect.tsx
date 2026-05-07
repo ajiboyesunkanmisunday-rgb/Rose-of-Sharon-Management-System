@@ -3,11 +3,23 @@
 import { useState, useRef, useEffect, useId } from "react";
 import { ChevronDown, Search, X } from "lucide-react";
 
+type StringOption = string;
+type ObjectOption = { label: string; value: string };
+type SelectOption = StringOption | ObjectOption;
+
+function optionLabel(o: SelectOption): string {
+  return typeof o === "string" ? o : o.label;
+}
+function optionValue(o: SelectOption): string {
+  return typeof o === "string" ? o : o.value;
+}
+
 interface SearchableSelectProps {
   label?: string;
   placeholder?: string;
   searchPlaceholder?: string;
-  options: string[];
+  /** Accept either string[] or {label,value}[] */
+  options: SelectOption[];
   value: string;
   onChange: (value: string) => void;
   required?: boolean;
@@ -59,11 +71,18 @@ export default function SearchableSelect({
   }, [open]);
 
   const filtered = query.trim()
-    ? options.filter((o) => o.toLowerCase().includes(query.trim().toLowerCase()))
+    ? options.filter((o) => optionLabel(o).toLowerCase().includes(query.trim().toLowerCase()))
     : options;
 
-  const handleSelect = (option: string) => {
-    onChange(option);
+  // Find the display label for the current value
+  const displayLabel = value
+    ? (options.find((o) => optionValue(o) === value)
+        ? optionLabel(options.find((o) => optionValue(o) === value)!)
+        : value)
+    : "";
+
+  const handleSelect = (option: SelectOption) => {
+    onChange(optionValue(option));
     setOpen(false);
     setQuery("");
   };
@@ -94,8 +113,8 @@ export default function SearchableSelect({
             : "border-[#E5E7EB] hover:border-[#9CA3AF]"
         } bg-white text-left`}
       >
-        <span className={value ? "text-[#374151]" : "text-[#9CA3AF]"}>
-          {value || placeholder}
+        <span className={displayLabel ? "text-[#374151]" : "text-[#9CA3AF]"}>
+          {displayLabel || placeholder}
         </span>
         <div className="flex shrink-0 items-center gap-1">
           {value && (
@@ -152,21 +171,25 @@ export default function SearchableSelect({
                 No results for &ldquo;{query}&rdquo;
               </li>
             ) : (
-              filtered.map((option) => (
-                <li
-                  key={option}
-                  role="option"
-                  aria-selected={value === option}
-                  onClick={() => handleSelect(option)}
-                  className={`cursor-pointer px-4 py-2.5 text-sm transition-colors ${
-                    value === option
-                      ? "bg-[#EFF6FF] font-medium text-[#000080]"
-                      : "text-[#374151] hover:bg-[#F9FAFB]"
-                  }`}
-                >
-                  {option}
-                </li>
-              ))
+              filtered.map((option) => {
+                const val = optionValue(option);
+                const lbl = optionLabel(option);
+                return (
+                  <li
+                    key={val}
+                    role="option"
+                    aria-selected={value === val}
+                    onClick={() => handleSelect(option)}
+                    className={`cursor-pointer px-4 py-2.5 text-sm transition-colors ${
+                      value === val
+                        ? "bg-[#EFF6FF] font-medium text-[#000080]"
+                        : "text-[#374151] hover:bg-[#F9FAFB]"
+                    }`}
+                  >
+                    {lbl}
+                  </li>
+                );
+              })
             )}
           </ul>
 
