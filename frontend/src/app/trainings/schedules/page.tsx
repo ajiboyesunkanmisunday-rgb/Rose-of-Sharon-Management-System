@@ -10,6 +10,7 @@ import ActionDropdown from "@/components/ui/ActionDropdown";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { trainingSchedules } from "@/lib/mock-data";
 import { ScheduleStatus } from "@/lib/types";
+import { CalendarClock } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -65,9 +66,14 @@ export default function TrainingSchedulesPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Trainings</h1>
-        <h2 className="text-[22px] font-bold text-[#000080]">Schedules</h2>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EDE9FE]">
+          <CalendarClock className="h-6 w-6 text-[#7C3AED]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Training Schedules</h1>
+          <p className="text-sm text-[#6B7280]">Plan and track course sessions and training timetables</p>
+        </div>
       </div>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

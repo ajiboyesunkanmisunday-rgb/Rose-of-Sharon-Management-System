@@ -18,7 +18,7 @@ import {
 import {
   ChevronRight, ChevronLeft, Download, FileText, FileSpreadsheet,
   Printer, RefreshCw, Users, UserCheck, UserPlus, HeartHandshake,
-  Cake, Heart, Church, Building2, CalendarDays,
+  Cake, Heart, Church, Building2, CalendarDays, BarChart2,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -1142,9 +1142,14 @@ export default function ReportsPage() {
   // ═══════════════════════════════════════════════════════════════════
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Reports</h1>
-        <p className="text-sm text-[#6B7280]">Generate and export detailed reports for your church ministry</p>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F0FDF4]">
+          <BarChart2 className="h-6 w-6 text-[#059669]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Reports</h1>
+          <p className="text-sm text-[#6B7280]">Generate and export detailed reports for your church ministry</p>
+        </div>
       </div>
 
       {/* Tab switcher */}

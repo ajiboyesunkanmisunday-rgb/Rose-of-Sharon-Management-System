@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { changePassword } from "@/lib/api";
+import { KeyRound } from "lucide-react";
 
 export default function ChangePasswordPage() {
   const [current, setCurrent] = useState("");
@@ -48,11 +49,14 @@ export default function ChangePasswordPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-1">
-        <h1 className="text-[28px] font-bold text-[#000000]">Settings</h1>
-      </div>
-      <div className="mb-6">
-        <p className="text-sm text-[#6B7280]">Change Password</p>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FEF3C7]">
+          <KeyRound className="h-6 w-6 text-[#D97706]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Change Password</h1>
+          <p className="text-sm text-[#6B7280]">Update your admin account password</p>
+        </div>
       </div>
 
       {toast && (

@@ -151,9 +151,14 @@ export default function MySettingsPage() {
   return (
     <DashboardLayout>
       {/* ── Page header ── */}
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Settings</h1>
-        <p className="text-sm text-[#6B7280]">My Settings</p>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F3F4F6]">
+          <Settings className="h-6 w-6 text-[#374151]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Settings</h1>
+          <p className="text-sm text-[#6B7280]">Manage your account and system preferences</p>
+        </div>
       </div>
 
       {/* ── Profile card ── */}
