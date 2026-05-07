@@ -133,6 +133,43 @@ function countByStage(converts: NewConvertResponse[]) {
   return Object.entries(map).map(([name, count]) => ({ name, count }));
 }
 
+function countByFavouriteParts(users: UserResponse[]) {
+  const map: Record<string, number> = {};
+  users.forEach((u) => {
+    if (!u.favouriteParts) return;
+    const parts = u.favouriteParts.split(/[,;|]+/).map((s) => s.trim()).filter(Boolean);
+    parts.forEach((p) => { map[p] = (map[p] ?? 0) + 1; });
+  });
+  return Object.entries(map)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([name, count]) => ({ name: name.length > 20 ? name.slice(0, 18) + "…" : name, count }));
+}
+
+function countVisiting(users: UserResponse[]) {
+  let visiting = 0, notVisiting = 0;
+  users.forEach((u) => {
+    if (u.isVisiting === true) visiting++;
+    else notVisiting++;
+  });
+  return [
+    { name: "First-time Visitors", value: visiting,    color: C.orange },
+    { name: "Regular / Members",   value: notVisiting, color: C.navy   },
+  ];
+}
+
+function countHowDidYouHear(users: UserResponse[]) {
+  const map: Record<string, number> = {};
+  users.forEach((u) => {
+    if (!u.howDidYouHear) return;
+    const key = u.howDidYouHear.trim();
+    if (key) map[key] = (map[key] ?? 0) + 1;
+  });
+  return Object.entries(map)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => ({ name: name.length > 22 ? name.slice(0, 20) + "…" : name, count }));
+}
+
 // ─── Sub-components ──────────────────────────────────────────────────────────
 function KpiCard({ label, value, sub, color = C.navy }: {
   label: string; value: string | number; sub?: string; color?: string;
@@ -283,6 +320,15 @@ export default function AnalyticsDashboard() {
     }
   });
   const leftData = MONTH_SHORT.map((m, i) => ({ month: m, Left: leftByMonth[i] }));
+
+  // 17. Favourite parts of service — first timers
+  const favouritePartsData = countByFavouriteParts(firstTimers);
+
+  // 18. Visiting vs non-visiting (first timers)
+  const visitingData = countVisiting(firstTimers);
+
+  // 19. How did you hear about the church — first timers
+  const howDidYouHearData = countHowDidYouHear(firstTimers);
 
   // 15 & 16. Urgent followup: first/second timers with 0 calls & 0 visits
   const urgentList = [...firstTimers, ...secondTimers]
@@ -582,7 +628,77 @@ export default function AnalyticsDashboard() {
         </p>
       </ChartCard>
 
-      {/* ── Row 10: Urgent Followup + Attention Rate ─────────────── */}
+      {/* ── Row 10: Charts 17 / 18 / 19 ─────────────────────────── */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* Chart 17: Favourite parts of service */}
+        <ChartCard title="17. Favourite Parts of Service — First Timers">
+          {favouritePartsData.length === 0 ? (
+            <p className="py-10 text-center text-xs text-[#9CA3AF]">No favourite-part data recorded yet.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={favouritePartsData} layout="vertical" margin={{ top: 4, right: 16, left: 10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={110} />
+                <Tooltip {...TOOLTIP_STYLE} />
+                <Bar dataKey="count" name="Responses" fill={C.indigo} radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+
+        {/* Chart 19: How did you hear about the church */}
+        <ChartCard title="19. How First Timers Heard About the Church">
+          {howDidYouHearData.length === 0 ? (
+            <p className="py-10 text-center text-xs text-[#9CA3AF]">No invitation-source data recorded yet.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={howDidYouHearData} layout="vertical" margin={{ top: 4, right: 16, left: 10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={110} />
+                <Tooltip {...TOOLTIP_STYLE} />
+                <Bar dataKey="count" name="Responses" fill={C.teal} radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+      </div>
+
+      {/* Chart 18: Visitor pie */}
+      <ChartCard title="18. First Timers — Visitors vs Regular Attendees">
+        <div className="flex items-center gap-8">
+          <ResponsiveContainer width="50%" height={220}>
+            <PieChart>
+              <Pie
+                data={visitingData}
+                cx="50%" cy="50%"
+                outerRadius={90}
+                dataKey="value"
+                label={({ percent }: { percent?: number }) => percent != null ? `${(percent * 100).toFixed(0)}%` : ""}
+                labelLine={false}
+              >
+                {visitingData.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip {...TOOLTIP_STYLE} />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="flex flex-col gap-3">
+            {visitingData.map((g) => (
+              <div key={g.name} className="flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full" style={{ background: g.color }} />
+                <span className="text-xs text-[#374151]">{g.name}</span>
+                <span className="ml-3 text-sm font-bold text-[#111827]">{g.value.toLocaleString()}</span>
+              </div>
+            ))}
+            <p className="mt-1 text-[10px] text-[#9CA3AF]">Based on first-timer records with <em>isVisiting</em> flag.</p>
+          </div>
+        </div>
+      </ChartCard>
+
+      {/* ── Row 11: Urgent Followup + Attention Rate ─────────────── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* 16: Attention rate card */}
         <div className="flex flex-col gap-4">
