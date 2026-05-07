@@ -389,16 +389,7 @@ export default function DirectoryPage() {
                 {/* View link */}
                 <div className="mt-auto pt-3">
                   <button
-                    onClick={() => {
-                      const basePath =
-                        person.userType === "member"        ? "/user-management/members"        :
-                        person.userType === "e-member"      ? "/user-management/e-members"      :
-                        person.userType === "first-timer"   ? "/user-management/first-timers"   :
-                        person.userType === "second-timer"  ? "/user-management/second-timers"  :
-                        person.userType === "new-convert"   ? "/user-management/new-converts"   :
-                        "/user-management/members";
-                      router.push(`${basePath}/${person.id}`);
-                    }}
+                    onClick={() => router.push(`/directory/${person.id}`)}
                     className="w-full rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] transition-colors hover:bg-[#000080] hover:text-white"
                   >
                     View Profile

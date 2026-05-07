@@ -92,8 +92,11 @@ const navItems: NavItem[] = [
     label: "Trainings",
     icon: Swords,
     children: [
-      { label: "Courses", href: "/trainings/courses" },
-      { label: "Schedules", href: "/trainings/schedules" },
+      { label: "Baptismal Class",      href: "/trainings/baptismal"  },
+      { label: "Workers-in-Training",  href: "/trainings/workers"    },
+      { label: "School of Disciples",  href: "/trainings/sod"        },
+      { label: "School of Ministry",   href: "/trainings/som"        },
+      { label: "RILA",                 href: "/trainings/rila"       },
     ],
   },
   {

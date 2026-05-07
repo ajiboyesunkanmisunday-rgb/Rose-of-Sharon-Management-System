@@ -210,3 +210,34 @@
   from   = "/trainings/schedules/:id/edit/"
   to     = "/trainings/schedules/sch-1/edit/"
   status = 200
+
+# ── New static training + report pages ──────────────────────────────────────
+[[redirects]]
+  from   = "/reports/followup/"
+  to     = "/reports/followup/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/baptismal/"
+  to     = "/trainings/baptismal/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/workers/"
+  to     = "/trainings/workers/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/sod/"
+  to     = "/trainings/sod/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/som/"
+  to     = "/trainings/som/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/rila/"
+  to     = "/trainings/rila/index.html"
+  status = 200
