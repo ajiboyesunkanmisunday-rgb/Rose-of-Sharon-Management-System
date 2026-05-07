@@ -7,6 +7,7 @@ import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
 import { trainingCourses } from "@/lib/mock-data";
 import { CourseStatus } from "@/lib/types";
+import { GraduationCap } from "lucide-react";
 
 const statusBadgeColors: Record<CourseStatus, string> = {
   Active: "bg-[#DCFCE7] text-[#16A34A]",
@@ -31,11 +32,14 @@ export default function CoursesPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-1">
-        <h1 className="text-[28px] font-bold text-[#000000]">Trainings</h1>
-      </div>
-      <div className="mb-6">
-        <p className="text-sm text-[#6B7280]">Courses</p>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF]">
+          <GraduationCap className="h-6 w-6 text-[#000080]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Training Courses</h1>
+          <p className="text-sm text-[#6B7280]">Manage church training programs and courses</p>
+        </div>
       </div>
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">

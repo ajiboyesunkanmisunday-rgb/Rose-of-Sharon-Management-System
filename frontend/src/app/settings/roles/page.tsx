@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import ActionDropdown from "@/components/ui/ActionDropdown";
 import { getRoles, createRole, updateRole, type RoleResponse } from "@/lib/api";
+import { ShieldCheck } from "lucide-react";
 
 function fmtDate(s?: string) {
   if (!s) return "—";
@@ -89,9 +90,14 @@ export default function RolesPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Settings</h1>
-        <h2 className="text-[22px] font-bold text-[#000080]">Roles &amp; Permissions</h2>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF]">
+          <ShieldCheck className="h-6 w-6 text-[#000080]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Roles &amp; Permissions</h1>
+          <p className="text-sm text-[#6B7280]">Define admin roles and their access levels</p>
+        </div>
       </div>
 
       <div className="mb-4 flex items-center justify-end">

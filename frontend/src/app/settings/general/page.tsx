@@ -3,6 +3,7 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
+import { SlidersHorizontal } from "lucide-react";
 
 export default function GeneralSettingsPage() {
   const [churchInfo, setChurchInfo] = useState({
@@ -33,9 +34,14 @@ export default function GeneralSettingsPage() {
   return (
     <DashboardLayout>
       {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Settings</h1>
-        <h2 className="text-[22px] font-bold text-[#000080]">General</h2>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F3F4F6]">
+          <SlidersHorizontal className="h-6 w-6 text-[#374151]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">General Settings</h1>
+          <p className="text-sm text-[#6B7280]">Church information and service configurations</p>
+        </div>
       </div>
 
       {/* Form Card */}

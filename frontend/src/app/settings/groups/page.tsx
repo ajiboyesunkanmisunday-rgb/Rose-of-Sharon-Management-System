@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
 import Modal from "@/components/ui/Modal";
+import { Users } from "lucide-react";
 import {
   getGroups,
   createGroup,
@@ -103,9 +104,14 @@ export default function GroupsPage() {
   return (
     <DashboardLayout>
       {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Settings</h1>
-        <h2 className="text-[22px] font-bold text-[#000080]">Groups</h2>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F0FDF4]">
+          <Users className="h-6 w-6 text-[#16A34A]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Groups</h1>
+          <p className="text-sm text-[#6B7280]">Manage church departments, units and fellowship groups</p>
+        </div>
       </div>
 
       {/* Top bar */}
