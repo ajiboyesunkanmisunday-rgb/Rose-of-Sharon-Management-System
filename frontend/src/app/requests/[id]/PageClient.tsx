@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
-import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { getRequest, changeRequestStatus, type RequestResponse } from "@/lib/api";
 
 const categoryBadgeColors: Record<string, string> = {
@@ -62,7 +61,6 @@ export default function RequestDetailPage() {
   const [request, setRequest] = useState<RequestResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showAssignDropdown, setShowAssignDropdown] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("Received");
@@ -107,11 +105,6 @@ export default function RequestDetailPage() {
       </DashboardLayout>
     );
   }
-
-  const handleConfirmDelete = () => {
-    setShowDeleteModal(false);
-    router.push("/requests");
-  };
 
   const handleStatusChange = async (status: string) => {
     setShowStatusDropdown(false);
@@ -299,17 +292,7 @@ export default function RequestDetailPage() {
         >
           Edit
         </Button>
-        <Button variant="danger" onClick={() => setShowDeleteModal(true)}>
-          Delete
-        </Button>
       </div>
-
-      {/* Delete Modal */}
-      <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleConfirmDelete}
-      />
     </DashboardLayout>
   );
 }
