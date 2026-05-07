@@ -1372,12 +1372,13 @@ export async function uploadMedia(fields: {
   const form = new FormData();
   form.append("title", fields.title);
   if (fields.description) form.append("description", fields.description);
-  form.append("type", fields.category);   // backend field is "type", not "category"
-  // "size" is required by the backend DTO — send file size in bytes
+  // UploadMediaRequest DTO has both "type" and "category" fields — send both.
+  form.append("type",     fields.category);
+  form.append("category", fields.category);
+  // "size" is an int64 in the DTO — send file size in bytes.
   form.append("size", String(fields.file ? fields.file.size : 0));
-  // Try "file" first (standard Spring Boot @RequestParam("file") convention).
-  // If the backend uses a different parameter name update this value.
-  if (fields.file) form.append("file", fields.file);
+  // DTO field name for the file is "multipartFile" (confirmed from OpenAPI spec).
+  if (fields.file) form.append("multipartFile", fields.file);
 
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
