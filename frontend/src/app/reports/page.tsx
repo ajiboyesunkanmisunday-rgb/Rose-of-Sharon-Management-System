@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import dynamic from "next/dynamic";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+const AnalyticsDashboard = dynamic(() => import("./AnalyticsDashboard"), { ssr: false });
 import {
   getBirthdays,
   getWeddingAnniversaries,
@@ -22,7 +24,7 @@ import {
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-type ReportTab = "membership" | "celebrations" | "attendance";
+type ReportTab = "analytics" | "membership" | "celebrations" | "attendance";
 type ReportId  =
   | "members" | "e-members" | "first-timers" | "second-timers" | "new-converts"
   | "birthdays" | "weddings" | "church-anniversary" | "departmental"
@@ -56,7 +58,7 @@ interface ReportRow {
 }
 
 // ─── Catalogue ───────────────────────────────────────────────────────────────
-const CATALOGUE: Record<ReportTab, CategoryDef[]> = {
+const CATALOGUE: Record<Exclude<ReportTab, "analytics">, CategoryDef[]> = {
   membership: [{
     title: "Membership",
     description: "Generate membership reports and track the growth of your church members.",
@@ -761,7 +763,7 @@ export default function ReportsPage() {
   const today = new Date();
 
   // Navigation
-  const [activeTab,      setActiveTab]      = useState<ReportTab>("membership");
+  const [activeTab,      setActiveTab]      = useState<ReportTab>("analytics");
   const [selectedReport, setSelectedReport] = useState<ReportId | null>(null);
 
   // Fetch state
@@ -789,7 +791,9 @@ export default function ReportsPage() {
   // Departmental filter
   const [selectedDept, setSelectedDept] = useState("all");
 
-  const currentDef = CATALOGUE[activeTab].flatMap((c) => c.reports).find((r) => r.id === selectedReport);
+  const currentDef = activeTab !== "analytics"
+    ? CATALOGUE[activeTab].flatMap((c: CategoryDef) => c.reports).find((r: ReportDef) => r.id === selectedReport)
+    : undefined;
   const cols        = selectedReport ? colsForReport(selectedReport) : MEMBER_COLS;
 
   const isMembership  = selectedReport !== null && MEMBERSHIP_REPORT_IDS.includes(selectedReport);
@@ -1154,7 +1158,7 @@ export default function ReportsPage() {
 
       {/* Tab switcher */}
       <div className="mb-6 flex gap-1 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-1">
-        {(["membership","celebrations","attendance"] as ReportTab[]).map((t) => (
+        {(["analytics","membership","celebrations","attendance"] as ReportTab[]).map((t) => (
           <button key={t} onClick={() => setActiveTab(t)}
             className={`flex-1 rounded-lg py-2.5 text-sm font-medium capitalize transition
               ${activeTab === t ? "bg-white text-[#000080] shadow-sm" : "text-[#6B7280] hover:text-[#374151]"}`}>
@@ -1163,9 +1167,12 @@ export default function ReportsPage() {
         ))}
       </div>
 
+      {/* Analytics Dashboard */}
+      {activeTab === "analytics" && <AnalyticsDashboard />}
+
       {/* Category blocks */}
-      <div className="space-y-6">
-        {CATALOGUE[activeTab].map((cat) => (
+      {activeTab !== "analytics" && <div className="space-y-6">
+        {CATALOGUE[activeTab as Exclude<ReportTab, "analytics">].map((cat) => (
           <div key={cat.title} className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-sm">
             <div className="border-b-2 border-[#000080] bg-[#F0F2FF] px-6 py-5">
               <div className="flex items-center gap-3">
@@ -1197,7 +1204,7 @@ export default function ReportsPage() {
             </div>
           </div>
         ))}
-      </div>
+      </div>}
     </DashboardLayout>
   );
 }
