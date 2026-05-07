@@ -50,8 +50,8 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
             <p className="text-sm font-bold text-[#1F2937]">{displayName}</p>
             <p className="text-xs text-[#6B7280]">{displayEmail}</p>
           </div>
-          {/* Avatar initials on small screens */}
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#B5B5F3] text-xs font-bold text-[#000080] sm:hidden">
+          {/* Avatar circle */}
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#B5B5F3] text-xs font-bold text-[#000080] ring-2 ring-white">
             {initials}
           </div>
           <ChevronDown
@@ -69,18 +69,18 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
               onClick={() => setDropdownOpen(false)}
             />
             <div className="absolute right-0 top-full z-50 mt-1 w-48 max-w-[calc(100vw-1rem)] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-              <a
-                href="/profile"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              <button
+                onClick={() => { setDropdownOpen(false); router.push("/profile"); }}
+                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
               >
                 My Profile
-              </a>
-              <a
-                href="/settings/general"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              </button>
+              <button
+                onClick={() => { setDropdownOpen(false); router.push("/settings/general"); }}
+                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
               >
                 Settings
-              </a>
+              </button>
               <hr className="my-1 border-gray-100" />
               <button
                 onClick={() => {
