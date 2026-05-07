@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { GitBranch } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { activeWorkflowCards } from "@/lib/mock-data";
 import { ActiveWorkflowStage, WorkflowCardStatus } from "@/lib/types";
@@ -34,9 +35,14 @@ export default function GuestWorkflowPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Workflows</h1>
-        <h2 className="text-[22px] font-bold text-[#000080]">Guest Workflow</h2>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EFF6FF]">
+          <GitBranch className="h-6 w-6 text-[#2563EB]" />
+        </div>
+        <div>
+          <h1 className="text-[28px] font-bold text-[#000000]">Guest Workflow</h1>
+          <p className="text-sm text-[#6B7280]">Track and move guests through the follow-up pipeline</p>
+        </div>
       </div>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:overflow-x-auto sm:pb-4">
