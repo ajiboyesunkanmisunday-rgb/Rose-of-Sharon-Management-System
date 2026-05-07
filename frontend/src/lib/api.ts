@@ -1379,21 +1379,21 @@ export async function uploadMedia(fields: {
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  // Upload directly to the backend to bypass Netlify's 10 MB proxy-redirect limit.
-  // The backend allows all origins (Access-Control-Allow-Origin: *) and Bearer-token
-  // auth works without Access-Control-Allow-Credentials, so CORS is fine.
-  const BACKEND_URL = "https://api.rccgros.org";
+  // Route through the Netlify reverse-proxy (/api/* → api.rccgros.org/api/:splat)
+  // so the request stays same-origin and no CORS preflight is triggered.
+  // Do NOT set Content-Type — let the browser set it automatically with the
+  // correct multipart boundary for the FormData body.
   let response: Response;
   try {
-    response = await fetch(`${BACKEND_URL}/api/v1/media`, {
+    response = await fetch("/api/v1/media", {
       method: "POST",
       headers,
       body: form,
     });
   } catch {
-    // TypeError — usually a CORS preflight rejection or network failure
+    // TypeError — network failure
     throw new Error(
-      "Media upload could not reach the server. This may be a CORS issue — please ask the backend team to allow uploads from the Netlify domain, or try again on a stable connection."
+      "Media upload failed — please check your connection and try again."
     );
   }
 
