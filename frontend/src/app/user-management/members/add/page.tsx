@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
@@ -8,13 +8,20 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import MultiSelect from "@/components/ui/MultiSelect";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { createMember, uploadProfilePicture } from "@/lib/api";
+import { createMember, uploadProfilePicture, getAllGroups, type GroupResponse } from "@/lib/api";
 import { NIGERIA_STATES, COUNTRIES } from "@/lib/nigeria-states";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 
 export default function AddMemberPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Real groups from API
+  const [availableGroups, setAvailableGroups] = useState<GroupResponse[]>([]);
+  useEffect(() => {
+    getAllGroups().then(setAvailableGroups).catch(() => {});
+  }, []);
+  const groupNames = availableGroups.map((g) => g.name);
 
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
@@ -83,6 +90,9 @@ export default function AddMemberPage() {
         dayOfWedding,
         monthOfWedding,
         yearOfWedding,
+        groupIds: groups.length > 0
+          ? groups.map((name) => availableGroups.find((g) => g.name === name)?.id).filter(Boolean) as string[]
+          : undefined,
       });
       router.push("/user-management/members");
     } catch (err) {
@@ -411,23 +421,10 @@ export default function AddMemberPage() {
                 {/* Groups (multi-select dropdown) */}
                 <MultiSelect
                   label="Groups"
-                  options={[
-                    "Youth",
-                    "Men",
-                    "Women",
-                    "Children",
-                    "Teenagers",
-                    "Young Adults",
-                    "Choir",
-                    "Ushering",
-                    "Protocol",
-                    "Media",
-                    "Prayer",
-                    "Evangelism",
-                  ]}
+                  options={groupNames}
                   value={groups}
                   onChange={setGroups}
-                  placeholder="Select Groups"
+                  placeholder={groupNames.length ? "Select Groups" : "Loading groups…"}
                   name="groups"
                 />
               </div>

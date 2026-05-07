@@ -1,19 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
+import MultiSelect from "@/components/ui/MultiSelect";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { createEMember, uploadProfilePicture } from "@/lib/api";
+import { createEMember, uploadProfilePicture, getAllGroups, type GroupResponse } from "@/lib/api";
 import { NIGERIA_STATES } from "@/lib/nigeria-states";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 
 export default function AddEMemberPage() {
   const router = useRouter();
+
+  // Real groups from API
+  const [availableGroups, setAvailableGroups] = useState<GroupResponse[]>([]);
+  useEffect(() => {
+    getAllGroups().then(setAvailableGroups).catch(() => {});
+  }, []);
+  const groupNames = availableGroups.map((g) => g.name);
 
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
@@ -28,6 +36,7 @@ export default function AddEMemberPage() {
   const [state, setState] = useState("");
   const [maritalStatus, setMaritalStatus] = useState("");
   const [serviceAttended, setServiceAttended] = useState("");
+  const [groups, setGroups] = useState<string[]>([]);
   const [photo, setPhoto] = useState<File | null>(null);
   const [spouse, setSpouse] = useState<SpouseData | null>(null);
   const [showSpouseModal, setShowSpouseModal] = useState(false);
@@ -91,6 +100,9 @@ export default function AddEMemberPage() {
         dayOfWedding,
         monthOfWedding,
         yearOfWedding,
+        groupIds: groups.length > 0
+          ? groups.map((name) => availableGroups.find((g) => g.name === name)?.id).filter(Boolean) as string[]
+          : undefined,
       });
       router.push("/user-management/e-members");
     } catch (err) {
@@ -302,6 +314,16 @@ export default function AddEMemberPage() {
                 <option value="Special Service">Special Service</option>
               </select>
             </div>
+
+            {/* Groups (multi-select dropdown) */}
+            <MultiSelect
+              label="Groups"
+              options={groupNames}
+              value={groups}
+              onChange={setGroups}
+              placeholder={groupNames.length ? "Select Groups" : "Loading groups…"}
+              name="groups"
+            />
           </div>
 
           {/* Photo Upload */}
