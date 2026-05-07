@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 const AnalyticsDashboard = dynamic(() => import("./AnalyticsDashboard"), { ssr: false });
 import {
   getBirthdays,
@@ -537,10 +538,13 @@ function MembershipFilters({
           </FilterSection>
 
           <FilterSection title="Group / Department" icon={groupIcon}>
-            <select value={group} onChange={(e) => onGroup(e.target.value)} className={selectCls}>
-              <option value="">All Groups</option>
-              {groups.map((g) => <option key={g.id} value={g.name}>{g.name}</option>)}
-            </select>
+            <SearchableSelect
+              placeholder="All Groups"
+              searchPlaceholder="Search groups…"
+              options={groups.map((g) => g.name)}
+              value={group}
+              onChange={onGroup}
+            />
           </FilterSection>
         </div>
 
