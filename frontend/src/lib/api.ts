@@ -225,6 +225,8 @@ export interface UserResponse {
   // Service history
   firstTimeService?: EventResponse;
   secondTimeService?: EventResponse;
+  // WhatsApp contact
+  whatsappNumber?: string;
   // Spouse / couple info
   spouse?: UserResponse;
   couplePictureUrl?: string;

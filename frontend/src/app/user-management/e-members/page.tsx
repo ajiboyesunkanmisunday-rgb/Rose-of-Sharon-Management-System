@@ -266,7 +266,7 @@ export default function EMembersPage() {
               className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
           </div>
-          <Button onClick={handleExport}>Export CSV</Button>
+          <Button onClick={() => setShowFilter(false)}>Apply</Button>
           {(startDate || endDate) && (
             <button
               type="button"

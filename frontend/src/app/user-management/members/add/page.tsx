@@ -9,6 +9,7 @@ import MultiSelect from "@/components/ui/MultiSelect";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
 import { createMember, uploadProfilePicture } from "@/lib/api";
+import { NIGERIA_STATES, COUNTRIES } from "@/lib/nigeria-states";
 
 export default function AddMemberPage() {
   const router = useRouter();
@@ -371,15 +372,7 @@ export default function AddMemberPage() {
                     className={selectStyles}
                   >
                     <option value="">Select State</option>
-                    {[
-                      "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
-                      "Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo",
-                      "Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa",
-                      "Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba",
-                      "Yobe","Zamfara",
-                    ].map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
+                    {NIGERIA_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
 
@@ -392,13 +385,7 @@ export default function AddMemberPage() {
                     className={selectStyles}
                   >
                     <option value="">Select Country</option>
-                    <option value="Nigeria">Nigeria</option>
-                    <option value="Ghana">Ghana</option>
-                    <option value="Kenya">Kenya</option>
-                    <option value="South Africa">South Africa</option>
-                    <option value="United Kingdom">United Kingdom</option>
-                    <option value="United States">United States</option>
-                    <option value="Canada">Canada</option>
+                    {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
 

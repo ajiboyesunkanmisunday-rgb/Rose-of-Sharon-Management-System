@@ -9,6 +9,7 @@ import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
 import { createFirstTimer, uploadProfilePicture } from "@/lib/api";
+import { NIGERIA_STATES, COUNTRIES } from "@/lib/nigeria-states";
 
 export default function AddFirstTimerPage() {
   const router = useRouter();
@@ -336,14 +337,7 @@ export default function AddFirstTimerPage() {
                 className={selectStyles}
               >
                 <option value="">Select State</option>
-                <option value="Lagos">Lagos</option>
-                <option value="Abuja">Abuja</option>
-                <option value="Rivers">Rivers</option>
-                <option value="Oyo">Oyo</option>
-                <option value="Kano">Kano</option>
-                <option value="Enugu">Enugu</option>
-                <option value="Delta">Delta</option>
-                <option value="Ogun">Ogun</option>
+                {NIGERIA_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div>
@@ -354,13 +348,7 @@ export default function AddFirstTimerPage() {
                 className={selectStyles}
               >
                 <option value="">Select Country</option>
-                <option value="Nigeria">Nigeria</option>
-                <option value="Ghana">Ghana</option>
-                <option value="Kenya">Kenya</option>
-                <option value="South Africa">South Africa</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="United States">United States</option>
-                <option value="Canada">Canada</option>
+                {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
           </div>

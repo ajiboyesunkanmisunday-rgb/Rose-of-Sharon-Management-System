@@ -32,6 +32,14 @@ const statusBadgeColors: Record<string, string> = {
 
 const statusOptions = ["Received", "Assigned", "In Progress", "Resolved"] as const;
 
+// Map display name → API enum value
+const STATUS_API_MAP: Record<string, string> = {
+  "Received":    "RECEIVED",
+  "Assigned":    "ASSIGNED",
+  "In Progress": "IN_PROGRESS",
+  "Resolved":    "RESOLVED",
+};
+
 function fullName(u?: { firstName?: string; middleName?: string; lastName?: string }): string {
   if (!u) return "—";
   return [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—";
@@ -109,7 +117,8 @@ export default function RequestDetailPage() {
     setShowStatusDropdown(false);
     setUpdatingStatus(true);
     try {
-      await changeRequestStatus(id, status);
+      const apiStatus = STATUS_API_MAP[status] ?? status;
+      await changeRequestStatus(id, apiStatus);
       setCurrentStatus(status);
     } catch {
       // silently keep old status
