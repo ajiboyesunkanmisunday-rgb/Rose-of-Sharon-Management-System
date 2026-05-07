@@ -222,8 +222,10 @@ export default function GuestWorkflowPage() {
                   setDragOverCard(null);
                 }
               }}
-              className={`flex min-w-[270px] flex-1 flex-col rounded-xl border-2 bg-white transition-all ${
-                isColOver ? "border-[#000080] shadow-md" : "border-[#E5E7EB]"
+              className={`flex min-w-[270px] flex-1 flex-col rounded-xl border-2 transition-all ${
+                isColOver
+                  ? "border-[#000080] bg-[#E8EAF0] shadow-md"
+                  : "border-[#E5E7EB] bg-[#F3F4F6]"
               }`}
             >
               {/* Column header */}
@@ -238,38 +240,32 @@ export default function GuestWorkflowPage() {
               </div>
 
               {isColOver && colCards.length === 0 && (
-                <div className="mx-3 mt-2 rounded-lg border-2 border-dashed border-[#000080]/40 bg-[#F0F2FF] py-3 text-center text-xs font-medium text-[#000080]">
+                <div className="mx-3 mt-2 rounded-lg border-2 border-dashed border-[#000080]/40 bg-[#E8EAF0] py-3 text-center text-xs font-medium text-[#000080]">
                   Drop here
                 </div>
               )}
 
               {/* Cards */}
               <div className="flex flex-1 flex-col gap-0 p-3">
-                {colCards.length === 0 && !isColOver ? (
-                  <div className="flex flex-1 items-center justify-center py-6 text-xs text-[#9CA3AF]">
-                    No guests
-                  </div>
-                ) : (
-                  colCards.map((card) => {
-                    const overInfo = dragOverCard?.cardId === card.id && dragOverCard.stage === col.stage
-                      ? dragOverCard
-                      : null;
-                    return (
-                      <GuestCard
-                        key={card.id}
-                        card={card}
-                        isMoving={moving === card.id}
-                        showInsertBefore={overInfo?.insertBefore === true}
-                        showInsertAfter={overInfo?.insertBefore === false}
-                        onDragStart={handleDragStart}
-                        onDragEnd={handleDragEnd}
-                        onCardDragOver={handleCardDragOver}
-                        onCardDrop={handleCardDrop}
-                        onEdit={() => setEditCard(card)}
-                      />
-                    );
-                  })
-                )}
+                {colCards.map((card) => {
+                  const overInfo = dragOverCard?.cardId === card.id && dragOverCard.stage === col.stage
+                    ? dragOverCard
+                    : null;
+                  return (
+                    <GuestCard
+                      key={card.id}
+                      card={card}
+                      isMoving={moving === card.id}
+                      showInsertBefore={overInfo?.insertBefore === true}
+                      showInsertAfter={overInfo?.insertBefore === false}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      onCardDragOver={handleCardDragOver}
+                      onCardDrop={handleCardDrop}
+                      onDoubleClick={() => setEditCard(card)}
+                    />
+                  );
+                })}
               </div>
             </div>
           );
@@ -282,7 +278,7 @@ export default function GuestWorkflowPage() {
 // ── GuestCard ────────────────────────────────────────────────────────────────────
 function GuestCard({
   card, isMoving, showInsertBefore, showInsertAfter,
-  onDragStart, onDragEnd, onCardDragOver, onCardDrop, onEdit,
+  onDragStart, onDragEnd, onCardDragOver, onCardDrop, onDoubleClick,
 }: {
   card: ActiveWorkflowCard;
   isMoving: boolean;
@@ -292,7 +288,7 @@ function GuestCard({
   onDragEnd: () => void;
   onCardDragOver: (e: React.DragEvent, cardId: string, stage: ActiveWorkflowStage) => void;
   onCardDrop: (e: React.DragEvent, cardId: string, stage: ActiveWorkflowStage) => void;
-  onEdit: () => void;
+  onDoubleClick: () => void;
 }) {
   return (
     <div className="mb-2.5">
@@ -306,25 +302,29 @@ function GuestCard({
         onDragEnd={onDragEnd}
         onDragOver={(e) => onCardDragOver(e, card.id, card.stage)}
         onDrop={(e) => onCardDrop(e, card.id, card.stage)}
+        onDoubleClick={onDoubleClick}
+        title="Double-click to view / edit"
         className={`group rounded-xl border bg-white p-3.5 shadow-sm transition-all cursor-grab active:cursor-grabbing select-none ${
           isMoving
             ? "opacity-50 scale-95"
             : "border-[#E5E7EB] hover:border-[#000080] hover:shadow-md"
         }`}
       >
+        {/* Name + grip */}
         <div className="mb-2 flex items-start justify-between gap-2">
-          <p className="text-sm font-semibold text-[#111827] leading-snug">{card.memberName}</p>
+          <p className="text-sm font-semibold text-[#111827] leading-snug break-words">{card.memberName}</p>
           <GripVertical className="h-4 w-4 shrink-0 text-[#D1D5DB] group-hover:text-[#9CA3AF]" />
         </div>
 
+        {/* Meta */}
         <div className="space-y-1.5">
-          <div className="flex items-center gap-1.5 text-xs text-[#374151]">
-            <Phone className="h-3 w-3 shrink-0 text-[#9CA3AF]" />
-            <span>{card.phone}</span>
+          <div className="flex items-start gap-1.5 text-xs text-[#374151]">
+            <Phone className="mt-0.5 h-3 w-3 shrink-0 text-[#9CA3AF]" />
+            <span className="break-words">{card.phone}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-[#374151]">
-            <User className="h-3 w-3 shrink-0 text-[#9CA3AF]" />
-            <span>Assigned: <span className="font-medium">{card.assignedTo}</span></span>
+          <div className="flex items-start gap-1.5 text-xs text-[#374151]">
+            <User className="mt-0.5 h-3 w-3 shrink-0 text-[#9CA3AF]" />
+            <span className="break-words">Assigned: <span className="font-medium">{card.assignedTo}</span></span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-[#9CA3AF]">
             <CalendarDays className="h-3 w-3 shrink-0" />
@@ -332,16 +332,12 @@ function GuestCard({
           </div>
         </div>
 
+        {/* Status badge */}
         <div className="mt-3 flex items-center justify-between gap-2">
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_COLORS[card.status]}`}>
             {card.status}
           </span>
-          <button
-            onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            className="text-xs font-medium text-[#000080] underline hover:text-[#000066]"
-          >
-            Edit
-          </button>
+          <p className="text-[10px] text-[#C4C9D4] select-none">Double-click to edit</p>
         </div>
       </div>
 

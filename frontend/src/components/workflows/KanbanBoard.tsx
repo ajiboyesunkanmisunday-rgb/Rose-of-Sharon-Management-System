@@ -43,7 +43,7 @@ interface ColumnsState { [status: string]: RequestResponse[] }
 interface DragOverCard {
   cardId: string;
   colStatus: string;
-  insertBefore: boolean; // true = insert before this card, false = insert after
+  insertBefore: boolean;
 }
 
 interface KanbanBoardProps {
@@ -64,12 +64,12 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
     return state;
   }, [columns]);
 
-  const [cards, setCards]           = useState<ColumnsState>(() => buildState(boardData));
-  const [moving, setMoving]         = useState<string | null>(null);
+  const [cards, setCards]             = useState<ColumnsState>(() => buildState(boardData));
+  const [moving, setMoving]           = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
   const [dragOverCard, setDragOverCard] = useState<DragOverCard | null>(null);
-  const [toast, setToast]           = useState("");
-  const [editCard, setEditCard]     = useState<{ card: RequestResponse; fromStatus: string } | null>(null);
+  const [toast, setToast]             = useState("");
+  const [editCard, setEditCard]       = useState<{ card: RequestResponse; fromStatus: string } | null>(null);
 
   useEffect(() => { setCards(buildState(boardData)); }, [boardData, buildState]);
 
@@ -96,17 +96,15 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
     dragFromCol.current = null;
   };
 
-  // ── Drag: column level (for dropping onto empty area) ──
+  // ── Drag: column level ──
   const handleColDragOver = (e: React.DragEvent, toStatus: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    // Only set col highlight if NOT hovering a card
     if (!dragOverCard) setDragOverCol(toStatus);
   };
 
   const handleColDrop = async (e: React.DragEvent, toStatus: string) => {
     e.preventDefault();
-    // If we already handled at card level, skip
     if (dragOverCard && dragOverCard.colStatus === toStatus) return;
 
     setDragOverCol(null);
@@ -117,7 +115,6 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
     if (!cardId || !fromCol) return;
 
     if (fromCol === toStatus) {
-      // Same column, drop at end
       setCards((prev) => {
         const next = { ...prev };
         const arr  = prev[fromCol].filter((c) => c.id !== cardId);
@@ -131,27 +128,18 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
     await moveCard(cardId, fromCol, toStatus, null);
   };
 
-  // ── Drag: card level (for position-aware drop) ──
-  const handleCardDragOver = (
-    e: React.DragEvent,
-    targetCardId: string,
-    colStatus: string,
-  ) => {
+  // ── Drag: card level ──
+  const handleCardDragOver = (e: React.DragEvent, targetCardId: string, colStatus: string) => {
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = "move";
-    // Determine top/bottom half
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const insertBefore = e.clientY < rect.top + rect.height / 2;
     setDragOverCard({ cardId: targetCardId, colStatus, insertBefore });
     setDragOverCol(colStatus);
   };
 
-  const handleCardDrop = async (
-    e: React.DragEvent,
-    targetCardId: string,
-    colStatus: string,
-  ) => {
+  const handleCardDrop = async (e: React.DragEvent, targetCardId: string, colStatus: string) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -163,7 +151,7 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
     setDragOverCard(null);
 
     if (!cardId || !fromCol || !info) return;
-    if (cardId === targetCardId) return; // dropped on itself
+    if (cardId === targetCardId) return;
 
     await moveCard(cardId, fromCol, colStatus, { targetCardId, insertBefore: info.insertBefore });
   };
@@ -178,12 +166,9 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
     const card = cards[fromCol]?.find((c) => c.id === cardId);
     if (!card) return;
 
-    // Optimistic update
     setCards((prev) => {
       const next = { ...prev };
-      // Remove from source
       next[fromCol] = prev[fromCol].filter((c) => c.id !== cardId);
-      // Insert into target
       const updatedCard = { ...card, requestStatus: toCol };
       let destArr = (prev[toCol] ?? []).filter((c) => c.id !== cardId);
       if (position) {
@@ -201,17 +186,16 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
       return next;
     });
 
-    if (fromCol === toCol) return; // reorder only, no API call
+    if (fromCol === toCol) return;
 
     setMoving(cardId);
     try {
       await changeRequestStatus(cardId, toCol);
       showToast(`Moved to "${columns.find((c) => c.status === toCol)?.label ?? toCol}"`);
     } catch {
-      // Revert
       setCards((prev) => {
         const next = { ...prev };
-        next[toCol] = prev[toCol].filter((c) => c.id !== cardId);
+        next[toCol]   = prev[toCol].filter((c) => c.id !== cardId);
         next[fromCol] = [...(prev[fromCol] ?? []), card];
         return next;
       });
@@ -278,10 +262,10 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
         </div>
       )}
 
-      {/* Board — horizontal scroll */}
+      {/* Board */}
       <div className="flex gap-4 overflow-x-auto pb-4">
         {columns.map((col) => {
-          const colCards = cards[col.status] ?? [];
+          const colCards  = cards[col.status] ?? [];
           const isColOver = dragOverCol === col.status && !dragOverCard;
 
           return (
@@ -295,11 +279,13 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
                   setDragOverCard(null);
                 }
               }}
-              className={`flex min-w-[280px] flex-1 flex-col rounded-xl border-2 bg-white transition-all ${
-                isColOver ? "border-[#000080] shadow-md" : "border-[#E5E7EB]"
+              className={`flex min-w-[280px] flex-1 flex-col rounded-xl border-2 transition-all ${
+                isColOver
+                  ? "border-[#000080] bg-[#E8EAF0] shadow-md"
+                  : "border-[#E5E7EB] bg-[#F3F4F6]"
               }`}
             >
-              {/* Header */}
+              {/* Column header */}
               <div className={`flex items-center justify-between rounded-t-xl ${col.headerBg} px-4 py-3`}>
                 <div className="flex items-center gap-2">
                   <span className={`h-2.5 w-2.5 rounded-full ${col.dotColor}`} />
@@ -310,24 +296,20 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
                 </span>
               </div>
 
-              {/* Empty drop hint */}
+              {/* Drop hint (empty column while dragging over) */}
               {isColOver && colCards.length === 0 && (
-                <div className="mx-3 mt-2 rounded-lg border-2 border-dashed border-[#000080]/40 bg-[#F0F2FF] py-3 text-center text-xs font-medium text-[#000080]">
+                <div className="mx-3 mt-2 rounded-lg border-2 border-dashed border-[#000080]/40 bg-[#E8EAF0] py-3 text-center text-xs font-medium text-[#000080]">
                   Drop here
                 </div>
               )}
 
-              {/* Cards list — vertical */}
+              {/* Cards list */}
               <div className="flex flex-1 flex-col gap-0 p-3">
-                {colCards.length === 0 && !isColOver && (
-                  <div className="flex flex-1 items-center justify-center py-6 text-xs text-[#9CA3AF]">
-                    No requests
-                  </div>
-                )}
                 {colCards.map((card) => {
-                  const overInfo = dragOverCard?.cardId === card.id && dragOverCard.colStatus === col.status
-                    ? dragOverCard
-                    : null;
+                  const overInfo =
+                    dragOverCard?.cardId === card.id && dragOverCard.colStatus === col.status
+                      ? dragOverCard
+                      : null;
                   return (
                     <KanbanCard
                       key={card.id}
@@ -340,7 +322,7 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
                       onDragEnd={handleDragEnd}
                       onCardDragOver={handleCardDragOver}
                       onCardDrop={handleCardDrop}
-                      onEdit={() => setEditCard({ card, fromStatus: col.status })}
+                      onDoubleClick={() => setEditCard({ card, fromStatus: col.status })}
                     />
                   );
                 })}
@@ -356,7 +338,7 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
 // ─── KanbanCard ───────────────────────────────────────────────────────────────
 function KanbanCard({
   card, fromStatus, isMoving, showInsertBefore, showInsertAfter,
-  onDragStart, onDragEnd, onCardDragOver, onCardDrop, onEdit,
+  onDragStart, onDragEnd, onCardDragOver, onCardDrop, onDoubleClick,
 }: {
   card: RequestResponse;
   fromStatus: string;
@@ -367,7 +349,7 @@ function KanbanCard({
   onDragEnd: () => void;
   onCardDragOver: (e: React.DragEvent, cardId: string, colStatus: string) => void;
   onCardDrop: (e: React.DragEvent, cardId: string, colStatus: string) => void;
-  onEdit: () => void;
+  onDoubleClick: () => void;
 }) {
   const typeBadge: Record<string, string> = {
     PRAYER:      "bg-[#EDE9FE] text-[#7C3AED]",
@@ -377,7 +359,6 @@ function KanbanCard({
 
   return (
     <div className="mb-2.5">
-      {/* Insert-before indicator */}
       {showInsertBefore && (
         <div className="mb-1 h-0.5 w-full rounded-full bg-[#000080] shadow-sm" />
       )}
@@ -388,33 +369,44 @@ function KanbanCard({
         onDragEnd={onDragEnd}
         onDragOver={(e) => onCardDragOver(e, card.id, fromStatus)}
         onDrop={(e) => onCardDrop(e, card.id, fromStatus)}
+        onDoubleClick={onDoubleClick}
+        title="Double-click to view / edit"
         className={`group rounded-xl border bg-white p-3.5 shadow-sm transition-all cursor-grab active:cursor-grabbing select-none ${
-          isMoving ? "opacity-50 scale-95" : "border-[#E5E7EB] hover:border-[#000080] hover:shadow-md"
+          isMoving
+            ? "opacity-50 scale-95"
+            : "border-[#E5E7EB] hover:border-[#000080] hover:shadow-md"
         }`}
       >
-        {/* Drag handle + type badge */}
+        {/* Type badge + grip */}
         <div className="mb-2 flex items-start justify-between gap-2">
-          <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${typeBadge[card.requestType ?? ""] ?? "bg-gray-100 text-gray-600"}`}>
+          <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${typeBadge[card.requestType ?? ""] ?? "bg-gray-100 text-gray-600"}`}>
             {(card.requestType ?? "").replace(/_/g, " ")}
           </span>
           <GripVertical className="h-4 w-4 shrink-0 text-[#D1D5DB] group-hover:text-[#9CA3AF]" />
         </div>
 
-        <p className="text-sm font-semibold text-[#111827] leading-snug">{card.subject || "—"}</p>
+        {/* Subject — wraps */}
+        <p className="text-sm font-semibold text-[#111827] leading-snug break-words">
+          {card.subject || "—"}
+        </p>
 
+        {/* Content — wraps, 3-line clamp */}
         {card.content && (
-          <p className="mt-1 line-clamp-2 text-xs text-[#6B7280] leading-relaxed">{card.content}</p>
+          <p className="mt-1 text-xs text-[#6B7280] leading-relaxed break-words line-clamp-3">
+            {card.content}
+          </p>
         )}
 
+        {/* Meta */}
         <div className="mt-3 space-y-1.5">
-          <div className="flex items-center gap-1.5 text-xs text-[#374151]">
-            <User className="h-3.5 w-3.5 shrink-0 text-[#9CA3AF]" />
-            <span className="font-medium">{fullName(card.owner)}</span>
+          <div className="flex items-start gap-1.5 text-xs text-[#374151]">
+            <User className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9CA3AF]" />
+            <span className="font-medium break-words">{fullName(card.owner)}</span>
           </div>
           {card.assignedTo && (
-            <div className="flex items-center gap-1.5 text-xs text-[#374151]">
-              <MessageSquare className="h-3.5 w-3.5 shrink-0 text-[#9CA3AF]" />
-              <span>Assigned: <span className="font-medium">{fullName(card.assignedTo)}</span></span>
+            <div className="flex items-start gap-1.5 text-xs text-[#374151]">
+              <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9CA3AF]" />
+              <span className="break-words">Assigned: <span className="font-medium">{fullName(card.assignedTo)}</span></span>
             </div>
           )}
           {card.createdOn && (
@@ -425,17 +417,12 @@ function KanbanCard({
           )}
         </div>
 
-        <div className="mt-3 flex justify-end">
-          <button
-            onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            className="text-xs font-medium text-[#000080] underline hover:text-[#000066]"
-          >
-            Edit / View
-          </button>
-        </div>
+        {/* Hint */}
+        <p className="mt-2.5 text-[10px] text-[#C4C9D4] text-right select-none">
+          Double-click to edit
+        </p>
       </div>
 
-      {/* Insert-after indicator */}
       {showInsertAfter && (
         <div className="mt-1 h-0.5 w-full rounded-full bg-[#000080] shadow-sm" />
       )}
@@ -454,7 +441,7 @@ function CardDetailModal({
   onClose: () => void;
 }) {
   const [selectedStatus, setSelectedStatus] = useState(fromStatus);
-  const [saving, setSaving]   = useState(false);
+  const [saving, setSaving]     = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
 
   const currentLabel = columns.find((c) => c.status === selectedStatus)?.label ?? selectedStatus;
@@ -474,19 +461,23 @@ function CardDetailModal({
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
+        {/* Header */}
         <div className="flex items-start justify-between border-b border-[#E5E7EB] px-6 py-4">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">
               {(card.requestType ?? "").replace(/_/g, " ")} REQUEST
             </p>
-            <h2 className="mt-0.5 text-base font-bold text-[#111827]">{card.subject || "—"}</h2>
+            <h2 className="mt-0.5 text-base font-bold text-[#111827] break-words">{card.subject || "—"}</h2>
           </div>
-          <button onClick={onClose} className="ml-4 rounded-lg p-1.5 text-[#9CA3AF] hover:bg-[#F3F4F6] hover:text-[#374151]">
+          <button onClick={onClose}
+            className="ml-4 rounded-lg p-1.5 text-[#9CA3AF] hover:bg-[#F3F4F6] hover:text-[#374151]">
             <X className="h-4 w-4" />
           </button>
         </div>
 
+        {/* Body */}
         <div className="space-y-4 px-6 py-5">
+          {/* Status */}
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-[#374151]">Status</label>
             <div className="relative">
@@ -518,21 +509,23 @@ function CardDetailModal({
             {saving && <p className="mt-1 text-[10px] text-[#9CA3AF]">Saving…</p>}
           </div>
 
+          {/* Content */}
           <div>
             <p className="mb-1 text-xs font-semibold text-[#374151]">Request Content</p>
-            <div className="rounded-lg bg-[#F9FAFB] px-4 py-3 text-sm text-[#374151] leading-relaxed min-h-[80px]">
+            <div className="rounded-lg bg-[#F9FAFB] px-4 py-3 text-sm text-[#374151] leading-relaxed min-h-[80px] break-words">
               {card.content || <span className="text-[#9CA3AF]">No content provided.</span>}
             </div>
           </div>
 
+          {/* Meta grid */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Submitted By</p>
-              <p className="mt-0.5 text-sm font-medium text-[#111827]">{fullName(card.owner)}</p>
+              <p className="mt-0.5 text-sm font-medium text-[#111827] break-words">{fullName(card.owner)}</p>
             </div>
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Assigned To</p>
-              <p className="mt-0.5 text-sm font-medium text-[#111827]">{card.assignedTo ? fullName(card.assignedTo) : "—"}</p>
+              <p className="mt-0.5 text-sm font-medium text-[#111827] break-words">{card.assignedTo ? fullName(card.assignedTo) : "—"}</p>
             </div>
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Date Submitted</p>
@@ -545,6 +538,7 @@ function CardDetailModal({
           </div>
         </div>
 
+        {/* Footer */}
         <div className="flex justify-end border-t border-[#E5E7EB] px-6 py-4">
           <button onClick={onClose}
             className="rounded-lg bg-[#000080] px-5 py-2 text-sm font-medium text-white hover:bg-[#000066]">
