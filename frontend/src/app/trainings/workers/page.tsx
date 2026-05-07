@@ -1,12 +1,5 @@
-import TrainingGroupPage from "@/components/trainings/TrainingGroupPage";
+import WorkersInTrainingPage from "@/components/trainings/WorkersInTrainingPage";
 
-export default function WorkersInTrainingPage() {
-  return (
-    <TrainingGroupPage
-      groupKeywords={["Workers in Training", "Workers-in-Training", "WIT"]}
-      title="Workers-in-Training"
-      description="Members currently undergoing workers training programme"
-      accentColor="#7C3AED"
-    />
-  );
+export default function WorkersPage() {
+  return <WorkersInTrainingPage />;
 }
