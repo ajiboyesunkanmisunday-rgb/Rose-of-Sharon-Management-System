@@ -10,6 +10,7 @@ import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
 import { createMember, uploadProfilePicture } from "@/lib/api";
 import { NIGERIA_STATES, COUNTRIES } from "@/lib/nigeria-states";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 export default function AddMemberPage() {
   const router = useRouter();
@@ -366,27 +367,25 @@ export default function AddMemberPage() {
                 {/* State */}
                 <div>
                   <label className={labelStyles}>State</label>
-                  <select
+                  <SearchableSelect
+                    placeholder="Select State"
+                    searchPlaceholder="Search states…"
+                    options={NIGERIA_STATES}
                     value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    className={selectStyles}
-                  >
-                    <option value="">Select State</option>
-                    {NIGERIA_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                    onChange={setState}
+                  />
                 </div>
 
                 {/* Country */}
                 <div>
                   <label className={labelStyles}>Country</label>
-                  <select
+                  <SearchableSelect
+                    placeholder="Select Country"
+                    searchPlaceholder="Search countries…"
+                    options={COUNTRIES}
                     value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    className={selectStyles}
-                  >
-                    <option value="">Select Country</option>
-                    {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                    onChange={setCountry}
+                  />
                 </div>
 
                 {/* Marital Status */}

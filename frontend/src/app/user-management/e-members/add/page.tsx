@@ -10,6 +10,7 @@ import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
 import { createEMember, uploadProfilePicture } from "@/lib/api";
 import { NIGERIA_STATES } from "@/lib/nigeria-states";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 export default function AddEMemberPage() {
   const router = useRouter();
@@ -280,14 +281,13 @@ export default function AddEMemberPage() {
             {/* State */}
             <div>
               <label className={labelStyles}>State</label>
-              <select
+              <SearchableSelect
+                placeholder="Select State"
+                searchPlaceholder="Search states…"
+                options={NIGERIA_STATES}
                 value={state}
-                onChange={(e) => setState(e.target.value)}
-                className={selectStyles}
-              >
-                <option value="">Select State</option>
-                {NIGERIA_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
+                onChange={setState}
+              />
             </div>
 
             {/* Service Attended */}
