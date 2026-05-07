@@ -23,6 +23,12 @@ const STATUS_COLORS: Record<WorkflowCardStatus, string> = {
 
 type ColumnsState = Record<ActiveWorkflowStage, ActiveWorkflowCard[]>;
 
+interface DragOverCard {
+  cardId: string;
+  stage:  ActiveWorkflowStage;
+  insertBefore: boolean;
+}
+
 function buildState(cards: ActiveWorkflowCard[]): ColumnsState {
   const state = {} as ColumnsState;
   COLUMNS.forEach((c) => { state[c.stage] = []; });
@@ -34,11 +40,12 @@ function buildState(cards: ActiveWorkflowCard[]): ColumnsState {
 
 // ── Component ───────────────────────────────────────────────────────────────────
 export default function GuestWorkflowPage() {
-  const [columns, setColumns]   = useState<ColumnsState>(() => buildState(activeWorkflowCards));
-  const [dragOver, setDragOver] = useState<ActiveWorkflowStage | null>(null);
-  const [moving,   setMoving]   = useState<string | null>(null);
-  const [toast,    setToast]    = useState("");
-  const [editCard, setEditCard] = useState<ActiveWorkflowCard | null>(null);
+  const [columns,      setColumns]      = useState<ColumnsState>(() => buildState(activeWorkflowCards));
+  const [dragOverCol,  setDragOverCol]  = useState<ActiveWorkflowStage | null>(null);
+  const [dragOverCard, setDragOverCard] = useState<DragOverCard | null>(null);
+  const [moving,       setMoving]       = useState<string | null>(null);
+  const [toast,        setToast]        = useState("");
+  const [editCard,     setEditCard]     = useState<ActiveWorkflowCard | null>(null);
 
   const dragCardId  = useRef<string | null>(null);
   const dragFromCol = useRef<ActiveWorkflowStage | null>(null);
@@ -50,7 +57,7 @@ export default function GuestWorkflowPage() {
     setTimeout(() => setToast(""), 3000);
   };
 
-  // ── Drag handlers ──
+  // ── Drag: card start ──
   const handleDragStart = (e: React.DragEvent, cardId: string, fromStage: ActiveWorkflowStage) => {
     dragCardId.current  = cardId;
     dragFromCol.current = fromStage;
@@ -59,74 +66,124 @@ export default function GuestWorkflowPage() {
     setMoving(cardId);
   };
 
-  const handleDragOver = (e: React.DragEvent, toStage: ActiveWorkflowStage) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    setDragOver(toStage);
+  const handleDragEnd = () => {
+    setDragOverCol(null);
+    setDragOverCard(null);
+    setMoving(null);
+    dragCardId.current  = null;
+    dragFromCol.current = null;
   };
 
-  const handleDrop = (e: React.DragEvent, toStage: ActiveWorkflowStage) => {
+  // ── Drag: column level ──
+  const handleColDragOver = (e: React.DragEvent, toStage: ActiveWorkflowStage) => {
     e.preventDefault();
-    setDragOver(null);
-    setMoving(null);
+    e.dataTransfer.dropEffect = "move";
+    if (!dragOverCard) setDragOverCol(toStage);
+  };
+
+  const handleColDrop = (e: React.DragEvent, toStage: ActiveWorkflowStage) => {
+    e.preventDefault();
+    if (dragOverCard && dragOverCard.stage === toStage) return;
+
+    setDragOverCol(null);
+    setDragOverCard(null);
 
     const cardId    = dragCardId.current;
     const fromStage = dragFromCol.current;
-    dragCardId.current  = null;
-    dragFromCol.current = null;
+    if (!cardId || !fromStage) return;
 
-    if (!cardId || !fromStage || fromStage === toStage) return;
+    moveCard(cardId, fromStage, toStage, null);
+  };
 
+  // ── Drag: card level ──
+  const handleCardDragOver = (e: React.DragEvent, targetCardId: string, stage: ActiveWorkflowStage) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const insertBefore = e.clientY < rect.top + rect.height / 2;
+    setDragOverCard({ cardId: targetCardId, stage, insertBefore });
+    setDragOverCol(stage);
+  };
+
+  const handleCardDrop = (e: React.DragEvent, targetCardId: string, stage: ActiveWorkflowStage) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const cardId    = dragCardId.current;
+    const fromStage = dragFromCol.current;
+    const info      = dragOverCard;
+
+    setDragOverCol(null);
+    setDragOverCard(null);
+    setMoving(null);
+
+    if (!cardId || !fromStage || !info) return;
+    if (cardId === targetCardId) return;
+
+    moveCard(cardId, fromStage, stage, { targetCardId, insertBefore: info.insertBefore });
+  };
+
+  // ── Core move ──
+  const moveCard = (
+    cardId: string,
+    fromStage: ActiveWorkflowStage,
+    toStage: ActiveWorkflowStage,
+    position: { targetCardId: string; insertBefore: boolean } | null,
+  ) => {
     const card = columns[fromStage]?.find((c) => c.id === cardId);
     if (!card) return;
 
     setColumns((prev) => {
       const next = { ...prev };
       next[fromStage] = prev[fromStage].filter((c) => c.id !== cardId);
-      next[toStage]   = [...(prev[toStage] ?? []), { ...card, stage: toStage }];
+      const updatedCard = { ...card, stage: toStage };
+      let destArr = (prev[toStage] ?? []).filter((c) => c.id !== cardId);
+      if (position) {
+        const targetIdx = destArr.findIndex((c) => c.id === position.targetCardId);
+        if (targetIdx === -1) {
+          destArr = [...destArr, updatedCard];
+        } else {
+          const insertIdx = position.insertBefore ? targetIdx : targetIdx + 1;
+          destArr.splice(insertIdx, 0, updatedCard);
+        }
+      } else {
+        destArr = [...destArr, updatedCard];
+      }
+      next[toStage] = destArr;
       return next;
     });
 
-    showToast(`Moved "${card.memberName}" → ${toStage}`);
+    if (fromStage !== toStage) {
+      showToast(`Moved "${card.memberName}" → ${toStage}`);
+    }
+    // NOTE: no backend API for guest workflow yet — client-side only
   };
 
-  const handleDragEnd = () => {
-    setDragOver(null);
-    setMoving(null);
-    dragCardId.current  = null;
-    dragFromCol.current = null;
-  };
-
-  // ── Edit / save ──
+  // ── Edit save ──
   const handleSaveCard = (updated: ActiveWorkflowCard) => {
     const oldStage = (Object.entries(columns) as [ActiveWorkflowStage, ActiveWorkflowCard[]][])
       .find(([, cards]) => cards.some((c) => c.id === updated.id))?.[0];
-
     if (!oldStage) return;
 
     setColumns((prev) => {
       const next = { ...prev };
-      // Remove from old column
-      next[oldStage] = prev[oldStage].filter((c) => c.id !== updated.id);
-      // Add to (possibly new) column
+      next[oldStage]      = prev[oldStage].filter((c) => c.id !== updated.id);
       next[updated.stage] = [...(prev[updated.stage] ?? []), updated];
       return next;
     });
-
     setEditCard(null);
     showToast(`"${updated.memberName}" updated.`);
   };
 
   return (
     <DashboardLayout>
-      {/* Toast */}
       {toast && (
         <div className="pointer-events-none fixed bottom-6 right-6 z-50 rounded-xl border border-[#E5E7EB] bg-white px-5 py-3 text-sm font-medium text-[#111827] shadow-xl">
           {toast}
         </div>
       )}
 
-      {/* Edit modal */}
       {editCard && (
         <GuestEditModal
           card={editCard}
@@ -143,29 +200,30 @@ export default function GuestWorkflowPage() {
         <div>
           <h1 className="text-[28px] font-bold text-[#000000]">Guest Workflow</h1>
           <p className="text-sm text-[#6B7280]">
-            {totalCards} active guest{totalCards !== 1 ? "s" : ""} · Drag cards between columns to update stage
+            {totalCards} active guest{totalCards !== 1 ? "s" : ""} · Drag cards between columns or reorder within a column
           </p>
         </div>
       </div>
 
-      {/* Kanban Board */}
+      {/* Board */}
       <div className="flex gap-4 overflow-x-auto pb-6">
         {COLUMNS.map((col) => {
           const colCards = columns[col.stage] ?? [];
-          const isOver   = dragOver === col.stage;
+          const isColOver = dragOverCol === col.stage && !dragOverCard;
 
           return (
             <div
               key={col.stage}
-              onDragOver={(e) => handleDragOver(e, col.stage)}
-              onDrop={(e) => handleDrop(e, col.stage)}
+              onDragOver={(e) => handleColDragOver(e, col.stage)}
+              onDrop={(e) => handleColDrop(e, col.stage)}
               onDragLeave={(e) => {
                 if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                  setDragOver(null);
+                  setDragOverCol(null);
+                  setDragOverCard(null);
                 }
               }}
               className={`flex min-w-[270px] flex-1 flex-col rounded-xl border-2 bg-white transition-all ${
-                isOver ? "border-[#000080] shadow-md" : "border-[#E5E7EB]"
+                isColOver ? "border-[#000080] shadow-md" : "border-[#E5E7EB]"
               }`}
             >
               {/* Column header */}
@@ -179,30 +237,38 @@ export default function GuestWorkflowPage() {
                 </span>
               </div>
 
-              {/* Drop zone hint */}
-              {isOver && (
+              {isColOver && colCards.length === 0 && (
                 <div className="mx-3 mt-2 rounded-lg border-2 border-dashed border-[#000080]/40 bg-[#F0F2FF] py-3 text-center text-xs font-medium text-[#000080]">
                   Drop here
                 </div>
               )}
 
               {/* Cards */}
-              <div className="flex flex-1 flex-col gap-2.5 p-3">
-                {colCards.length === 0 && !isOver ? (
+              <div className="flex flex-1 flex-col gap-0 p-3">
+                {colCards.length === 0 && !isColOver ? (
                   <div className="flex flex-1 items-center justify-center py-6 text-xs text-[#9CA3AF]">
                     No guests
                   </div>
                 ) : (
-                  colCards.map((card) => (
-                    <GuestCard
-                      key={card.id}
-                      card={card}
-                      isMoving={moving === card.id}
-                      onDragStart={handleDragStart}
-                      onDragEnd={handleDragEnd}
-                      onEdit={() => setEditCard(card)}
-                    />
-                  ))
+                  colCards.map((card) => {
+                    const overInfo = dragOverCard?.cardId === card.id && dragOverCard.stage === col.stage
+                      ? dragOverCard
+                      : null;
+                    return (
+                      <GuestCard
+                        key={card.id}
+                        card={card}
+                        isMoving={moving === card.id}
+                        showInsertBefore={overInfo?.insertBefore === true}
+                        showInsertAfter={overInfo?.insertBefore === false}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                        onCardDragOver={handleCardDragOver}
+                        onCardDrop={handleCardDrop}
+                        onEdit={() => setEditCard(card)}
+                      />
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -215,59 +281,73 @@ export default function GuestWorkflowPage() {
 
 // ── GuestCard ────────────────────────────────────────────────────────────────────
 function GuestCard({
-  card, isMoving, onDragStart, onDragEnd, onEdit,
+  card, isMoving, showInsertBefore, showInsertAfter,
+  onDragStart, onDragEnd, onCardDragOver, onCardDrop, onEdit,
 }: {
   card: ActiveWorkflowCard;
   isMoving: boolean;
+  showInsertBefore: boolean;
+  showInsertAfter: boolean;
   onDragStart: (e: React.DragEvent, id: string, stage: ActiveWorkflowStage) => void;
   onDragEnd: () => void;
+  onCardDragOver: (e: React.DragEvent, cardId: string, stage: ActiveWorkflowStage) => void;
+  onCardDrop: (e: React.DragEvent, cardId: string, stage: ActiveWorkflowStage) => void;
   onEdit: () => void;
 }) {
   return (
-    <div
-      draggable
-      onDragStart={(e) => onDragStart(e, card.id, card.stage)}
-      onDragEnd={onDragEnd}
-      className={`group rounded-xl border bg-white p-3.5 shadow-sm transition-all cursor-grab active:cursor-grabbing ${
-        isMoving
-          ? "opacity-50 scale-95"
-          : "border-[#E5E7EB] hover:border-[#000080] hover:shadow-md"
-      }`}
-    >
-      {/* Name + grip handle */}
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <p className="text-sm font-semibold text-[#111827] leading-snug">{card.memberName}</p>
-        <GripVertical className="h-4 w-4 shrink-0 text-[#D1D5DB] group-hover:text-[#9CA3AF]" />
+    <div className="mb-2.5">
+      {showInsertBefore && (
+        <div className="mb-1 h-0.5 w-full rounded-full bg-[#000080] shadow-sm" />
+      )}
+
+      <div
+        draggable
+        onDragStart={(e) => onDragStart(e, card.id, card.stage)}
+        onDragEnd={onDragEnd}
+        onDragOver={(e) => onCardDragOver(e, card.id, card.stage)}
+        onDrop={(e) => onCardDrop(e, card.id, card.stage)}
+        className={`group rounded-xl border bg-white p-3.5 shadow-sm transition-all cursor-grab active:cursor-grabbing select-none ${
+          isMoving
+            ? "opacity-50 scale-95"
+            : "border-[#E5E7EB] hover:border-[#000080] hover:shadow-md"
+        }`}
+      >
+        <div className="mb-2 flex items-start justify-between gap-2">
+          <p className="text-sm font-semibold text-[#111827] leading-snug">{card.memberName}</p>
+          <GripVertical className="h-4 w-4 shrink-0 text-[#D1D5DB] group-hover:text-[#9CA3AF]" />
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5 text-xs text-[#374151]">
+            <Phone className="h-3 w-3 shrink-0 text-[#9CA3AF]" />
+            <span>{card.phone}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-[#374151]">
+            <User className="h-3 w-3 shrink-0 text-[#9CA3AF]" />
+            <span>Assigned: <span className="font-medium">{card.assignedTo}</span></span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-[#9CA3AF]">
+            <CalendarDays className="h-3 w-3 shrink-0" />
+            <span>Added {card.dateAdded}</span>
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_COLORS[card.status]}`}>
+            {card.status}
+          </span>
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            className="text-xs font-medium text-[#000080] underline hover:text-[#000066]"
+          >
+            Edit
+          </button>
+        </div>
       </div>
 
-      {/* Meta */}
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-1.5 text-xs text-[#374151]">
-          <Phone className="h-3 w-3 shrink-0 text-[#9CA3AF]" />
-          <span>{card.phone}</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-[#374151]">
-          <User className="h-3 w-3 shrink-0 text-[#9CA3AF]" />
-          <span>Assigned: <span className="font-medium">{card.assignedTo}</span></span>
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-[#9CA3AF]">
-          <CalendarDays className="h-3 w-3 shrink-0" />
-          <span>Added {card.dateAdded}</span>
-        </div>
-      </div>
-
-      {/* Status badge + edit */}
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_COLORS[card.status]}`}>
-          {card.status}
-        </span>
-        <button
-          onClick={(e) => { e.stopPropagation(); onEdit(); }}
-          className="text-xs font-medium text-[#000080] underline hover:text-[#000066]"
-        >
-          Edit
-        </button>
-      </div>
+      {showInsertAfter && (
+        <div className="mt-1 h-0.5 w-full rounded-full bg-[#000080] shadow-sm" />
+      )}
     </div>
   );
 }
@@ -280,26 +360,21 @@ function GuestEditModal({
   onSave: (updated: ActiveWorkflowCard) => void;
   onClose: () => void;
 }) {
-  const [form, setForm] = useState<ActiveWorkflowCard>({ ...card });
+  const [form, setForm]         = useState<ActiveWorkflowCard>({ ...card });
   const [stageOpen,  setStageOpen]  = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
 
   const set = (field: keyof ActiveWorkflowCard, value: string | number) =>
     setForm((f) => ({ ...f, [field]: value }));
 
-  const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) onClose();
-  };
-
   const STATUSES: WorkflowCardStatus[] = ["On Track", "Pending", "Overdue"];
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
-      onClick={handleBackdrop}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-[#E5E7EB] px-6 py-4">
           <h2 className="text-base font-bold text-[#111827]">Edit Guest Card</h2>
           <button onClick={onClose} className="rounded-lg p-1.5 text-[#9CA3AF] hover:bg-[#F3F4F6] hover:text-[#374151]">
@@ -307,9 +382,7 @@ function GuestEditModal({
           </button>
         </div>
 
-        {/* Body */}
         <div className="space-y-4 px-6 py-5">
-          {/* Name */}
           <div>
             <label className="mb-1 block text-xs font-semibold text-[#374151]">Name</label>
             <input
@@ -319,7 +392,6 @@ function GuestEditModal({
             />
           </div>
 
-          {/* Phone */}
           <div>
             <label className="mb-1 block text-xs font-semibold text-[#374151]">Phone</label>
             <input
@@ -329,7 +401,6 @@ function GuestEditModal({
             />
           </div>
 
-          {/* Assigned to */}
           <div>
             <label className="mb-1 block text-xs font-semibold text-[#374151]">Assigned To</label>
             <input
@@ -353,13 +424,11 @@ function GuestEditModal({
               {stageOpen && (
                 <div className="absolute left-0 top-full z-10 mt-1 w-full rounded-lg border border-[#E5E7EB] bg-white shadow-lg">
                   {COLUMNS.map((col) => (
-                    <button
-                      key={col.stage}
+                    <button key={col.stage}
                       onClick={() => { set("stage", col.stage); setStageOpen(false); }}
                       className={`flex w-full items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-[#F9FAFB] ${
                         col.stage === form.stage ? "font-semibold text-[#000080]" : "text-[#374151]"
-                      }`}
-                    >
+                      }`}>
                       <span className={`h-2 w-2 rounded-full ${col.dotColor}`} />
                       {col.stage}
                     </button>
@@ -383,13 +452,11 @@ function GuestEditModal({
               {statusOpen && (
                 <div className="absolute left-0 top-full z-10 mt-1 w-full rounded-lg border border-[#E5E7EB] bg-white shadow-lg">
                   {STATUSES.map((s) => (
-                    <button
-                      key={s}
+                    <button key={s}
                       onClick={() => { set("status", s); setStatusOpen(false); }}
                       className={`flex w-full items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-[#F9FAFB] ${
                         s === form.status ? "font-semibold text-[#000080]" : "text-[#374151]"
-                      }`}
-                    >
+                      }`}>
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_COLORS[s]}`}>{s}</span>
                     </button>
                   ))}
@@ -398,7 +465,6 @@ function GuestEditModal({
             </div>
           </div>
 
-          {/* Notes */}
           <div>
             <label className="mb-1 block text-xs font-semibold text-[#374151]">Notes</label>
             <textarea
@@ -411,18 +477,13 @@ function GuestEditModal({
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex justify-end gap-3 border-t border-[#E5E7EB] px-6 py-4">
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-[#D1D5DB] px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F9FAFB]"
-          >
+          <button onClick={onClose}
+            className="rounded-lg border border-[#D1D5DB] px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F9FAFB]">
             Cancel
           </button>
-          <button
-            onClick={() => onSave(form)}
-            className="rounded-lg bg-[#000080] px-5 py-2 text-sm font-medium text-white hover:bg-[#000066]"
-          >
+          <button onClick={() => onSave(form)}
+            className="rounded-lg bg-[#000080] px-5 py-2 text-sm font-medium text-white hover:bg-[#000066]">
             Save Changes
           </button>
         </div>
