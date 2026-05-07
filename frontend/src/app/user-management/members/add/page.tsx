@@ -126,7 +126,7 @@ export default function AddMemberPage() {
     "December",
   ];
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+  const yearOptions = Array.from({ length: 100 }, (_, i) => String(currentYear - i));
 
   return (
     <DashboardLayout>
@@ -319,18 +319,13 @@ export default function AddMemberPage() {
                       </option>
                     ))}
                   </select>
-                  <select
+                  <SearchableSelect
+                    placeholder="Year"
+                    searchPlaceholder="Search year…"
+                    options={yearOptions}
                     value={dobYear}
-                    onChange={(e) => setDobYear(e.target.value)}
-                    className={selectStyles}
-                  >
-                    <option value="">Year</option>
-                    {years.map((y) => (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setDobYear}
+                  />
                 </div>
               </div>
 

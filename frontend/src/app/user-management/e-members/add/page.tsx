@@ -46,7 +46,7 @@ export default function AddEMemberPage() {
     "July", "August", "September", "October", "November", "December",
   ];
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+  const yearOptions = Array.from({ length: 100 }, (_, i) => String(currentYear - i));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -240,16 +240,13 @@ export default function AddEMemberPage() {
                     <option key={m} value={i + 1}>{m}</option>
                   ))}
                 </select>
-                <select
+                <SearchableSelect
+                  placeholder="Year"
+                  searchPlaceholder="Search year…"
+                  options={yearOptions}
                   value={dobYear}
-                  onChange={(e) => setDobYear(e.target.value)}
-                  className={selectStyles}
-                >
-                  <option value="">Year</option>
-                  {years.map((y) => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </select>
+                  onChange={setDobYear}
+                />
               </div>
             </div>
 
