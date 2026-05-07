@@ -135,7 +135,7 @@ export default function EditSecondTimerPage() {
     "July", "August", "September", "October", "November", "December",
   ];
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+  const yearOptions = Array.from({ length: 100 }, (_, i) => String(currentYear - i));
 
   return (
     <DashboardLayout>
@@ -210,10 +210,13 @@ export default function EditSecondTimerPage() {
                   <option value="">Month</option>
                   {months.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                 </select>
-                <select value={dobYear} onChange={(e) => setDobYear(e.target.value)} className={selectStyles}>
-                  <option value="">Year</option>
-                  {years.map((y) => <option key={y} value={y}>{y}</option>)}
-                </select>
+                <SearchableSelect
+                  placeholder="Year"
+                  searchPlaceholder="Search year…"
+                  options={yearOptions}
+                  value={dobYear}
+                  onChange={setDobYear}
+                />
               </div>
             </div>
             <PhoneInput label="WhatsApp Number" code={whatsappCode} number={whatsappNumber} onCodeChange={setWhatsappCode} onNumberChange={setWhatsappNumber} placeholder="Enter WhatsApp Number" />
