@@ -1375,8 +1375,9 @@ export async function uploadMedia(fields: {
   form.append("type", fields.category);   // backend field is "type", not "category"
   // "size" is required by the backend DTO — send file size in bytes
   form.append("size", String(fields.file ? fields.file.size : 0));
-  // Backend multipart field name is "multipartFile" (from UploadMediaRequest DTO)
-  if (fields.file) form.append("multipartFile", fields.file);
+  // Try "file" first (standard Spring Boot @RequestParam("file") convention).
+  // If the backend uses a different parameter name update this value.
+  if (fields.file) form.append("file", fields.file);
 
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -1406,11 +1407,19 @@ export async function uploadMedia(fields: {
   }
 
   if (!response.ok) {
-    let errorMessage = `Request failed: ${response.status}`;
+    let errorMessage = `Upload failed (${response.status})`;
     try {
-      const errBody = await response.json();
-      if (errBody?.message) errorMessage = errBody.message;
-      else if (errBody?.error) errorMessage = errBody.error;
+      const raw = await response.text();
+      if (raw) {
+        try {
+          const errBody = JSON.parse(raw);
+          if (errBody?.message) errorMessage = errBody.message;
+          else if (errBody?.error) errorMessage = errBody.error;
+          else errorMessage = raw;
+        } catch {
+          errorMessage = raw; // plain-text error from backend
+        }
+      }
     } catch { /* ignore */ }
     throw new Error(errorMessage);
   }
