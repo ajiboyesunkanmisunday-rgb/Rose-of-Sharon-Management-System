@@ -58,6 +58,7 @@ export default function ViewSecondTimerPage() {
 
   const [activeTab, setActiveTab] = useState<Tab>("details");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showConvertModal, setShowConvertModal] = useState(false);
 
   const [noteText,  setNoteText]  = useState("");
   const [callText,  setCallText]  = useState("");
@@ -110,7 +111,12 @@ export default function ViewSecondTimerPage() {
   };
 
   const handleConvertToMember = async () => {
-    if (!id || !confirm("Convert this second timer to a full member?")) return;
+    if (!id) return;
+    setShowConvertModal(true);
+  };
+
+  const handleConfirmConvert = async () => {
+    setShowConvertModal(false);
     setConverting(true);
     try {
       await convertToFullMember(id);
@@ -299,6 +305,22 @@ export default function ViewSecondTimerPage() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleConfirmDelete}
       />
+
+      {/* Convert to Member confirmation modal */}
+      {showConvertModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-xl">
+            <h3 className="mb-2 text-lg font-bold text-[#111827]">Convert to Full Member?</h3>
+            <p className="mb-6 text-sm text-[#374151]">
+              This will move this second timer to the Members list. This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setShowConvertModal(false)}>Cancel</Button>
+              <Button variant="primary" onClick={handleConfirmConvert}>Yes, Convert</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

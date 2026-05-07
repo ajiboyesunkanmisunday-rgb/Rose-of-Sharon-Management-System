@@ -58,6 +58,7 @@ export default function ViewFirstTimerPage() {
 
   const [activeTab, setActiveTab] = useState<Tab>("details");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showConvertModal, setShowConvertModal] = useState(false);
 
   const [noteText,  setNoteText]  = useState("");
   const [callText,  setCallText]  = useState("");
@@ -110,7 +111,12 @@ export default function ViewFirstTimerPage() {
   };
 
   const handleConvertToSecondTimer = async () => {
-    if (!id || !confirm("Convert this first timer to a second timer?")) return;
+    if (!id) return;
+    setShowConvertModal(true);
+  };
+
+  const handleConfirmConvert = async () => {
+    setShowConvertModal(false);
     setConverting(true);
     try {
       await convertToSecondTimer(id);
@@ -299,6 +305,22 @@ export default function ViewFirstTimerPage() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleConfirmDelete}
       />
+
+      {/* Convert to Second Timer confirmation modal */}
+      {showConvertModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-xl">
+            <h3 className="mb-2 text-lg font-bold text-[#111827]">Convert to Second Timer?</h3>
+            <p className="mb-6 text-sm text-[#374151]">
+              This will move this first timer to the Second Timers list. This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setShowConvertModal(false)}>Cancel</Button>
+              <Button variant="primary" onClick={handleConfirmConvert}>Yes, Convert</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

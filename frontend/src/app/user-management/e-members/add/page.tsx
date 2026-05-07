@@ -9,6 +9,7 @@ import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
 import { createEMember, uploadProfilePicture } from "@/lib/api";
+import { NIGERIA_STATES } from "@/lib/nigeria-states";
 
 export default function AddEMemberPage() {
   const router = useRouter();
@@ -285,15 +286,7 @@ export default function AddEMemberPage() {
                 className={selectStyles}
               >
                 <option value="">Select State</option>
-                {[
-                  "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
-                  "Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo",
-                  "Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa",
-                  "Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba",
-                  "Yobe","Zamfara",
-                ].map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
+                {NIGERIA_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
 

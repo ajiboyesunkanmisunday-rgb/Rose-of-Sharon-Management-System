@@ -86,12 +86,12 @@ export default function PhoneInput({
             // and enforce max 15 digits
             let digits = e.target.value.replace(/\D/g, "");
             if (digits.startsWith("0")) digits = digits.slice(1);
-            digits = digits.slice(0, 15);
+            digits = digits.slice(0, 10);
             onNumberChange(digits);
           }}
           placeholder={placeholder}
           required={required}
-          maxLength={15}
+          maxLength={10}
           className={`${sharedStyles} w-full px-4`}
         />
         <p className="col-span-full mt-1 text-xs text-[#9CA3AF]">

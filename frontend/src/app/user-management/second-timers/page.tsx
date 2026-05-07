@@ -317,8 +317,9 @@ export default function SecondTimersPage() {
             >
               <option value="">All Services</option>
               <option value="Sunday Service">Sunday Service</option>
-              <option value="Tuesday Service">Tuesday Service</option>
-              <option value="Thursday Service">Thursday Service</option>
+              <option value="Tuesday Bible Study">Tuesday Bible Study</option>
+              <option value="Thursday Prayer Meeting">Thursday Prayer Meeting</option>
+              <option value="Special Service">Special Service</option>
             </select>
           </div>
           <div className="flex flex-col">

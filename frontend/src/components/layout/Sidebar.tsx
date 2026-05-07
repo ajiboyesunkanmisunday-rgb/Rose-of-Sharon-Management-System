@@ -79,11 +79,6 @@ const navItems: NavItem[] = [
     href: "/requests",
   },
   {
-    label: "Prayer Requests",
-    icon: Flame,
-    href: "/prayer-requests",
-  },
-  {
     label: "Testimonies",
     icon: Heart,
     href: "/testimonies",

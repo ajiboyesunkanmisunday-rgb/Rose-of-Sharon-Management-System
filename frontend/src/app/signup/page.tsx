@@ -147,6 +147,9 @@ export default function SignupPage() {
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
+          <p className="mt-1 text-xs text-[#6B7280]">
+            Your password must contain a lowercase letter, an uppercase letter, a number, a special character and at least 8 characters.
+          </p>
         </div>
 
         <div>
