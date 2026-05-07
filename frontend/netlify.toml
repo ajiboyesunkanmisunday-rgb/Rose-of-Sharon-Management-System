@@ -128,7 +128,7 @@
 
 [[redirects]]
   from   = "/settings/roles/:id/edit/"
-  to     = "/settings/roles/r-1/edit/"
+  to     = "/settings/roles/role-1/edit/"
   status = 200
 
 [[redirects]]
@@ -144,4 +144,69 @@
 [[redirects]]
   from   = "/testimonies/:id/"
   to     = "/testimonies/t-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/celebrations/:id/edit/"
+  to     = "/celebrations/cel-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/directory/:id/"
+  to     = "/directory/dir-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/directory/:id/edit/"
+  to     = "/directory/dir-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/calendar/events/:id/"
+  to     = "/calendar/events/cal-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/calendar/events/:id/edit/"
+  to     = "/calendar/events/cal-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/communication/announcements/:id/"
+  to     = "/communication/announcements/ann-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/communication/announcements/:id/edit/"
+  to     = "/communication/announcements/ann-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/communication/messages/:id/"
+  to     = "/communication/messages/msg-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/communication/templates/:id/edit/"
+  to     = "/communication/templates/tpl-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/courses/:id/"
+  to     = "/trainings/courses/course-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/courses/:id/edit/"
+  to     = "/trainings/courses/course-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/schedules/:id/"
+  to     = "/trainings/schedules/sch-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/schedules/:id/edit/"
+  to     = "/trainings/schedules/sch-1/edit/"
   status = 200

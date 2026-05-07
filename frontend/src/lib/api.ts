@@ -1417,6 +1417,115 @@ export async function uploadMedia(fields: {
   return text ? (JSON.parse(text) as MediaResponse) : ({} as MediaResponse);
 }
 
+// ─── Message Templates ────────────────────────────────────────────────────────
+
+export type MessageTemplateCategory =
+  | "NEW_FIRST_TIMER"
+  | "NEW_SECOND_TIMER"
+  | "NEW_CONVERT"
+  | "WEDDING_ANNIVERSARY"
+  | "BIRTHDAY"
+  | "PRAYER_REQUEST"
+  | "NEW_MEMBER"
+  | "NEW_E_MEMBER"
+  | "COUNSELING_REQUEST";
+
+export type MessageTemplateChannel = "EMAIL" | "SMS";
+
+export interface MessageTemplateResponse {
+  id: string;
+  messageTemplateCategory: MessageTemplateCategory;
+  channel: MessageTemplateChannel;
+  name: string;
+  content: string;
+  subject?: string;
+  createdOn?: string;
+}
+
+export interface CreateMessageTemplateRequest {
+  category: string;
+  channel: string;
+  name: string;
+  subject?: string;
+  content: string;
+}
+
+export interface UpdateMessageTemplateRequest {
+  category?: string;
+  channel?: string;
+  subject?: string;
+  content?: string;
+}
+
+export async function getMessageTemplates(
+  page = 0,
+  size = 10,
+): Promise<CustomPageResponse<MessageTemplateResponse>> {
+  return apiFetch<CustomPageResponse<MessageTemplateResponse>>(
+    `/api/v1/message-templates?page=${page}&size=${size}`,
+  );
+}
+
+export async function getMessageTemplate(
+  id: string,
+): Promise<MessageTemplateResponse> {
+  return apiFetch<MessageTemplateResponse>(`/api/v1/message-templates/${id}`);
+}
+
+export async function createMessageTemplate(
+  body: CreateMessageTemplateRequest,
+): Promise<MessageTemplateResponse> {
+  return apiFetch<MessageTemplateResponse>("/api/v1/message-templates", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateMessageTemplate(
+  id: string,
+  body: UpdateMessageTemplateRequest,
+): Promise<MessageTemplateResponse> {
+  return apiFetch<MessageTemplateResponse>(
+    `/api/v1/message-templates/${id}`,
+    { method: "PUT", body: JSON.stringify(body) },
+  );
+}
+
+export async function deleteMessageTemplate(
+  id: string,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/message-templates/${id}`, {
+    method: "DELETE",
+  });
+}
+
+// ─── Admin Users ──────────────────────────────────────────────────────────────
+
+export interface AdminResponse {
+  id: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  email: string;
+  profilePictureUrl?: string;
+  sex?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+  userType?: string;
+  roleId?: string;
+  roleName?: string;
+  lastLogin?: string;
+}
+
+export async function getAdminUsers(
+  page = 0,
+  size = 20,
+): Promise<CustomPageResponse<AdminResponse>> {
+  return apiFetch<CustomPageResponse<AdminResponse>>(
+    `/api/v1/users/admin?page=${page}&size=${size}`,
+  );
+}
+
 /**
  * Upload a profile picture and return the hosted URL.
  * Uses /api/v1/media with category IMAGES.

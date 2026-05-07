@@ -19,8 +19,9 @@ import { Heart } from "lucide-react";
 const ITEMS_PER_PAGE = 10;
 
 const statusBadgeColors: Record<string, string> = {
-  READ:   "bg-[#DCFCE7] text-[#16A34A]",
-  UNREAD: "bg-[#FEF9C3] text-[#CA8A04]",
+  READ:     "bg-[#DCFCE7] text-[#16A34A]",
+  NOT_READ: "bg-[#FEF9C3] text-[#CA8A04]",
+  UNREAD:   "bg-[#FEF9C3] text-[#CA8A04]", // legacy fallback
 };
 
 function fullName(u?: { firstName?: string; middleName?: string; lastName?: string } | null) {
@@ -242,7 +243,7 @@ export default function TestimoniesPage() {
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{fmtDate(t.createdOn)}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${statusBadgeColors[t.testimonyStatus ?? ""] ?? "bg-gray-100 text-gray-600"}`}>
-                      {(t.testimonyStatus ?? "UNREAD").replace(/_/g, " ")}
+                      {t.testimonyStatus === "NOT_READ" ? "Unread" : (t.testimonyStatus ?? "Unread")}
                     </span>
                   </td>
                   <td className="px-4 py-3">
