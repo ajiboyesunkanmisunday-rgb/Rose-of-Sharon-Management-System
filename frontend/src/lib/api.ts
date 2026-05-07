@@ -227,6 +227,12 @@ export interface UserResponse {
   secondTimeService?: EventResponse;
   // WhatsApp contact
   whatsappNumber?: string;
+  // Wedding date
+  dayOfWedding?: number;
+  monthOfWedding?: number;
+  yearOfWedding?: number;
+  // Reason for leaving / stopping attendance
+  reasonForLeaving?: string;
   // Spouse / couple info
   spouse?: UserResponse;
   couplePictureUrl?: string;
