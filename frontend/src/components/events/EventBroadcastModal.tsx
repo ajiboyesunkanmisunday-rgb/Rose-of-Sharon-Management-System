@@ -3,6 +3,7 @@
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { SelectField, TextAreaField } from "@/components/ui/FormField";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 import { useState } from "react";
 import { groups } from "@/lib/mock-data";
 
@@ -51,11 +52,6 @@ export default function EventBroadcastModal({
     onClose();
   };
 
-  const groupOptions = [
-    { label: "All Groups", value: "" },
-    ...groups.map((g) => ({ label: g.name, value: g.id })),
-  ];
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Broadcast to Members" size="md">
       <div className="space-y-5">
@@ -71,20 +67,14 @@ export default function EventBroadcastModal({
           <h3 className="mb-3 text-sm font-semibold text-[#111827]">Audience Filters</h3>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div>
-              <label className="mb-1 block text-sm font-medium text-[#374151]">
-                Group
-              </label>
-              <select
+              <SearchableSelect
+                label="Group"
+                placeholder="All Groups"
+                searchPlaceholder="Search groups…"
+                options={groups.map((g) => ({ label: g.name, value: g.id }))}
                 value={group}
-                onChange={(e) => setGroup(e.target.value)}
-                className="w-full rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
-              >
-                {groupOptions.map((g) => (
-                  <option key={g.value} value={g.value}>
-                    {g.label}
-                  </option>
-                ))}
-              </select>
+                onChange={setGroup}
+              />
             </div>
             <SelectField
               label="Gender"

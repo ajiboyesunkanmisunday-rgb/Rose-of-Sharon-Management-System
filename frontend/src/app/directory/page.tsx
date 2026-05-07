@@ -16,6 +16,7 @@ import {
   type GroupResponse,
 } from "@/lib/api";
 import { BookUser } from "lucide-react";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 type MemberType = "all" | "member" | "e-member" | "first-timer" | "second-timer" | "new-convert";
 
@@ -107,7 +108,7 @@ export default function DirectoryPage() {
   const router = useRouter();
   const [search, setSearch]               = useState("");
   const [selectedType, setSelectedType]   = useState<MemberType>("all");
-  const [selectedGroup, setSelectedGroup] = useState("All");
+  const [selectedGroup, setSelectedGroup] = useState("");
   const [currentPage, setCurrentPage]     = useState(1);
 
   const [entries, setEntries]   = useState<DirectoryEntry[]>([]);
@@ -186,7 +187,7 @@ export default function DirectoryPage() {
   const filtered = useMemo(() => {
     let list = entries;
     if (selectedType !== "all") list = list.filter((e) => e.userType === selectedType);
-    if (selectedGroup !== "All") {
+    if (selectedGroup) {
       list = list.filter((e) =>
         e.groups?.some((g) => g.name === selectedGroup || g.id === selectedGroup)
       );
@@ -290,19 +291,18 @@ export default function DirectoryPage() {
               placeholder="Search by name, email, phone…"
             />
           </div>
-          <select
-            value={selectedGroup}
-            onChange={(e) => { setSelectedGroup(e.target.value); resetPage(); }}
-            className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
-          >
-            <option value="All">All Groups</option>
-            {groups.map((g) => (
-              <option key={g.id} value={g.name}>{g.name}</option>
-            ))}
-          </select>
-          {(search || selectedGroup !== "All" || selectedType !== "all") && (
+          <div className="w-full sm:w-60">
+            <SearchableSelect
+              placeholder="All Groups"
+              searchPlaceholder="Search groups…"
+              options={groups.map((g) => g.name)}
+              value={selectedGroup}
+              onChange={(v) => { setSelectedGroup(v); resetPage(); }}
+            />
+          </div>
+          {(search || selectedGroup || selectedType !== "all") && (
             <button
-              onClick={() => { setSearch(""); setSelectedGroup("All"); setSelectedType("all"); resetPage(); }}
+              onClick={() => { setSearch(""); setSelectedGroup(""); setSelectedType("all"); resetPage(); }}
               className="text-sm font-medium text-[#000080] underline hover:text-[#000066]"
             >
               Clear filters
