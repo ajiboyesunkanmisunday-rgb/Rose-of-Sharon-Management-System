@@ -8,7 +8,7 @@ import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
-import { getEvents, type EventResponse } from "@/lib/api";
+import { getEvents, searchEvents, cancelEvent, type EventResponse } from "@/lib/api";
 import { CalendarClock } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
@@ -38,6 +38,13 @@ function locationLabel(event: EventResponse): string {
   return parts.length ? parts.join(", ") : "—";
 }
 
+function fmtDate(raw?: string | null): string {
+  if (!raw) return "—";
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw; // fallback to raw if unparseable
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
 export default function EventManagementPage() {
   const router = useRouter();
 
@@ -50,13 +57,20 @@ export default function EventManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState("");
 
-  const fetchEvents = useCallback(async (page: number) => {
+  const fetchEvents = useCallback(async (page: number, query: string) => {
     setLoading(true);
     setApiError("");
     try {
-      const res = await getEvents(page - 1, ITEMS_PER_PAGE);
-      setEvents(res.content);
+      let res;
+      if (query.trim()) {
+        res = await searchEvents(query.trim(), page - 1, ITEMS_PER_PAGE);
+      } else {
+        res = await getEvents(page - 1, ITEMS_PER_PAGE);
+      }
+      setEvents(res.content ?? []);
       setTotalPages(res.totalPages || 1);
       setTotalItems(res.totalElements || 0);
     } catch (err) {
@@ -68,29 +82,35 @@ export default function EventManagementPage() {
   }, []);
 
   useEffect(() => {
-    fetchEvents(currentPage);
-  }, [currentPage, fetchEvents]);
+    fetchEvents(currentPage, search);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]);
 
-  const displayedEvents = search.trim()
-    ? events.filter((e) => {
-        const q = search.toLowerCase();
-        return (
-          (e.title ?? "").toLowerCase().includes(q) ||
-          (e.city ?? "").toLowerCase().includes(q) ||
-          (e.state ?? "").toLowerCase().includes(q) ||
-          (e.eventCategory ?? "").toLowerCase().includes(q)
-        );
-      })
-    : events;
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchEvents(1, search);
+  };
 
   const handleCancelClick = (id: string) => {
     setSelectedId(id);
+    setCancelError("");
     setShowCancelModal(true);
   };
 
-  const handleConfirmCancel = () => {
-    setShowCancelModal(false);
-    setSelectedId(null);
+  const handleConfirmCancel = async () => {
+    if (!selectedId) return;
+    setCancelling(true);
+    setCancelError("");
+    try {
+      await cancelEvent(selectedId);
+      setShowCancelModal(false);
+      setSelectedId(null);
+      fetchEvents(currentPage, search);
+    } catch (err) {
+      setCancelError(err instanceof Error ? err.message : "Failed to cancel event.");
+    } finally {
+      setCancelling(false);
+    }
   };
 
   return (
@@ -109,8 +129,8 @@ export default function EventManagementPage() {
         <div className="w-full sm:w-72">
           <SearchBar
             value={search}
-            onChange={(val) => { setSearch(val); setCurrentPage(1); }}
-            onSearch={() => setCurrentPage(1)}
+            onChange={(val) => setSearch(val)}
+            onSearch={handleSearch}
             placeholder="Search events..."
           />
         </div>
@@ -130,7 +150,7 @@ export default function EventManagementPage() {
       {apiError && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {apiError} —{" "}
-          <button className="font-medium underline" onClick={() => fetchEvents(currentPage)}>
+          <button className="font-medium underline" onClick={() => fetchEvents(currentPage, search)}>
             Retry
           </button>
         </div>
@@ -155,19 +175,20 @@ export default function EventManagementPage() {
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-gray-400">Loading events…</td>
               </tr>
-            ) : displayedEvents.length === 0 ? (
+            ) : events.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-gray-400">No events found.</td>
               </tr>
             ) : (
-              displayedEvents.map((event) => (
+              events.map((event) => (
                 <tr
                   key={event.id}
-                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50"
+                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
                   style={{ height: "56px" }}
+                  onClick={() => router.push(`/event-management/${event.id}`)}
                 >
                   <td className="px-4 py-3 text-sm font-medium text-[#374151]">{event.title}</td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">{event.date}</td>
+                  <td className="px-4 py-3 text-sm text-[#374151]">{fmtDate(event.date)}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                     {locationLabel(event)}
                   </td>
@@ -199,12 +220,12 @@ export default function EventManagementPage() {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <ActionDropdown
                       actions={[
-                        { label: "View", onClick: () => router.push(`/event-management/${event.id}`) },
-                        { label: "Edit", onClick: () => router.push(`/event-management/${event.id}/edit`) },
-                        { label: "Cancel Event", onClick: () => handleCancelClick(event.id) },
+                        { label: "View",  onClick: () => router.push(`/event-management/${event.id}`) },
+                        { label: "Edit",  onClick: () => router.push(`/event-management/${event.id}/edit`) },
+                        ...(event.isCanceled ? [] : [{ label: "Cancel Event", onClick: () => handleCancelClick(event.id) }]),
                       ]}
                     />
                   </td>
@@ -220,15 +241,21 @@ export default function EventManagementPage() {
           currentPage={currentPage}
           totalPages={totalPages}
           totalItems={totalItems}
-          onPageChange={setCurrentPage}
+          onPageChange={(p) => { setCurrentPage(p); fetchEvents(p, search); }}
         />
       </div>
 
       <DeleteConfirmModal
         isOpen={showCancelModal}
-        onClose={() => setShowCancelModal(false)}
+        onClose={() => { setShowCancelModal(false); setCancelError(""); }}
         onConfirm={handleConfirmCancel}
-        message="Are you sure you want to cancel this event? Attendees will be notified."
+        message={
+          cancelError
+            ? `Error: ${cancelError} — Click confirm to try again.`
+            : "Are you sure you want to cancel this event? Attendees will be notified."
+        }
+        confirmLabel={cancelling ? "Cancelling…" : "Cancel Event"}
+        confirmDisabled={cancelling}
       />
     </DashboardLayout>
   );

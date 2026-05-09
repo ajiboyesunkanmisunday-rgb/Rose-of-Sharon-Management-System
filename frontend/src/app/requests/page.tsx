@@ -252,8 +252,8 @@ export default function RequestsPage() {
               <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">No requests found.</td></tr>
             ) : (
               displayed.map((r) => (
-                <tr key={r.id} className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50" style={{height:"56px"}}>
-                  <td className="px-4 py-3">
+                <tr key={r.id} className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer" style={{height:"56px"}} onClick={() => router.push(`/requests/${r.id}`)}>
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <input type="checkbox" checked={selectedRows.has(r.id)} onChange={() => handleSelectRow(r.id)}
                       className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]" />
                   </td>
@@ -273,7 +273,7 @@ export default function RequestsPage() {
                     </span>
                   </td>
                   <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{fullName(r.assignedTo)}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <ActionDropdown
                       actions={[
                         { label: "View", onClick: () => router.push(`/requests/${r.id}`) },

@@ -340,7 +340,15 @@ export default function DirectoryPage() {
             return (
               <div
                 key={`${person.userType}-${person.id}`}
-                className="flex flex-col rounded-xl border border-[#E5E7EB] bg-white p-5 transition-shadow hover:shadow-md"
+                className="flex flex-col rounded-xl border border-[#E5E7EB] bg-white p-5 transition-shadow hover:shadow-md cursor-pointer"
+                onClick={() => {
+                  // Cache full person data so the profile page can display it
+                  // immediately, even if the generic getUser API returns empty.
+                  if (typeof window !== "undefined") {
+                    try { sessionStorage.setItem(`dir_person_${person.id}`, JSON.stringify(person)); } catch {}
+                  }
+                  router.push(`/directory/${person.id}`);
+                }}
               >
                 {/* Avatar */}
                 <div className="mb-3 flex items-start justify-between">
@@ -389,7 +397,13 @@ export default function DirectoryPage() {
                 {/* View link */}
                 <div className="mt-auto pt-3">
                   <button
-                    onClick={() => router.push(`/directory/${person.id}`)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (typeof window !== "undefined") {
+                        try { sessionStorage.setItem(`dir_person_${person.id}`, JSON.stringify(person)); } catch {}
+                      }
+                      router.push(`/directory/${person.id}`);
+                    }}
                     className="w-full rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] transition-colors hover:bg-[#000080] hover:text-white"
                   >
                     View Profile

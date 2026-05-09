@@ -6,7 +6,9 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import { FormField, SelectField, TextAreaField } from "@/components/ui/FormField";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 import { createEvent } from "@/lib/api";
+import { NIGERIA_STATES, COUNTRIES } from "@/lib/nigeria-states";
 
 const CATEGORY_OPTIONS = [
   { label: "Service", value: "SERVICE" },
@@ -22,18 +24,22 @@ const LOCATION_TYPE_OPTIONS = [
   { label: "Hybrid", value: "HYBRID" },
 ];
 
-const NIGERIA_STATES = [
-  "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
-  "Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo",
-  "Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa",
-  "Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba",
-  "Yobe","Zamfara",
-];
-
 function timeToEpochMs(date: string, time: string): number | undefined {
   if (!date) return undefined;
   const t = time || "00:00";
-  return new Date(`${date}T${t}:00`).getTime();
+  const ms = new Date(`${date}T${t}:00`).getTime();
+  return isNaN(ms) ? undefined : ms;
+}
+
+/** Ensure a date string is YYYY-MM-DD regardless of what the browser/API gave us. */
+function normalizeDate(raw: string): string {
+  if (!raw) return "";
+  // Already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  // Try to parse and reformat
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
 }
 
 export default function AddEventPage() {
@@ -52,7 +58,7 @@ export default function AddEventPage() {
     street: "",
     city: "",
     state: "",
-    country: "Nigeria",
+    country: "",
     additionalInstructions: "",
     eFlyer: "",
     requiresRegistration: false,
@@ -69,19 +75,24 @@ export default function AddEventPage() {
     setFormData((prev) => ({ ...prev, [name]: val }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
-    // Safari's native date picker updates the DOM without always firing React's onChange.
-    // Read directly from the DOM element as the authoritative value, falling back to state.
-    const dateEl = document.getElementById("event-date-input") as HTMLInputElement | null;
-    const date = dateEl?.value || formData.date || "";
+    // Use the native FormData API — reads the actual DOM value for every input,
+    // including Safari date pickers that sometimes skip React's onChange.
+    const fd = new FormData(e.currentTarget);
+    const rawDate = (fd.get("date") as string | null) ?? "";
+    const date = normalizeDate(rawDate) || normalizeDate(formData.date);
 
     if (!date) {
       setError("Please select a date for the event.");
       return;
     }
+
+    // Read times from FormData too for the same reason
+    const startTimeRaw = (fd.get("startTime") as string | null) ?? formData.startTime;
+    const endTimeRaw   = (fd.get("endTime")   as string | null) ?? formData.endTime;
 
     setLoading(true);
     try {
@@ -91,8 +102,8 @@ export default function AddEventPage() {
         topic: formData.topic || undefined,
         category: formData.category || undefined,
         date,
-        startTime: timeToEpochMs(date, formData.startTime),
-        endTime: timeToEpochMs(date, formData.endTime),
+        startTime: timeToEpochMs(date, startTimeRaw),
+        endTime: timeToEpochMs(date, endTimeRaw),
         locationType: formData.locationType || undefined,
         virtualMeetingLink: formData.virtualMeetingLink || undefined,
         street: formData.street || undefined,
@@ -162,13 +173,11 @@ export default function AddEventPage() {
           {/* Date & Time */}
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-3">
             <FormField
-              id="event-date-input"
               label="Event Date"
               type="date"
               name="date"
               value={formData.date}
               onChange={handleChange}
-              onInput={handleChange as React.FormEventHandler}
               required
             />
             <FormField
@@ -222,19 +231,21 @@ export default function AddEventPage() {
                 onChange={handleChange}
                 placeholder="City"
               />
-              <SelectField
+              <SearchableSelect
                 label="State"
-                name="state"
+                placeholder="Select state…"
+                searchPlaceholder="Search states…"
+                options={NIGERIA_STATES}
                 value={formData.state}
-                onChange={handleChange}
-                options={NIGERIA_STATES.map((s) => ({ label: s, value: s }))}
+                onChange={(v) => setFormData((prev) => ({ ...prev, state: v }))}
               />
-              <FormField
+              <SearchableSelect
                 label="Country"
-                name="country"
+                placeholder="Select country…"
+                searchPlaceholder="Search countries…"
+                options={COUNTRIES}
                 value={formData.country}
-                onChange={handleChange}
-                placeholder="Country"
+                onChange={(v) => setFormData((prev) => ({ ...prev, country: v }))}
               />
             </div>
           )}

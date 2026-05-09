@@ -219,7 +219,7 @@ export default function PrayerRequestsPage() {
                 key={req.id}
                 className="border-b border-[#F3F4F6] hover:bg-gray-50 cursor-pointer"
                 style={{ height: "56px" }}
-                onDoubleClick={() => router.push(`/prayer-requests/${req.id}`)}
+                onClick={() => router.push(`/prayer-requests/${req.id}`)}
               >
                 <td className="px-4 py-3 text-sm font-medium text-[#111827]">
                   {getSubmittedBy(req)}
@@ -231,7 +231,7 @@ export default function PrayerRequestsPage() {
                 <td className="px-4 py-3">{statusBadge(req.requestStatus ?? "—")}</td>
                 <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{getAssignedTo(req)}</td>
                 <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{getDate(req)}</td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                   <ActionDropdown
                     actions={[
                       { label: "View", onClick: () => router.push(`/prayer-requests/${req.id}`) },

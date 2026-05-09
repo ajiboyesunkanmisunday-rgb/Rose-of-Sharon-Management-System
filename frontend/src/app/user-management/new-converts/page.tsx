@@ -352,9 +352,9 @@ export default function NewConvertsPage() {
                   key={nc.id}
                   className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
                   style={{ height: "56px" }}
-                  onDoubleClick={() => router.push(`/user-management/new-converts/${nc.id}`)}
+                  onClick={() => router.push(`/user-management/new-converts/${nc.id}`)}
                 >
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="checkbox"
                       checked={selectedRows.has(nc.id)}
@@ -374,7 +374,7 @@ export default function NewConvertsPage() {
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                     {nc.createdOn ? nc.createdOn.slice(0, 10) : <span className="text-[#9CA3AF]">—</span>}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <ActionDropdown
                       actions={[
                         { label: "View", onClick: () => router.push(`/user-management/new-converts/${nc.id}`) },
