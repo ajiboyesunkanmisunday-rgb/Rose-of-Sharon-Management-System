@@ -100,8 +100,15 @@ async function apiFetchRaw<T>(
   options: RequestInit = {}
 ): Promise<ApiFetchResult<T>> {
   const token = getToken();
+  const method = (options.method ?? "GET").toUpperCase();
+
+  // Only include Content-Type for requests that have a body.
+  // GET/HEAD with Content-Type causes browsers to add Content-Length: 0,
+  // which confuses Netlify's function body parsing.
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    ...(method !== "GET" && method !== "HEAD"
+      ? { "Content-Type": "application/json" }
+      : {}),
     ...(options.headers as Record<string, string>),
   };
 
@@ -126,7 +133,6 @@ async function apiFetchRaw<T>(
   //
   // Requests to /.netlify/functions/* (e.g. login) are NOT proxied — they
   // call the function directly.
-  const method = (options.method ?? "GET").toUpperCase();
   let fetchUrl = `${BASE_URL}${path}`;
   let fetchMethod = method;
   const needsProxy =
