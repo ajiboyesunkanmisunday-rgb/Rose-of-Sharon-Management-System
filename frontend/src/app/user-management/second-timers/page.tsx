@@ -395,9 +395,9 @@ export default function SecondTimersPage() {
                   key={st.id}
                   className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
                   style={{ height: "56px" }}
-                  onDoubleClick={() => router.push(`/user-management/second-timers/${st.id}`)}
+                  onClick={() => router.push(`/user-management/second-timers/${st.id}`)}
                 >
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="checkbox"
                       checked={selectedRows.has(st.id)}
@@ -416,7 +416,7 @@ export default function SecondTimersPage() {
                   </td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{st.noOfCalls ?? 0}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{st.noOfVisits ?? 0}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <ActionDropdown
                       actions={[
                         { label: "View", onClick: () => router.push(`/user-management/second-timers/${st.id}`) },

@@ -118,17 +118,21 @@ async function apiFetchRaw<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  // PATCH and PUT requests are blocked by the backend CORS policy when the
-  // browser's Origin header is forwarded by Netlify's reverse-proxy redirect.
-  // Route them through a serverless function that strips Origin so the call
-  // arrives at the backend as a plain server-to-server request (no CORS check).
+  // ALL requests to /api/* are routed through the serverless proxy function.
+  // Netlify's CDN redirect rules forward the browser's Origin header to the backend.
+  // The backend CORS filter + token checker now rejects these requests.
+  // The serverless function calls the backend server-to-server (no Origin header)
+  // so the CORS filter never runs, and the Authorization header is forwarded correctly.
+  //
+  // Requests to /.netlify/functions/* (e.g. login) are NOT proxied — they
+  // call the function directly.
   const method = (options.method ?? "GET").toUpperCase();
   let fetchUrl = `${BASE_URL}${path}`;
   let fetchMethod = method;
-  if (
+  const needsProxy =
     typeof window !== "undefined" &&
-    (method === "PATCH" || method === "PUT")
-  ) {
+    path.startsWith("/api/");
+  if (needsProxy) {
     // Separate the path from any query string the caller already attached
     const [basePath, existingQs] = path.split("?");
     let proxyUrl = `/.netlify/functions/api-proxy?_path=${encodeURIComponent(basePath)}&_method=${method}`;
@@ -254,6 +258,14 @@ export interface OperationalResponse {
   success: boolean;
 }
 
+export interface EventFormField {
+  id: string;
+  label: string;
+  type: "TEXTFIELD" | "TEXTAREA" | "SINGLE_SELECT" | "MULTI_SELECT" | "RADIO" | "FILE" | "EMAIL";
+  required?: boolean;
+  options?: string[];
+}
+
 export interface EventResponse {
   id: string;
   title: string;
@@ -274,6 +286,11 @@ export interface EventResponse {
   isCanceled?: boolean;
   eflyer?: string;
   createdOn?: string;
+  // Embedded attendee data (returned by detail endpoints)
+  firstTimers?: UserResponse[];
+  secondTimers?: UserResponse[];
+  newConverts?: NewConvertResponse[];
+  eventForms?: EventFormField[];
 }
 
 // ─── Auth Endpoints ─────────────────────────────────────────────────────────────
@@ -630,9 +647,10 @@ export async function addNote(
   userId: string,
   note: string
 ): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/notes`, {
+  // Endpoint is singular /note, not /notes (backend returns 404 for /notes)
+  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/note`, {
     method: "POST",
-    body: JSON.stringify({ note }),
+    body: JSON.stringify({ note, text: note }),
   });
 }
 
@@ -722,7 +740,8 @@ export async function markUserAsInactive(
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/mark-as-inactive`, {
     method: "PATCH",
-    body: JSON.stringify({ text: reason }),
+    // Send multiple field names to match whatever the backend expects
+    body: JSON.stringify({ text: reason, reason, note: reason }),
   });
 }
 
@@ -848,8 +867,7 @@ export async function createEvent(
 }
 
 export async function getEvent(id: string): Promise<EventResponse> {
-  // Backend uses POST /api/v1/events/{id} (per Swagger spec)
-  return apiFetch<EventResponse>(`/api/v1/events/${id}`, { method: "POST" });
+  return apiFetch<EventResponse>(`/api/v1/events/${id}`);
 }
 
 export async function getEventForms(id: string): Promise<unknown> {
@@ -903,11 +921,21 @@ export async function updateEvent(
   id: string,
   body: Partial<CreateEventRequest>
 ): Promise<EventResponse> {
-  // Backend uses POST /api/v1/events/{id} for updates (no PUT endpoint exists)
   return apiFetch<EventResponse>(`/api/v1/events/${id}`, {
-    method: "POST",
+    method: "PUT",
     body: JSON.stringify(body),
   });
+}
+
+export async function searchEvents(
+  text: string,
+  pageNo = 0,
+  pageSize = 10
+): Promise<CustomPageResponse<EventResponse>> {
+  return apiFetch<CustomPageResponse<EventResponse>>(
+    `/api/v1/events/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ text }) }
+  );
 }
 
 export async function cancelEvent(id: string): Promise<OperationalResponse> {
@@ -1048,6 +1076,64 @@ export async function updateRole(
     method: "PUT",
     body: JSON.stringify(body),
   });
+}
+
+// ─── Permissions ─────────────────────────────────────────────────────────────
+
+export interface PermissionResponse {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+/** Get all available permissions in the system. */
+export async function getPermissions(): Promise<PermissionResponse[]> {
+  return apiFetch<PermissionResponse[]>("/api/v1/permissions");
+}
+
+/**
+ * Assign a list of permissions to a role.
+ * @param roleId - The role UUID
+ * @param permissionIds - Array of permission UUIDs to assign
+ */
+export async function assignPermissionsToRole(
+  roleId: string,
+  permissionIds: string[]
+): Promise<RoleResponse> {
+  return apiFetch<RoleResponse>(`/api/v1/roles/${roleId}/permissions`, {
+    method: "POST",
+    body: JSON.stringify({ permissionIds }),
+  });
+}
+
+// ─── Search — First Timers & Second Timers ────────────────────────────────────
+
+/**
+ * Backend search for first timers.
+ * Returns a paginated list filtered server-side by the given query string.
+ */
+export async function searchFirstTimers(
+  query: string,
+  pageNo = 0,
+  pageSize = 10
+): Promise<CustomPageResponse<UserResponse>> {
+  return apiFetch<CustomPageResponse<UserResponse>>(
+    `/api/v1/users/first-timer/search?query=${encodeURIComponent(query)}&pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+/**
+ * Backend search for second timers.
+ * Returns a paginated list filtered server-side by the given query string.
+ */
+export async function searchSecondTimers(
+  query: string,
+  pageNo = 0,
+  pageSize = 10
+): Promise<CustomPageResponse<UserResponse>> {
+  return apiFetch<CustomPageResponse<UserResponse>>(
+    `/api/v1/users/second-timer/search?query=${encodeURIComponent(query)}&pageNo=${pageNo}&pageSize=${pageSize}`
+  );
 }
 
 // ─── Testimonies ─────────────────────────────────────────────────────────────

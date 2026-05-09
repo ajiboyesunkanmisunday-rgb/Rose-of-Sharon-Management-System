@@ -22,15 +22,24 @@ import {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function fmtEpoch(ms?: number): string {
-  if (!ms) return "—";
-  const d = new Date(ms);
+function fmtEpoch(ms?: number | string | null): string {
+  const n = Number(ms);
+  if (!ms || isNaN(n) || n === 0) return "—";
+  const d = new Date(n);
+  if (isNaN(d.getTime())) return "—";
   let h = d.getHours();
   const mm = String(d.getMinutes()).padStart(2, "0");
   const ap = h >= 12 ? "PM" : "AM";
   if (h === 0) h = 12;
   else if (h > 12) h -= 12;
   return `${h}:${mm} ${ap}`;
+}
+
+function fmtDate(raw?: string | null): string {
+  if (!raw) return "—";
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw;
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 function fullName(u: { firstName?: string; middleName?: string; lastName?: string }) {
@@ -284,7 +293,7 @@ export default function EventDetailClient() {
         <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
             <p className="text-xs font-medium text-[#6B7280]">Date</p>
-            <p className="mt-1 text-sm font-medium text-[#111827]">{event.date || "—"}</p>
+            <p className="mt-1 text-sm font-medium text-[#111827]">{fmtDate(event.date)}</p>
           </div>
           <div>
             <p className="text-xs font-medium text-[#6B7280]">Start Time</p>
@@ -321,7 +330,7 @@ export default function EventDetailClient() {
             <div>
               <p className="text-xs font-medium text-[#6B7280]">Created</p>
               <p className="mt-1 text-sm font-medium text-[#111827]">
-                {new Date(event.createdOn).toLocaleDateString()}
+                {fmtDate(event.createdOn)}
               </p>
             </div>
           )}

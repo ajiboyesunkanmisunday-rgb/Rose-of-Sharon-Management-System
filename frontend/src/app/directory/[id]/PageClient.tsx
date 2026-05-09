@@ -42,12 +42,39 @@ export default function DirectoryDetailClient() {
 
   useEffect(() => {
     if (!id || id.startsWith("dir-")) { setLoading(false); return; }
+
+    // Immediately show data from the directory listing cache (sessionStorage)
+    // so the profile never displays a blank page while the API loads.
+    if (typeof window !== "undefined") {
+      try {
+        const cached = sessionStorage.getItem(`dir_person_${id}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed?.firstName || parsed?.email) {
+            setContact(parsed as UserResponse);
+            setLoading(false);
+          }
+        }
+      } catch {}
+    }
+
+    setLoading(true);
     async function load() {
       try {
         const u = await getUser(id);
-        setContact(u);
+        // Only replace the cached version if the API returned real data
+        if (u?.firstName || u?.email || u?.id) {
+          setContact(u);
+          if (typeof window !== "undefined") {
+            try { sessionStorage.setItem(`dir_person_${id}`, JSON.stringify(u)); } catch {}
+          }
+        }
       } catch {
-        setError("Failed to load contact.");
+        // If API fails but we already have cached data, silently keep it
+        setContact((prev) => {
+          if (!prev?.firstName && !prev?.email) setError("Failed to load contact.");
+          return prev;
+        });
       } finally {
         setLoading(false);
       }

@@ -405,9 +405,9 @@ export default function FirstTimersPage() {
                   key={ft.id}
                   className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
                   style={{ height: "56px" }}
-                  onDoubleClick={() => router.push(`/user-management/first-timers/${ft.id}`)}
+                  onClick={() => router.push(`/user-management/first-timers/${ft.id}`)}
                 >
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="checkbox"
                       checked={selectedRows.has(ft.id)}
@@ -426,7 +426,7 @@ export default function FirstTimersPage() {
                   </td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{ft.noOfCalls ?? 0}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{ft.noOfVisits ?? 0}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <ActionDropdown
                       actions={[
                         { label: "View", onClick: () => router.push(`/user-management/first-timers/${ft.id}`) },

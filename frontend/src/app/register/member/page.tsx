@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 const GENDERS = ["Male", "Female"];
 const MARITAL_STATUS = ["Single", "Married", "Divorced", "Widowed"];
@@ -289,33 +290,25 @@ export default function RegisterMemberPage() {
             {/* State */}
             <div>
               <label className={labelStyles}>State</label>
-              <select
-                name="state"
+              <SearchableSelect
+                placeholder="Select state…"
+                searchPlaceholder="Search states…"
+                options={STATES}
                 value={formData.state}
-                onChange={handleChange}
-                className={selectStyles}
-              >
-                <option value="">Select</option>
-                {STATES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
+                onChange={(v) => setFormData((prev) => ({ ...prev, state: v }))}
+              />
             </div>
 
             {/* Country */}
             <div>
               <label className={labelStyles}>Country</label>
-              <select
-                name="country"
+              <SearchableSelect
+                placeholder="Select country…"
+                searchPlaceholder="Search countries…"
+                options={COUNTRIES}
                 value={formData.country}
-                onChange={handleChange}
-                className={selectStyles}
-              >
-                <option value="">Select</option>
-                {COUNTRIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+                onChange={(v) => setFormData((prev) => ({ ...prev, country: v }))}
+              />
             </div>
           </div>
 

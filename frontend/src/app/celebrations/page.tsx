@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
@@ -19,13 +19,35 @@ import {
   type UserResponse,
   type CelebrationResponse,
 } from "@/lib/api";
-import { PartyPopper } from "lucide-react";
+import { PartyPopper, Download, ChevronDown } from "lucide-react";
 
 type Tab = "birthdays" | "anniversaries" | "thanksgiving";
 type ThanksgivingStatus = "All" | "PENDING" | "TREATED";
+type ExportFormat = "csv" | "excel" | "pdf" | "word";
 
 const ITEMS_PER_PAGE = 50;
 const CELEB_PER_PAGE = 10;
+const CARDS_PER_PAGE = 12;
+
+// ── Avatar helpers (matches directory style) ────────────────────────────────
+
+const avatarBgColors = [
+  "bg-[#B5B5F3]", "bg-[#BFDBFE]", "bg-[#BBF7D0]",
+  "bg-[#FDE68A]", "bg-[#FECACA]", "bg-[#DDD6FE]",
+  "bg-[#A7F3D0]", "bg-[#FED7AA]",
+];
+
+function avatarColor(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = ((hash << 5) - hash + id.charCodeAt(i)) | 0;
+  return avatarBgColors[Math.abs(hash) % avatarBgColors.length];
+}
+
+function initials(u: { firstName?: string; lastName?: string }) {
+  return `${u.firstName?.[0] ?? ""}${u.lastName?.[0] ?? ""}`.toUpperCase() || "?";
+}
+
+// ── Name / date helpers ─────────────────────────────────────────────────────
 
 function fullName(u?: { firstName?: string; middleName?: string; lastName?: string } | null) {
   if (!u) return "—";
@@ -37,9 +59,16 @@ function monthName(m?: number) {
   return new Date(2000, m - 1, 1).toLocaleDateString("en-US", { month: "short" });
 }
 
-function fmtBirthday(u: UserResponse) {
+function fmtBirthdayDate(u: UserResponse) {
   if (!u.dayOfBirth || !u.monthOfBirth) return "—";
-  return `${monthName(u.monthOfBirth)} ${u.dayOfBirth}`;
+  const year = u.yearOfBirth ? ` ${u.yearOfBirth}` : "";
+  return `${monthName(u.monthOfBirth)} ${u.dayOfBirth}${year}`;
+}
+
+function fmtWeddingDate(u: UserResponse) {
+  if (!u.dayOfWedding || !u.monthOfWedding) return "—";
+  const year = u.yearOfWedding ? ` ${u.yearOfWedding}` : "";
+  return `${monthName(u.monthOfWedding)} ${u.dayOfWedding}${year}`;
 }
 
 function fmtDate(s?: string) {
@@ -47,10 +76,22 @@ function fmtDate(s?: string) {
   return new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-function todayISO() { return new Date().toISOString().slice(0, 10); }
-function monthStartISO() {
-  const n = new Date();
-  return new Date(n.getFullYear(), n.getMonth(), 1).toISOString().slice(0, 10);
+/** Returns Monday of the current week */
+function thisWeekStartISO(): string {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Returns Sunday of the current week */
+function thisWeekEndISO(): string {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = day === 0 ? 0 : 7 - day;
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().slice(0, 10);
 }
 
 function isoToParts(iso: string) {
@@ -58,30 +99,471 @@ function isoToParts(iso: string) {
   return { day: dd, month: mm };
 }
 
-const UserIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-  </svg>
-);
-
-const HeartIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-  </svg>
-);
+// ── Inline SVG icons ─────────────────────────────────────────────────────────
 
 const MessageIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
   </svg>
 );
 
 const MailIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
     <polyline points="22,6 12,13 2,6" />
   </svg>
 );
+
+// ── Image fetch helpers for export ──────────────────────────────────────────
+
+async function fetchBase64(url: string): Promise<string | null> {
+  try {
+    const r = await fetch(url, { mode: "cors" });
+    if (!r.ok) return null;
+    const buf = await r.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let bin = "";
+    bytes.forEach((b) => (bin += String.fromCharCode(b)));
+    const mime = r.headers.get("content-type") ?? "image/jpeg";
+    return `data:${mime};base64,${btoa(bin)}`;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchBuffer(url: string): Promise<ArrayBuffer | null> {
+  try {
+    const r = await fetch(url, { mode: "cors" });
+    if (!r.ok) return null;
+    return r.arrayBuffer();
+  } catch {
+    return null;
+  }
+}
+
+// ── Export row type ──────────────────────────────────────────────────────────
+
+type ExportRow = Record<string, string>;
+
+function buildBirthdayRows(users: UserResponse[]): ExportRow[] {
+  return users.map((u) => ({
+    "Full Name": fullName(u),
+    "Date of Birth": fmtBirthdayDate(u),
+    "Phone Number": u.phoneNumber ?? "—",
+    "Email Address": u.email ?? "—",
+    "_photoUrl": u.profilePictureUrl ?? "",
+  }));
+}
+
+function buildAnniversaryRows(users: UserResponse[]): ExportRow[] {
+  return users.map((u) => ({
+    "Full Name": fullName(u) + (u.spouse ? ` & ${fullName(u.spouse)}` : ""),
+    "Wedding Anniversary Date": fmtWeddingDate(u),
+    "Phone Number": u.phoneNumber ?? "—",
+    "Email Address": u.email ?? "—",
+    "_photoUrl": u.couplePictureUrl ?? u.profilePictureUrl ?? "",
+  }));
+}
+
+// ── Core export function ─────────────────────────────────────────────────────
+
+async function exportData(
+  format: ExportFormat,
+  rows: ExportRow[],
+  filename: string,
+  dateColumn: string,
+) {
+  if (rows.length === 0) return;
+
+  const columns = ["Full Name", dateColumn, "Phone Number", "Email Address"];
+
+  // ── CSV ──────────────────────────────────────────────────────────────────
+  if (format === "csv") {
+    const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+    const csvCols = ["Photo URL", ...columns];
+    const header = csvCols.map(escape).join(",");
+    const body = rows
+      .map((r) =>
+        [escape(r["_photoUrl"] ?? ""), ...columns.map((c) => escape(r[c] ?? ""))].join(",")
+      )
+      .join("\n");
+    const blob = new Blob([`${header}\n${body}`], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${filename}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    return;
+  }
+
+  // ── Excel ────────────────────────────────────────────────────────────────
+  if (format === "excel") {
+    const { utils, writeFile } = await import("xlsx");
+    const xlCols = ["Photo URL", ...columns];
+    const ws = utils.json_to_sheet(
+      rows.map((r) =>
+        xlCols.reduce<Record<string, string>>((acc, c) => {
+          acc[c] = c === "Photo URL" ? (r["_photoUrl"] ?? "") : (r[c] ?? "");
+          return acc;
+        }, {})
+      ),
+      { header: xlCols }
+    );
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, "Celebrants");
+    writeFile(wb, `${filename}.xlsx`);
+    return;
+  }
+
+  // ── PDF ──────────────────────────────────────────────────────────────────
+  if (format === "pdf") {
+    const { default: jsPDF } = await import("jspdf");
+    const autoTable = (await import("jspdf-autotable")).default;
+    const doc = new jsPDF({ orientation: "landscape" });
+
+    // Pre-fetch images
+    const imgMap: Record<number, string> = {};
+    await Promise.all(
+      rows.map(async (r, i) => {
+        if (r["_photoUrl"]) {
+          const b64 = await fetchBase64(r["_photoUrl"]);
+          if (b64) imgMap[i] = b64;
+        }
+      })
+    );
+
+    const hasImages = Object.keys(imgMap).length > 0;
+
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 128);
+    doc.text(filename.replace(/_/g, " "), 14, 15);
+    doc.setTextColor(0, 0, 0);
+
+    const imgCellW = hasImages ? 16 : 0;
+
+    autoTable(doc, {
+      startY: 22,
+      head: [hasImages ? ["Photo", ...columns] : columns],
+      body: rows.map((r) =>
+        hasImages
+          ? ["", ...columns.map((c) => r[c] ?? "")]
+          : columns.map((c) => r[c] ?? "")
+      ),
+      styles: { fontSize: 9, cellPadding: 3, valign: "middle" },
+      headStyles: { fillColor: [0, 0, 128], textColor: 255, fontStyle: "bold" },
+      columnStyles: hasImages ? { 0: { cellWidth: imgCellW } } : {},
+      rowPageBreak: "avoid",
+      didDrawCell: (data) => {
+        if (!hasImages) return;
+        if (data.section === "body" && data.column.index === 0) {
+          const b64 = imgMap[data.row.index];
+          if (b64) {
+            const x = data.cell.x + 1;
+            const y = data.cell.y + 1;
+            const size = Math.min(data.cell.height - 2, imgCellW - 2);
+            try {
+              doc.addImage(b64, "JPEG", x, y, size, size);
+            } catch {
+              // skip if format not supported
+            }
+          }
+        }
+      },
+    });
+
+    doc.save(`${filename}.pdf`);
+    return;
+  }
+
+  // ── Word ─────────────────────────────────────────────────────────────────
+  if (format === "word") {
+    const {
+      Document, Packer, Paragraph, Table, TableRow, TableCell,
+      TextRun, WidthType, AlignmentType, BorderStyle, ImageRun,
+    } = await import("docx");
+    const { saveAs } = await import("file-saver");
+
+    // Pre-fetch image buffers
+    const bufMap: Record<number, ArrayBuffer> = {};
+    await Promise.all(
+      rows.map(async (r, i) => {
+        if (r["_photoUrl"]) {
+          const buf = await fetchBuffer(r["_photoUrl"]);
+          if (buf) bufMap[i] = buf;
+        }
+      })
+    );
+
+    const hasImages = Object.keys(bufMap).length > 0;
+    const allColumns = hasImages ? ["Photo", ...columns] : columns;
+
+    const borderStyle = { style: BorderStyle.SINGLE, size: 4, color: "E5E7EB" };
+    const tableBorders = {
+      top: borderStyle, bottom: borderStyle,
+      left: borderStyle, right: borderStyle,
+      insideHorizontal: borderStyle, insideVertical: borderStyle,
+    };
+
+    const headerCells = allColumns.map(
+      (col) =>
+        new TableCell({
+          shading: { fill: "000080" },
+          children: [
+            new Paragraph({
+              children: [new TextRun({ text: col, bold: true, color: "FFFFFF", size: 18 })],
+            }),
+          ],
+        })
+    );
+
+    const dataRows = await Promise.all(
+      rows.map(async (r, i) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const cells: any[] = [];
+
+        if (hasImages) {
+          const buf = bufMap[i];
+          cells.push(
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: buf
+                    ? [
+                        new ImageRun({
+                          data: buf,
+                          transformation: { width: 40, height: 40 },
+                          type: "jpg",
+                        }),
+                      ]
+                    : [new TextRun("—")],
+                }),
+              ],
+            })
+          );
+        }
+
+        columns.forEach((c) => {
+          cells.push(
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [new TextRun({ text: r[c] ?? "—", size: 18 })],
+                }),
+              ],
+            })
+          );
+        });
+
+        return new TableRow({ children: cells });
+      })
+    );
+
+    const table = new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      borders: tableBorders,
+      rows: [new TableRow({ children: headerCells, tableHeader: true }), ...dataRows],
+    });
+
+    const wordDoc = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({ text: filename.replace(/_/g, " "), bold: true, size: 32, color: "000080" }),
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 300 },
+            }),
+            table,
+          ],
+        },
+      ],
+    });
+
+    const blob = await Packer.toBlob(wordDoc);
+    saveAs(blob, `${filename}.docx`);
+    return;
+  }
+}
+
+// ── Export dropdown ──────────────────────────────────────────────────────────
+
+function ExportMenu({ onExport, disabled }: { onExport: (fmt: ExportFormat) => void; disabled?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const formats: { key: ExportFormat; label: string }[] = [
+    { key: "csv",   label: "CSV (.csv)" },
+    { key: "excel", label: "Excel (.xlsx)" },
+    { key: "pdf",   label: "PDF (.pdf)" },
+    { key: "word",  label: "Word (.docx)" },
+  ];
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        disabled={disabled}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] bg-white px-3 py-2 text-sm font-medium text-[#000080] hover:bg-[#000080]/5 disabled:opacity-40"
+      >
+        <Download className="h-4 w-4" />
+        Export
+        <ChevronDown className="h-3.5 w-3.5" />
+      </button>
+      {open && (
+        <div className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-[#E5E7EB] bg-white py-1 shadow-lg">
+          {formats.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => { onExport(f.key); setOpen(false); }}
+              className="block w-full px-4 py-2 text-left text-sm text-[#374151] hover:bg-gray-50"
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Birthday card (directory-style) ─────────────────────────────────────────
+
+function BirthdayCard({ u, onSMS, onEmail }: {
+  u: UserResponse;
+  onSMS: () => void;
+  onEmail: () => void;
+}) {
+  const bg = avatarColor(u.id);
+  const name = fullName(u);
+  const date = fmtBirthdayDate(u);
+  const phone = u.phoneNumber
+    ? `+${u.countryCode ?? ""} ${u.phoneNumber}`.trim()
+    : null;
+
+  return (
+    <div className="flex flex-col rounded-xl border border-[#E5E7EB] bg-white p-5 transition-shadow hover:shadow-md">
+      {/* Avatar + badge */}
+      <div className="mb-3 flex items-start justify-between">
+        {u.profilePictureUrl ? (
+          <img
+            src={u.profilePictureUrl}
+            alt={name}
+            className="h-14 w-14 rounded-full object-cover"
+          />
+        ) : (
+          <div
+            className={`flex h-14 w-14 items-center justify-center rounded-full ${bg} text-lg font-bold text-[#000080]`}
+          >
+            {initials(u)}
+          </div>
+        )}
+        <span className="rounded-full bg-pink-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-pink-700">
+          🎂 Birthday
+        </span>
+      </div>
+
+      {/* Info */}
+      <h3 className="text-sm font-bold text-[#111827]">{name}</h3>
+      <p className="mt-0.5 text-xs font-medium text-[#6B7280]">🗓 {date}</p>
+      {phone && <p className="mt-1 text-xs text-[#374151]">📞 {phone}</p>}
+      {u.email && (
+        <p className="mt-0.5 truncate text-xs text-[#000080]">{u.email}</p>
+      )}
+
+      {/* Actions */}
+      <div className="mt-auto flex items-center gap-2 pt-4">
+        <button
+          onClick={onSMS}
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080]/5"
+        >
+          <MessageIcon /> SMS
+        </button>
+        <button
+          onClick={onEmail}
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080]/5"
+        >
+          <MailIcon /> Email
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Anniversary card (directory-style) ──────────────────────────────────────
+
+function AnniversaryCard({ u, onSMS, onEmail }: {
+  u: UserResponse;
+  onSMS: () => void;
+  onEmail: () => void;
+}) {
+  const bg = avatarColor(u.id);
+  const coupleName = fullName(u) + (u.spouse ? ` & ${fullName(u.spouse)}` : "");
+  const date = fmtWeddingDate(u);
+  const phone = u.phoneNumber
+    ? `+${u.countryCode ?? ""} ${u.phoneNumber}`.trim()
+    : null;
+
+  return (
+    <div className="flex flex-col rounded-xl border border-[#E5E7EB] bg-white p-5 transition-shadow hover:shadow-md">
+      {/* Avatar + badge */}
+      <div className="mb-3 flex items-start justify-between">
+        {u.couplePictureUrl || u.profilePictureUrl ? (
+          <img
+            src={u.couplePictureUrl ?? u.profilePictureUrl!}
+            alt={coupleName}
+            className="h-14 w-14 rounded-full object-cover"
+          />
+        ) : (
+          <div
+            className={`flex h-14 w-14 items-center justify-center rounded-full ${bg} text-lg font-bold text-[#000080]`}
+          >
+            {initials(u)}
+          </div>
+        )}
+        <span className="rounded-full bg-red-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-red-700">
+          💍 Anniversary
+        </span>
+      </div>
+
+      {/* Info */}
+      <h3 className="text-sm font-bold text-[#111827] leading-snug">{coupleName}</h3>
+      <p className="mt-0.5 text-xs font-medium text-[#6B7280]">🗓 {date}</p>
+      {phone && <p className="mt-1 text-xs text-[#374151]">📞 {phone}</p>}
+      {u.email && (
+        <p className="mt-0.5 truncate text-xs text-[#000080]">{u.email}</p>
+      )}
+
+      {/* Actions */}
+      <div className="mt-auto flex items-center gap-2 pt-4">
+        <button
+          onClick={onSMS}
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080]/5"
+        >
+          <MessageIcon /> SMS
+        </button>
+        <button
+          onClick={onEmail}
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080]/5"
+        >
+          <MailIcon /> Email
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CelebrationsPage() {
   const router = useRouter();
@@ -92,15 +574,17 @@ export default function CelebrationsPage() {
   const [birthdays, setBirthdays] = useState<UserResponse[]>([]);
   const [bdLoading, setBdLoading] = useState(false);
   const [bdError, setBdError] = useState("");
-  const [bFrom, setBFrom] = useState(monthStartISO());
-  const [bTo, setBTo] = useState(todayISO());
+  const [bFrom, setBFrom] = useState(thisWeekStartISO);
+  const [bTo, setBTo] = useState(thisWeekEndISO);
+  const [bdPage, setBdPage] = useState(1);
 
   // Anniversaries
   const [anniversaries, setAnniversaries] = useState<UserResponse[]>([]);
   const [annLoading, setAnnLoading] = useState(false);
   const [annError, setAnnError] = useState("");
-  const [aFrom, setAFrom] = useState(monthStartISO());
-  const [aTo, setATo] = useState(todayISO());
+  const [aFrom, setAFrom] = useState(thisWeekStartISO);
+  const [aTo, setATo] = useState(thisWeekEndISO);
+  const [annPage, setAnnPage] = useState(1);
 
   // Thanksgiving (Celebrations)
   const [celebrations, setCelebrations] = useState<CelebrationResponse[]>([]);
@@ -110,6 +594,9 @@ export default function CelebrationsPage() {
   const [celebTotalPages, setCelebTotalPages] = useState(1);
   const [celebTotalItems, setCelebTotalItems] = useState(0);
   const [tgStatus, setTgStatus] = useState<ThanksgivingStatus>("All");
+
+  // Exporting state
+  const [exporting, setExporting] = useState(false);
 
   // Modals
   const [showSMSModal, setShowSMSModal] = useState(false);
@@ -123,42 +610,32 @@ export default function CelebrationsPage() {
     { key: "thanksgiving", label: "Thanksgiving" },
   ];
 
-  // ── Fetch birthdays ──────────────────────────────────────────────────────────
+  // ── Fetch ───────────────────────────────────────────────────────────────────
+
   const fetchBirthdays = useCallback(async (from: string, to: string) => {
-    setBdLoading(true);
-    setBdError("");
+    setBdLoading(true); setBdError("");
     try {
-      const f = isoToParts(from);
-      const t = isoToParts(to);
+      const f = isoToParts(from); const t = isoToParts(to);
       const res = await getBirthdays(f.day, f.month, t.day, t.month, 0, ITEMS_PER_PAGE);
       setBirthdays(res.content ?? []);
     } catch (err) {
       setBdError(err instanceof Error ? err.message : "Failed to load birthdays.");
-    } finally {
-      setBdLoading(false);
-    }
+    } finally { setBdLoading(false); }
   }, []);
 
-  // ── Fetch anniversaries ──────────────────────────────────────────────────────
   const fetchAnniversaries = useCallback(async (from: string, to: string) => {
-    setAnnLoading(true);
-    setAnnError("");
+    setAnnLoading(true); setAnnError("");
     try {
-      const f = isoToParts(from);
-      const t = isoToParts(to);
+      const f = isoToParts(from); const t = isoToParts(to);
       const res = await getWeddingAnniversaries(f.day, f.month, t.day, t.month, 0, ITEMS_PER_PAGE);
       setAnniversaries(res.content ?? []);
     } catch (err) {
       setAnnError(err instanceof Error ? err.message : "Failed to load anniversaries.");
-    } finally {
-      setAnnLoading(false);
-    }
+    } finally { setAnnLoading(false); }
   }, []);
 
-  // ── Fetch thanksgiving / celebrations ───────────────────────────────────────
   const fetchCelebrations = useCallback(async (page: number) => {
-    setCelebLoading(true);
-    setCelebError("");
+    setCelebLoading(true); setCelebError("");
     try {
       const res = await getCelebrations(page - 1, CELEB_PER_PAGE);
       setCelebrations(res.content ?? []);
@@ -166,9 +643,7 @@ export default function CelebrationsPage() {
       setCelebTotalItems(res.totalElements ?? 0);
     } catch (err) {
       setCelebError(err instanceof Error ? err.message : "Failed to load thanksgiving entries.");
-    } finally {
-      setCelebLoading(false);
-    }
+    } finally { setCelebLoading(false); }
   }, []);
 
   useEffect(() => {
@@ -183,19 +658,20 @@ export default function CelebrationsPage() {
     if (activeTab === "thanksgiving") fetchCelebrations(celebPage);
   }, [activeTab, celebPage, fetchCelebrations]);
 
-  // ── Filter helpers ───────────────────────────────────────────────────────────
+  // ── Filter ──────────────────────────────────────────────────────────────────
+
   const q = search.toLowerCase().trim();
 
-  const filteredBirthdays = birthdays.filter((u) => {
-    if (!q) return true;
-    return fullName(u).toLowerCase().includes(q);
-  });
+  const filteredBirthdays = birthdays.filter((u) =>
+    !q || fullName(u).toLowerCase().includes(q)
+  );
 
   const filteredAnniversaries = anniversaries.filter((u) => {
     if (!q) return true;
-    const name = fullName(u).toLowerCase();
-    const spouseName = u.spouse ? fullName(u.spouse).toLowerCase() : "";
-    return name.includes(q) || spouseName.includes(q);
+    return (
+      fullName(u).toLowerCase().includes(q) ||
+      (u.spouse ? fullName(u.spouse).toLowerCase().includes(q) : false)
+    );
   });
 
   const filteredCelebrations = celebrations.filter((c) => {
@@ -204,7 +680,21 @@ export default function CelebrationsPage() {
     return fullName(c.requester).toLowerCase().includes(q);
   });
 
+  // Pagination for card grids
+  const bdTotalPages = Math.max(1, Math.ceil(filteredBirthdays.length / CARDS_PER_PAGE));
+  const safeBdPage = Math.min(bdPage, bdTotalPages);
+  const paginatedBirthdays = filteredBirthdays.slice(
+    (safeBdPage - 1) * CARDS_PER_PAGE, safeBdPage * CARDS_PER_PAGE
+  );
+
+  const annTotalPages = Math.max(1, Math.ceil(filteredAnniversaries.length / CARDS_PER_PAGE));
+  const safeAnnPage = Math.min(annPage, annTotalPages);
+  const paginatedAnniversaries = filteredAnniversaries.slice(
+    (safeAnnPage - 1) * CARDS_PER_PAGE, safeAnnPage * CARDS_PER_PAGE
+  );
+
   // ── Mark treated ─────────────────────────────────────────────────────────────
+
   const handleMarkTreated = async (id: string) => {
     try {
       await markCelebrationsAsTreated([id]);
@@ -214,8 +704,25 @@ export default function CelebrationsPage() {
     }
   };
 
+  // ── Export ────────────────────────────────────────────────────────────────────
+
+  const handleBirthdayExport = async (fmt: ExportFormat) => {
+    setExporting(true);
+    try {
+      await exportData(fmt, buildBirthdayRows(filteredBirthdays), "Birthdays_Celebrants", "Date of Birth");
+    } finally { setExporting(false); }
+  };
+
+  const handleAnniversaryExport = async (fmt: ExportFormat) => {
+    setExporting(true);
+    try {
+      await exportData(fmt, buildAnniversaryRows(filteredAnniversaries), "Anniversary_Celebrants", "Wedding Anniversary Date");
+    } finally { setExporting(false); }
+  };
+
   return (
     <DashboardLayout>
+      {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -227,7 +734,7 @@ export default function CelebrationsPage() {
               <p className="text-sm text-[#6B7280]">Birthdays, anniversaries, and thanksgiving celebrations</p>
             </div>
           </div>
-          {activeTab === "thanksgiving" ? (
+          {activeTab === "thanksgiving" && (
             <Button
               variant="primary"
               onClick={() => router.push("/celebrations/add?type=Thanksgiving")}
@@ -239,7 +746,7 @@ export default function CelebrationsPage() {
             >
               Add Thanksgiving Request
             </Button>
-          ) : null}
+          )}
         </div>
       </div>
 
@@ -260,15 +767,27 @@ export default function CelebrationsPage() {
         ))}
       </div>
 
-      {/* ── Birthdays ── */}
+      {/* ── Birthdays ────────────────────────────────────────────────────────── */}
       {activeTab === "birthdays" && (
         <>
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <div className="w-full sm:w-72">
-              <SearchBar value={search} onChange={setSearch} onSearch={() => {}} placeholder="Search birthdays..." />
+          {/* Toolbar */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="w-full sm:w-72">
+                <SearchBar value={search} onChange={(v) => { setSearch(v); setBdPage(1); }} onSearch={() => {}} placeholder="Search birthdays…" />
+              </div>
+              <DateRangePicker from={bFrom} to={bTo} onFromChange={(v) => { setBFrom(v); setBdPage(1); }} onToChange={(v) => { setBTo(v); setBdPage(1); }} />
             </div>
-            <DateRangePicker from={bFrom} to={bTo} onFromChange={setBFrom} onToChange={setBTo} />
+            <ExportMenu onExport={handleBirthdayExport} disabled={exporting || filteredBirthdays.length === 0} />
           </div>
+
+          {/* Stats */}
+          {!bdLoading && filteredBirthdays.length > 0 && (
+            <div className="mb-4 flex items-center gap-2 text-sm text-[#6B7280]">
+              <span className="font-medium text-[#000080]">{filteredBirthdays.length}</span>
+              {filteredBirthdays.length === 1 ? " birthday" : " birthdays"} in this period
+            </div>
+          )}
 
           {bdError && (
             <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -277,55 +796,63 @@ export default function CelebrationsPage() {
           )}
 
           {bdLoading ? (
-            <div className="py-12 text-center text-gray-400">Loading…</div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {filteredBirthdays.map((u) => (
-                <div key={u.id} className="rounded-xl border border-[#E5E7EB] bg-white p-5">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E5E7EB]">
-                      {u.profilePictureUrl
-                        ? <img src={u.profilePictureUrl} alt="" className="h-12 w-12 rounded-full object-cover" />
-                        : <UserIcon />}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-[#111827]">{fullName(u)}</p>
-                      <p className="text-xs text-[#6B7280]">{fmtBirthday(u)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => { setSmsTarget(u); setShowSMSModal(true); }}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080]/5"
-                    >
-                      <MessageIcon /> Send SMS
-                    </button>
-                    <button
-                      onClick={() => { setEmailTarget(u); setShowEmailModal(true); }}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080]/5"
-                    >
-                      <MailIcon /> Send Email
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {filteredBirthdays.length === 0 && (
-                <div className="col-span-3 py-8 text-center text-gray-400">No birthdays found.</div>
-              )}
+            <div className="flex h-48 items-center justify-center gap-2 text-gray-400">
+              <svg className="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Loading…
             </div>
+          ) : filteredBirthdays.length === 0 ? (
+            <div className="rounded-xl border border-[#E5E7EB] bg-white p-12 text-center text-sm text-gray-400">
+              No birthdays found for this period.
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {paginatedBirthdays.map((u) => (
+                  <BirthdayCard
+                    key={u.id}
+                    u={u}
+                    onSMS={() => { setSmsTarget(u); setShowSMSModal(true); }}
+                    onEmail={() => { setEmailTarget(u); setShowEmailModal(true); }}
+                  />
+                ))}
+              </div>
+              <div className="mt-6">
+                <Pagination
+                  currentPage={safeBdPage}
+                  totalPages={bdTotalPages}
+                  totalItems={filteredBirthdays.length}
+                  onPageChange={setBdPage}
+                />
+              </div>
+            </>
           )}
         </>
       )}
 
-      {/* ── Anniversaries ── */}
+      {/* ── Anniversaries ─────────────────────────────────────────────────────── */}
       {activeTab === "anniversaries" && (
         <>
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <div className="w-full sm:w-72">
-              <SearchBar value={search} onChange={setSearch} onSearch={() => {}} placeholder="Search anniversaries..." />
+          {/* Toolbar */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="w-full sm:w-72">
+                <SearchBar value={search} onChange={(v) => { setSearch(v); setAnnPage(1); }} onSearch={() => {}} placeholder="Search anniversaries…" />
+              </div>
+              <DateRangePicker from={aFrom} to={aTo} onFromChange={(v) => { setAFrom(v); setAnnPage(1); }} onToChange={(v) => { setATo(v); setAnnPage(1); }} />
             </div>
-            <DateRangePicker from={aFrom} to={aTo} onFromChange={setAFrom} onToChange={setATo} />
+            <ExportMenu onExport={handleAnniversaryExport} disabled={exporting || filteredAnniversaries.length === 0} />
           </div>
+
+          {/* Stats */}
+          {!annLoading && filteredAnniversaries.length > 0 && (
+            <div className="mb-4 flex items-center gap-2 text-sm text-[#6B7280]">
+              <span className="font-medium text-[#000080]">{filteredAnniversaries.length}</span>
+              {filteredAnniversaries.length === 1 ? " anniversary" : " anniversaries"} in this period
+            </div>
+          )}
 
           {annError && (
             <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -334,54 +861,48 @@ export default function CelebrationsPage() {
           )}
 
           {annLoading ? (
-            <div className="py-12 text-center text-gray-400">Loading…</div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {filteredAnniversaries.map((u) => (
-                <div key={u.id} className="rounded-xl border border-[#E5E7EB] bg-white p-5">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E5E7EB]">
-                      {u.couplePictureUrl
-                        ? <img src={u.couplePictureUrl} alt="" className="h-12 w-12 rounded-full object-cover" />
-                        : <HeartIcon />}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-[#111827]">
-                        {fullName(u)}{u.spouse ? ` & ${fullName(u.spouse)}` : ""}
-                      </p>
-                      <p className="text-xs text-[#6B7280]">{fmtBirthday(u)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => { setSmsTarget(u); setShowSMSModal(true); }}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080]/5"
-                    >
-                      <MessageIcon /> Send SMS
-                    </button>
-                    <button
-                      onClick={() => { setEmailTarget(u); setShowEmailModal(true); }}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080]/5"
-                    >
-                      <MailIcon /> Send Email
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {filteredAnniversaries.length === 0 && (
-                <div className="col-span-3 py-8 text-center text-gray-400">No anniversaries found.</div>
-              )}
+            <div className="flex h-48 items-center justify-center gap-2 text-gray-400">
+              <svg className="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Loading…
             </div>
+          ) : filteredAnniversaries.length === 0 ? (
+            <div className="rounded-xl border border-[#E5E7EB] bg-white p-12 text-center text-sm text-gray-400">
+              No anniversaries found for this period.
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {paginatedAnniversaries.map((u) => (
+                  <AnniversaryCard
+                    key={u.id}
+                    u={u}
+                    onSMS={() => { setSmsTarget(u); setShowSMSModal(true); }}
+                    onEmail={() => { setEmailTarget(u); setShowEmailModal(true); }}
+                  />
+                ))}
+              </div>
+              <div className="mt-6">
+                <Pagination
+                  currentPage={safeAnnPage}
+                  totalPages={annTotalPages}
+                  totalItems={filteredAnniversaries.length}
+                  onPageChange={setAnnPage}
+                />
+              </div>
+            </>
           )}
         </>
       )}
 
-      {/* ── Thanksgiving ── */}
+      {/* ── Thanksgiving ──────────────────────────────────────────────────────── */}
       {activeTab === "thanksgiving" && (
         <>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div className="w-full sm:w-72">
-              <SearchBar value={search} onChange={setSearch} onSearch={() => {}} placeholder="Search thanksgiving..." />
+              <SearchBar value={search} onChange={setSearch} onSearch={() => {}} placeholder="Search thanksgiving…" />
             </div>
           </div>
 
@@ -422,7 +943,12 @@ export default function CelebrationsPage() {
                   <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">No thanksgiving entries found.</td></tr>
                 ) : (
                   filteredCelebrations.map((row) => (
-                    <tr key={row.id} className="border-b border-[#F3F4F6] hover:bg-gray-50" style={{ height: "56px" }}>
+                    <tr
+                      key={row.id}
+                      className="border-b border-[#F3F4F6] hover:bg-gray-50 cursor-pointer"
+                      style={{ height: "56px" }}
+                      onClick={() => router.push(`/celebrations/${row.id}`)}
+                    >
                       <td className="px-4 py-3 text-sm text-[#374151]">{fullName(row.requester)}</td>
                       <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                         {(row.celebrationType ?? "—").replace(/_/g, " ")}
@@ -438,7 +964,7 @@ export default function CelebrationsPage() {
                           {(row.celebrationStatus ?? "PENDING").replace(/_/g, " ")}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <ActionDropdown
                           actions={[
                             { label: "View", onClick: () => router.push(`/celebrations/${row.id}`) },

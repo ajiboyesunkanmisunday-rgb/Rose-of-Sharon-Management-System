@@ -1,21 +1,20 @@
 const https = require("https");
 
 /**
- * General API proxy for PATCH / PUT JSON requests.
+ * Universal API proxy — handles ALL HTTP methods (GET, POST, PATCH, PUT, DELETE).
  *
- * The Netlify reverse-proxy redirect (/api/* → backend) forwards the browser's
- * Origin header to the backend. The backend CORS filter does not list PATCH in
- * its allowed methods, so every PATCH returns 403 "Invalid CORS request".
+ * The Netlify CDN redirect (/api/* → backend) forwards the browser's Origin header.
+ * The backend CORS filter + token checker now rejects these requests.
+ * This function calls the backend server-to-server (no Origin header) so the CORS
+ * filter never runs, and the Authorization token is forwarded correctly.
  *
- * This function receives the request from the browser, strips the Origin header,
- * and forwards the call directly to the backend server-to-server (no CORS check).
- *
- * Called by apiFetchRaw() in api.ts whenever method is PATCH or PUT.
+ * Called by apiFetchRaw() in api.ts for every request whose path starts with /api/.
  * The actual target path is passed as the `_path` query parameter, and any
- * original query string as `_qs`.
+ * original query string as `_qs`. The actual HTTP method is passed as `_method`.
  *
  * Example:
- *   PATCH /.netlify/functions/api-proxy?_path=/api/v1/users/member/abc&_method=PATCH
+ *   POST /.netlify/functions/api-proxy?_path=/api/v1/users&_method=GET
+ *   POST /.netlify/functions/api-proxy?_path=/api/v1/users/abc&_method=PATCH
  *   Body: { "firstName": "...", ... }
  */
 exports.handler = async function (event) {
@@ -33,14 +32,24 @@ exports.handler = async function (event) {
   }
 
   const backendPath = targetPath + (targetQuery ? `?${targetQuery}` : "");
-  const rawBody = event.body || "";
 
-  // Only forward the Authorization header; deliberately omit Origin so the
-  // backend CORS filter does not run and block the request.
-  const forwardHeaders = {
-    "Content-Type": "application/json",
-    "Content-Length": Buffer.byteLength(rawBody),
-  };
+  // Netlify base64-encodes bodies when the content is binary or the platform
+  // determines it necessary. Decode before forwarding so the backend receives
+  // the original UTF-8 JSON instead of a base64 string.
+  let rawBody = event.body || "";
+  if (event.isBase64Encoded && rawBody) {
+    rawBody = Buffer.from(rawBody, "base64").toString("utf8");
+  }
+
+  // Only forward Authorization (and Content-Type for requests with a body).
+  // Deliberately omit Origin so the backend CORS filter does not run and
+  // block the request.
+  const forwardHeaders = {};
+
+  if (rawBody) {
+    forwardHeaders["Content-Type"] = "application/json";
+    forwardHeaders["Content-Length"] = Buffer.byteLength(rawBody);
+  }
 
   const auth =
     event.headers?.authorization ||

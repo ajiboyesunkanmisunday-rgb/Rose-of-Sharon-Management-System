@@ -86,7 +86,7 @@ export default function EditMemberPage() {
       await updateMember(id, {
         firstName: firstName || undefined,
         lastName: lastName || undefined,
-        email: email || undefined,
+        // email is intentionally omitted — backend rejects email changes for admin accounts
         phoneNumber: phone || undefined,
         sex: gender || undefined,
         dayOfBirth: dobDay ? Number(dobDay) : undefined,
@@ -206,15 +206,15 @@ export default function EditMemberPage() {
                   />
                 </div>
 
-                {/* Email */}
+                {/* Email — display only, not sent on update */}
                 <div>
                   <label className={labelStyles}>Email</label>
                   <input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter Email"
-                    className={inputStyles}
+                    readOnly
+                    className={`${inputStyles} cursor-not-allowed bg-[#F9FAFB] text-[#9CA3AF]`}
+                    title="Email cannot be changed"
                   />
                 </div>
 

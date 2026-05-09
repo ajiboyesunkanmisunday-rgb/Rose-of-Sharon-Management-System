@@ -6,7 +6,9 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import { FormField, SelectField, TextAreaField } from "@/components/ui/FormField";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 import { getEvent, updateEvent } from "@/lib/api";
+import { NIGERIA_STATES, COUNTRIES } from "@/lib/nigeria-states";
 
 const CATEGORY_OPTIONS = [
   { label: "Service",         value: "SERVICE"         },
@@ -22,24 +24,27 @@ const LOCATION_TYPE_OPTIONS = [
   { label: "Hybrid",   value: "HYBRID"   },
 ];
 
-const NIGERIA_STATES = [
-  "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
-  "Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo",
-  "Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa",
-  "Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba",
-  "Yobe","Zamfara",
-];
-
-function epochToTimeInput(ms?: number): string {
-  if (!ms) return "";
-  const d = new Date(ms);
+function epochToTimeInput(ms?: number | null): string {
+  if (!ms || isNaN(Number(ms))) return "";
+  const d = new Date(Number(ms));
+  if (isNaN(d.getTime())) return "";
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 function timeToEpochMs(date: string, time: string): number | undefined {
   if (!date) return undefined;
   const t = time || "00:00";
-  return new Date(`${date}T${t}:00`).getTime();
+  const ms = new Date(`${date}T${t}:00`).getTime();
+  return isNaN(ms) ? undefined : ms;
+}
+
+/** Ensure date is YYYY-MM-DD for <input type="date">. */
+function normalizeDate(raw?: string | null): string {
+  if (!raw) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
 }
 
 export default function EditEventClient() {
@@ -87,7 +92,7 @@ export default function EditEventClient() {
         preacher:               ev.preacher ?? "",
         topic:                  ev.topic ?? "",
         category:               ev.eventCategory ?? "",
-        date:                   ev.date ?? "",
+        date:                   normalizeDate(ev.date),
         startTime:              epochToTimeInput(ev.startTime),
         endTime:                epochToTimeInput(ev.endTime),
         locationType:           ev.locationType ?? "",
@@ -95,7 +100,7 @@ export default function EditEventClient() {
         street:                 ev.street ?? "",
         city:                   ev.city ?? "",
         state:                  ev.state ?? "",
-        country:                ev.country ?? "Nigeria",
+        country:                ev.country ?? "",
         additionalInstructions: ev.additionalInstructions ?? "",
         eFlyer:                 ev.eflyer ?? "",
         requiresRegistration:   ev.requiresRegistration ?? false,
@@ -113,18 +118,21 @@ export default function EditEventClient() {
     setFormData((prev) => ({ ...prev, [name]: val }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
-    const dateEl = document.getElementById("event-date-input") as HTMLInputElement | null;
-    const date = dateEl?.value || formData.date || "";
+    const fd = new FormData(e.currentTarget);
+    const rawDate = (fd.get("date") as string | null) ?? "";
+    const date = normalizeDate(rawDate) || normalizeDate(formData.date);
 
     if (!date) {
       setError("Please select a date for the event.");
-      setLoading(false);
       return;
     }
+
+    const startTimeRaw = (fd.get("startTime") as string | null) ?? formData.startTime;
+    const endTimeRaw   = (fd.get("endTime")   as string | null) ?? formData.endTime;
 
     setLoading(true);
     try {
@@ -134,8 +142,8 @@ export default function EditEventClient() {
         topic:                  formData.topic || undefined,
         category:               formData.category || undefined,
         date,
-        startTime:              timeToEpochMs(date, formData.startTime),
-        endTime:                timeToEpochMs(date, formData.endTime),
+        startTime:              timeToEpochMs(date, startTimeRaw),
+        endTime:                timeToEpochMs(date, endTimeRaw),
         locationType:           formData.locationType || undefined,
         virtualMeetingLink:     formData.virtualMeetingLink || undefined,
         street:                 formData.street || undefined,
@@ -178,7 +186,7 @@ export default function EditEventClient() {
           </div>
 
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-3">
-            <FormField id="event-date-input" label="Event Date" type="date" name="date" value={formData.date} onChange={handleChange} onInput={handleChange as React.FormEventHandler} required />
+            <FormField label="Event Date" type="date" name="date" value={formData.date} onChange={handleChange} required />
             <FormField label="Start Time" type="time" name="startTime" value={formData.startTime} onChange={handleChange} />
             <FormField label="End Time"   type="time" name="endTime"   value={formData.endTime}   onChange={handleChange} />
           </div>
@@ -193,9 +201,22 @@ export default function EditEventClient() {
             <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
               <FormField label="Street / Venue"  name="street"  value={formData.street}  onChange={handleChange} placeholder="Street address or venue name" />
               <FormField label="City"             name="city"    value={formData.city}    onChange={handleChange} placeholder="City" />
-              <SelectField label="State" name="state" value={formData.state} onChange={handleChange}
-                options={NIGERIA_STATES.map((s) => ({ label: s, value: s }))} />
-              <FormField label="Country" name="country" value={formData.country} onChange={handleChange} placeholder="Country" />
+              <SearchableSelect
+                label="State"
+                placeholder="Select state…"
+                searchPlaceholder="Search states…"
+                options={NIGERIA_STATES}
+                value={formData.state}
+                onChange={(v) => setFormData((prev) => ({ ...prev, state: v }))}
+              />
+              <SearchableSelect
+                label="Country"
+                placeholder="Select country…"
+                searchPlaceholder="Search countries…"
+                options={COUNTRIES}
+                value={formData.country}
+                onChange={(v) => setFormData((prev) => ({ ...prev, country: v }))}
+              />
             </div>
           )}
 

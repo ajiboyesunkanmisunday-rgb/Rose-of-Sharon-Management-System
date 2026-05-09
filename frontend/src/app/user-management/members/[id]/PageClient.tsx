@@ -145,6 +145,7 @@ export default function ViewMemberProfilePage() {
     try {
       await markUserAsInactive(id, "Marked inactive by admin");
       setActionMsg("Member marked as inactive.");
+      fetchUser(); // refresh so the profile reflects the new status
     } catch (err) {
       setActionMsg(err instanceof Error ? err.message : "Failed to mark inactive.");
     } finally {

@@ -99,7 +99,7 @@ export default function EditSecondTimerPage() {
         middleName: middleName || undefined,
         lastName: lastName || undefined,
         sex: gender || undefined,
-        email: email || undefined,
+        // email intentionally omitted — backend rejects email changes for admin accounts
         countryCode: rawCode || undefined,
         phoneNumber: phone || undefined,
         dayOfBirth: dobDay ? Number(dobDay) : undefined,
@@ -189,7 +189,7 @@ export default function EditSecondTimerPage() {
             <PhoneInput label="Mobile Number" code={countryCode} number={phone} onCodeChange={setCountryCode} onNumberChange={setPhone} placeholder="Enter Mobile Number" />
             <div>
               <label className={labelStyles}>Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter Email" className={inputStyles} />
+              <input type="email" value={email} readOnly className={`${inputStyles} cursor-not-allowed bg-[#F9FAFB] text-[#9CA3AF]`} title="Email cannot be changed" />
             </div>
             <div>
               <label className={labelStyles}>Gender</label>
