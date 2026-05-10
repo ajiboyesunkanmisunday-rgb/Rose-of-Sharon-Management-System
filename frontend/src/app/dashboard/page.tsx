@@ -4,13 +4,13 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Users, UserPlus, UserCheck, Star, Cake, Heart, PhoneCall } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { urgentFollowUps, birthdayReminders } from "@/lib/mock-data";
 import {
   getMembers,
   getEMembers,
   getFirstTimers,
   getSecondTimers,
   getNewConverts,
+  getCelebrations,
 } from "@/lib/api";
 
 const attendanceData = [
@@ -31,15 +31,34 @@ interface KpiStats {
   loading: boolean;
 }
 
+interface FollowUpItem {
+  id: string;
+  name: string;
+  phone: string;
+  category: string;
+  assignedOfficer: string;
+}
+
+interface CelebrationItem {
+  id: string;
+  name: string;
+  type: string;
+  date: string;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const maxAttendance = Math.max(...attendanceData.map((d) => d.value));
-  const topFollowUps = urgentFollowUps.slice(0, 5);
-  const upcomingCelebrations = birthdayReminders.slice(0, 5);
 
   const [stats, setStats] = useState<KpiStats>({
     members: 0, eMembers: 0, firstTimers: 0, secondTimers: 0, newConverts: 0, loading: true,
   });
+
+  const [topFollowUps, setTopFollowUps] = useState<FollowUpItem[]>([]);
+  const [followUpsLoading, setFollowUpsLoading] = useState(true);
+
+  const [upcomingCelebrations, setUpcomingCelebrations] = useState<CelebrationItem[]>([]);
+  const [celebrationsLoading, setCelebrationsLoading] = useState(true);
 
   useEffect(() => {
     async function loadStats() {
@@ -64,6 +83,63 @@ export default function DashboardPage() {
       }
     }
     loadStats();
+  }, []);
+
+  // Load first-timers with noOfCalls === 0 for urgent follow-up
+  useEffect(() => {
+    setFollowUpsLoading(true);
+    getFirstTimers(0, 20)
+      .then((res) => {
+        const items: FollowUpItem[] = (res.content ?? [])
+          .filter((u) => (u.noOfCalls ?? 0) === 0)
+          .slice(0, 5)
+          .map((u) => {
+            const fullName = [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ");
+            const af = u.assignedFollowUp;
+            const officerName = af
+              ? [af.firstName, af.lastName].filter(Boolean).join(" ")
+              : "Unassigned";
+            return {
+              id: u.id,
+              name: fullName,
+              phone: u.phoneNumber ?? "",
+              category: "First Timer",
+              assignedOfficer: officerName,
+            };
+          });
+        setTopFollowUps(items);
+      })
+      .catch(() => setTopFollowUps([]))
+      .finally(() => setFollowUpsLoading(false));
+  }, []);
+
+  // Load birthday celebrations this week
+  useEffect(() => {
+    setCelebrationsLoading(true);
+    getCelebrations(0, 20)
+      .then((res) => {
+        const items: CelebrationItem[] = (res.content ?? [])
+          .filter((c) => c.celebrationType === "BIRTHDAY")
+          .slice(0, 5)
+          .map((c) => {
+            const req = c.requester;
+            const name = req
+              ? [req.firstName, req.lastName].filter(Boolean).join(" ")
+              : "Unknown";
+            const dateStr = c.date
+              ? new Date(c.date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
+              : "—";
+            return {
+              id: c.id,
+              name,
+              type: "Birthday",
+              date: dateStr,
+            };
+          });
+        setUpcomingCelebrations(items);
+      })
+      .catch(() => setUpcomingCelebrations([]))
+      .finally(() => setCelebrationsLoading(false));
   }, []);
 
   const totalPeople = stats.members + stats.eMembers + stats.firstTimers + stats.secondTimers + stats.newConverts;
@@ -103,9 +179,6 @@ export default function DashboardPage() {
       href: "/user-management/new-converts",
     },
   ];
-
-  const severityColor = (days: number) =>
-    days >= 10 ? "bg-red-100 text-red-700" : days >= 5 ? "bg-orange-100 text-orange-700" : "bg-yellow-100 text-yellow-800";
 
   return (
     <DashboardLayout>
@@ -156,25 +229,31 @@ export default function DashboardPage() {
             </button>
           </div>
           <div className="space-y-3">
-            {topFollowUps.map((f) => (
-              <div key={f.id} className="flex items-start justify-between gap-3 rounded-lg border border-[#E5E7EB] p-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-[#111827]">{f.name}</p>
-                  <p className="text-xs text-[#6B7280]">{f.phone}</p>
-                  <p className="mt-1 text-xs text-[#6B7280]">
-                    Assigned: <span className="text-[#374151]">{f.assignedOfficer}</span>
-                  </p>
+            {followUpsLoading ? (
+              <p className="text-sm text-[#6B7280] text-center py-4">Loading…</p>
+            ) : topFollowUps.length === 0 ? (
+              <p className="text-sm text-[#6B7280] text-center py-4">No urgent follow-ups.</p>
+            ) : (
+              topFollowUps.map((f) => (
+                <div key={f.id} className="flex items-start justify-between gap-3 rounded-lg border border-[#E5E7EB] p-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-[#111827]">{f.name}</p>
+                    <p className="text-xs text-[#6B7280]">{f.phone}</p>
+                    <p className="mt-1 text-xs text-[#6B7280]">
+                      Assigned: <span className="text-[#374151]">{f.assignedOfficer}</span>
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-yellow-100 text-yellow-800">
+                      Not called
+                    </span>
+                    <span className="rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[11px] font-medium text-[#374151]">
+                      {f.category}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col items-end gap-1.5">
-                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${severityColor(f.daysOverdue)}`}>
-                    {f.daysOverdue === 0 ? "Due today" : `${f.daysOverdue}d overdue`}
-                  </span>
-                  <span className="rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[11px] font-medium text-[#374151]">
-                    {f.category}
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -200,32 +279,33 @@ export default function DashboardPage() {
       <div className="mt-6 rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold text-[#111827]">Upcoming Birthdays &amp; Anniversaries</h2>
-          <span className="text-xs font-medium text-[#6B7280]">Next 30 days</span>
+          <span className="text-xs font-medium text-[#6B7280]">This week</span>
         </div>
         <div className="space-y-3">
-          {upcomingCelebrations.map((item) => (
-            <div key={item.id} className="flex items-center justify-between gap-3 rounded-lg border border-[#E5E7EB] p-3">
-              <div className="flex items-center gap-3">
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${item.type === "Birthday" ? "bg-pink-100" : "bg-purple-100"}`}>
-                  {item.type === "Birthday"
-                    ? <Cake className="h-5 w-5 text-pink-600" />
-                    : <Heart className="h-5 w-5 text-purple-600" />}
+          {celebrationsLoading ? (
+            <p className="text-sm text-[#6B7280] text-center py-4">Loading…</p>
+          ) : upcomingCelebrations.length === 0 ? (
+            <p className="text-sm text-[#6B7280] text-center py-4">No celebrations found.</p>
+          ) : (
+            upcomingCelebrations.map((item) => (
+              <div key={item.id} className="flex items-center justify-between gap-3 rounded-lg border border-[#E5E7EB] p-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pink-100">
+                    <Cake className="h-5 w-5 text-pink-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-[#111827]">{item.name}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-[#111827]">{item.name}</p>
-                  {item.phone && <p className="text-xs text-[#6B7280]">{item.phone}</p>}
+                <div className="flex flex-col items-end gap-1">
+                  <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium bg-pink-100 text-pink-700">
+                    {item.type}
+                  </span>
+                  <span className="text-[11px] font-medium text-[#6B7280]">{item.date}</span>
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${item.type === "Birthday" ? "bg-pink-100 text-pink-700" : "bg-purple-100 text-purple-700"}`}>
-                  {item.type}
-                </span>
-                <span className="text-[11px] font-medium text-[#6B7280]">
-                  {item.daysUntil === 0 ? "Today 🎉" : item.daysUntil === 1 ? "Tomorrow" : `In ${item.daysUntil} days`} · {item.date}
-                </span>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </DashboardLayout>

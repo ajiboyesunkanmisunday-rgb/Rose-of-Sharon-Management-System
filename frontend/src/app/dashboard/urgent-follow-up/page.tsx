@@ -1,47 +1,73 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import SearchBar from "@/components/ui/SearchBar";
 import Pagination from "@/components/ui/Pagination";
-import { urgentFollowUps } from "@/lib/mock-data";
+import { getFirstTimers, type UserResponse } from "@/lib/api";
 
 const ITEMS_PER_PAGE = 10;
+
+interface FollowUpRow {
+  id: string;
+  name: string;
+  phone: string;
+  serviceAttended: string;
+  assignedOfficer: string;
+}
+
+function toRow(u: UserResponse): FollowUpRow {
+  const name = [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ");
+  const af = u.assignedFollowUp;
+  const officerName = af
+    ? [af.firstName, af.lastName].filter(Boolean).join(" ")
+    : "Unassigned";
+  return {
+    id: u.id,
+    name,
+    phone: u.phoneNumber ?? "",
+    serviceAttended: u.serviceAttended ?? u.firstTimeService?.title ?? "—",
+    assignedOfficer: officerName,
+  };
+}
 
 export default function UrgentFollowUpPage() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [rows, setRows] = useState<FollowUpRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    getFirstTimers(0, 100)
+      .then((res) => {
+        const data = (res.content ?? [])
+          .filter((u) => (u.noOfCalls ?? 0) === 0)
+          .map(toRow);
+        setRows(data);
+      })
+      .catch(() => setRows([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return urgentFollowUps;
+    if (!search.trim()) return rows;
     const q = search.toLowerCase();
-    return urgentFollowUps.filter(
+    return rows.filter(
       (f) =>
         f.name.toLowerCase().includes(q) ||
         f.assignedOfficer.toLowerCase().includes(q) ||
-        f.category.toLowerCase().includes(q) ||
-        f.phone.toLowerCase().includes(q)
+        f.phone.toLowerCase().includes(q) ||
+        f.serviceAttended.toLowerCase().includes(q)
     );
-  }, [search]);
+  }, [search, rows]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated = filtered.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
-
-  const daysColor = (d: number) =>
-    d >= 10 ? "text-red-600 font-semibold" : d >= 5 ? "text-orange-600 font-semibold" : "text-yellow-700";
-
-  const statusBadge = (s: string) => {
-    const map: Record<string, string> = {
-      Critical: "bg-red-100 text-red-700",
-      Overdue: "bg-orange-100 text-orange-700",
-      "Due Today": "bg-yellow-100 text-yellow-800",
-    };
-    return <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${map[s] || "bg-gray-100 text-gray-700"}`}>{s}</span>;
-  };
 
   return (
     <DashboardLayout>
@@ -62,40 +88,47 @@ export default function UrgentFollowUpPage() {
             <tr className="bg-[#F3F4F6]">
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
               <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Phone</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Category</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Service Attended</th>
               <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Assigned Officer</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Days Overdue</th>
-              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Last Contact</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
             </tr>
           </thead>
           <tbody>
-            {paginated.map((f) => (
-              <tr key={f.id} className="border-b border-[#F3F4F6] hover:bg-gray-50" style={{ height: "56px" }}>
-                <td className="px-4 py-3 text-sm text-[#374151]">{f.name}</td>
-                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{f.phone}</td>
-                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{f.category}</td>
-                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{f.assignedOfficer}</td>
-                <td className={`px-4 py-3 text-sm ${daysColor(f.daysOverdue)}`}>
-                  {f.daysOverdue === 0 ? "Due today" : `${f.daysOverdue} days`}
-                </td>
-                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{f.lastContact}</td>
-                <td className="px-4 py-3">{statusBadge(f.status)}</td>
-              </tr>
-            ))}
-            {paginated.length === 0 && (
+            {loading ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
-                  No follow-ups found.
+                <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                  Loading follow-ups…
                 </td>
               </tr>
+            ) : (
+              <>
+                {paginated.map((f) => (
+                  <tr key={f.id} className="border-b border-[#F3F4F6] hover:bg-gray-50" style={{ height: "56px" }}>
+                    <td className="px-4 py-3 text-sm text-[#374151]">{f.name}</td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{f.phone}</td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{f.serviceAttended}</td>
+                    <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{f.assignedOfficer}</td>
+                  </tr>
+                ))}
+                {paginated.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                      No follow-ups found.
+                    </td>
+                  </tr>
+                )}
+              </>
             )}
           </tbody>
         </table>
       </div>
 
       <div className="mt-4">
-        <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filtered.length} onPageChange={setCurrentPage} />
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filtered.length}
+          onPageChange={setCurrentPage}
+        />
       </div>
     </DashboardLayout>
   );

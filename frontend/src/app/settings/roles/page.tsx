@@ -5,7 +5,15 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import ActionDropdown from "@/components/ui/ActionDropdown";
-import { getRoles, createRole, updateRole, type RoleResponse } from "@/lib/api";
+import {
+  getRoles,
+  createRole,
+  updateRole,
+  getPermissions,
+  assignPermissionsToRole,
+  type RoleResponse,
+  type PermissionResponse,
+} from "@/lib/api";
 import { ShieldCheck } from "lucide-react";
 
 function fmtDate(s?: string) {
@@ -28,6 +36,15 @@ export default function RolesPage() {
   const [saveError,     setSaveError]     = useState("");
 
   const [formData, setFormData] = useState({ name: "", description: "" });
+
+  // Permissions modal state
+  const [showPermModal,   setShowPermModal]   = useState(false);
+  const [permRole,        setPermRole]        = useState<RoleResponse | null>(null);
+  const [allPerms,        setAllPerms]        = useState<PermissionResponse[]>([]);
+  const [selectedPerms,   setSelectedPerms]   = useState<Set<string>>(new Set());
+  const [loadingPerms,    setLoadingPerms]    = useState(false);
+  const [savingPerms,     setSavingPerms]     = useState(false);
+  const [permError,       setPermError]       = useState("");
 
   const fetchRoles = useCallback(async () => {
     setLoading(true);
@@ -55,6 +72,46 @@ export default function RolesPage() {
     setFormData({ name: role.name, description: role.description ?? "" });
     setSaveError("");
     setShowEditModal(true);
+  };
+
+  const openPermissions = (role: RoleResponse) => {
+    setPermRole(role);
+    setPermError("");
+    setSelectedPerms(new Set());
+    setShowPermModal(true);
+    setLoadingPerms(true);
+    getPermissions()
+      .then((perms) => {
+        setAllPerms(perms);
+      })
+      .catch(() => {
+        setPermError("Failed to load permissions.");
+      })
+      .finally(() => setLoadingPerms(false));
+  };
+
+  const togglePerm = (id: string) => {
+    setSelectedPerms((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSavePermissions = async () => {
+    if (!permRole) return;
+    setSavingPerms(true);
+    setPermError("");
+    try {
+      await assignPermissionsToRole(permRole.id, Array.from(selectedPerms));
+      setShowPermModal(false);
+      setPermRole(null);
+    } catch (err) {
+      setPermError(err instanceof Error ? err.message : "Failed to assign permissions.");
+    } finally {
+      setSavingPerms(false);
+    }
   };
 
   const handleAdd = async () => {
@@ -145,6 +202,7 @@ export default function RolesPage() {
                     <ActionDropdown
                       actions={[
                         { label: "Edit", onClick: () => openEdit(role) },
+                        { label: "Manage Permissions", onClick: () => openPermissions(role) },
                       ]}
                     />
                   </td>
@@ -232,6 +290,61 @@ export default function RolesPage() {
             <Button variant="secondary" onClick={() => { setShowEditModal(false); setEditing(null); setSaveError(""); }}>Cancel</Button>
             <Button variant="primary" onClick={handleEdit} disabled={saving || !formData.name.trim()}>
               {saving ? "Saving…" : "Update"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Manage Permissions Modal */}
+      <Modal
+        isOpen={showPermModal}
+        onClose={() => { setShowPermModal(false); setPermRole(null); setPermError(""); }}
+        title={`Manage Permissions${permRole ? ` — ${permRole.name}` : ""}`}
+        size="md"
+      >
+        <div className="space-y-4">
+          {permError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{permError}</div>
+          )}
+
+          {loadingPerms ? (
+            <p className="text-sm text-[#6B7280] text-center py-4">Loading permissions…</p>
+          ) : allPerms.length === 0 ? (
+            <p className="text-sm text-[#6B7280] text-center py-4">No permissions available.</p>
+          ) : (
+            <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
+              {allPerms.map((perm) => (
+                <label
+                  key={perm.id}
+                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-[#E5E7EB] p-3 transition-colors hover:bg-[#F9FAFB]"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedPerms.has(perm.id)}
+                    onChange={() => togglePerm(perm.id)}
+                    className="mt-0.5 h-4 w-4 rounded border-[#D1D5DB] accent-[#000080]"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-[#111827]">{perm.name}</p>
+                    {perm.description && (
+                      <p className="text-xs text-[#6B7280] mt-0.5">{perm.description}</p>
+                    )}
+                  </div>
+                </label>
+              ))}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => { setShowPermModal(false); setPermRole(null); setPermError(""); }}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSavePermissions}
+              disabled={savingPerms || loadingPerms}
+            >
+              {savingPerms ? "Saving…" : "Save Permissions"}
             </Button>
           </div>
         </div>
