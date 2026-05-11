@@ -826,7 +826,7 @@ export async function getGuestInformation(
 }
 
 // Backend endpoint: POST /api/v1/new-converts/mark-as-attended?believerClassStage=CLASS_1
-// Supports multi-select via { ids: string[] }; here we pass a single userId.
+// { ids: string[] } — works for one or many converts at once.
 export async function updateBelieversClass(
   userId: string,
   believersClass: string
@@ -838,6 +838,34 @@ export async function updateBelieversClass(
       body: JSON.stringify({ ids: [userId] }),
     }
   );
+}
+
+export async function updateBelieversClassBulk(
+  userIds: string[],
+  believersClass: string
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/new-converts/mark-as-attended?believerClassStage=${encodeURIComponent(believersClass)}`,
+    {
+      method: "POST",
+      body: JSON.stringify({ ids: userIds }),
+    }
+  );
+}
+
+/** Map human-readable class labels ("Class 1") to backend values ("CLASS_1"). */
+export function toBelieverClassStage(label: string): string {
+  const map: Record<string, string> = {
+    "Class 1": "CLASS_1",
+    "Class 2": "CLASS_2",
+    "Class 3": "CLASS_3",
+    "Class 4": "CLASS_4",
+    "Class 5": "COMPLETED",
+    "Completed": "COMPLETED",
+    "Not started": "",
+    "None": "",
+  };
+  return map[label] ?? label; // if already in backend format, pass through
 }
 
 // ─── Settings ───────────────────────────────────────────────────────────────────
