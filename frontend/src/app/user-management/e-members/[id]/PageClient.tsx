@@ -311,7 +311,7 @@ export default function EMemberProfilePage() {
                 ) : (
                   <div className="space-y-3">
                     {notes.map((n, i) => {
-                      const noteType = (n.type ?? "").toUpperCase();
+                      const noteType = (n.noteCategory ?? n.type ?? "").toUpperCase();
                       const badgeClass =
                         noteType.includes("CALL")  ? "bg-[#DBEAFE] text-[#1D4ED8]" :
                         noteType.includes("VISIT") ? "bg-[#DCFCE7] text-[#16A34A]" :

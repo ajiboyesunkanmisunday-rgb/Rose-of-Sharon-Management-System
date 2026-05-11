@@ -314,8 +314,9 @@ export default function ViewFirstTimerPage() {
                 ) : (
                   <ul className="space-y-3">
                     {notes.map((n) => {
-                      const typeLabel = n.type === "CALL" ? "Call" : n.type === "VISIT" ? "Visit" : "Note";
-                      const typeBg    = n.type === "CALL" ? "bg-blue-50 text-blue-700" : n.type === "VISIT" ? "bg-green-50 text-green-700" : "bg-[#F3F4F6] text-[#374151]";
+                      const cat = (n.noteCategory ?? n.type ?? "").toUpperCase();
+                      const typeLabel = cat.includes("CALL") ? "Call Log" : cat.includes("VISIT") ? "Visit Log" : "Note";
+                      const typeBg    = cat.includes("CALL") ? "bg-blue-50 text-blue-700" : cat.includes("VISIT") ? "bg-green-50 text-green-700" : "bg-[#F3F4F6] text-[#374151]";
                       return (
                         <li key={n.id} className="rounded-lg border border-[#F3F4F6] bg-[#FAFAFA] px-4 py-3">
                           <div className="mb-1 flex items-center justify-between gap-2">
@@ -324,7 +325,7 @@ export default function ViewFirstTimerPage() {
                           </div>
                           <p className="text-sm text-[#374151]">{n.content ?? "—"}</p>
                           {(n.officerName ?? n.createdBy) && (
-                            <p className="mt-1 text-xs text-[#9CA3AF]">By {n.officerName ?? n.createdBy}</p>
+                            <p className="mt-1 text-xs text-[#9CA3AF]">By {n.officerName ?? (typeof n.createdBy === "string" ? n.createdBy : [n.createdBy?.firstName, n.createdBy?.lastName].filter(Boolean).join(" "))}</p>
                           )}
                         </li>
                       );

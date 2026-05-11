@@ -719,17 +719,26 @@ export interface NoteResponse {
   id: string;
   userId?: string;
   content?: string;
-  type?: string;        // e.g. "GENERAL", "CALL", "VISIT"
+  /** Swagger: "CALL" | "VISIT" | "OTHERS" */
+  noteCategory?: string;
+  /** Legacy alias kept for backward-compat with older backend versions */
+  type?: string;
   createdOn?: string;
-  createdBy?: string;
+  /** createdBy is an object per Swagger (UserBasicResponse) */
+  createdBy?: { id?: string; firstName?: string; lastName?: string } | string;
+  /** Legacy field kept for backward compat */
   officerName?: string;
 }
 
 export async function getNotes(
-  userId: string
+  userId: string,
+  pageNo = 0,
+  pageSize = 50
 ): Promise<NoteResponse[]> {
-  // Try GET /api/v1/notes?userId={id} — returns array or paginated wrapper
-  const res = await apiFetch<NoteResponse[] | { content?: NoteResponse[] }>(`/api/v1/notes?userId=${encodeURIComponent(userId)}`);
+  // GET /api/v1/notes?userId={id}&pageNo={n}&pageSize={s}
+  const res = await apiFetch<NoteResponse[] | { content?: NoteResponse[] }>(
+    `/api/v1/notes?userId=${encodeURIComponent(userId)}&pageNo=${pageNo}&pageSize=${pageSize}`
+  );
   if (Array.isArray(res)) return res;
   return res.content ?? [];
 }
@@ -740,9 +749,8 @@ export async function addNote(
   userId: string,
   note: string
 ): Promise<OperationalResponse> {
-  // Backend endpoint: POST /api/v1/notes/general with { userId, content }
-  // (/api/v1/notes returns 405 — general notes live on the /general sub-path)
-  return apiFetch<OperationalResponse>(`/api/v1/notes/general`, {
+  // Swagger: POST /api/v1/notes  { userId, content }
+  return apiFetch<OperationalResponse>(`/api/v1/notes`, {
     method: "POST",
     body: JSON.stringify({ userId, content: note }),
   });
@@ -752,7 +760,7 @@ export async function addCallReport(
   userId: string,
   report: string
 ): Promise<OperationalResponse> {
-  // Backend endpoint: POST /api/v1/notes/call with { userId, content }
+  // Swagger: POST /api/v1/notes/call  { userId, content }
   return apiFetch<OperationalResponse>(`/api/v1/notes/call`, {
     method: "POST",
     body: JSON.stringify({ userId, content: report }),
@@ -763,7 +771,7 @@ export async function addVisitReport(
   userId: string,
   report: string
 ): Promise<OperationalResponse> {
-  // Backend endpoint: POST /api/v1/notes/visit with { userId, content }
+  // Swagger: POST /api/v1/notes/visit  { userId, content }
   return apiFetch<OperationalResponse>(`/api/v1/notes/visit`, {
     method: "POST",
     body: JSON.stringify({ userId, content: report }),
