@@ -1813,3 +1813,62 @@ export async function uploadProfilePicture(file: File): Promise<string> {
   if (!photoUrl) throw new Error("Photo uploaded but no URL was returned. Please try again.");
   return photoUrl;
 }
+
+// ─── Announcements ────────────────────────────────────────────────────────────
+
+export interface AnnouncementSubmission {
+  id: string;
+  title: string;
+  content: string;
+  submitterName: string;
+  submitterEmail?: string;
+  submitterPhone?: string;
+  status: "PENDING" | "APPROVED" | "DISCARDED";
+  createdAt: string;
+}
+
+export interface AnnouncementSettings {
+  deadline: string; // ISO date-time
+}
+
+export async function getAnnouncementSettings(): Promise<AnnouncementSettings> {
+  return apiFetch<AnnouncementSettings>("/api/v1/announcements/settings");
+}
+
+export async function setAnnouncementDeadline(deadline: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/announcements/settings", {
+    method: "PUT",
+    body: JSON.stringify({ deadline }),
+  });
+}
+
+export async function getAnnouncements(): Promise<AnnouncementSubmission[]> {
+  return apiFetch<AnnouncementSubmission[]>("/api/v1/announcements");
+}
+
+export async function submitAnnouncement(data: {
+  title: string;
+  content: string;
+  submitterName: string;
+  submitterEmail?: string;
+  submitterPhone?: string;
+}): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/announcements", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function approveAnnouncement(id: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/announcements/${id}/approve`, {
+    method: "PATCH",
+  });
+}
+
+export async function discardAnnouncement(id: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/announcements/${id}`, {
+    method: "DELETE",
+  });
+}
+
+// searchEMembers and searchMembers are declared earlier in this file.

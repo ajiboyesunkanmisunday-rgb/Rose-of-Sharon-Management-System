@@ -24,6 +24,7 @@ import {
   LogOut,
   ChevronRight,
   ChevronDown,
+  Megaphone,
 } from "lucide-react";
 
 interface SubItem {
@@ -103,6 +104,11 @@ const navItems: NavItem[] = [
     label: "Media",
     icon: SquarePlay,
     href: "/media",
+  },
+  {
+    label: "Announcements",
+    icon: Megaphone,
+    href: "/announcements",
   },
   {
     label: "Event Management",
