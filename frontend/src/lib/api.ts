@@ -163,18 +163,35 @@ async function apiFetchRaw<T>(
   }
 
   if (!response.ok) {
-    let errorMessage = `Request failed (${response.status})`;
+    const status = response.status;
+    let errorMessage = "";          // empty = no specific message yet
+    let backendMessage = "";        // what the backend actually said
+
     try {
       const errBody = await response.json();
-      if (errBody?.message) errorMessage = errBody.message;
-      else if (errBody?.error) errorMessage = errBody.error;
+      backendMessage = errBody?.message ?? errBody?.error ?? errBody?.detail ?? "";
     } catch {
-      // ignore parse errors
+      // non-JSON error body — ignore
     }
-    // Translate technical HTTP error phrases into plain-English messages
-    const status = response.status;
-    const raw = errorMessage.toLowerCase();
-    if (status === 405 || raw.includes("method not allowed")) {
+
+    // Always keep a meaningful backend message when the server provides one.
+    // Only fall back to generic text when the backend gives us nothing useful,
+    // or when the message is just a raw HTTP phrase (e.g. "Bad Request").
+    const raw = backendMessage.toLowerCase();
+    const isGenericPhrase =
+      !backendMessage ||
+      raw === "bad request" ||
+      raw === "not found" ||
+      raw === "forbidden" ||
+      raw === "internal server error" ||
+      raw === "method not allowed" ||
+      raw === "bad gateway" ||
+      raw === "service unavailable";
+
+    if (!isGenericPhrase) {
+      // Backend gave a real message — use it as-is
+      errorMessage = backendMessage;
+    } else if (status === 405 || raw.includes("method not allowed")) {
       errorMessage = "This action is not yet supported by the server. Please contact the backend team.";
     } else if (status === 502 || status === 503 || raw.includes("bad gateway") || raw.includes("service unavailable")) {
       errorMessage = "Server is temporarily unavailable. Please try again in a moment.";
@@ -186,7 +203,10 @@ async function apiFetchRaw<T>(
       errorMessage = "Invalid request. Please check the form and try again.";
     } else if (status === 403 || raw.includes("forbidden")) {
       errorMessage = "You don't have permission to perform this action.";
+    } else {
+      errorMessage = `Request failed (${status})`;
     }
+
     throw new Error(errorMessage);
   }
 
@@ -1694,7 +1714,7 @@ export async function getMessageTemplates(
   size = 10,
 ): Promise<CustomPageResponse<MessageTemplateResponse>> {
   return apiFetch<CustomPageResponse<MessageTemplateResponse>>(
-    `/api/v1/message-templates?page=${page}&size=${size}`,
+    `/api/v1/message-templates?pageNo=${page}&pageSize=${size}`,
   );
 }
 
