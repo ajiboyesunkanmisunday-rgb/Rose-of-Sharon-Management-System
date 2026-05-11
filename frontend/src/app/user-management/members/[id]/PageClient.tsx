@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
-import { getUser, getUserRequests, resetPassword, removeAdmin, markUserAsInactive, type UserResponse, type RequestResponse } from "@/lib/api";
+import { getUser, getUserRequests, markUserAsInactive, type UserResponse, type RequestResponse } from "@/lib/api";
 
 type Tab = "details" | "requests";
 
@@ -108,34 +108,6 @@ export default function ViewMemberProfilePage() {
   const handleConfirmDelete = () => {
     setShowDeleteModal(false);
     router.push("/user-management/members");
-  };
-
-  const handleResetPassword = async () => {
-    if (!id) return;
-    setActionLoading("reset");
-    setActionMsg("");
-    try {
-      await resetPassword(id);
-      setActionMsg("Password reset successfully.");
-    } catch (err) {
-      setActionMsg(err instanceof Error ? err.message : "Failed to reset password.");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleRemoveAdmin = async () => {
-    if (!id) return;
-    setActionLoading("removeAdmin");
-    setActionMsg("");
-    try {
-      await removeAdmin(id);
-      setActionMsg("Admin access removed.");
-    } catch (err) {
-      setActionMsg(err instanceof Error ? err.message : "Failed to remove admin.");
-    } finally {
-      setActionLoading(null);
-    }
   };
 
   const handleMarkInactive = async () => {
@@ -306,12 +278,6 @@ export default function ViewMemberProfilePage() {
           <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
             <Button variant="secondary" onClick={() => router.push(`/user-management/members/${id}/edit`)}>Edit</Button>
             <Button variant="primary"   onClick={() => router.push(`/user-management/members/${id}/link-spouse`)}>Link Spouse</Button>
-            <Button variant="secondary" onClick={handleResetPassword} disabled={actionLoading === "reset"}>
-              {actionLoading === "reset" ? "Resetting…" : "Reset Password"}
-            </Button>
-            <Button variant="secondary" onClick={handleRemoveAdmin} disabled={actionLoading === "removeAdmin"}>
-              {actionLoading === "removeAdmin" ? "Removing…" : "Remove Admin"}
-            </Button>
             <Button variant="secondary" onClick={handleMarkInactive} disabled={actionLoading === "inactive"}>
               {actionLoading === "inactive" ? "Marking…" : "Mark Inactive"}
             </Button>

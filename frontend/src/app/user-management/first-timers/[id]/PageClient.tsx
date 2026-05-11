@@ -63,8 +63,9 @@ export default function ViewFirstTimerPage() {
   const [noteText,  setNoteText]  = useState("");
   const [callText,  setCallText]  = useState("");
   const [visitText, setVisitText] = useState("");
-  const [saving,    setSaving]    = useState(false);
-  const [saveMsg,   setSaveMsg]   = useState("");
+  const [saving,      setSaving]      = useState(false);
+  const [saveMsg,     setSaveMsg]     = useState("");
+  const [saveFailed,  setSaveFailed]  = useState(false);
   const [converting, setConverting] = useState(false);
 
   const fetchUser = useCallback(async () => {
@@ -94,6 +95,7 @@ export default function ViewFirstTimerPage() {
     if (!text.trim()) return;
     setSaving(true);
     setSaveMsg("");
+    setSaveFailed(false);
     try {
       if (type === "note")  await addNote(id, text.trim());
       if (type === "call")  await addCallReport(id, text.trim());
@@ -104,6 +106,7 @@ export default function ViewFirstTimerPage() {
       setSaveMsg("Saved successfully.");
       setTimeout(() => setSaveMsg(""), 3000);
     } catch (err) {
+      setSaveFailed(true);
       setSaveMsg(err instanceof Error ? err.message : "Failed to save.");
     } finally {
       setSaving(false);
@@ -231,7 +234,7 @@ export default function ViewFirstTimerPage() {
           {activeTab === "activity" && (
             <div className="space-y-4">
               {saveMsg && (
-                <div className={`rounded-lg px-4 py-3 text-sm ${saveMsg.startsWith("Failed") || saveMsg.startsWith("Conversion") ? "bg-red-50 text-red-700 border border-red-200" : "bg-green-50 text-green-700 border border-green-200"}`}>
+                <div className={`rounded-lg px-4 py-3 text-sm border ${saveFailed ? "bg-red-50 text-red-700 border-red-200" : "bg-green-50 text-green-700 border-green-200"}`}>
                   {saveMsg}
                 </div>
               )}
