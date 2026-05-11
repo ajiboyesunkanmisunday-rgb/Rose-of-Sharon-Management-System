@@ -163,13 +163,29 @@ async function apiFetchRaw<T>(
   }
 
   if (!response.ok) {
-    let errorMessage = `Request failed: ${response.status}`;
+    let errorMessage = `Request failed (${response.status})`;
     try {
       const errBody = await response.json();
       if (errBody?.message) errorMessage = errBody.message;
       else if (errBody?.error) errorMessage = errBody.error;
     } catch {
       // ignore parse errors
+    }
+    // Translate technical HTTP error phrases into plain-English messages
+    const status = response.status;
+    const raw = errorMessage.toLowerCase();
+    if (status === 405 || raw.includes("method not allowed")) {
+      errorMessage = "This action is not yet supported by the server. Please contact the backend team.";
+    } else if (status === 502 || status === 503 || raw.includes("bad gateway") || raw.includes("service unavailable")) {
+      errorMessage = "Server is temporarily unavailable. Please try again in a moment.";
+    } else if (status === 404 || raw.includes("not found")) {
+      errorMessage = "Record not found. It may have been deleted or the ID is incorrect.";
+    } else if (status === 500 || raw.includes("internal server error")) {
+      errorMessage = "Server error. Please try again or contact support.";
+    } else if (status === 400 || raw.includes("bad request")) {
+      errorMessage = "Invalid request. Please check the form and try again.";
+    } else if (status === 403 || raw.includes("forbidden")) {
+      errorMessage = "You don't have permission to perform this action.";
     }
     throw new Error(errorMessage);
   }
@@ -406,6 +422,22 @@ export async function updateMember(
   return apiFetch<UserResponse>(`/api/v1/users/member/${id}`, {
     method: "PUT",
     body: JSON.stringify(body),
+  });
+}
+
+/**
+ * Dedicated call that sends ONLY groupIds to the member update endpoint.
+ * Called as a second step after updateMember so the backend processes
+ * the group list in isolation (works around backends that only save the
+ * first element when groupIds is mixed with other fields).
+ */
+export async function assignMemberGroups(
+  id: string,
+  groupIds: string[]
+): Promise<void> {
+  await apiFetch<UserResponse>(`/api/v1/users/member/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ groupIds }),
   });
 }
 
@@ -661,16 +693,38 @@ export async function markNewConvertsAsAttended(ids: string[]): Promise<Operatio
   });
 }
 
+// ─── Notes / Activity Log ────────────────────────────────────────────────────────
+
+export interface NoteResponse {
+  id: string;
+  userId?: string;
+  content?: string;
+  type?: string;        // e.g. "GENERAL", "CALL", "VISIT"
+  createdOn?: string;
+  createdBy?: string;
+  officerName?: string;
+}
+
+export async function getNotes(
+  userId: string
+): Promise<NoteResponse[]> {
+  // Try GET /api/v1/notes?userId={id} — returns array or paginated wrapper
+  const res = await apiFetch<NoteResponse[] | { content?: NoteResponse[] }>(`/api/v1/notes?userId=${encodeURIComponent(userId)}`);
+  if (Array.isArray(res)) return res;
+  return res.content ?? [];
+}
+
 // ─── Follow-up Actions ──────────────────────────────────────────────────────────
 
 export async function addNote(
   userId: string,
   note: string
 ): Promise<OperationalResponse> {
-  // Endpoint is singular /note, not /notes (backend returns 404 for /notes)
-  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/note`, {
+  // Backend endpoint: POST /api/v1/notes/general with { userId, content }
+  // (/api/v1/notes returns 405 — general notes live on the /general sub-path)
+  return apiFetch<OperationalResponse>(`/api/v1/notes/general`, {
     method: "POST",
-    body: JSON.stringify({ note, text: note }),
+    body: JSON.stringify({ userId, content: note }),
   });
 }
 
@@ -678,9 +732,10 @@ export async function addCallReport(
   userId: string,
   report: string
 ): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/call-report`, {
+  // Backend endpoint: POST /api/v1/notes/call with { userId, content }
+  return apiFetch<OperationalResponse>(`/api/v1/notes/call`, {
     method: "POST",
-    body: JSON.stringify({ report }),
+    body: JSON.stringify({ userId, content: report }),
   });
 }
 
@@ -688,9 +743,10 @@ export async function addVisitReport(
   userId: string,
   report: string
 ): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/visit-report`, {
+  // Backend endpoint: POST /api/v1/notes/visit with { userId, content }
+  return apiFetch<OperationalResponse>(`/api/v1/notes/visit`, {
     method: "POST",
-    body: JSON.stringify({ report }),
+    body: JSON.stringify({ userId, content: report }),
   });
 }
 
@@ -783,16 +839,47 @@ export async function getGuestInformation(
   );
 }
 
-// Note: believers-class update endpoint not yet available on backend.
-// Stubbed for when backend team adds it.
+// Backend endpoint: POST /api/v1/new-converts/mark-as-attended?believerClassStage=CLASS_1
+// { ids: string[] } — works for one or many converts at once.
 export async function updateBelieversClass(
   userId: string,
   believersClass: string
 ): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/new-converts/${userId}/believers-class`, {
-    method: "PUT",
-    body: JSON.stringify({ believerClassStage: believersClass }),
-  });
+  return apiFetch<OperationalResponse>(
+    `/api/v1/new-converts/mark-as-attended?believerClassStage=${encodeURIComponent(believersClass)}`,
+    {
+      method: "POST",
+      body: JSON.stringify({ ids: [userId] }),
+    }
+  );
+}
+
+export async function updateBelieversClassBulk(
+  userIds: string[],
+  believersClass: string
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/new-converts/mark-as-attended?believerClassStage=${encodeURIComponent(believersClass)}`,
+    {
+      method: "POST",
+      body: JSON.stringify({ ids: userIds }),
+    }
+  );
+}
+
+/** Map human-readable class labels ("Class 1") to backend values ("CLASS_1"). */
+export function toBelieverClassStage(label: string): string {
+  const map: Record<string, string> = {
+    "Class 1": "CLASS_1",
+    "Class 2": "CLASS_2",
+    "Class 3": "CLASS_3",
+    "Class 4": "CLASS_4",
+    "Class 5": "COMPLETED",
+    "Completed": "COMPLETED",
+    "Not started": "",
+    "None": "",
+  };
+  return map[label] ?? label; // if already in backend format, pass through
 }
 
 // ─── Settings ───────────────────────────────────────────────────────────────────
@@ -1018,7 +1105,7 @@ export async function getAllGroups(): Promise<GroupResponse[]> {
 }
 
 export async function getGroup(id: string): Promise<GroupResponse> {
-  return apiFetch<GroupResponse>(`/api/v1/groups/${id}`, { method: "POST" });
+  return apiFetch<GroupResponse>(`/api/v1/groups/${id}`);
 }
 
 export async function createGroup(body: CreateGroupRequest): Promise<GroupResponse> {
@@ -1941,3 +2028,62 @@ export async function uploadProfilePicture(file: File): Promise<string> {
   if (!photoUrl) throw new Error("Photo uploaded but no URL was returned. Please try again.");
   return photoUrl;
 }
+
+// ─── Announcements ────────────────────────────────────────────────────────────
+
+export interface AnnouncementSubmission {
+  id: string;
+  title: string;
+  content: string;
+  submitterName: string;
+  submitterEmail?: string;
+  submitterPhone?: string;
+  status: "PENDING" | "APPROVED" | "DISCARDED";
+  createdAt: string;
+}
+
+export interface AnnouncementSettings {
+  deadline: string; // ISO date-time
+}
+
+export async function getAnnouncementSettings(): Promise<AnnouncementSettings> {
+  return apiFetch<AnnouncementSettings>("/api/v1/announcements/settings");
+}
+
+export async function setAnnouncementDeadline(deadline: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/announcements/settings", {
+    method: "PUT",
+    body: JSON.stringify({ deadline }),
+  });
+}
+
+export async function getAnnouncements(): Promise<AnnouncementSubmission[]> {
+  return apiFetch<AnnouncementSubmission[]>("/api/v1/announcements");
+}
+
+export async function submitAnnouncement(data: {
+  title: string;
+  content: string;
+  submitterName: string;
+  submitterEmail?: string;
+  submitterPhone?: string;
+}): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/announcements", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function approveAnnouncement(id: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/announcements/${id}/approve`, {
+    method: "PATCH",
+  });
+}
+
+export async function discardAnnouncement(id: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/announcements/${id}`, {
+    method: "DELETE",
+  });
+}
+
+// searchEMembers and searchMembers are declared earlier in this file.

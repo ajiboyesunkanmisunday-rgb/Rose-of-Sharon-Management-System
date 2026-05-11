@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
-import { getUser, addNote, addCallReport, addVisitReport, convertToFullMember, type UserResponse } from "@/lib/api";
+import { getUser, addNote, addCallReport, addVisitReport, getNotes, convertToFullMember, type UserResponse, type NoteResponse } from "@/lib/api";
 
 type Tab = "details" | "activity";
 
@@ -63,9 +63,23 @@ export default function ViewSecondTimerPage() {
   const [noteText,  setNoteText]  = useState("");
   const [callText,  setCallText]  = useState("");
   const [visitText, setVisitText] = useState("");
-  const [saving,    setSaving]    = useState(false);
-  const [saveMsg,   setSaveMsg]   = useState("");
+  const [saving,      setSaving]      = useState(false);
+  const [saveMsg,     setSaveMsg]     = useState("");
+  const [saveFailed,  setSaveFailed]  = useState(false);
   const [converting, setConverting] = useState(false);
+
+  const [notes,        setNotes]        = useState<NoteResponse[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+
+  const fetchNotes = useCallback(async () => {
+    if (!id || id.startsWith("st-")) return;
+    setNotesLoading(true);
+    try {
+      const data = await getNotes(id);
+      setNotes(data);
+    } catch { /* non-fatal */ }
+    finally { setNotesLoading(false); }
+  }, [id]);
 
   const fetchUser = useCallback(async () => {
     if (!id || id.startsWith("st-")) return;
@@ -82,6 +96,7 @@ export default function ViewSecondTimerPage() {
   }, [id]);
 
   useEffect(() => { fetchUser(); }, [fetchUser]);
+  useEffect(() => { if (activeTab === "activity") fetchNotes(); }, [activeTab, fetchNotes]);
 
   const handleConfirmDelete = () => {
     setShowDeleteModal(false);
@@ -94,6 +109,7 @@ export default function ViewSecondTimerPage() {
     if (!text.trim()) return;
     setSaving(true);
     setSaveMsg("");
+    setSaveFailed(false);
     try {
       if (type === "note")  await addNote(id, text.trim());
       if (type === "call")  await addCallReport(id, text.trim());
@@ -103,7 +119,9 @@ export default function ViewSecondTimerPage() {
       if (type === "visit") setVisitText("");
       setSaveMsg("Saved successfully.");
       setTimeout(() => setSaveMsg(""), 3000);
+      fetchNotes();
     } catch (err) {
+      setSaveFailed(true);
       setSaveMsg(err instanceof Error ? err.message : "Failed to save.");
     } finally {
       setSaving(false);
@@ -231,7 +249,7 @@ export default function ViewSecondTimerPage() {
           {activeTab === "activity" && (
             <div className="space-y-4">
               {saveMsg && (
-                <div className={`rounded-lg px-4 py-3 text-sm ${saveMsg.startsWith("Failed") || saveMsg.startsWith("Conversion") ? "bg-red-50 text-red-700 border border-red-200" : "bg-green-50 text-green-700 border border-green-200"}`}>
+                <div className={`rounded-lg px-4 py-3 text-sm border ${saveFailed ? "bg-red-50 text-red-700 border-red-200" : "bg-green-50 text-green-700 border-green-200"}`}>
                   {saveMsg}
                 </div>
               )}
@@ -285,6 +303,35 @@ export default function ViewSecondTimerPage() {
                     {saving ? "Saving…" : "Save Visit"}
                   </Button>
                 </div>
+              </div>
+
+              {/* Activity History */}
+              <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
+                <h3 className="mb-3 text-sm font-bold text-[#111827]">Activity History</h3>
+                {notesLoading ? (
+                  <p className="text-center text-xs text-[#9CA3AF] py-4">Loading history…</p>
+                ) : notes.length === 0 ? (
+                  <p className="text-center text-xs text-[#9CA3AF] py-4">No activity recorded yet.</p>
+                ) : (
+                  <ul className="space-y-3">
+                    {notes.map((n) => {
+                      const typeLabel = n.type === "CALL" ? "Call" : n.type === "VISIT" ? "Visit" : "Note";
+                      const typeBg    = n.type === "CALL" ? "bg-blue-50 text-blue-700" : n.type === "VISIT" ? "bg-green-50 text-green-700" : "bg-[#F3F4F6] text-[#374151]";
+                      return (
+                        <li key={n.id} className="rounded-lg border border-[#F3F4F6] bg-[#FAFAFA] px-4 py-3">
+                          <div className="mb-1 flex items-center justify-between gap-2">
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${typeBg}`}>{typeLabel}</span>
+                            <span className="text-xs text-[#9CA3AF]">{n.createdOn ? new Date(n.createdOn).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</span>
+                          </div>
+                          <p className="text-sm text-[#374151]">{n.content ?? "—"}</p>
+                          {(n.officerName ?? n.createdBy) && (
+                            <p className="mt-1 text-xs text-[#9CA3AF]">By {n.officerName ?? n.createdBy}</p>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </div>
             </div>
           )}

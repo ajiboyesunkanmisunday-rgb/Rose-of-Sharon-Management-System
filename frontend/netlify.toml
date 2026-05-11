@@ -250,3 +250,22 @@
   from   = "/trainings/rila/"
   to     = "/trainings/rila/index.html"
   status = 200
+
+# ── Announcements ─────────────────────────────────────────────────────────────
+[[redirects]]
+  from   = "/announcements/"
+  to     = "/announcements/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/announcements/submit/"
+  to     = "/announcements/submit/index.html"
+  status = 200
+
+# ── Event check-in (QR code landing page) ─────────────────────────────────────
+# Serves the pre-built ev-1 placeholder HTML for any real UUID path;
+# the client reads the real event ID from window.location and fetches data.
+[[redirects]]
+  from   = "/events/:id/check-in/"
+  to     = "/events/ev-1/check-in/"
+  status = 200
