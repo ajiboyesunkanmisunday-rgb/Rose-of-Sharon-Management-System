@@ -62,9 +62,10 @@ export default function ViewMemberProfilePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [user,     setUser]     = useState<UserResponse | null>(null);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState("");
+  const [user,       setUser]       = useState<UserResponse | null>(null);
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState("");
+  const [photoError, setPhotoError] = useState(false);
 
   const [requests,     setRequests]     = useState<RequestResponse[]>([]);
   const [reqLoading,   setReqLoading]   = useState(false);
@@ -167,9 +168,17 @@ export default function ViewMemberProfilePage() {
             <div className="flex flex-col gap-6 md:flex-row">
               {/* Photo */}
               <div className="relative flex h-[180px] w-[150px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] sm:h-[250px] sm:w-[200px]">
-                {user?.profilePictureUrl
-                  ? <img src={user.profilePictureUrl} alt="" className="h-full w-full object-cover" />
-                  : <UserIcon />}
+                {user?.profilePictureUrl && !photoError ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={user.profilePictureUrl}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    onError={() => setPhotoError(true)}
+                  />
+                ) : (
+                  <UserIcon />
+                )}
               </div>
 
               {/* Details */}

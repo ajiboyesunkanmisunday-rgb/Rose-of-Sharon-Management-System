@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { getUser, addNote, addCallReport, addVisitReport, getNotes, convertToSecondTimer, type UserResponse, type NoteResponse } from "@/lib/api";
+import ProfilePhoto from "@/components/ui/ProfilePhoto";
 
 type Tab = "details" | "activity";
 
@@ -185,9 +186,7 @@ export default function ViewFirstTimerPage() {
             <div className="flex flex-col gap-6 md:flex-row">
               {/* Photo */}
               <div className="relative flex h-[180px] w-[150px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] sm:h-[250px] sm:w-[200px]">
-                {user?.profilePictureUrl
-                  ? <img src={user.profilePictureUrl} alt="" className="h-full w-full object-cover" />
-                  : <UserIcon />}
+                <ProfilePhoto src={user?.profilePictureUrl} />
               </div>
 
               {/* Details */}
