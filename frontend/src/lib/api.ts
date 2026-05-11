@@ -1025,7 +1025,7 @@ export async function getAllGroups(): Promise<GroupResponse[]> {
 }
 
 export async function getGroup(id: string): Promise<GroupResponse> {
-  return apiFetch<GroupResponse>(`/api/v1/groups/${id}`, { method: "POST" });
+  return apiFetch<GroupResponse>(`/api/v1/groups/${id}`);
 }
 
 export async function createGroup(body: CreateGroupRequest): Promise<GroupResponse> {
