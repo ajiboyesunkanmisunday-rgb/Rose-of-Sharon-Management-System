@@ -491,7 +491,7 @@ export default function EventDetailClient() {
       <QRCodeModal
         isOpen={showQRModal}
         onClose={() => setShowQRModal(false)}
-        value={`https://rosms.app/events/${id}/check-in`}
+        value={typeof window !== "undefined" ? `${window.location.origin}/events/${id}/check-in` : `/events/${id}/check-in`}
         title="Event Check-in QR Code"
       />
       <EventBroadcastModal
