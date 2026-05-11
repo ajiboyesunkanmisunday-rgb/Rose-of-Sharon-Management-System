@@ -1128,6 +1128,17 @@ export async function getGroup(id: string): Promise<GroupResponse> {
   return apiFetch<GroupResponse>(`/api/v1/groups/${id}`);
 }
 
+/** Fetch all members belonging to a specific group. */
+export async function getGroupMembers(
+  groupId: string,
+  pageNo = 0,
+  pageSize = 200
+): Promise<CustomPageResponse<UserResponse>> {
+  return apiFetch<CustomPageResponse<UserResponse>>(
+    `/api/v1/groups/${groupId}/members?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
 export async function createGroup(body: CreateGroupRequest): Promise<GroupResponse> {
   return apiFetch<GroupResponse>("/api/v1/groups", {
     method: "POST",
