@@ -395,6 +395,22 @@ export async function updateMember(
   });
 }
 
+/**
+ * Dedicated call that sends ONLY groupIds to the member update endpoint.
+ * Called as a second step after updateMember so the backend processes
+ * the group list in isolation (works around backends that only save the
+ * first element when groupIds is mixed with other fields).
+ */
+export async function assignMemberGroups(
+  id: string,
+  groupIds: string[]
+): Promise<void> {
+  await apiFetch<UserResponse>(`/api/v1/users/member/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ groupIds }),
+  });
+}
+
 export async function deleteMembersBulk(ids: string[]): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/users/member", {
     method: "DELETE",

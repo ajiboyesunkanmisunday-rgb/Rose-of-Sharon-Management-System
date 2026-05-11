@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import MultiSelect from "@/components/ui/MultiSelect";
-import { getUser, updateMember, uploadProfilePicture, getAllGroups } from "@/lib/api";
+import { getUser, updateMember, assignMemberGroups, uploadProfilePicture, getAllGroups } from "@/lib/api";
 import { NIGERIA_STATES, COUNTRIES } from "@/lib/nigeria-states";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 
@@ -98,8 +98,12 @@ export default function EditMemberPage() {
         country: country || undefined,
         maritalStatus: maritalStatus || undefined,
         profilePictureUrl,
-        groupIds: selectedGroupIds.length > 0 ? selectedGroupIds : undefined,
       });
+      // Send groupIds in a second isolated request so the backend processes
+      // the full array independently of other field updates.
+      if (selectedGroupIds.length > 0) {
+        await assignMemberGroups(id, selectedGroupIds);
+      }
       router.push(`/user-management/members/${id}`);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Failed to update member.");
