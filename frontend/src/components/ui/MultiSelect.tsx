@@ -131,8 +131,14 @@ export default function MultiSelect({
 
       {/* Dropdown panel */}
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-xl border border-[#E5E7EB] bg-white shadow-xl"
+        <div
+          className="absolute z-50 mt-1 w-full rounded-xl border border-[#E5E7EB] bg-white shadow-xl"
           style={{ minWidth: "100%", maxWidth: "100%" }}
+          // Prevent the document's mousedown listener from seeing clicks that originate
+          // inside this panel. Without this, React's re-render can detach the <li> from
+          // the DOM before the listener's `containerRef.contains(e.target)` check runs,
+          // causing it to return false and close the dropdown on every option click.
+          onMouseDown={(e) => e.stopPropagation()}
         >
           {/* Search row */}
           <div className="flex items-center gap-2 border-b border-[#F3F4F6] px-3 py-2">
