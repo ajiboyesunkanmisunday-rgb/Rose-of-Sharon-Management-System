@@ -20,6 +20,8 @@ import {
   addVisitReport,
   addNote,
   updateBelieversClass,
+  updateBelieversClassBulk,
+  toBelieverClassStage,
   type NewConvertResponse,
 } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
@@ -59,6 +61,8 @@ export default function NewConvertsPage() {
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
+  const [showBulkClassModal, setShowBulkClassModal] = useState(false);
+  const [bulkClassStage, setBulkClassStage] = useState("");
   const [callReport, setCallReport] = useState("");
   const [visitReport, setVisitReport] = useState("");
   const [selectedConvertId, setSelectedConvertId] = useState<string | null>(null);
@@ -180,13 +184,31 @@ export default function NewConvertsPage() {
     if (!selectedConvertId) return;
     setActionLoading(true);
     try {
-      await updateBelieversClass(selectedConvertId, highestClass);
+      await updateBelieversClass(selectedConvertId, toBelieverClassStage(highestClass));
       setShowAttendanceModal(false);
       setSelectedConvertId(null);
       fetchConverts(currentPage);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to update believers class.");
       setShowAttendanceModal(false);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleBulkClassUpdate = async () => {
+    if (!bulkClassStage) return;
+    setActionLoading(true);
+    setActionError("");
+    try {
+      await updateBelieversClassBulk(Array.from(selectedRows), toBelieverClassStage(bulkClassStage));
+      setShowBulkClassModal(false);
+      setBulkClassStage("");
+      setSelectedRows(new Set());
+      fetchConverts(currentPage);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to update believers class.");
+      setShowBulkClassModal(false);
     } finally {
       setActionLoading(false);
     }
@@ -209,7 +231,10 @@ export default function NewConvertsPage() {
     downloadCSV(csv, `new-converts-export-${new Date().toISOString().slice(0, 10)}.csv`);
   };
 
+  const CLASS_OPTIONS_BULK = ["Class 1", "Class 2", "Class 3", "Class 4", "Completed"];
+
   const bulkActions = [
+    { label: "Update Believers Class", onClick: () => setShowBulkClassModal(true) },
     { label: "Delete", onClick: () => setShowBulkDeleteModal(true) },
   ];
 
@@ -497,6 +522,46 @@ export default function NewConvertsPage() {
         templateHeaders={["firstName","middleName","lastName","gender","countryCode","phone","email","serviceAttended","address"]}
         templateSampleRow={["Sam","","Taylor","Male","+1","5551234567","sam@example.com","Sunday Service","123 Main St"]}
       />
+
+      {/* Bulk Believers Class Update Modal */}
+      {showBulkClassModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-xl">
+            <h3 className="mb-1 text-lg font-bold text-[#111827]">Update Believers Class</h3>
+            <p className="mb-5 text-sm text-[#6B7280]">
+              Set the believers class stage for{" "}
+              <strong className="text-[#111827]">{selectedRows.size}</strong>{" "}
+              selected convert{selectedRows.size !== 1 ? "s" : ""}.
+            </p>
+            <label className="mb-1 block text-sm font-medium text-[#374151]">Class Stage</label>
+            <select
+              value={bulkClassStage}
+              onChange={(e) => setBulkClassStage(e.target.value)}
+              className="w-full rounded-lg border border-[#E5E7EB] bg-white px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            >
+              <option value="">Select stage…</option>
+              {CLASS_OPTIONS_BULK.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                onClick={() => { setShowBulkClassModal(false); setBulkClassStage(""); }}
+                className="rounded-lg border border-[#E5E7EB] px-4 py-2.5 text-sm font-medium text-[#374151] hover:bg-[#F9FAFB]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkClassUpdate}
+                disabled={actionLoading || !bulkClassStage}
+                className="rounded-lg bg-[#000080] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#000066] disabled:opacity-50"
+              >
+                {actionLoading ? "Updating…" : "Update"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
