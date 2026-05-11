@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
-import { getNewConvert, addNote, addCallReport, addVisitReport, updateBelieversClass, type NewConvertResponse } from "@/lib/api";
+import { getNewConvert, addNote, addCallReport, addVisitReport, getNotes, updateBelieversClass, type NewConvertResponse, type NoteResponse } from "@/lib/api";
 
 type Tab = "details" | "activity";
 
@@ -55,6 +55,19 @@ export default function ViewNewConvertPage() {
   const [saveMsg,     setSaveMsg]     = useState("");
   const [saveFailed,  setSaveFailed]  = useState(false);
 
+  const [notes,        setNotes]        = useState<NoteResponse[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+
+  const fetchNotes = useCallback(async () => {
+    if (!id || id.startsWith("nc-")) return;
+    setNotesLoading(true);
+    try {
+      const data = await getNotes(id);
+      setNotes(data);
+    } catch { /* non-fatal */ }
+    finally { setNotesLoading(false); }
+  }, [id]);
+
   const fetchUser = useCallback(async () => {
     if (!id || id.startsWith("nc-")) return;
     setLoading(true);
@@ -70,6 +83,7 @@ export default function ViewNewConvertPage() {
   }, [id]);
 
   useEffect(() => { fetchUser(); }, [fetchUser]);
+  useEffect(() => { if (activeTab === "activity") fetchNotes(); }, [activeTab, fetchNotes]);
 
   const handleConfirmDelete = () => {
     setShowDeleteModal(false);
@@ -92,6 +106,7 @@ export default function ViewNewConvertPage() {
       if (type === "visit") setVisitText("");
       setSaveMsg("Saved successfully.");
       setTimeout(() => setSaveMsg(""), 3000);
+      fetchNotes();
     } catch (err) {
       setSaveFailed(true);
       setSaveMsg(err instanceof Error ? err.message : "Failed to save.");
@@ -272,6 +287,35 @@ export default function ViewNewConvertPage() {
                     {saving ? "Saving…" : "Save Visit"}
                   </Button>
                 </div>
+              </div>
+
+              {/* Activity History */}
+              <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
+                <h3 className="mb-3 text-sm font-bold text-[#111827]">Activity History</h3>
+                {notesLoading ? (
+                  <p className="text-center text-xs text-[#9CA3AF] py-4">Loading history…</p>
+                ) : notes.length === 0 ? (
+                  <p className="text-center text-xs text-[#9CA3AF] py-4">No activity recorded yet.</p>
+                ) : (
+                  <ul className="space-y-3">
+                    {notes.map((n) => {
+                      const typeLabel = n.type === "CALL" ? "Call Log" : n.type === "VISIT" ? "Visit Log" : "Note";
+                      const typeBg    = n.type === "CALL" ? "bg-blue-50 text-blue-700" : n.type === "VISIT" ? "bg-green-50 text-green-700" : "bg-[#F3F4F6] text-[#374151]";
+                      return (
+                        <li key={n.id} className="rounded-lg border border-[#F3F4F6] bg-[#FAFAFA] px-4 py-3">
+                          <div className="mb-1 flex items-center justify-between gap-2">
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${typeBg}`}>{typeLabel}</span>
+                            <span className="text-xs text-[#9CA3AF]">{n.createdOn ? new Date(n.createdOn).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</span>
+                          </div>
+                          <p className="text-sm text-[#374151]">{n.content ?? "—"}</p>
+                          {(n.officerName ?? n.createdBy) && (
+                            <p className="mt-1 text-xs text-[#9CA3AF]">By {n.officerName ?? n.createdBy}</p>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </div>
             </div>
           )}
