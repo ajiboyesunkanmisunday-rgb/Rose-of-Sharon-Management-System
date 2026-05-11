@@ -669,8 +669,9 @@ export async function addNote(
   userId: string,
   note: string
 ): Promise<OperationalResponse> {
-  // Backend endpoint: POST /api/v1/notes with { userId, content }
-  return apiFetch<OperationalResponse>(`/api/v1/notes`, {
+  // Backend endpoint: POST /api/v1/notes/general with { userId, content }
+  // (/api/v1/notes returns 405 — general notes live on the /general sub-path)
+  return apiFetch<OperationalResponse>(`/api/v1/notes/general`, {
     method: "POST",
     body: JSON.stringify({ userId, content: note }),
   });
