@@ -7,7 +7,7 @@
 // Empty string = relative URL, so requests go to /api/...
 // Netlify proxies /api/* → http://137.184.72.16:6001/api/* server-side,
 // avoiding the browser's mixed-content (HTTPS→HTTP) block.
-const BASE_URL = "";
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
 // ─── Token helpers ─────────────────────────────────────────────────────────────
 
@@ -137,7 +137,8 @@ async function apiFetchRaw<T>(
   let fetchMethod = method;
   const needsProxy =
     typeof window !== "undefined" &&
-    path.startsWith("/api/");
+    path.startsWith("/api/") &&
+    !BASE_URL;
   if (needsProxy) {
     // Separate the path from any query string the caller already attached
     const [basePath, existingQs] = path.split("?");
@@ -184,6 +185,16 @@ async function apiFetchRaw<T>(
     // Backend returned 2xx but non-parseable body — treat as success
     data = {} as T;
   }
+
+  // Extract token from Authorization header if present and not already in body.
+  // The backend often returns the JWT in the header only.
+  if (data && typeof data === "object" && !("token" in data)) {
+    const authHeader = response.headers.get("authorization");
+    if (authHeader) {
+      (data as any).token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    }
+  }
+
   return { data, headers: response.headers };
 }
 
@@ -307,7 +318,10 @@ export interface LoginRequest {
 }
 
 export async function loginUser(body: LoginRequest): Promise<UserResponse> {
-  const response = await apiFetch<UserResponse>("/.netlify/functions/login", {
+  // Use the direct backend login endpoint if BASE_URL is set (development);
+  // otherwise use the Netlify function proxy (production).
+  const path = BASE_URL ? "/api/v1/users/login" : "/.netlify/functions/login";
+  const response = await apiFetch<UserResponse>(path, {
     method: "POST",
     body: JSON.stringify(body),
   });
@@ -1092,9 +1106,15 @@ export interface PermissionResponse {
   description?: string;
 }
 
-/** Get all available permissions in the system. */
 export async function getPermissions(): Promise<PermissionResponse[]> {
   return apiFetch<PermissionResponse[]>("/api/v1/permissions");
+}
+
+/** Get all permissions tied to a specific role. */
+export async function getRolePermissions(
+  roleId: string
+): Promise<PermissionResponse[]> {
+  return apiFetch<PermissionResponse[]>(`/api/v1/roles/${roleId}/permissions`);
 }
 
 /**
@@ -1106,9 +1126,24 @@ export async function assignPermissionsToRole(
   roleId: string,
   permissionIds: string[]
 ): Promise<RoleResponse> {
-  return apiFetch<RoleResponse>(`/api/v1/roles/${roleId}/permissions`, {
-    method: "POST",
-    body: JSON.stringify({ permissionIds }),
+  return apiFetch<RoleResponse>(`/api/v1/roles/${roleId}/assign-permission`, {
+    method: "PUT",
+    body: JSON.stringify({ ids: permissionIds }),
+  });
+}
+
+/**
+ * Remove a list of permissions from a role.
+ * @param roleId - The role UUID
+ * @param permissionIds - Array of permission UUIDs to remove
+ */
+export async function removePermissionsFromRole(
+  roleId: string,
+  permissionIds: string[]
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/roles/${roleId}/remove-permission`, {
+    method: "DELETE",
+    body: JSON.stringify({ ids: permissionIds }),
   });
 }
 
@@ -1797,6 +1832,99 @@ export async function deleteWorkersInTrainingBulk(
     method: "DELETE",
     body: JSON.stringify({ ids }),
   });
+}
+
+
+// ─── Audit Logs ────────────────────────────────────────────────────────────────
+
+export interface AuditLogResponse {
+  id: string;
+  user: {
+    id: string;
+    firstName: string;
+    middleName?: string;
+    lastName: string;
+    email: string;
+    profilePictureUrl?: string;
+    sex?: "FEMALE" | "MALE";
+    street?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    countryCode?: string;
+    phoneNumber?: string;
+    dayOfBirth?: number;
+    monthOfBirth?: number;
+    yearOfBirth?: number;
+    dayOfWedding?: number;
+    monthOfWedding?: number;
+    yearOfWedding?: number;
+    maritalStatus?: "SINGLE" | "MARRIED" | "WIDOWED" | "DIVORCED";
+    spouse?: string;
+    couplePictureUrl?: string;
+    occupation?: string;
+    assignedFollowUp?: string;
+    noOfCalls?: number;
+    noOfVisits?: number;
+  };
+  userAgent: string;
+  actionPerformed: string;
+  actionPerformedSummary: string;
+  module: string;
+  location: string;
+  isSuccessful: boolean;
+  errorMessage?: string;
+  createdOn: string;
+}
+
+export async function getAuditLogs(
+  pageNo = 0,
+  pageSize = 10
+): Promise<CustomPageResponse<AuditLogResponse>> {
+  return apiFetch<CustomPageResponse<AuditLogResponse>>(
+    `/api/v1/audit-logs?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function searchAuditLogs(
+  text: string,
+  pageNo = 0,
+  pageSize = 10
+): Promise<CustomPageResponse<AuditLogResponse>> {
+  return apiFetch<CustomPageResponse<AuditLogResponse>>(
+    `/api/v1/audit-logs/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    }
+  );
+}
+
+export async function getAuditLogsInTimeframe(
+  startTime: string,
+  endTime: string,
+  pageNo = 0,
+  pageSize = 10
+): Promise<CustomPageResponse<AuditLogResponse>> {
+  return apiFetch<CustomPageResponse<AuditLogResponse>>(
+    `/api/v1/audit-logs/timeframe?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}&pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function searchAuditLogsInTimeframe(
+  text: string,
+  startTime: string,
+  endTime: string,
+  pageNo = 0,
+  pageSize = 10
+): Promise<CustomPageResponse<AuditLogResponse>> {
+  return apiFetch<CustomPageResponse<AuditLogResponse>>(
+    `/api/v1/audit-logs/timeframe/search?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}&pageNo=${pageNo}&pageSize=${pageSize}`,
+    {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    }
+  );
 }
 
 /**
