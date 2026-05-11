@@ -65,7 +65,8 @@ export default function EventDetailClient() {
   const [id, setId] = useState(paramId);
 
   // Read real ID from the browser URL — handles Netlify static rewrites where
-  // the pre-built placeholder HTML is served for a real UUID path.
+  // the pre-built placeholder HTML (ev-1, ev-2…) is served for a real UUID path.
+  // We always prefer the URL so the correct event is loaded.
   useEffect(() => {
     if (typeof window !== "undefined") {
       const parts = window.location.pathname.replace(/\/$/, "").split("/");
@@ -74,6 +75,9 @@ export default function EventDetailClient() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Detect Netlify static placeholder IDs (ev-1, ev-2, …) — never fetch with these.
+  const isPlaceholder = (v: string) => /^ev-\d+$/.test(v);
 
   const [event,        setEvent]        = useState<EventResponse | null>(null);
   const [loadingEvent, setLoadingEvent] = useState(true);
@@ -113,12 +117,19 @@ export default function EventDetailClient() {
 
   // ── Load event ─────────────────────────────────────────────────────────────
   useEffect(() => {
+    // If we still have a placeholder ID, exit loading state so the page isn't
+    // permanently stuck on "Loading…" while waiting for the URL effect.
+    if (!id || isPlaceholder(id)) {
+      setLoadingEvent(false);
+      return;
+    }
     setLoadingEvent(true);
     setEventError("");
     getEvent(id)
       .then(setEvent)
       .catch(err => setEventError(err instanceof Error ? err.message : "Failed to load event."))
       .finally(() => setLoadingEvent(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // ── Load first timers ─────────────────────────────────────────────────────
@@ -169,21 +180,24 @@ export default function EventDetailClient() {
     }
   }, [id]);
 
-  // Load data when tab changes
+  // Load data when tab changes — skip placeholder IDs and re-fire when id becomes a real UUID.
   useEffect(() => {
+    if (!id || isPlaceholder(id)) return;
     if (activeTab === "first-timers") loadFirstTimers(ftPage);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, ftPage]);
+  }, [activeTab, ftPage, id]);
 
   useEffect(() => {
+    if (!id || isPlaceholder(id)) return;
     if (activeTab === "e-members") loadEMembers(emPage);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, emPage]);
+  }, [activeTab, emPage, id]);
 
   useEffect(() => {
+    if (!id || isPlaceholder(id)) return;
     if (activeTab === "new-converts") loadNewConverts(ncPage);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, ncPage]);
+  }, [activeTab, ncPage, id]);
 
   // ── Mark attendance ───────────────────────────────────────────────────────
   const handleMarkAttendance = async (eMemberId: string) => {
@@ -214,7 +228,9 @@ export default function EventDetailClient() {
   };
 
   // ── Loading / error state for event ──────────────────────────────────────
-  if (loadingEvent) {
+  // Show loading while fetching OR while still holding a placeholder ID
+  // (the URL effect will swap it for the real UUID momentarily).
+  if (loadingEvent || isPlaceholder(id)) {
     return (
       <DashboardLayout>
         <PageHeader title="Event Management" subtitle="Loading…" backHref="/event-management" />
@@ -481,7 +497,7 @@ export default function EventDetailClient() {
       <QRCodeModal
         isOpen={showQRModal}
         onClose={() => setShowQRModal(false)}
-        value={`https://rosms.app/events/${id}/check-in`}
+        value={typeof window !== "undefined" ? `${window.location.origin}/events/${id}/check-in` : `/events/${id}/check-in`}
         title="Event Check-in QR Code"
       />
       <EventBroadcastModal
