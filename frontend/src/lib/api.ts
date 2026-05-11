@@ -653,10 +653,10 @@ export async function addNote(
   userId: string,
   note: string
 ): Promise<OperationalResponse> {
-  // Endpoint is singular /note, not /notes (backend returns 404 for /notes)
-  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/note`, {
+  // Backend endpoint: POST /api/v1/notes with { userId, content }
+  return apiFetch<OperationalResponse>(`/api/v1/notes`, {
     method: "POST",
-    body: JSON.stringify({ note, text: note }),
+    body: JSON.stringify({ userId, content: note }),
   });
 }
 
@@ -664,9 +664,10 @@ export async function addCallReport(
   userId: string,
   report: string
 ): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/call-report`, {
+  // Backend endpoint: POST /api/v1/notes/call with { userId, content }
+  return apiFetch<OperationalResponse>(`/api/v1/notes/call`, {
     method: "POST",
-    body: JSON.stringify({ report }),
+    body: JSON.stringify({ userId, content: report }),
   });
 }
 
@@ -674,9 +675,10 @@ export async function addVisitReport(
   userId: string,
   report: string
 ): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/visit-report`, {
+  // Backend endpoint: POST /api/v1/notes/visit with { userId, content }
+  return apiFetch<OperationalResponse>(`/api/v1/notes/visit`, {
     method: "POST",
-    body: JSON.stringify({ report }),
+    body: JSON.stringify({ userId, content: report }),
   });
 }
 
@@ -769,16 +771,19 @@ export async function getGuestInformation(
   );
 }
 
-// Note: believers-class update endpoint not yet available on backend.
-// Stubbed for when backend team adds it.
+// Backend endpoint: POST /api/v1/new-converts/mark-as-attended?believerClassStage=CLASS_1
+// Supports multi-select via { ids: string[] }; here we pass a single userId.
 export async function updateBelieversClass(
   userId: string,
   believersClass: string
 ): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/new-converts/${userId}/believers-class`, {
-    method: "PUT",
-    body: JSON.stringify({ believerClassStage: believersClass }),
-  });
+  return apiFetch<OperationalResponse>(
+    `/api/v1/new-converts/mark-as-attended?believerClassStage=${encodeURIComponent(believersClass)}`,
+    {
+      method: "POST",
+      body: JSON.stringify({ ids: [userId] }),
+    }
+  );
 }
 
 // ─── Settings ───────────────────────────────────────────────────────────────────

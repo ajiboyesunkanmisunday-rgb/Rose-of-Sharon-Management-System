@@ -211,9 +211,10 @@ export default function ViewNewConvertPage() {
                     className="flex-1 rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
                   >
                     <option value="">Select Stage</option>
-                    <option value="STAGE_1">Stage 1</option>
-                    <option value="STAGE_2">Stage 2</option>
-                    <option value="STAGE_3">Stage 3</option>
+                    <option value="CLASS_1">Class 1</option>
+                    <option value="CLASS_2">Class 2</option>
+                    <option value="CLASS_3">Class 3</option>
+                    <option value="CLASS_4">Class 4</option>
                     <option value="COMPLETED">Completed</option>
                   </select>
                   <Button variant="primary" onClick={handleUpdateClass} disabled={saving || !classStage}>
