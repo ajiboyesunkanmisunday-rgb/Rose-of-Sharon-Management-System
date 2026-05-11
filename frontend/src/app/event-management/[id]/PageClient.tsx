@@ -117,8 +117,12 @@ export default function EventDetailClient() {
 
   // ── Load event ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    // Skip placeholder IDs — wait for the URL effect to set the real UUID.
-    if (!id || isPlaceholder(id)) return;
+    // If we still have a placeholder ID, exit loading state so the page isn't
+    // permanently stuck on "Loading…" while waiting for the URL effect.
+    if (!id || isPlaceholder(id)) {
+      setLoadingEvent(false);
+      return;
+    }
     setLoadingEvent(true);
     setEventError("");
     getEvent(id)
@@ -224,7 +228,9 @@ export default function EventDetailClient() {
   };
 
   // ── Loading / error state for event ──────────────────────────────────────
-  if (loadingEvent) {
+  // Show loading while fetching OR while still holding a placeholder ID
+  // (the URL effect will swap it for the real UUID momentarily).
+  if (loadingEvent || isPlaceholder(id)) {
     return (
       <DashboardLayout>
         <PageHeader title="Event Management" subtitle="Loading…" backHref="/event-management" />
