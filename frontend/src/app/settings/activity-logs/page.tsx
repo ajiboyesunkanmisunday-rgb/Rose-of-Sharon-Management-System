@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
 import Pagination from "@/components/ui/Pagination";
 import DateRangePicker from "@/components/ui/DateRangePicker";
-import { activityLogs } from "@/lib/mock-data";
-import { ScrollText } from "lucide-react";
+import { getAuditLogs, searchAuditLogs, getAuditLogsInTimeframe, searchAuditLogsInTimeframe, type AuditLogResponse } from "@/lib/api";
+import { ScrollText, RefreshCw } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 
-const categoryBadgeColors: Record<string, string> = {
+const moduleBadgeColors: Record<string, string> = {
   Login: "bg-[#000080] text-white",
   Member: "bg-[#16A34A] text-white",
   Communication: "bg-[#CA8A04] text-white",
@@ -20,31 +20,56 @@ const categoryBadgeColors: Record<string, string> = {
 };
 
 export default function ActivityLogsPage() {
+  const [logs, setLogs] = useState<AuditLogResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
   const [search, setSearch] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
 
-  const filtered = useMemo(() => {
-    let list = activityLogs;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (l) =>
-          l.action.toLowerCase().includes(q) ||
-          l.performedBy.toLowerCase().includes(q) ||
-          l.location.toLowerCase().includes(q) ||
-          l.category.toLowerCase().includes(q)
-      );
+  const fetchLogs = useCallback(async (page: number, q: string, start?: string, end?: string) => {
+    setLoading(true);
+    setError("");
+    try {
+      let res;
+      if (start && end) {
+        // Use timeframe endpoints if date range is provided
+        const isoStart = `${start}T00:00:00Z`;
+        const isoEnd = `${end}T23:59:59Z`;
+        res = q.trim()
+          ? await searchAuditLogsInTimeframe(q, isoStart, isoEnd, page - 1, ITEMS_PER_PAGE)
+          : await getAuditLogsInTimeframe(isoStart, isoEnd, page - 1, ITEMS_PER_PAGE);
+      } else {
+        // Fallback to general endpoints
+        res = q.trim()
+          ? await searchAuditLogs(q, page - 1, ITEMS_PER_PAGE)
+          : await getAuditLogs(page - 1, ITEMS_PER_PAGE);
+      }
+      
+      setLogs(res.content ?? []);
+      setTotalPages(res.totalPages ?? 1);
+      setTotalItems(res.totalElements ?? 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load activity logs.");
+    } finally {
+      setLoading(false);
     }
-    return list;
-  }, [search]);
+  }, []);
 
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paginated = filtered.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  useEffect(() => {
+    fetchLogs(currentPage, activeSearch, fromDate, toDate);
+  }, [currentPage, activeSearch, fromDate, toDate, fetchLogs]);
+
+  const handleSearch = () => {
+    setActiveSearch(search);
+    setCurrentPage(1);
+  };
 
   return (
     <DashboardLayout>
@@ -65,17 +90,33 @@ export default function ActivityLogsPage() {
           onFromChange={setFromDate}
           onToChange={setToDate}
         />
-        <div className="w-full sm:w-72">
-          <SearchBar
-            value={search}
-            onChange={setSearch}
-            onSearch={() => setCurrentPage(1)}
-            placeholder="Search activity..."
-          />
+        <div className="flex w-full sm:w-auto items-center gap-2">
+           <div className="w-full sm:w-72">
+            <SearchBar
+                value={search}
+                onChange={setSearch}
+                onSearch={handleSearch}
+                placeholder="Search activity..."
+            />
+           </div>
+           <button 
+             onClick={() => fetchLogs(currentPage, activeSearch, fromDate, toDate)}
+             className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-gray-500 hover:bg-gray-50 transition-colors"
+             title="Refresh"
+           >
+             <RefreshCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} />
+           </button>
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex justify-between items-center animate-in fade-in slide-in-from-top-1">
+          <span>{error}</span>
+          <button onClick={() => fetchLogs(currentPage, activeSearch, fromDate, toDate)} className="font-bold underline hover:no-underline">Retry</button>
+        </div>
+      )}
+
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="bg-[#F3F4F6]">
@@ -83,35 +124,61 @@ export default function ActivityLogsPage() {
               <th className="px-4 py-4 text-sm font-bold text-[#000080]">Performed By</th>
               <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Date & Time</th>
               <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Location</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Category</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Module</th>
             </tr>
           </thead>
-          <tbody>
-            {paginated.map((log) => (
-              <tr
-                key={log.id}
-                className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50"
-                style={{ height: "56px" }}
-              >
-                <td className="px-4 py-3 text-sm text-[#374151]">{log.action}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{log.performedBy}</td>
-                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{log.timestamp}</td>
-                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{log.location}</td>
-                <td className="hidden sm:table-cell px-4 py-3">
-                  <span
-                    className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
-                      categoryBadgeColors[log.category] || "bg-gray-200 text-gray-700"
-                    }`}
+          <tbody className="divide-y divide-[#F3F4F6]">
+            {loading && logs.length === 0 ? (
+                <tr>
+                    <td colSpan={5} className="px-4 py-12 text-center text-gray-400">
+                      <div className="flex flex-col items-center gap-2">
+                        <RefreshCw className="h-8 w-8 animate-spin text-gray-300" />
+                        <span>Loading activity logs...</span>
+                      </div>
+                    </td>
+                </tr>
+            ) : (
+                logs.map((log) => (
+                  <tr
+                    key={log.id}
+                    className="transition-colors hover:bg-gray-50"
                   >
-                    {log.category}
-                  </span>
-                </td>
-              </tr>
-            ))}
-            {paginated.length === 0 && (
+                    <td className="px-4 py-4">
+                        <div className="text-sm font-medium text-[#374151]">{log.actionPerformed}</div>
+                        <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{log.actionPerformedSummary}</div>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-[#374151]">
+                        {log.user ? `${log.user.firstName} ${log.user.lastName}` : "System"}
+                        <div className="text-xs text-gray-400">{log.user?.email}</div>
+                    </td>
+                    <td className="hidden sm:table-cell px-4 py-4 text-sm text-[#374151]">
+                        {log.createdOn ? new Date(log.createdOn).toLocaleString(undefined, {
+                            dateStyle: 'medium',
+                            timeStyle: 'short'
+                        }) : "—"}
+                    </td>
+                    <td className="hidden md:table-cell px-4 py-4 text-sm text-[#374151]">
+                      {log.location || "Unknown"}
+                      {log.isSuccessful === false && (
+                        <div className="text-[10px] text-red-500 font-medium">Failed</div>
+                      )}
+                    </td>
+                    <td className="hidden sm:table-cell px-4 py-4">
+                      <span
+                        className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          moduleBadgeColors[log.module] || "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {log.module}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+            )}
+            {!loading && logs.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-400" style={{}}>
-                  No activity found.
+                <td colSpan={5} className="px-4 py-12 text-center text-gray-400">
+                  No activity logs found.
                 </td>
               </tr>
             )}
@@ -123,7 +190,7 @@ export default function ActivityLogsPage() {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={filtered.length}
+          totalItems={totalItems}
           onPageChange={setCurrentPage}
         />
       </div>
