@@ -176,21 +176,24 @@ export default function EventDetailClient() {
     }
   }, [id]);
 
-  // Load data when tab changes
+  // Load data when tab changes — skip placeholder IDs and re-fire when id becomes a real UUID.
   useEffect(() => {
+    if (!id || isPlaceholder(id)) return;
     if (activeTab === "first-timers") loadFirstTimers(ftPage);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, ftPage]);
+  }, [activeTab, ftPage, id]);
 
   useEffect(() => {
+    if (!id || isPlaceholder(id)) return;
     if (activeTab === "e-members") loadEMembers(emPage);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, emPage]);
+  }, [activeTab, emPage, id]);
 
   useEffect(() => {
+    if (!id || isPlaceholder(id)) return;
     if (activeTab === "new-converts") loadNewConverts(ncPage);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, ncPage]);
+  }, [activeTab, ncPage, id]);
 
   // ── Mark attendance ───────────────────────────────────────────────────────
   const handleMarkAttendance = async (eMemberId: string) => {
