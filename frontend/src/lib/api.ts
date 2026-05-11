@@ -162,13 +162,29 @@ async function apiFetchRaw<T>(
   }
 
   if (!response.ok) {
-    let errorMessage = `Request failed: ${response.status}`;
+    let errorMessage = `Request failed (${response.status})`;
     try {
       const errBody = await response.json();
       if (errBody?.message) errorMessage = errBody.message;
       else if (errBody?.error) errorMessage = errBody.error;
     } catch {
       // ignore parse errors
+    }
+    // Translate technical HTTP error phrases into plain-English messages
+    const status = response.status;
+    const raw = errorMessage.toLowerCase();
+    if (status === 405 || raw.includes("method not allowed")) {
+      errorMessage = "This action is not yet supported by the server. Please contact the backend team.";
+    } else if (status === 502 || status === 503 || raw.includes("bad gateway") || raw.includes("service unavailable")) {
+      errorMessage = "Server is temporarily unavailable. Please try again in a moment.";
+    } else if (status === 404 || raw.includes("not found")) {
+      errorMessage = "Record not found. It may have been deleted or the ID is incorrect.";
+    } else if (status === 500 || raw.includes("internal server error")) {
+      errorMessage = "Server error. Please try again or contact support.";
+    } else if (status === 400 || raw.includes("bad request")) {
+      errorMessage = "Invalid request. Please check the form and try again.";
+    } else if (status === 403 || raw.includes("forbidden")) {
+      errorMessage = "You don't have permission to perform this action.";
     }
     throw new Error(errorMessage);
   }
@@ -661,6 +677,27 @@ export async function markNewConvertsAsAttended(ids: string[]): Promise<Operatio
     method: "POST",
     body: JSON.stringify({ ids }),
   });
+}
+
+// ─── Notes / Activity Log ────────────────────────────────────────────────────────
+
+export interface NoteResponse {
+  id: string;
+  userId?: string;
+  content?: string;
+  type?: string;        // e.g. "GENERAL", "CALL", "VISIT"
+  createdOn?: string;
+  createdBy?: string;
+  officerName?: string;
+}
+
+export async function getNotes(
+  userId: string
+): Promise<NoteResponse[]> {
+  // Try GET /api/v1/notes?userId={id} — returns array or paginated wrapper
+  const res = await apiFetch<NoteResponse[] | { content?: NoteResponse[] }>(`/api/v1/notes?userId=${encodeURIComponent(userId)}`);
+  if (Array.isArray(res)) return res;
+  return res.content ?? [];
 }
 
 // ─── Follow-up Actions ──────────────────────────────────────────────────────────
