@@ -1136,16 +1136,9 @@ export async function getGroup(id: string): Promise<GroupResponse> {
   return apiFetch<GroupResponse>(`/api/v1/groups/${id}`);
 }
 
-/** Fetch all members belonging to a specific group. */
-export async function getGroupMembers(
-  groupId: string,
-  pageNo = 0,
-  pageSize = 200
-): Promise<CustomPageResponse<UserResponse>> {
-  return apiFetch<CustomPageResponse<UserResponse>>(
-    `/api/v1/groups/${groupId}/members?pageNo=${pageNo}&pageSize=${pageSize}`
-  );
-}
+// NOTE: GET /api/v1/groups/{id}/members does not exist in the backend (returns 405).
+// Group member filtering must be done client-side using the groups[] array
+// on each UserResponse, or the backend team must add the endpoint.
 
 export async function createGroup(body: CreateGroupRequest): Promise<GroupResponse> {
   return apiFetch<GroupResponse>("/api/v1/groups", {
