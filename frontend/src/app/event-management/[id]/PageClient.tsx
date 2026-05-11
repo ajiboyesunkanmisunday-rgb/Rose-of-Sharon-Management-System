@@ -65,7 +65,8 @@ export default function EventDetailClient() {
   const [id, setId] = useState(paramId);
 
   // Read real ID from the browser URL — handles Netlify static rewrites where
-  // the pre-built placeholder HTML is served for a real UUID path.
+  // the pre-built placeholder HTML (ev-1, ev-2…) is served for a real UUID path.
+  // We always prefer the URL so the correct event is loaded.
   useEffect(() => {
     if (typeof window !== "undefined") {
       const parts = window.location.pathname.replace(/\/$/, "").split("/");
@@ -74,6 +75,9 @@ export default function EventDetailClient() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Detect Netlify static placeholder IDs (ev-1, ev-2, …) — never fetch with these.
+  const isPlaceholder = (v: string) => /^ev-\d+$/.test(v);
 
   const [event,        setEvent]        = useState<EventResponse | null>(null);
   const [loadingEvent, setLoadingEvent] = useState(true);
@@ -113,12 +117,15 @@ export default function EventDetailClient() {
 
   // ── Load event ─────────────────────────────────────────────────────────────
   useEffect(() => {
+    // Skip placeholder IDs — wait for the URL effect to set the real UUID.
+    if (!id || isPlaceholder(id)) return;
     setLoadingEvent(true);
     setEventError("");
     getEvent(id)
       .then(setEvent)
       .catch(err => setEventError(err instanceof Error ? err.message : "Failed to load event."))
       .finally(() => setLoadingEvent(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // ── Load first timers ─────────────────────────────────────────────────────
