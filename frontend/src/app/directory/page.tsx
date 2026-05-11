@@ -12,7 +12,6 @@ import {
   getSecondTimers,
   getNewConverts,
   getAllGroups,
-  getGroupMembers,
   type UserResponse,
   type GroupResponse,
 } from "@/lib/api";
@@ -117,9 +116,6 @@ export default function DirectoryPage() {
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
 
-  // IDs of entries that belong to the selected group (from server-side lookup)
-  const [groupMemberIds, setGroupMemberIds] = useState<Set<string> | null>(null);
-  const [groupLoading, setGroupLoading]     = useState(false);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -189,44 +185,16 @@ export default function DirectoryPage() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // When a group is selected, fetch its members from the backend so we can filter
-  // properly — the list endpoints don't include group membership on each user.
-  useEffect(() => {
-    if (!selectedGroup) {
-      setGroupMemberIds(null);
-      return;
-    }
-    const group = groups.find((g) => g.name === selectedGroup);
-    if (!group) {
-      setGroupMemberIds(null);
-      return;
-    }
-    setGroupLoading(true);
-    getGroupMembers(group.id, 0, 500)
-      .then((res) => {
-        const ids = new Set<string>((res.content ?? []).map((u) => u.id));
-        setGroupMemberIds(ids);
-      })
-      .catch(() => {
-        // Endpoint may not exist — fall back to client-side groups array on each user
-        setGroupMemberIds(null);
-      })
-      .finally(() => setGroupLoading(false));
-  }, [selectedGroup, groups]);
-
   const filtered = useMemo(() => {
     let list = entries;
     if (selectedType !== "all") list = list.filter((e) => e.userType === selectedType);
     if (selectedGroup) {
-      if (groupMemberIds !== null) {
-        // Server confirmed membership — use the authoritative ID set
-        list = list.filter((e) => groupMemberIds.has(e.id));
-      } else {
-        // Server endpoint not available — fall back to groups array on each user
-        list = list.filter((e) =>
-          e.groups?.some((g) => g.name === selectedGroup || g.id === selectedGroup)
-        );
-      }
+      // Filter by group using the groups array returned on each user object.
+      // If the backend list endpoint doesn't include groups, this will
+      // return 0 results — in that case, a notice is shown below.
+      list = list.filter((e) =>
+        e.groups?.some((g) => g.name === selectedGroup || g.id === selectedGroup)
+      );
     }
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -239,7 +207,7 @@ export default function DirectoryPage() {
       );
     }
     return list;
-  }, [entries, selectedType, selectedGroup, groupMemberIds, search]);
+  }, [entries, selectedType, selectedGroup, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -351,17 +319,21 @@ export default function DirectoryPage() {
       </div>
 
       {/* Content */}
-      {(loading || groupLoading) ? (
+      {loading ? (
         <div className="flex h-48 items-center justify-center text-gray-400">
           <svg className="mr-3 h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
-          {groupLoading ? "Filtering by group…" : "Loading directory…"}
+          Loading directory…
         </div>
       ) : paginated.length === 0 ? (
         <div className="rounded-xl border border-[#E5E7EB] bg-white p-12 text-center text-sm text-gray-400">
-          {entries.length === 0 ? "No members found in the database." : "No members match your filters."}
+          {entries.length === 0
+            ? "No members found in the database."
+            : selectedGroup
+              ? `No members found in the "${selectedGroup}" group. Group membership filtering requires the backend to include groups in the member list — ask the backend team to include the groups field in user list responses.`
+              : "No members match your filters."}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
