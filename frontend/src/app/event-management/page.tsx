@@ -10,6 +10,7 @@ import ActionDropdown from "@/components/ui/ActionDropdown";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { getEvents, searchEvents, cancelEvent, type EventResponse } from "@/lib/api";
 import { CalendarClock } from "lucide-react";
+import { useToast } from "@/context/ToastContext";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -56,6 +57,7 @@ const EVENT_CATEGORIES = [
 
 export default function EventManagementPage() {
   const router = useRouter();
+  const { addToast } = useToast();
 
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [allEvents, setAllEvents] = useState<EventResponse[]>([]); // for client-side filter
@@ -135,9 +137,12 @@ export default function EventManagementPage() {
       await cancelEvent(selectedId);
       setShowCancelModal(false);
       setSelectedId(null);
+      addToast("Event cancelled successfully.", "success");
       fetchEvents(currentPage, search);
     } catch (err) {
-      setCancelError(err instanceof Error ? err.message : "Failed to cancel event.");
+      const msg = err instanceof Error ? err.message : "Failed to cancel event.";
+      setCancelError(msg);
+      addToast(msg, "error");
     } finally {
       setCancelling(false);
     }
