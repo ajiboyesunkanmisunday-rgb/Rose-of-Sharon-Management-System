@@ -137,13 +137,9 @@ export default function SecondTimersPage() {
 
   const handleSaveNote = async (note: string) => {
     if (!selectedTimerId) return;
-    try {
-      await addNote(selectedTimerId, note);
-      setShowNotesModal(false);
-      setSelectedTimerId(null);
-    } catch {
-      // modal handles its own error display
-    }
+    await addNote(selectedTimerId, note);
+    setShowNotesModal(false);
+    setSelectedTimerId(null);
   };
 
   const handleBulkDeleteConfirm = async () => {

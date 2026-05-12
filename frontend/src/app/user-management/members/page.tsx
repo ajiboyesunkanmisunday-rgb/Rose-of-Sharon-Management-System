@@ -14,7 +14,7 @@ import AddNotesModal from "@/components/user-management/AddNotesModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import BulkImportModal from "@/components/user-management/BulkImportModal";
 import NoLongerMemberModal from "@/components/user-management/NoLongerMemberModal";
-import { getMembers, deleteMembersBulk, type UserResponse } from "@/lib/api";
+import { getMembers, deleteMembersBulk, addNote, type UserResponse } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
 import { SkeletonRow } from "@/components/ui/Skeleton";
 import { useAssignSuperAdmin } from "@/hooks/member/useAssignSuperAdmin";
@@ -145,6 +145,13 @@ export default function MembersPage() {
   const handleAddNotesClick = (id: string) => {
     setSelectedMemberId(id);
     setShowNotesModal(true);
+  };
+
+  const handleSaveNote = async (note: string) => {
+    if (!selectedMemberId) return;
+    await addNote(selectedMemberId, note);
+    setShowNotesModal(false);
+    setSelectedMemberId(null);
   };
 
   const handleNoLongerMemberClick = (id: string) => {
@@ -635,6 +642,7 @@ export default function MembersPage() {
           setShowNotesModal(false);
           setSelectedMemberId(null);
         }}
+        onSave={handleSaveNote}
       />
       <DeleteConfirmModal
         isOpen={showDeleteModal}
