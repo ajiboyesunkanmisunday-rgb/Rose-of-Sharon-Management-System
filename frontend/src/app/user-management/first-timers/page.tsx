@@ -369,7 +369,49 @@ export default function FirstTimersPage() {
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      {/* Mobile card view */}
+      <div className="sm:hidden space-y-3 mb-4">
+        {loading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-2">
+              <div className="skeleton h-4 w-32" /><div className="skeleton h-3 w-24" />
+            </div>
+          ))
+        ) : displayedTimers.length === 0 ? (
+          <p className="text-center text-sm text-gray-400 py-8">No first timers found.</p>
+        ) : (
+          displayedTimers.map((ft) => (
+            <div
+              key={ft.id}
+              onClick={() => router.push(`/user-management/first-timers/${ft.id}`)}
+              className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EEF2FF]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-[#111827] truncate">{fullName(ft)}</p>
+                <p className="text-xs text-[#6B7280]">{ft.phoneNumber}</p>
+                <p className="text-xs text-[#9CA3AF]">Calls: {ft.noOfCalls ?? 0} · Visits: {ft.noOfVisits ?? 0}</p>
+              </div>
+              <div onClick={(e) => e.stopPropagation()}>
+                <ActionDropdown
+                  actions={[
+                    { label: "View", onClick: () => router.push(`/user-management/first-timers/${ft.id}`) },
+                    { label: "Edit", onClick: () => router.push(`/user-management/first-timers/${ft.id}/edit`) },
+                    { label: "Add Notes", onClick: () => { setSelectedTimerId(ft.id); setShowNotesModal(true); } },
+                  ]}
+                />
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Table — hidden on mobile */}
+      <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="bg-[#F3F4F6]">
