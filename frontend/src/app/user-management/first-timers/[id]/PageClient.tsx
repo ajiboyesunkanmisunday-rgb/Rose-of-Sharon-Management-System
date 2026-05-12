@@ -8,6 +8,7 @@ import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal"
 import { getUser, addNote, addCallReport, addVisitReport, getNotes, convertToSecondTimer, type UserResponse, type NoteResponse } from "@/lib/api";
 import ProfilePhoto from "@/components/ui/ProfilePhoto";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
+import { useToast } from "@/context/ToastContext";
 
 type Tab = "details" | "activity";
 
@@ -41,6 +42,7 @@ const UserIcon = () => (
 
 export default function ViewFirstTimerPage() {
   const router = useRouter();
+  const { addToast } = useToast();
   const params = useParams();
   const paramId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
   const [id, setId] = useState(paramId);
@@ -121,10 +123,13 @@ export default function ViewFirstTimerPage() {
       if (type === "visit") setVisitText("");
       setSaveMsg("Saved successfully.");
       setTimeout(() => setSaveMsg(""), 3000);
+      addToast("Saved successfully.", "success");
       fetchNotes(); // refresh history
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to save.";
       setSaveFailed(true);
-      setSaveMsg(err instanceof Error ? err.message : "Failed to save.");
+      setSaveMsg(msg);
+      addToast(msg, "error");
     } finally {
       setSaving(false);
     }
@@ -140,9 +145,12 @@ export default function ViewFirstTimerPage() {
     setConverting(true);
     try {
       await convertToSecondTimer(id);
+      addToast("Converted to Second Timer successfully.", "success");
       router.push("/user-management/second-timers");
     } catch (err) {
-      setSaveMsg(err instanceof Error ? err.message : "Conversion failed.");
+      const msg = err instanceof Error ? err.message : "Conversion failed.";
+      setSaveMsg(msg);
+      addToast(msg, "error");
       setConverting(false);
     }
   };

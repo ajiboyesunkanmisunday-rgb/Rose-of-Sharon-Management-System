@@ -7,6 +7,7 @@ import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { getUser, getUserRequests, markUserAsInactive, type UserResponse, type RequestResponse } from "@/lib/api";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
+import { useToast } from "@/context/ToastContext";
 
 type Tab = "details" | "requests";
 
@@ -47,6 +48,7 @@ const reqStatusColors: Record<string, string> = {
 
 export default function ViewMemberProfilePage() {
   const router = useRouter();
+  const { addToast } = useToast();
   const params = useParams();
   const paramId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
   const [id, setId] = useState(paramId);
@@ -119,9 +121,12 @@ export default function ViewMemberProfilePage() {
     try {
       await markUserAsInactive(id, "Marked inactive by admin");
       setActionMsg("Member marked as inactive.");
+      addToast("Member marked as inactive.", "success");
       fetchUser(); // refresh so the profile reflects the new status
     } catch (err) {
-      setActionMsg(err instanceof Error ? err.message : "Failed to mark inactive.");
+      const msg = err instanceof Error ? err.message : "Failed to mark inactive.";
+      setActionMsg(msg);
+      addToast(msg, "error");
     } finally {
       setActionLoading(null);
     }

@@ -9,6 +9,7 @@ import { FormField, SelectField, TextAreaField } from "@/components/ui/FormField
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { createEvent } from "@/lib/api";
 import { NIGERIA_STATES, COUNTRIES } from "@/lib/nigeria-states";
+import { useToast } from "@/context/ToastContext";
 
 const CATEGORY_OPTIONS = [
   { label: "Service", value: "SERVICE" },
@@ -44,6 +45,7 @@ function normalizeDate(raw: string): string {
 
 export default function AddEventPage() {
   const router = useRouter();
+  const { addToast } = useToast();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -114,10 +116,12 @@ export default function AddEventPage() {
         eFlyer: formData.eFlyer || undefined,
         requiresRegistration: formData.requiresRegistration || undefined,
       });
+      addToast("Event created successfully.", "success");
       router.push("/event-management");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to create event.";
       setError(msg);
+      addToast(msg, "error");
       setLoading(false);
     }
   };
