@@ -12,6 +12,14 @@
 [build.environment]
   NODE_VERSION = "18"
 
+# Root path — Next.js static export does NOT generate out/index.html
+# because redirect() in page.tsx is a server-side call; Netlify needs
+# an explicit rule to redirect visitors to the login page.
+[[redirects]]
+  from   = "/"
+  to     = "/login"
+  status = 302
+
 # Login is handled by a serverless function so it can read the
 # Authorization response header from the backend and return the
 # JWT token inside the JSON body.
