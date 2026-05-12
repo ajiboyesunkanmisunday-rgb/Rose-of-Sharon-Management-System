@@ -751,10 +751,11 @@ export async function addNote(
   userId: string,
   note: string
 ): Promise<OperationalResponse> {
-  // Swagger: POST /api/v1/notes  { userId, content, noteCategory }
+  // POST /api/v1/notes  { userId, content }
+  // noteCategory omitted — "OTHERS" triggers backend 500; backend should default
   return apiFetch<OperationalResponse>(`/api/v1/notes`, {
     method: "POST",
-    body: JSON.stringify({ userId, content: note, noteCategory: "OTHERS" }),
+    body: JSON.stringify({ userId, content: note }),
   });
 }
 

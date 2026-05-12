@@ -120,6 +120,7 @@ export default function DirectoryPage() {
   // Group member IDs fetched from the backend when a group filter is active
   const [groupMemberIds, setGroupMemberIds]     = useState<Set<string> | null>(null);
   const [groupMembersLoading, setGroupMembersLoading] = useState(false);
+  const [groupFilterError, setGroupFilterError] = useState("");
 
 
   const fetchAll = useCallback(async () => {
@@ -194,10 +195,12 @@ export default function DirectoryPage() {
   useEffect(() => {
     if (!selectedGroupId) {
       setGroupMemberIds(null);
+      setGroupFilterError("");
       return;
     }
     let cancelled = false;
     setGroupMembersLoading(true);
+    setGroupFilterError("");
     getGroupMembers(selectedGroupId)
       .then((res) => {
         if (cancelled) return;
@@ -205,7 +208,11 @@ export default function DirectoryPage() {
         setGroupMemberIds(ids);
       })
       .catch(() => {
-        if (!cancelled) setGroupMemberIds(new Set());
+        if (!cancelled) {
+          // API not yet available — fall back to showing all members
+          setGroupMemberIds(null);
+          setGroupFilterError("Group member filter is currently unavailable. Showing all members.");
+        }
       })
       .finally(() => {
         if (!cancelled) setGroupMembersLoading(false);
@@ -324,15 +331,18 @@ export default function DirectoryPage() {
               searchPlaceholder="Search groups…"
               options={groups.map((g) => ({ label: g.name, value: g.id }))}
               value={selectedGroupId}
-              onChange={(v) => { setSelectedGroupId(v); setGroupMemberIds(null); resetPage(); }}
+              onChange={(v) => { setSelectedGroupId(v); setGroupMemberIds(null); setGroupFilterError(""); resetPage(); }}
             />
           </div>
           {groupMembersLoading && (
             <span className="text-xs text-[#6B7280] animate-pulse">Loading group members…</span>
           )}
+          {groupFilterError && (
+            <span className="text-xs text-amber-600">{groupFilterError}</span>
+          )}
           {(search || selectedGroupId || selectedType !== "all") && (
             <button
-              onClick={() => { setSearch(""); setSelectedGroupId(""); setGroupMemberIds(null); setSelectedType("all"); resetPage(); }}
+              onClick={() => { setSearch(""); setSelectedGroupId(""); setGroupMemberIds(null); setGroupFilterError(""); setSelectedType("all"); resetPage(); }}
               className="text-sm font-medium text-[#000080] underline hover:text-[#000066]"
             >
               Clear filters
@@ -357,9 +367,7 @@ export default function DirectoryPage() {
         <div className="rounded-xl border border-[#E5E7EB] bg-white p-12 text-center text-sm text-gray-400">
           {entries.length === 0
             ? "No members found in the database."
-            : selectedGroupId && !groupMembersLoading
-              ? `No members found in the selected group.`
-              : "No members match your filters."}
+            : "No members match your filters."}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

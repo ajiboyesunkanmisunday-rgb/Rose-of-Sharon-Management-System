@@ -159,13 +159,9 @@ export default function NewConvertsPage() {
 
   const handleSaveNote = async (note: string) => {
     if (!selectedConvertId) return;
-    try {
-      await addNote(selectedConvertId, note);
-      setShowNotesModal(false);
-      setSelectedConvertId(null);
-    } catch {
-      // modal handles its own error display
-    }
+    await addNote(selectedConvertId, note);
+    setShowNotesModal(false);
+    setSelectedConvertId(null);
   };
 
   const handleBulkDeleteConfirm = async () => {
