@@ -7,6 +7,7 @@ import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { getUser, addNote, addCallReport, addVisitReport, getNotes, convertToSecondTimer, type UserResponse, type NoteResponse } from "@/lib/api";
 import ProfilePhoto from "@/components/ui/ProfilePhoto";
+import Breadcrumbs from "@/components/ui/Breadcrumbs";
 
 type Tab = "details" | "activity";
 
@@ -161,9 +162,14 @@ export default function ViewFirstTimerPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
+      <div className="mb-4">
         <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
-        <div className="flex items-center gap-2">
+        <Breadcrumbs items={[
+          { label: "User Management" },
+          { label: "First Timers", href: "/user-management/first-timers" },
+          { label: user ? fullName(user) : "Profile" },
+        ]} />
+        <div className="flex items-center gap-2 mt-1">
           <button onClick={() => router.push("/user-management/first-timers")} className="flex items-center text-[#000080] transition-colors hover:text-[#000066]">
             <BackArrow />
           </button>

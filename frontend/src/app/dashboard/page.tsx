@@ -11,6 +11,7 @@ import {
   getSecondTimers,
   getNewConverts,
   getCelebrations,
+  type UserResponse,
 } from "@/lib/api";
 
 const attendanceData = [
@@ -85,29 +86,29 @@ export default function DashboardPage() {
     loadStats();
   }, []);
 
-  // Load first-timers with noOfCalls === 0 for urgent follow-up
+  // Load first-timers AND second-timers with noOfCalls === 0 for urgent follow-up
   useEffect(() => {
     setFollowUpsLoading(true);
-    getFirstTimers(0, 20)
-      .then((res) => {
-        const items: FollowUpItem[] = (res.content ?? [])
-          .filter((u) => (u.noOfCalls ?? 0) === 0)
-          .slice(0, 5)
-          .map((u) => {
-            const fullName = [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ");
-            const af = u.assignedFollowUp;
-            const officerName = af
-              ? [af.firstName, af.lastName].filter(Boolean).join(" ")
-              : "Unassigned";
-            return {
-              id: u.id,
-              name: fullName,
-              phone: u.phoneNumber ?? "",
-              category: "First Timer",
-              assignedOfficer: officerName,
-            };
-          });
-        setTopFollowUps(items);
+    const toItem = (u: UserResponse, category: string): FollowUpItem => {
+      const name = [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ");
+      const af = u.assignedFollowUp;
+      return {
+        id: u.id,
+        name,
+        phone: u.phoneNumber ?? "",
+        category,
+        assignedOfficer: af ? [af.firstName, af.lastName].filter(Boolean).join(" ") : "Unassigned",
+      };
+    };
+    Promise.allSettled([getFirstTimers(0, 20), getSecondTimers(0, 20)])
+      .then(([ft, st]) => {
+        const ftItems = ft.status === "fulfilled"
+          ? (ft.value.content ?? []).filter((u) => (u.noOfCalls ?? 0) === 0).map((u) => toItem(u, "First Timer"))
+          : [];
+        const stItems = st.status === "fulfilled"
+          ? (st.value.content ?? []).filter((u) => (u.noOfCalls ?? 0) === 0).map((u) => toItem(u, "Second Timer"))
+          : [];
+        setTopFollowUps([...ftItems, ...stItems].slice(0, 6));
       })
       .catch(() => setTopFollowUps([]))
       .finally(() => setFollowUpsLoading(false));
@@ -192,7 +193,7 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
         {kpiCards.map((card) => {
           const Icon = card.icon;
           return (
@@ -259,7 +260,12 @@ export default function DashboardPage() {
 
         {/* Attendance Overview */}
         <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-[#111827]">Last 6 Sundays Attendance</h2>
+          <div className="mb-4 flex items-start justify-between gap-2">
+            <h2 className="text-base font-semibold text-[#111827]">Last 6 Sundays Attendance</h2>
+            <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-medium text-amber-700">
+              Sample data
+            </span>
+          </div>
           <div className="flex h-56 items-end justify-between gap-2 px-1">
             {attendanceData.map((item) => (
               <div key={item.day} className="flex flex-1 flex-col items-center gap-1.5">
