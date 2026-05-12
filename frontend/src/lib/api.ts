@@ -563,6 +563,8 @@ export interface CreateFirstTimerRequest {
   serviceRating?: number;        // 1–5 numeric rating of the service
   favouritePartOfService?: string;
   fromOnline?: boolean;          // worshipped online before
+  whatsappNumber?: string;       // WhatsApp contact number
+  howWasService?: string;        // service quality feedback ("Excellent", "Good", etc.)
 }
 
 export async function getFirstTimers(
@@ -749,10 +751,10 @@ export async function addNote(
   userId: string,
   note: string
 ): Promise<OperationalResponse> {
-  // Swagger: POST /api/v1/notes  { userId, content }
+  // Swagger: POST /api/v1/notes  { userId, content, noteCategory }
   return apiFetch<OperationalResponse>(`/api/v1/notes`, {
     method: "POST",
-    body: JSON.stringify({ userId, content: note }),
+    body: JSON.stringify({ userId, content: note, noteCategory: "OTHERS" }),
   });
 }
 
@@ -1136,9 +1138,13 @@ export async function getGroup(id: string): Promise<GroupResponse> {
   return apiFetch<GroupResponse>(`/api/v1/groups/${id}`);
 }
 
-// NOTE: GET /api/v1/groups/{id}/members does not exist in the backend (returns 405).
-// Group member filtering must be done client-side using the groups[] array
-// on each UserResponse, or the backend team must add the endpoint.
+export async function getGroupMembers(
+  groupId: string, pageNo = 0, pageSize = 500
+): Promise<CustomPageResponse<UserResponse>> {
+  return apiFetch<CustomPageResponse<UserResponse>>(
+    `/api/v1/groups/${groupId}/members?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
 
 export async function createGroup(body: CreateGroupRequest): Promise<GroupResponse> {
   return apiFetch<GroupResponse>("/api/v1/groups", {

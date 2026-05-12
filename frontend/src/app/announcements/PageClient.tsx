@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
+import { useToast } from "@/context/ToastContext";
 import {
   getAnnouncements,
   getAnnouncementSettings,
@@ -101,6 +102,8 @@ export default function AnnouncementsPageClient() {
   // Per-row action state
   const [actioning, setActioning] = useState<string | null>(null);
 
+  const { addToast } = useToast();
+
   // ── Load data ──────────────────────────────────────────────────────────────
   const load = useCallback(async () => {
     setLoading(true);
@@ -142,8 +145,11 @@ export default function AnnouncementsPageClient() {
       setShowDeadlineEdit(false);
       setDeadlineMsg("Deadline saved.");
       setTimeout(() => setDeadlineMsg(""), 3000);
+      addToast("Submission deadline saved.", "success");
     } catch (err) {
-      setDeadlineMsg(err instanceof Error ? err.message : "Failed to save deadline.");
+      const msg = err instanceof Error ? err.message : "Failed to save deadline.";
+      setDeadlineMsg(msg);
+      addToast(msg, "error");
     } finally {
       setSavingDeadline(false);
     }
@@ -157,8 +163,11 @@ export default function AnnouncementsPageClient() {
       setItems((prev) =>
         prev.map((a) => a.id === id ? { ...a, status: "APPROVED" } : a)
       );
+      addToast("Announcement approved.", "success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to approve.");
+      const msg = err instanceof Error ? err.message : "Failed to approve.";
+      setError(msg);
+      addToast(msg, "error");
     } finally {
       setActioning(null);
     }
@@ -171,8 +180,11 @@ export default function AnnouncementsPageClient() {
     try {
       await discardAnnouncement(id);
       setItems((prev) => prev.filter((a) => a.id !== id));
+      addToast("Announcement discarded.", "success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to discard.");
+      const msg = err instanceof Error ? err.message : "Failed to discard.";
+      setError(msg);
+      addToast(msg, "error");
     } finally {
       setActioning(null);
     }
@@ -185,7 +197,7 @@ export default function AnnouncementsPageClient() {
 
   return (
     <DashboardLayout>
-      <PageHeader title="Announcements" subtitle="Manage announcement submissions" />
+      <PageHeader title="Altar Announcements" subtitle="Manage announcement submissions" />
 
       {/* ── Deadline banner ──────────────────────────────────────────────── */}
       <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-4">
@@ -272,7 +284,25 @@ export default function AnnouncementsPageClient() {
       </div>
 
       {loading ? (
-        <div className="py-16 text-center text-sm text-gray-400">Loading announcements…</div>
+        <div className="space-y-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-[#E5E7EB] bg-white p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex-1 space-y-2">
+                  <div className="skeleton h-4 w-48 rounded" />
+                  <div className="skeleton h-3 w-64 rounded" />
+                  <div className="skeleton h-3 w-full rounded mt-3" />
+                  <div className="skeleton h-3 w-5/6 rounded" />
+                  <div className="skeleton h-3 w-4/6 rounded" />
+                </div>
+                <div className="flex shrink-0 gap-2 sm:flex-col sm:items-end">
+                  <div className="skeleton h-8 w-20 rounded-lg" />
+                  <div className="skeleton h-8 w-20 rounded-lg" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <>
           {/* ── Pending tab ────────────────────────────────────────────────── */}

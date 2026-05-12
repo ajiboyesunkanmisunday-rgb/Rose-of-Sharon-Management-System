@@ -12,6 +12,7 @@ import {
   getSecondTimers,
   getNewConverts,
   getAllGroups,
+  getGroupMembers,
   type UserResponse,
   type GroupResponse,
 } from "@/lib/api";
@@ -108,13 +109,17 @@ export default function DirectoryPage() {
   const router = useRouter();
   const [search, setSearch]               = useState("");
   const [selectedType, setSelectedType]   = useState<MemberType>("all");
-  const [selectedGroup, setSelectedGroup] = useState("");
+  const [selectedGroupId, setSelectedGroupId] = useState("");
   const [currentPage, setCurrentPage]     = useState(1);
 
   const [entries, setEntries]   = useState<DirectoryEntry[]>([]);
   const [groups, setGroups]     = useState<GroupResponse[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
+
+  // Group member IDs fetched from the backend when a group filter is active
+  const [groupMemberIds, setGroupMemberIds]     = useState<Set<string> | null>(null);
+  const [groupMembersLoading, setGroupMembersLoading] = useState(false);
 
 
   const fetchAll = useCallback(async () => {
@@ -185,16 +190,34 @@ export default function DirectoryPage() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
+  // Fetch group members from the backend when a group filter is selected
+  useEffect(() => {
+    if (!selectedGroupId) {
+      setGroupMemberIds(null);
+      return;
+    }
+    let cancelled = false;
+    setGroupMembersLoading(true);
+    getGroupMembers(selectedGroupId)
+      .then((res) => {
+        if (cancelled) return;
+        const ids = new Set((res.content ?? []).map((u) => u.id));
+        setGroupMemberIds(ids);
+      })
+      .catch(() => {
+        if (!cancelled) setGroupMemberIds(new Set());
+      })
+      .finally(() => {
+        if (!cancelled) setGroupMembersLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [selectedGroupId]);
+
   const filtered = useMemo(() => {
     let list = entries;
     if (selectedType !== "all") list = list.filter((e) => e.userType === selectedType);
-    if (selectedGroup) {
-      // Filter by group using the groups array returned on each user object.
-      // If the backend list endpoint doesn't include groups, this will
-      // return 0 results — in that case, a notice is shown below.
-      list = list.filter((e) =>
-        e.groups?.some((g) => g.name === selectedGroup || g.id === selectedGroup)
-      );
+    if (selectedGroupId && groupMemberIds) {
+      list = list.filter((e) => groupMemberIds.has(e.id));
     }
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -207,7 +230,7 @@ export default function DirectoryPage() {
       );
     }
     return list;
-  }, [entries, selectedType, selectedGroup, search]);
+  }, [entries, selectedType, selectedGroupId, groupMemberIds, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -299,14 +322,17 @@ export default function DirectoryPage() {
             <SearchableSelect
               placeholder="All Groups"
               searchPlaceholder="Search groups…"
-              options={groups.map((g) => g.name)}
-              value={selectedGroup}
-              onChange={(v) => { setSelectedGroup(v); resetPage(); }}
+              options={groups.map((g) => ({ label: g.name, value: g.id }))}
+              value={selectedGroupId}
+              onChange={(v) => { setSelectedGroupId(v); setGroupMemberIds(null); resetPage(); }}
             />
           </div>
-          {(search || selectedGroup || selectedType !== "all") && (
+          {groupMembersLoading && (
+            <span className="text-xs text-[#6B7280] animate-pulse">Loading group members…</span>
+          )}
+          {(search || selectedGroupId || selectedType !== "all") && (
             <button
-              onClick={() => { setSearch(""); setSelectedGroup(""); setSelectedType("all"); resetPage(); }}
+              onClick={() => { setSearch(""); setSelectedGroupId(""); setGroupMemberIds(null); setSelectedType("all"); resetPage(); }}
               className="text-sm font-medium text-[#000080] underline hover:text-[#000066]"
             >
               Clear filters
@@ -331,8 +357,8 @@ export default function DirectoryPage() {
         <div className="rounded-xl border border-[#E5E7EB] bg-white p-12 text-center text-sm text-gray-400">
           {entries.length === 0
             ? "No members found in the database."
-            : selectedGroup
-              ? `No members found in the "${selectedGroup}" group. Group membership filtering requires the backend to include groups in the member list — ask the backend team to include the groups field in user list responses.`
+            : selectedGroupId && !groupMembersLoading
+              ? `No members found in the selected group.`
               : "No members match your filters."}
         </div>
       ) : (

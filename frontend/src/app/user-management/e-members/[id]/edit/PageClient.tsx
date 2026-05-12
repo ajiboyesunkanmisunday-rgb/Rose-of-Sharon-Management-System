@@ -41,6 +41,12 @@ export default function EditEMemberPage() {
   const [photo, setPhoto] = useState<File | null>(null);
   const [spouse, setSpouse] = useState<SpouseData | null>(null);
   const [showSpouseModal, setShowSpouseModal] = useState(false);
+  // Store fields not shown in form so they are preserved on update
+  const [storedEmail, setStoredEmail]           = useState("");
+  const [storedSex, setStoredSex]               = useState("");
+  const [storedCountry, setStoredCountry]       = useState("");
+  const [storedState, setStoredState]           = useState("");
+  const [storedOccupation, setStoredOccupation] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -56,6 +62,11 @@ export default function EditEMemberPage() {
       setEmail(u.email ?? "");
       setMaritalStatus(u.maritalStatus ?? "");
       setServiceAttended(u.serviceAttended ?? "");
+      setStoredEmail(u.email ?? "");
+      setStoredSex(u.sex ?? "");
+      setStoredCountry(u.country ?? "");
+      setStoredState(u.state ?? "");
+      setStoredOccupation(u.occupation ?? "");
       if (u.spouse) {
         setSpouse({ name: [u.spouse.firstName, u.spouse.lastName].filter(Boolean).join(" "), weddingDate: "" });
       }
@@ -88,6 +99,12 @@ export default function EditEMemberPage() {
         countryCode: rawCode || undefined,
         maritalStatus: maritalStatus || undefined,
         serviceAttended: serviceAttended || undefined,
+        // Preserved fields — not shown in form but must be passed back to prevent backend clearing them
+        email: storedEmail || undefined,
+        sex: storedSex || undefined,
+        country: storedCountry || undefined,
+        state: storedState || undefined,
+        occupation: storedOccupation || undefined,
         profilePictureUrl,
       });
       router.push(`/user-management/e-members/${id}`);
