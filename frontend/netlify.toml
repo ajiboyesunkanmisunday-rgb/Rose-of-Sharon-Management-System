@@ -262,6 +262,92 @@
   to     = "/announcements/submit/index.html"
   status = 200
 
+# ── Static list / detail pages missing auto-serve ────────────────────────────
+[[redirects]]
+  from   = "/testimonies/"
+  to     = "/testimonies/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/requests/"
+  to     = "/requests/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/requests/add/"
+  to     = "/requests/add/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/prayer-requests/"
+  to     = "/prayer-requests/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/prayer-requests/add/"
+  to     = "/prayer-requests/add/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/profile/"
+  to     = "/profile/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/reports/"
+  to     = "/reports/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/media/"
+  to     = "/media/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/media/upload/"
+  to     = "/media/upload/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/notifications/"
+  to     = "/notifications/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/notifications/settings/"
+  to     = "/notifications/settings/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/directory/"
+  to     = "/directory/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/directory/add/"
+  to     = "/directory/add/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/celebrations/"
+  to     = "/celebrations/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/celebrations/add/"
+  to     = "/celebrations/add/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/event-management/"
+  to     = "/event-management/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/event-management/add/"
+  to     = "/event-management/add/index.html"
+  status = 200
+
 # ── Event check-in (QR code landing page) ─────────────────────────────────────
 # Serves the pre-built ev-1 placeholder HTML for any real UUID path;
 # the client reads the real event ID from window.location and fetches data.
