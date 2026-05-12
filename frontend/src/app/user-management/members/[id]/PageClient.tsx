@@ -178,8 +178,8 @@ export default function ViewMemberProfilePage() {
           {/* Profile Card */}
           <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
             <div className="flex flex-col gap-6 md:flex-row">
-              {/* Photo */}
-              <div className="relative flex h-[180px] w-[150px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] sm:h-[250px] sm:w-[200px]">
+              {/* Photo — shrink-0 so it never squeezes the detail columns */}
+              <div className="relative mx-auto flex h-[160px] w-[130px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] sm:mx-0 sm:h-[220px] sm:w-[180px] md:h-[240px] md:w-[200px]">
                 {user?.profilePictureUrl && !photoError ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img

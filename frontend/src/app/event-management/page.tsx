@@ -257,7 +257,56 @@ export default function EventManagementPage() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      {/* Mobile card view */}
+      <div className="sm:hidden space-y-3 mb-4">
+        {loading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-2">
+              <div className="skeleton h-4 w-40" /><div className="skeleton h-3 w-24" />
+            </div>
+          ))
+        ) : events.length === 0 ? (
+          <p className="text-center text-sm text-gray-400 py-8">No events found.</p>
+        ) : (
+          events.map((event) => (
+            <div
+              key={event.id}
+              onClick={() => router.push(`/event-management/${event.id}`)}
+              className="flex items-start gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EDE9FE]">
+                <CalendarClock className="h-5 w-5 text-[#7C3AED]" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-[#111827] truncate">{event.title}</p>
+                <p className="text-xs text-[#6B7280]">{fmtDate(event.date)} · {locationLabel(event)}</p>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${categoryColors[event.eventCategory ?? ""] ?? "bg-gray-100 text-gray-600"}`}>
+                    {categoryLabel(event.eventCategory)}
+                  </span>
+                  {event.isCanceled ? (
+                    <span className="inline-block rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">Cancelled</span>
+                  ) : (
+                    <span className="inline-block rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Active</span>
+                  )}
+                </div>
+              </div>
+              <div onClick={(e) => e.stopPropagation()}>
+                <ActionDropdown
+                  actions={[
+                    { label: "View", onClick: () => router.push(`/event-management/${event.id}`) },
+                    { label: "Edit", onClick: () => router.push(`/event-management/${event.id}/edit`) },
+                    ...(event.isCanceled ? [] : [{ label: "Cancel Event", onClick: () => handleCancelClick(event.id) }]),
+                  ]}
+                />
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Table — hidden on mobile */}
+      <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="bg-[#F3F4F6]">

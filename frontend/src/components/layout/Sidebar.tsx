@@ -106,7 +106,7 @@ const navItems: NavItem[] = [
     href: "/media",
   },
   {
-    label: "Announcements",
+    label: "Altar Announcements",
     icon: Megaphone,
     href: "/announcements",
   },
