@@ -12,6 +12,7 @@ import AddNotesModal from "@/components/user-management/AddNotesModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import AssignFollowUpModal from "@/components/user-management/AssignFollowUpModal";
 import BulkImportModal from "@/components/user-management/BulkImportModal";
+import QRCodeModal from "@/components/user-management/QRCodeModal";
 import Modal from "@/components/ui/Modal";
 import {
   getSecondTimers,
@@ -57,6 +58,7 @@ export default function SecondTimersPage() {
   const [showBulkAssignModal, setShowBulkAssignModal] = useState(false);
   const [showSingleAssignModal, setShowSingleAssignModal] = useState(false);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
+  const [showQRCodeModal, setShowQRCodeModal] = useState(false);
   const [selectedTimerId, setSelectedTimerId] = useState<string | null>(null);
   const [showFilter, setShowFilter] = useState(false);
   const [filterService, setFilterService] = useState("");
@@ -275,6 +277,18 @@ export default function SecondTimersPage() {
             }
           >
             <span className="hidden sm:inline">Filter</span>
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={() => setShowQRCodeModal(true)}
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h7v7"/>
+              </svg>
+            }
+          >
+            <span className="hidden sm:inline">QR Code</span>
           </Button>
 
           <Button
@@ -560,6 +574,13 @@ export default function SecondTimersPage() {
         module="Second Timers"
         templateHeaders={["firstName","middleName","lastName","gender","countryCode","phone","email","serviceAttended","date"]}
         templateSampleRow={["Pat","","Lee","Female","+1","5551234567","pat@example.com","Sunday Service","2026-04-20"]}
+      />
+
+      <QRCodeModal
+        isOpen={showQRCodeModal}
+        onClose={() => setShowQRCodeModal(false)}
+        value="/user-management/second-timers/add"
+        title="Second Timer Registration QR Code"
       />
     </DashboardLayout>
   );

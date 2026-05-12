@@ -6,6 +6,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { getNewConvert, addNote, addCallReport, addVisitReport, getNotes, updateBelieversClass, type NewConvertResponse, type NoteResponse } from "@/lib/api";
+import { useToast } from "@/context/ToastContext";
+import { SkeletonProfile } from "@/components/ui/Skeleton";
 
 type Tab = "details" | "activity";
 
@@ -58,6 +60,8 @@ export default function ViewNewConvertPage() {
   const [notes,        setNotes]        = useState<NoteResponse[]>([]);
   const [notesLoading, setNotesLoading] = useState(false);
 
+  const { addToast } = useToast();
+
   const fetchNotes = useCallback(async () => {
     if (!id || id.startsWith("nc-")) return;
     setNotesLoading(true);
@@ -104,12 +108,13 @@ export default function ViewNewConvertPage() {
       if (type === "note")  setNoteText("");
       if (type === "call")  setCallText("");
       if (type === "visit") setVisitText("");
-      setSaveMsg("Saved successfully.");
-      setTimeout(() => setSaveMsg(""), 3000);
+      addToast("Saved successfully.", "success");
       fetchNotes();
     } catch (err) {
       setSaveFailed(true);
-      setSaveMsg(err instanceof Error ? err.message : "Failed to save.");
+      const msg = err instanceof Error ? err.message : "Failed to save.";
+      setSaveMsg(msg);
+      addToast(msg, "error");
     } finally {
       setSaving(false);
     }
@@ -122,11 +127,12 @@ export default function ViewNewConvertPage() {
     setSaveFailed(false);
     try {
       await updateBelieversClass(id, classStage);
-      setSaveMsg("Class stage updated.");
-      setTimeout(() => setSaveMsg(""), 3000);
+      addToast("Class stage updated.", "success");
     } catch (err) {
       setSaveFailed(true);
-      setSaveMsg(err instanceof Error ? err.message : "Failed to update class.");
+      const msg = err instanceof Error ? err.message : "Failed to update class.";
+      setSaveMsg(msg);
+      addToast(msg, "error");
     } finally {
       setSaving(false);
     }
@@ -159,14 +165,14 @@ export default function ViewNewConvertPage() {
       )}
 
       {loading ? (
-        <div className="flex h-48 items-center justify-center text-gray-400">Loading…</div>
+        <SkeletonProfile />
       ) : (
         <>
           {/* Profile Card */}
           <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
             <div className="flex flex-col gap-6 md:flex-row">
               {/* Photo placeholder */}
-              <div className="flex h-[180px] w-[150px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] sm:h-[250px] sm:w-[200px]">
+              <div className="relative mx-auto flex h-[160px] w-[130px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] sm:mx-0 sm:h-[220px] sm:w-[180px] md:h-[240px] md:w-[200px]">
                 <UserIcon />
               </div>
 

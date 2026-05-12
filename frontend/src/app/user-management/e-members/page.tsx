@@ -388,7 +388,12 @@ export default function EMembersPage() {
       {/* Modals */}
       <SendSMSModal isOpen={showSMSModal} onClose={() => setShowSMSModal(false)} selectedCount={selectedRows.size} />
       <SendEmailModal isOpen={showEmailModal} onClose={() => setShowEmailModal(false)} selectedCount={selectedRows.size} />
-      <QRCodeModal isOpen={showQRCodeModal} onClose={() => setShowQRCodeModal(false)} />
+      <QRCodeModal
+        isOpen={showQRCodeModal}
+        onClose={() => setShowQRCodeModal(false)}
+        value="/user-management/e-members/add"
+        title="E-Member Registration QR Code"
+      />
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         onClose={() => { setShowDeleteModal(false); setSelectedEMemberId(null); }}

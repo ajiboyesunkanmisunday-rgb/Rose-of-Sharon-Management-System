@@ -12,6 +12,7 @@ import AddNotesModal from "@/components/user-management/AddNotesModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import MarkAttendanceModal from "@/components/user-management/MarkAttendanceModal";
 import BulkImportModal from "@/components/user-management/BulkImportModal";
+import QRCodeModal from "@/components/user-management/QRCodeModal";
 import Modal from "@/components/ui/Modal";
 import {
   getNewConverts,
@@ -26,6 +27,7 @@ import {
 } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
 import { Sparkles } from "lucide-react";
+import { SkeletonRow } from "@/components/ui/Skeleton";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -61,6 +63,7 @@ export default function NewConvertsPage() {
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
+  const [showQRCodeModal, setShowQRCodeModal] = useState(false);
   const [showBulkClassModal, setShowBulkClassModal] = useState(false);
   const [bulkClassStage, setBulkClassStage] = useState("");
   const [callReport, setCallReport] = useState("");
@@ -294,6 +297,18 @@ export default function NewConvertsPage() {
           </Link>
 
           <Button
+            variant="secondary"
+            onClick={() => setShowQRCodeModal(true)}
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h7v7"/>
+              </svg>
+            }
+          >
+            <span className="hidden sm:inline">QR Code</span>
+          </Button>
+
+          <Button
             onClick={handleExport}
             icon={
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -341,7 +356,48 @@ export default function NewConvertsPage() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      {/* Mobile card view */}
+      <div className="sm:hidden space-y-3 mb-4">
+        {loading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-2">
+              <div className="skeleton h-4 w-36" /><div className="skeleton h-3 w-24" />
+            </div>
+          ))
+        ) : displayedConverts.length === 0 ? (
+          <p className="text-center text-sm text-gray-400 py-8">No new converts found.</p>
+        ) : (
+          displayedConverts.map((nc) => (
+            <div
+              key={nc.id}
+              onClick={() => router.push(`/user-management/new-converts/${nc.id}`)}
+              className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700">
+                {nc.firstName?.[0]}{nc.lastName?.[0]}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-[#111827] truncate">{fullName(nc)}</p>
+                <p className="text-xs text-[#6B7280] truncate">{nc.phoneNumber}</p>
+                <p className="text-xs text-[#9CA3AF]">{nc.believerClassStage || "Not started"}</p>
+              </div>
+              <div onClick={(e) => e.stopPropagation()}>
+                <ActionDropdown
+                  actions={[
+                    { label: "View", onClick: () => router.push(`/user-management/new-converts/${nc.id}`) },
+                    { label: "Add Notes", onClick: () => { setSelectedConvertId(nc.id); setShowNotesModal(true); } },
+                    { label: "Add Call Report", onClick: () => { setSelectedConvertId(nc.id); setShowCallReportModal(true); } },
+                    { label: "Add Visit Report", onClick: () => { setSelectedConvertId(nc.id); setShowVisitReportModal(true); } },
+                    { label: "Mark Class Attendance", onClick: () => { setSelectedConvertId(nc.id); setShowAttendanceModal(true); } },
+                  ]}
+                />
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="bg-[#F3F4F6]">
@@ -364,9 +420,7 @@ export default function NewConvertsPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">Loading new converts…</td>
-              </tr>
+              Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={8} />)
             ) : displayedConverts.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-gray-400">No new converts found.</td>
@@ -521,6 +575,13 @@ export default function NewConvertsPage() {
         module="New Converts"
         templateHeaders={["firstName","middleName","lastName","gender","countryCode","phone","email","serviceAttended","address"]}
         templateSampleRow={["Sam","","Taylor","Male","+1","5551234567","sam@example.com","Sunday Service","123 Main St"]}
+      />
+
+      <QRCodeModal
+        isOpen={showQRCodeModal}
+        onClose={() => setShowQRCodeModal(false)}
+        value="/user-management/new-converts/add"
+        title="New Convert Registration QR Code"
       />
 
       {/* Bulk Believers Class Update Modal */}

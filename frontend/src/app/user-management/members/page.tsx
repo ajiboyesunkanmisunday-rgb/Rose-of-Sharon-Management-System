@@ -626,6 +626,8 @@ export default function MembersPage() {
       <QRCodeModal
         isOpen={showQRCodeModal}
         onClose={() => setShowQRCodeModal(false)}
+        value="/user-management/members/add"
+        title="Member Registration QR Code"
       />
       <AddNotesModal
         isOpen={showNotesModal}
