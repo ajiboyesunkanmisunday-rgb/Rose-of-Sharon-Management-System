@@ -1,9 +1,25 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# Netlify redirect rules — this file MUST live at the REPO ROOT so Netlify
-# CDN picks it up. Build settings are managed in the Netlify UI (base dir:
-# frontend, build command: npm run build, publish dir: out).
-# Do NOT add a [build] section here — it conflicts with UI settings.
+# Netlify configuration — REPO ROOT
+#
+# ROOT CAUSE OF ALL 404s: Netlify UI had the wrong publish directory (repo
+# root instead of frontend/out). Every page was buried at /frontend/out/login/
+# instead of /login/. This [build] section overrides that with the correct
+# paths. NODE_VERSION = "22" matches the version the working deploys used.
 # ─────────────────────────────────────────────────────────────────────────────
+
+[build]
+  command   = "cd frontend && npm run build"
+  publish   = "frontend/out"
+  functions = "frontend/netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+[functions."api-proxy"]
+  timeout = 26
+
+[build.environment]
+  NODE_VERSION = "22"
 
 # ── Root path ────────────────────────────────────────────────────────────────
 # Next.js static export does NOT generate out/index.html for redirect() pages.
