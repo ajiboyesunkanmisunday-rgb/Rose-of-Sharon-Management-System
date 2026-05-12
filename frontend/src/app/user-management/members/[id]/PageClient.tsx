@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { getUser, getUserRequests, markUserAsInactive, type UserResponse, type RequestResponse } from "@/lib/api";
+import Breadcrumbs from "@/components/ui/Breadcrumbs";
 
 type Tab = "details" | "requests";
 
@@ -143,9 +144,14 @@ export default function ViewMemberProfilePage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
+      <div className="mb-4">
         <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
-        <div className="flex items-center gap-2">
+        <Breadcrumbs items={[
+          { label: "User Management" },
+          { label: "Members", href: "/user-management/members" },
+          { label: user ? fullName(user) : "Profile" },
+        ]} />
+        <div className="flex items-center gap-2 mt-1">
           <button onClick={() => router.push("/user-management/members")} className="flex items-center text-[#000080] transition-colors hover:text-[#000066]">
             <BackArrow />
           </button>

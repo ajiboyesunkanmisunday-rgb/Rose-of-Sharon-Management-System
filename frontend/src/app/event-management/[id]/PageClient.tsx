@@ -19,6 +19,7 @@ import {
   type UserResponse,
   type NewConvertResponse,
 } from "@/lib/api";
+import Breadcrumbs from "@/components/ui/Breadcrumbs";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -242,12 +243,28 @@ export default function EventDetailClient() {
   if (eventError || !event) {
     return (
       <DashboardLayout>
-        <PageHeader title="Event Management" subtitle="Error" backHref="/event-management" />
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {eventError || "Event not found."}
-          <button className="ml-2 font-medium underline" onClick={() => router.push("/event-management")}>
-            Go back
-          </button>
+        <PageHeader title="Event Management" subtitle="Event Not Found" backHref="/event-management" />
+        <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-6 text-sm text-red-700">
+          <p className="font-medium text-base mb-1">Unable to load event</p>
+          <p className="text-red-600">{eventError || "This event could not be found or may have been removed."}</p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Button variant="secondary" onClick={() => {
+              setEventError("");
+              setLoadingEvent(true);
+              getEvent(id)
+                .then(setEvent)
+                .catch(err => setEventError(err instanceof Error ? err.message : "Failed to load event."))
+                .finally(() => setLoadingEvent(false));
+            }}>
+              Retry
+            </Button>
+            <Button variant="secondary" onClick={() => router.push("/event-management")}>
+              Back to Events
+            </Button>
+            <Button variant="primary" onClick={() => router.push("/event-management/add")}>
+              Create New Event
+            </Button>
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -266,6 +283,10 @@ export default function EventDetailClient() {
         subtitle={event.title}
         backHref="/event-management"
       />
+      <Breadcrumbs items={[
+        { label: "Event Management", href: "/event-management" },
+        { label: event.title },
+      ]} />
 
       {/* ── Event info card ──────────────────────────────────────────────── */}
       <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
