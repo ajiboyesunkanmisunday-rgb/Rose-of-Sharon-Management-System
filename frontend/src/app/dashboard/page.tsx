@@ -13,6 +13,7 @@ import {
   getCelebrations,
   type UserResponse,
 } from "@/lib/api";
+import { SkeletonCard } from "@/components/ui/Skeleton";
 
 const attendanceData = [
   { day: "Mar 16", value: 780 },
@@ -194,24 +195,26 @@ export default function DashboardPage() {
 
       {/* KPI Cards */}
       <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-        {kpiCards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <button
-              key={card.label}
-              onClick={() => router.push(card.href)}
-              className="flex items-center gap-4 rounded-xl bg-white p-5 shadow-sm border border-[#E5E7EB] text-left transition-shadow hover:shadow-md"
-            >
-              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${card.iconBg}`}>
-                <Icon className={`h-6 w-6 ${card.iconColor}`} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-2xl font-bold text-[#111827]">{card.value}</p>
-                <p className="text-xs text-[#6B7280] leading-tight mt-0.5">{card.label}</p>
-              </div>
-            </button>
-          );
-        })}
+        {stats.loading
+          ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+          : kpiCards.map((card) => {
+              const Icon = card.icon;
+              return (
+                <button
+                  key={card.label}
+                  onClick={() => router.push(card.href)}
+                  className="flex items-center gap-4 rounded-xl bg-white p-5 shadow-sm border border-[#E5E7EB] text-left transition-shadow hover:shadow-md"
+                >
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${card.iconBg}`}>
+                    <Icon className={`h-6 w-6 ${card.iconColor}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-2xl font-bold text-[#111827]">{card.value}</p>
+                    <p className="text-xs text-[#6B7280] leading-tight mt-0.5">{card.label}</p>
+                  </div>
+                </button>
+              );
+            })}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -231,7 +234,15 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-3">
             {followUpsLoading ? (
-              <p className="text-sm text-[#6B7280] text-center py-4">Loading…</p>
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="rounded-lg border border-[#E5E7EB] p-3 space-y-2">
+                    <div className="skeleton h-4 w-32" />
+                    <div className="skeleton h-3 w-24" />
+                    <div className="skeleton h-3 w-40" />
+                  </div>
+                ))}
+              </div>
             ) : topFollowUps.length === 0 ? (
               <p className="text-sm text-[#6B7280] text-center py-4">No urgent follow-ups.</p>
             ) : (

@@ -16,6 +16,7 @@ import BulkImportModal from "@/components/user-management/BulkImportModal";
 import NoLongerMemberModal from "@/components/user-management/NoLongerMemberModal";
 import { getMembers, deleteMembersBulk, type UserResponse } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
+import { SkeletonRow } from "@/components/ui/Skeleton";
 import { useAssignSuperAdmin } from "@/hooks/member/useAssignSuperAdmin";
 import { toast } from "sonner";
 import AssignSuperAdminModal from "@/components/user-management/AssignSuperAdminModal";
@@ -413,11 +414,7 @@ export default function MembersPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
-                  Loading members…
-                </td>
-              </tr>
+              Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={7} />)
             ) : displayedMembers.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-gray-400">

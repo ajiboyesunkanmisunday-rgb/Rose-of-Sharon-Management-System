@@ -11,6 +11,7 @@ import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal"
 import { getEvents, searchEvents, cancelEvent, type EventResponse } from "@/lib/api";
 import { CalendarClock } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
+import { SkeletonRow } from "@/components/ui/Skeleton";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -272,9 +273,7 @@ export default function EventManagementPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">Loading events…</td>
-              </tr>
+              Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} columns={8} />)
             ) : events.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-gray-400">No events found.</td>

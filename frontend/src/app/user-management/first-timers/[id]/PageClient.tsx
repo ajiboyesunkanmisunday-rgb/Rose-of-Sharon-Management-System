@@ -9,6 +9,7 @@ import { getUser, addNote, addCallReport, addVisitReport, getNotes, convertToSec
 import ProfilePhoto from "@/components/ui/ProfilePhoto";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import { useToast } from "@/context/ToastContext";
+import { SkeletonProfile } from "@/components/ui/Skeleton";
 
 type Tab = "details" | "activity";
 
@@ -192,7 +193,7 @@ export default function ViewFirstTimerPage() {
       )}
 
       {loading ? (
-        <div className="flex h-48 items-center justify-center text-gray-400">Loading…</div>
+        <SkeletonProfile />
       ) : (
         <>
           {/* Profile Card */}
