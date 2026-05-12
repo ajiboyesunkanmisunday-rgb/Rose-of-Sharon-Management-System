@@ -24,6 +24,7 @@ import {
 } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
 import { UserPlus } from "lucide-react";
+import { SkeletonRow } from "@/components/ui/Skeleton";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -392,9 +393,7 @@ export default function FirstTimersPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-gray-400">Loading first timers…</td>
-              </tr>
+              Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={9} />)
             ) : displayedTimers.length === 0 ? (
               <tr>
                 <td colSpan={9} className="px-4 py-8 text-center text-gray-400">No first timers found.</td>

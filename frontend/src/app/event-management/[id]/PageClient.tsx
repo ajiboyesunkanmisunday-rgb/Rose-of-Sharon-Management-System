@@ -20,6 +20,7 @@ import {
   type NewConvertResponse,
 } from "@/lib/api";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
+import { SkeletonProfile } from "@/components/ui/Skeleton";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -235,7 +236,7 @@ export default function EventDetailClient() {
     return (
       <DashboardLayout>
         <PageHeader title="Event Management" subtitle="Loading…" backHref="/event-management" />
-        <div className="py-12 text-center text-sm text-gray-400">Loading event details…</div>
+        <SkeletonProfile />
       </DashboardLayout>
     );
   }
