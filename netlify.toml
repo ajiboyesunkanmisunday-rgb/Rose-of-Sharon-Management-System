@@ -1,0 +1,370 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Netlify build configuration
+# This file must live at the REPO ROOT so Netlify's CDN reads it.
+# All paths under [build] are relative to the base directory.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[build]
+  base      = "frontend"
+  command   = "npm run build"
+  publish   = "out"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+[functions."api-proxy"]
+  timeout = 26          # max Netlify allows; default is 10s
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# ── Root path ────────────────────────────────────────────────────────────────
+# Next.js static export does NOT generate out/index.html for redirect() pages.
+# Belt-and-suspenders: public/_redirects also covers this, but this rule
+# ensures the CDN never caches a 404 for /.
+[[redirects]]
+  from   = "/"
+  to     = "/login"
+  status = 302
+
+# Login is handled by a serverless function so it can read the
+# Authorization response header from the backend and return the JWT token.
+[[redirects]]
+  from  = "/api/v1/users/login"
+  to    = "/.netlify/functions/login"
+  status = 200
+  force  = true
+
+# All other API calls are proxied through Netlify to avoid CORS issues.
+[[redirects]]
+  from  = "/api/*"
+  to    = "https://api.rccgros.org/api/:splat"
+  status = 200
+  force  = true
+
+# Forgot-password — static page, ensure trailing-slash variant is served too
+[[redirects]]
+  from   = "/forgot-password/"
+  to     = "/forgot-password/index.html"
+  status = 200
+
+# ── Dynamic [id] routes ──────────────────────────────────────────────────────
+# Next.js static export only pre-builds mock IDs (m-1, em-1, etc.).
+# Real backend IDs are UUIDs. These rules serve the pre-built placeholder HTML
+# for any UUID path; the Next.js client router then reads the real ID from the
+# URL via useParams() and fetches the correct data from the API.
+
+[[redirects]]
+  from   = "/user-management/members/:id/"
+  to     = "/user-management/members/m-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/members/:id/edit/"
+  to     = "/user-management/members/m-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/members/:id/link-spouse/"
+  to     = "/user-management/members/m-1/link-spouse/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/e-members/:id/"
+  to     = "/user-management/e-members/em-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/e-members/:id/edit/"
+  to     = "/user-management/e-members/em-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/first-timers/:id/"
+  to     = "/user-management/first-timers/ft-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/first-timers/:id/edit/"
+  to     = "/user-management/first-timers/ft-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/second-timers/:id/"
+  to     = "/user-management/second-timers/st-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/second-timers/:id/edit/"
+  to     = "/user-management/second-timers/st-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/user-management/new-converts/:id/"
+  to     = "/user-management/new-converts/nc-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/event-management/:id/"
+  to     = "/event-management/ev-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/event-management/:id/edit/"
+  to     = "/event-management/ev-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/celebrations/:id/"
+  to     = "/celebrations/cel-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/settings/groups/:id/"
+  to     = "/settings/groups/grp-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/settings/groups/:id/edit/"
+  to     = "/settings/groups/grp-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/workflows/active/:id/"
+  to     = "/workflows/active/aw-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/workflows/templates/:id/edit/"
+  to     = "/workflows/templates/wft-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/prayer-requests/:id/"
+  to     = "/prayer-requests/pr-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/media/:id/"
+  to     = "/media/med-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/settings/roles/:id/edit/"
+  to     = "/settings/roles/role-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/requests/:id/"
+  to     = "/requests/req-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/requests/:id/edit/"
+  to     = "/requests/req-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/testimonies/:id/"
+  to     = "/testimonies/t-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/celebrations/:id/edit/"
+  to     = "/celebrations/cel-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/directory/:id/"
+  to     = "/directory/dir-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/directory/:id/edit/"
+  to     = "/directory/dir-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/calendar/events/:id/"
+  to     = "/calendar/events/cal-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/calendar/events/:id/edit/"
+  to     = "/calendar/events/cal-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/communication/announcements/:id/"
+  to     = "/communication/announcements/ann-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/communication/announcements/:id/edit/"
+  to     = "/communication/announcements/ann-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/communication/messages/:id/"
+  to     = "/communication/messages/msg-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/communication/templates/:id/edit/"
+  to     = "/communication/templates/tpl-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/courses/:id/"
+  to     = "/trainings/courses/course-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/courses/:id/edit/"
+  to     = "/trainings/courses/course-1/edit/"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/schedules/:id/"
+  to     = "/trainings/schedules/sch-1/"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/schedules/:id/edit/"
+  to     = "/trainings/schedules/sch-1/edit/"
+  status = 200
+
+# ── New static training + report pages ──────────────────────────────────────
+[[redirects]]
+  from   = "/reports/followup/"
+  to     = "/reports/followup/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/baptismal/"
+  to     = "/trainings/baptismal/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/workers/"
+  to     = "/trainings/workers/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/sod/"
+  to     = "/trainings/sod/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/som/"
+  to     = "/trainings/som/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/rila/"
+  to     = "/trainings/rila/index.html"
+  status = 200
+
+# ── Announcements ─────────────────────────────────────────────────────────────
+[[redirects]]
+  from   = "/announcements/"
+  to     = "/announcements/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/announcements/submit/"
+  to     = "/announcements/submit/index.html"
+  status = 200
+
+# ── Static list / detail pages missing auto-serve ────────────────────────────
+[[redirects]]
+  from   = "/testimonies/"
+  to     = "/testimonies/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/requests/"
+  to     = "/requests/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/requests/add/"
+  to     = "/requests/add/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/prayer-requests/"
+  to     = "/prayer-requests/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/prayer-requests/add/"
+  to     = "/prayer-requests/add/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/profile/"
+  to     = "/profile/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/reports/"
+  to     = "/reports/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/media/"
+  to     = "/media/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/media/upload/"
+  to     = "/media/upload/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/notifications/"
+  to     = "/notifications/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/notifications/settings/"
+  to     = "/notifications/settings/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/directory/"
+  to     = "/directory/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/directory/add/"
+  to     = "/directory/add/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/celebrations/"
+  to     = "/celebrations/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/celebrations/add/"
+  to     = "/celebrations/add/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/event-management/"
+  to     = "/event-management/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/event-management/add/"
+  to     = "/event-management/add/index.html"
+  status = 200
+
+# ── Event check-in (QR code landing page) ─────────────────────────────────────
+[[redirects]]
+  from   = "/events/:id/check-in/"
+  to     = "/events/ev-1/check-in/"
+  status = 200
