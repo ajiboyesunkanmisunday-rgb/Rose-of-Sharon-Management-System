@@ -8,7 +8,6 @@ import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
-import AddNotesModal from "@/components/user-management/AddNotesModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import AssignFollowUpModal from "@/components/user-management/AssignFollowUpModal";
 import BulkImportModal from "@/components/user-management/BulkImportModal";
@@ -18,7 +17,6 @@ import {
   getSecondTimers,
   deleteSecondTimersBulk,
   addCallReport,
-  addNote,
   assignFollowUp,
   convertToFullMember,
   type UserResponse,
@@ -51,7 +49,6 @@ export default function SecondTimersPage() {
   const [actionError, setActionError] = useState("");
 
   // Modal states
-  const [showNotesModal, setShowNotesModal] = useState(false);
   const [showCallReportModal, setShowCallReportModal] = useState(false);
   const [callReport, setCallReport] = useState("");
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
@@ -133,13 +130,6 @@ export default function SecondTimersPage() {
     } finally {
       setActionLoading(false);
     }
-  };
-
-  const handleSaveNote = async (note: string) => {
-    if (!selectedTimerId) return;
-    await addNote(selectedTimerId, note);
-    setShowNotesModal(false);
-    setSelectedTimerId(null);
   };
 
   const handleBulkDeleteConfirm = async () => {
@@ -401,7 +391,6 @@ export default function SecondTimersPage() {
                   actions={[
                     { label: "View", onClick: () => router.push(`/user-management/second-timers/${st.id}`) },
                     { label: "Edit", onClick: () => router.push(`/user-management/second-timers/${st.id}/edit`) },
-                    { label: "Add Notes", onClick: () => { setSelectedTimerId(st.id); setShowNotesModal(true); } },
                   ]}
                 />
               </div>
@@ -473,10 +462,6 @@ export default function SecondTimersPage() {
                         { label: "View", onClick: () => router.push(`/user-management/second-timers/${st.id}`) },
                         { label: "Edit", onClick: () => router.push(`/user-management/second-timers/${st.id}/edit`) },
                         {
-                          label: "Add Notes",
-                          onClick: () => { setSelectedTimerId(st.id); setShowNotesModal(true); },
-                        },
-                        {
                           label: "Add Call Report",
                           onClick: () => { setSelectedTimerId(st.id); setShowCallReportModal(true); },
                         },
@@ -506,12 +491,6 @@ export default function SecondTimersPage() {
           onPageChange={setCurrentPage}
         />
       </div>
-
-      <AddNotesModal
-        isOpen={showNotesModal}
-        onClose={() => { setShowNotesModal(false); setSelectedTimerId(null); }}
-        onSave={handleSaveNote}
-      />
 
       <Modal
         isOpen={showCallReportModal}

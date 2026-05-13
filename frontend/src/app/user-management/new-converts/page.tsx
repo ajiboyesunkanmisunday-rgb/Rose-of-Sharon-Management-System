@@ -8,7 +8,6 @@ import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
-import AddNotesModal from "@/components/user-management/AddNotesModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import MarkAttendanceModal from "@/components/user-management/MarkAttendanceModal";
 import BulkImportModal from "@/components/user-management/BulkImportModal";
@@ -19,7 +18,6 @@ import {
   deleteNewConvertsBulk,
   addCallReport,
   addVisitReport,
-  addNote,
   updateBelieversClass,
   updateBelieversClassBulk,
   toBelieverClassStage,
@@ -57,7 +55,6 @@ export default function NewConvertsPage() {
   const [actionError, setActionError] = useState("");
 
   // Modal states
-  const [showNotesModal, setShowNotesModal] = useState(false);
   const [showCallReportModal, setShowCallReportModal] = useState(false);
   const [showVisitReportModal, setShowVisitReportModal] = useState(false);
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
@@ -155,13 +152,6 @@ export default function NewConvertsPage() {
     } finally {
       setActionLoading(false);
     }
-  };
-
-  const handleSaveNote = async (note: string) => {
-    if (!selectedConvertId) return;
-    await addNote(selectedConvertId, note);
-    setShowNotesModal(false);
-    setSelectedConvertId(null);
   };
 
   const handleBulkDeleteConfirm = async () => {
@@ -381,7 +371,6 @@ export default function NewConvertsPage() {
                 <ActionDropdown
                   actions={[
                     { label: "View", onClick: () => router.push(`/user-management/new-converts/${nc.id}`) },
-                    { label: "Add Notes", onClick: () => { setSelectedConvertId(nc.id); setShowNotesModal(true); } },
                     { label: "Add Call Report", onClick: () => { setSelectedConvertId(nc.id); setShowCallReportModal(true); } },
                     { label: "Add Visit Report", onClick: () => { setSelectedConvertId(nc.id); setShowVisitReportModal(true); } },
                     { label: "Mark Class Attendance", onClick: () => { setSelectedConvertId(nc.id); setShowAttendanceModal(true); } },
@@ -454,10 +443,6 @@ export default function NewConvertsPage() {
                       actions={[
                         { label: "View", onClick: () => router.push(`/user-management/new-converts/${nc.id}`) },
                         {
-                          label: "Add Notes",
-                          onClick: () => { setSelectedConvertId(nc.id); setShowNotesModal(true); },
-                        },
-                        {
                           label: "Add Call Report",
                           onClick: () => { setSelectedConvertId(nc.id); setShowCallReportModal(true); },
                         },
@@ -487,12 +472,6 @@ export default function NewConvertsPage() {
           onPageChange={setCurrentPage}
         />
       </div>
-
-      <AddNotesModal
-        isOpen={showNotesModal}
-        onClose={() => { setShowNotesModal(false); setSelectedConvertId(null); }}
-        onSave={handleSaveNote}
-      />
 
       <Modal
         isOpen={showCallReportModal}

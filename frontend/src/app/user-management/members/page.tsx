@@ -10,11 +10,10 @@ import ActionDropdown from "@/components/ui/ActionDropdown";
 import SendSMSModal from "@/components/user-management/SendSMSModal";
 import SendEmailModal from "@/components/user-management/SendEmailModal";
 import QRCodeModal from "@/components/user-management/QRCodeModal";
-import AddNotesModal from "@/components/user-management/AddNotesModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import BulkImportModal from "@/components/user-management/BulkImportModal";
 import NoLongerMemberModal from "@/components/user-management/NoLongerMemberModal";
-import { getMembers, deleteMembersBulk, addNote, type UserResponse } from "@/lib/api";
+import { getMembers, deleteMembersBulk, type UserResponse } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
 import { SkeletonRow } from "@/components/ui/Skeleton";
 import { useAssignSuperAdmin } from "@/hooks/member/useAssignSuperAdmin";
@@ -45,7 +44,6 @@ export default function MembersPage() {
   const [showQRCodeModal, setShowQRCodeModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
-  const [showNotesModal, setShowNotesModal] = useState(false);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [showNoLongerBulkModal, setShowNoLongerBulkModal] = useState(false);
   const [showNoLongerSingleModal, setShowNoLongerSingleModal] = useState(false);
@@ -140,18 +138,6 @@ export default function MembersPage() {
     } catch (err) {
       console.error("Bulk delete failed:", err);
     }
-  };
-
-  const handleAddNotesClick = (id: string) => {
-    setSelectedMemberId(id);
-    setShowNotesModal(true);
-  };
-
-  const handleSaveNote = async (note: string) => {
-    if (!selectedMemberId) return;
-    await addNote(selectedMemberId, note);
-    setShowNotesModal(false);
-    setSelectedMemberId(null);
   };
 
   const handleNoLongerMemberClick = (id: string) => {
@@ -537,10 +523,6 @@ export default function MembersPage() {
                             ),
                         },
                         {
-                          label: "Add Notes",
-                          onClick: () => handleAddNotesClick(member.id),
-                        },
-                        {
                           label: "Link Spouse",
                           onClick: () =>
                             router.push(
@@ -635,14 +617,6 @@ export default function MembersPage() {
         onClose={() => setShowQRCodeModal(false)}
         value="/user-management/members/add"
         title="Member Registration QR Code"
-      />
-      <AddNotesModal
-        isOpen={showNotesModal}
-        onClose={() => {
-          setShowNotesModal(false);
-          setSelectedMemberId(null);
-        }}
-        onSave={handleSaveNote}
       />
       <DeleteConfirmModal
         isOpen={showDeleteModal}

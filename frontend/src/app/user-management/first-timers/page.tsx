@@ -8,7 +8,6 @@ import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
-import AddNotesModal from "@/components/user-management/AddNotesModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import AssignFollowUpModal from "@/components/user-management/AssignFollowUpModal";
 import BulkImportModal from "@/components/user-management/BulkImportModal";
@@ -18,7 +17,6 @@ import {
   getFirstTimers,
   deleteFirstTimersBulk,
   addCallReport,
-  addNote,
   assignFollowUp,
   convertToSecondTimer,
   type UserResponse,
@@ -51,7 +49,6 @@ export default function FirstTimersPage() {
   const [actionError, setActionError] = useState("");
 
   // Modal states
-  const [showNotesModal, setShowNotesModal] = useState(false);
   const [showCallReportModal, setShowCallReportModal] = useState(false);
   const [callReport, setCallReport] = useState("");
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
@@ -134,13 +131,6 @@ export default function FirstTimersPage() {
     } finally {
       setActionLoading(false);
     }
-  };
-
-  const handleSaveNote = async (note: string) => {
-    if (!selectedTimerId) return;
-    await addNote(selectedTimerId, note);
-    setShowNotesModal(false);
-    setSelectedTimerId(null);
   };
 
   const handleBulkDeleteConfirm = async () => {
@@ -408,7 +398,6 @@ export default function FirstTimersPage() {
                   actions={[
                     { label: "View", onClick: () => router.push(`/user-management/first-timers/${ft.id}`) },
                     { label: "Edit", onClick: () => router.push(`/user-management/first-timers/${ft.id}/edit`) },
-                    { label: "Add Notes", onClick: () => { setSelectedTimerId(ft.id); setShowNotesModal(true); } },
                   ]}
                 />
               </div>
@@ -480,10 +469,6 @@ export default function FirstTimersPage() {
                         { label: "View", onClick: () => router.push(`/user-management/first-timers/${ft.id}`) },
                         { label: "Edit", onClick: () => router.push(`/user-management/first-timers/${ft.id}/edit`) },
                         {
-                          label: "Add Notes",
-                          onClick: () => { setSelectedTimerId(ft.id); setShowNotesModal(true); },
-                        },
-                        {
                           label: "Add Call Report",
                           onClick: () => { setSelectedTimerId(ft.id); setShowCallReportModal(true); },
                         },
@@ -513,13 +498,6 @@ export default function FirstTimersPage() {
           onPageChange={setCurrentPage}
         />
       </div>
-
-      {/* Add Notes Modal */}
-      <AddNotesModal
-        isOpen={showNotesModal}
-        onClose={() => { setShowNotesModal(false); setSelectedTimerId(null); }}
-        onSave={handleSaveNote}
-      />
 
       {/* Add Call Report Modal */}
       <Modal
