@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
-import { getUser, addNote, addCallReport, addVisitReport, getNotes, convertToFullMember, type UserResponse, type NoteResponse } from "@/lib/api";
+import { getUser, addCallReport, addVisitReport, getNotes, convertToFullMember, type UserResponse, type NoteResponse } from "@/lib/api";
 import ProfilePhoto from "@/components/ui/ProfilePhoto";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import { useToast } from "@/context/ToastContext";
@@ -65,7 +65,6 @@ export default function ViewSecondTimerPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showConvertModal, setShowConvertModal] = useState(false);
 
-  const [noteText,  setNoteText]  = useState("");
   const [callText,  setCallText]  = useState("");
   const [visitText, setVisitText] = useState("");
   const [saving,      setSaving]      = useState(false);
@@ -108,18 +107,16 @@ export default function ViewSecondTimerPage() {
     router.push("/user-management/second-timers");
   };
 
-  const handleSaveActivity = async (type: "note" | "call" | "visit") => {
+  const handleSaveActivity = async (type: "call" | "visit") => {
     if (!id) return;
-    const text = type === "note" ? noteText : type === "call" ? callText : visitText;
+    const text = type === "call" ? callText : visitText;
     if (!text.trim()) return;
     setSaving(true);
     setSaveMsg("");
     setSaveFailed(false);
     try {
-      if (type === "note")  await addNote(id, text.trim());
       if (type === "call")  await addCallReport(id, text.trim());
       if (type === "visit") await addVisitReport(id, text.trim());
-      if (type === "note")  setNoteText("");
       if (type === "call")  setCallText("");
       if (type === "visit") setVisitText("");
       setSaveMsg("Saved successfully.");
@@ -267,23 +264,6 @@ export default function ViewSecondTimerPage() {
                   {saveMsg}
                 </div>
               )}
-
-              {/* Add Note */}
-              <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
-                <h3 className="mb-3 text-sm font-bold text-[#111827]">Add Note</h3>
-                <textarea
-                  value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
-                  placeholder="Enter note…"
-                  rows={3}
-                  className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
-                />
-                <div className="mt-2 flex justify-end">
-                  <Button variant="primary" onClick={() => handleSaveActivity("note")} disabled={saving || !noteText.trim()}>
-                    {saving ? "Saving…" : "Save Note"}
-                  </Button>
-                </div>
-              </div>
 
               {/* Log Call */}
               <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
