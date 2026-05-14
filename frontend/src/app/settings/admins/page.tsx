@@ -232,13 +232,13 @@ export default function AdminUsersPage() {
                   <td className="px-4 py-3">
                     <ActionDropdown
                       actions={[
-                        { 
-                          label: "Remove Access", 
+                        {
+                          label: "Remove Access",
                           onClick: () => {
                             setDeletingAdmin(admin);
                             setShowDeleteModal(true);
                           },
-                          className: "text-red-600"
+                          danger: true,
                         },
                       ]}
                     />
