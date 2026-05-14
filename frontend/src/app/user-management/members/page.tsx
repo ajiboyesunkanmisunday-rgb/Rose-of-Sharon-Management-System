@@ -636,12 +636,17 @@ export default function MembersPage() {
         isOpen={showNoLongerBulkModal}
         onClose={() => setShowNoLongerBulkModal(false)}
         onConfirm={async (reason) => {
-          await Promise.allSettled(
-            Array.from(selectedRows).map((id) => markUserAsInactive(id, reason))
-          );
-          setSelectedRows(new Set());
-          setShowNoLongerBulkModal(false);
-          fetchMembers(currentPage);
+          try {
+            await Promise.allSettled(
+              Array.from(selectedRows).map((id) => markUserAsInactive(id, reason))
+            );
+            setSelectedRows(new Set());
+            setShowNoLongerBulkModal(false);
+            fetchMembers(currentPage);
+            toast.success("Members marked as inactive.");
+          } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Failed to mark as inactive.");
+          }
         }}
         count={selectedRows.size}
       />
@@ -649,10 +654,15 @@ export default function MembersPage() {
         isOpen={showNoLongerSingleModal}
         onClose={() => { setShowNoLongerSingleModal(false); setSelectedMemberId(null); }}
         onConfirm={async (reason) => {
-          if (selectedMemberId) await markUserAsInactive(selectedMemberId, reason);
-          setShowNoLongerSingleModal(false);
-          setSelectedMemberId(null);
-          fetchMembers(currentPage);
+          try {
+            if (selectedMemberId) await markUserAsInactive(selectedMemberId, reason);
+            setShowNoLongerSingleModal(false);
+            setSelectedMemberId(null);
+            fetchMembers(currentPage);
+            toast.success("Member marked as inactive.");
+          } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Failed to mark as inactive.");
+          }
         }}
         count={1}
       />
