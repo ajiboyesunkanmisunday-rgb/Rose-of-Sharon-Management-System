@@ -185,9 +185,10 @@ export default function ViewNewConvertPage() {
                     { label: "Phone",            value: phone },
                     { label: "Address",          value: address },
                     { label: "Gender",           value: user?.sex },
-                    { label: "Believers Class",  value: user?.believerClassStage },
-                    { label: "Service Attended", value: user?.service?.title },
-                    { label: "Date Added",       value: fmtDate(user?.createdOn) },
+                    { label: "Believers Class",       value: user?.believerClassStage },
+                    { label: "First Service Attended", value: user?.service?.title },
+                    { label: "First Service Date",    value: fmtDate(user?.service?.date) },
+                    { label: "Date Added",            value: fmtDate(user?.createdOn) },
                   ].map(({ label, value }) => value ? (
                     <div key={label}>
                       <p className="text-xs font-medium text-[#6B7280]">{label}</p>
