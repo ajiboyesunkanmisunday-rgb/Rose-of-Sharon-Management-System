@@ -81,18 +81,21 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
 }
 
 /**
- * Returns false ONLY when we are certain the token is expired (we decoded
- * it successfully and the exp claim is in the past). If we cannot decode the
- * payload we let the token through — the backend will reject it with 401 if
- * it is truly invalid.
+ * Returns true when the token should be rejected client-side:
+ * - Not a valid JWT (no 3 dot-separated parts) — catches raw session keys
+ *   and the legacy "session_<id>" fallback that should never reach the API
+ * - Valid JWT with an exp claim that is already in the past
  */
 function isTokenExpired(token: string): boolean {
+  // Reject anything that isn't a 3-part JWT immediately
+  if (!token || token.split(".").length !== 3) return true;
+
   const payload = decodeJwtPayload(token);
-  if (!payload) return false; // can't decode → assume not expired, let backend decide
+  if (!payload) return true; // couldn't parse — treat as invalid
   if (typeof payload.exp === "number") {
     return payload.exp * 1000 < Date.now();
   }
-  return false; // no exp claim → not expired
+  return false; // valid JWT with no exp claim
 }
 
 async function apiFetchRaw<T>(
@@ -174,13 +177,30 @@ async function apiFetchRaw<T>(
       // non-JSON error body — ignore
     }
 
-    // Always log the raw backend message to the browser console for debugging.
+    // Log the raw backend message to the browser console for debugging.
     console.error(`[api] ${status} on ${path} — backend said:`, backendMessage || "(no message)");
+
+    const raw = backendMessage.toLowerCase();
+
+    // The backend returns 400 for permission errors — treat these as 403.
+    const isPermissionError =
+      raw.includes("do not have permission") ||
+      raw.includes("access denied") ||
+      raw.includes("not authorized") ||
+      raw.includes("unauthorized");
+
+    if (isPermissionError) {
+      // Force re-login: clear the bad token so the next page load goes to /login
+      removeToken();
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+      throw new Error("Your session has expired or you do not have access. Please log in again.");
+    }
 
     // Always keep a meaningful backend message when the server provides one.
     // Only fall back to generic text when the backend gives us nothing useful,
     // or when the message is just a raw HTTP phrase (e.g. "Bad Request").
-    const raw = backendMessage.toLowerCase();
     const isGenericPhrase =
       !backendMessage ||
       raw === "bad request" ||
@@ -366,12 +386,7 @@ export async function loginUser(body: LoginRequest): Promise<UserResponse> {
   });
 
   if (response.token) {
-    // Real JWT from backend — store directly
     setToken(response.token);
-  } else if (response.id) {
-    // Backend login succeeded but has not returned a JWT yet.
-    // Store a session marker so the UI remains accessible.
-    setToken(`session_${response.id}`);
   }
 
   setStoredUser({
