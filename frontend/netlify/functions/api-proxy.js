@@ -64,6 +64,14 @@ exports.handler = async function (event) {
     const response = await fetch(backendUrl, fetchOptions);
     const text     = await response.text();
 
+    // Log non-2xx responses so they appear in Netlify function logs.
+    if (!response.ok) {
+      console.error(
+        `[api-proxy] ${method} ${backendUrl} → ${response.status}`,
+        text.slice(0, 500)
+      );
+    }
+
     return {
       statusCode: response.status,
       headers:    { "Content-Type": "application/json" },
