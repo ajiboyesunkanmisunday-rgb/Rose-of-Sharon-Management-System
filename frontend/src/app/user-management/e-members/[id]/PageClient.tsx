@@ -5,7 +5,8 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
-import { getUser, addNote, addCallReport, addVisitReport, type UserResponse } from "@/lib/api";
+import { getUser, addCallReport, addVisitReport, getNotes, type UserResponse, type NoteResponse } from "@/lib/api";
+import ProfilePhoto from "@/components/ui/ProfilePhoto";
 
 type Tab = "details" | "activity";
 
@@ -59,11 +60,28 @@ export default function EMemberProfilePage() {
   const [activeTab, setActiveTab] = useState<Tab>("details");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const [noteText,   setNoteText]   = useState("");
   const [callText,   setCallText]   = useState("");
   const [visitText,  setVisitText]  = useState("");
   const [saving,     setSaving]     = useState(false);
   const [saveMsg,    setSaveMsg]    = useState("");
+
+  const [notes,       setNotes]       = useState<NoteResponse[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+
+  const fetchNotes = useCallback(async () => {
+    if (!id || id.startsWith("em-")) return;
+    setNotesLoading(true);
+    try {
+      const data = await getNotes(id);
+      setNotes(data ?? []);
+    } catch {
+      // silently ignore
+    } finally {
+      setNotesLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => { if (activeTab === "activity") fetchNotes(); }, [activeTab, fetchNotes]);
 
   const fetchUser = useCallback(async () => {
     if (!id || id.startsWith("em-")) return;
@@ -86,21 +104,20 @@ export default function EMemberProfilePage() {
     router.push("/user-management/e-members");
   };
 
-  const handleSaveActivity = async (type: "note" | "call" | "visit") => {
+  const handleSaveActivity = async (type: "call" | "visit") => {
     if (!id) return;
-    const text = type === "note" ? noteText : type === "call" ? callText : visitText;
+    const text = type === "call" ? callText : visitText;
     if (!text.trim()) return;
     setSaving(true);
     setSaveMsg("");
     try {
-      if (type === "note")  await addNote(id, text.trim());
       if (type === "call")  await addCallReport(id, text.trim());
       if (type === "visit") await addVisitReport(id, text.trim());
-      if (type === "note")  setNoteText("");
       if (type === "call")  setCallText("");
       if (type === "visit") setVisitText("");
       setSaveMsg("Saved successfully.");
       setTimeout(() => setSaveMsg(""), 3000);
+      fetchNotes();
     } catch (err) {
       setSaveMsg(err instanceof Error ? err.message : "Failed to save.");
     } finally {
@@ -150,9 +167,7 @@ export default function EMemberProfilePage() {
             <div className="flex flex-col gap-6 md:flex-row">
               {/* Photo */}
               <div className="relative flex h-[180px] w-[150px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] sm:h-[250px] sm:w-[200px]">
-                {user?.profilePictureUrl
-                  ? <img src={user.profilePictureUrl} alt="" className="h-full w-full object-cover" />
-                  : <UserIcon />}
+                <ProfilePhoto src={user?.profilePictureUrl} />
               </div>
 
               {/* Details */}
@@ -232,23 +247,6 @@ export default function EMemberProfilePage() {
                 </div>
               )}
 
-              {/* Add Note */}
-              <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
-                <h3 className="mb-3 text-sm font-bold text-[#111827]">Add Note</h3>
-                <textarea
-                  value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
-                  placeholder="Enter note…"
-                  rows={3}
-                  className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
-                />
-                <div className="mt-2 flex justify-end">
-                  <Button variant="primary" onClick={() => handleSaveActivity("note")} disabled={saving || !noteText.trim()}>
-                    {saving ? "Saving…" : "Save Note"}
-                  </Button>
-                </div>
-              </div>
-
               {/* Add Call Report */}
               <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
                 <h3 className="mb-3 text-sm font-bold text-[#111827]">Log Call</h3>
@@ -281,6 +279,38 @@ export default function EMemberProfilePage() {
                     {saving ? "Saving…" : "Save Visit"}
                   </Button>
                 </div>
+              </div>
+
+              {/* Activity History */}
+              <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
+                <h3 className="mb-3 text-sm font-bold text-[#111827]">Activity History</h3>
+                {notesLoading ? (
+                  <p className="text-sm text-gray-400">Loading…</p>
+                ) : notes.length === 0 ? (
+                  <p className="text-sm text-gray-400">No activity recorded yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {notes.map((n, i) => {
+                      const noteType = (n.noteCategory ?? n.type ?? "").toUpperCase();
+                      const badgeClass =
+                        noteType.includes("CALL")  ? "bg-[#DBEAFE] text-[#1D4ED8]" :
+                        noteType.includes("VISIT") ? "bg-[#DCFCE7] text-[#16A34A]" :
+                                                      "bg-[#F3F4F6] text-[#6B7280]";
+                      const badgeLabel =
+                        noteType.includes("CALL")  ? "Call Log" :
+                        noteType.includes("VISIT") ? "Visit Log" : "Note";
+                      return (
+                        <div key={n.id ?? i} className="rounded-lg border border-[#E5E7EB] p-3">
+                          <div className="flex items-center gap-2">
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badgeClass}`}>{badgeLabel}</span>
+                            <span className="text-xs text-[#9CA3AF]">{fmtDate(n.createdOn)}</span>
+                          </div>
+                          <p className="mt-2 text-sm text-[#374151]">{n.content ?? "—"}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}

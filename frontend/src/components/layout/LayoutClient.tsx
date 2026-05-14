@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
 import TopNav from "./TopNav";
 import { isAuthenticated } from "@/lib/api";
+import { ToastProvider } from "@/context/ToastContext";
 
 export default function LayoutClient({
   children,
@@ -43,28 +44,30 @@ export default function LayoutClient({
   }, [sidebarOpen]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar — always visible on desktop, drawer on mobile */}
-      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+    <ToastProvider>
+      <div className="min-h-screen bg-gray-50">
+        {/* Sidebar — always visible on desktop, drawer on mobile */}
+        <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
-      {/* Backdrop for mobile drawer */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
-          onClick={closeSidebar}
-          aria-hidden="true"
-        />
-      )}
+        {/* Backdrop for mobile drawer */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+            onClick={closeSidebar}
+            aria-hidden="true"
+          />
+        )}
 
-      {/* Top navigation */}
-      <TopNav onMenuOpen={openSidebar} />
+        {/* Top navigation */}
+        <TopNav onMenuOpen={openSidebar} />
 
-      {/* Main content area
-          - Mobile/tablet: full width, pushed below top bar
-          - Desktop: indented by sidebar width */}
-      <main className="mt-16 min-h-[calc(100vh-64px)] bg-white p-4 sm:p-6 lg:ml-[322px]">
-        {children}
-      </main>
-    </div>
+        {/* Main content area
+            - Mobile/tablet: full width, pushed below top bar
+            - Desktop: indented by sidebar width (272px) */}
+        <main className="mt-16 min-h-[calc(100vh-64px)] bg-white p-4 sm:p-6 lg:ml-[272px]">
+          {children}
+        </main>
+      </div>
+    </ToastProvider>
   );
 }

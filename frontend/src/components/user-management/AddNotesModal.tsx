@@ -12,16 +12,21 @@ interface AddNotesModalProps {
 export default function AddNotesModal({ isOpen, onClose, onSave }: AddNotesModalProps) {
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   const handleSave = async () => {
     if (!note.trim()) return;
     setSaving(true);
+    setSaveError("");
     try {
       if (onSave) {
         await onSave(note);
       }
       setNote("");
+      setSaveError("");
       onClose();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save note. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -42,6 +47,11 @@ export default function AddNotesModal({ isOpen, onClose, onSave }: AddNotesModal
             className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-gray-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
           />
         </div>
+        {saveError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {saveError}
+          </div>
+        )}
         <button
           onClick={handleSave}
           disabled={saving || !note.trim()}

@@ -12,6 +12,7 @@ import {
   getSecondTimers,
   getNewConverts,
   getAllGroups,
+  getGroupMembers,
   type UserResponse,
   type GroupResponse,
 } from "@/lib/api";
@@ -108,13 +109,19 @@ export default function DirectoryPage() {
   const router = useRouter();
   const [search, setSearch]               = useState("");
   const [selectedType, setSelectedType]   = useState<MemberType>("all");
-  const [selectedGroup, setSelectedGroup] = useState("");
+  const [selectedGroupId, setSelectedGroupId] = useState("");
   const [currentPage, setCurrentPage]     = useState(1);
 
   const [entries, setEntries]   = useState<DirectoryEntry[]>([]);
   const [groups, setGroups]     = useState<GroupResponse[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
+
+  // Group member IDs fetched from the backend when a group filter is active
+  const [groupMemberIds, setGroupMemberIds]     = useState<Set<string> | null>(null);
+  const [groupMembersLoading, setGroupMembersLoading] = useState(false);
+  const [groupFilterError, setGroupFilterError] = useState("");
+
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -184,13 +191,40 @@ export default function DirectoryPage() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
+  // Fetch group members from the backend when a group filter is selected
+  useEffect(() => {
+    if (!selectedGroupId) {
+      setGroupMemberIds(null);
+      setGroupFilterError("");
+      return;
+    }
+    let cancelled = false;
+    setGroupMembersLoading(true);
+    setGroupFilterError("");
+    getGroupMembers(selectedGroupId)
+      .then((res) => {
+        if (cancelled) return;
+        const ids = new Set((res.content ?? []).map((u) => u.id));
+        setGroupMemberIds(ids);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          // API not yet available — fall back to showing all members
+          setGroupMemberIds(null);
+          setGroupFilterError("Group member filter is currently unavailable. Showing all members.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setGroupMembersLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [selectedGroupId]);
+
   const filtered = useMemo(() => {
     let list = entries;
     if (selectedType !== "all") list = list.filter((e) => e.userType === selectedType);
-    if (selectedGroup) {
-      list = list.filter((e) =>
-        e.groups?.some((g) => g.name === selectedGroup || g.id === selectedGroup)
-      );
+    if (selectedGroupId && groupMemberIds) {
+      list = list.filter((e) => groupMemberIds.has(e.id));
     }
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -203,7 +237,7 @@ export default function DirectoryPage() {
       );
     }
     return list;
-  }, [entries, selectedType, selectedGroup, search]);
+  }, [entries, selectedType, selectedGroupId, groupMemberIds, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -295,14 +329,20 @@ export default function DirectoryPage() {
             <SearchableSelect
               placeholder="All Groups"
               searchPlaceholder="Search groups…"
-              options={groups.map((g) => g.name)}
-              value={selectedGroup}
-              onChange={(v) => { setSelectedGroup(v); resetPage(); }}
+              options={groups.map((g) => ({ label: g.name, value: g.id }))}
+              value={selectedGroupId}
+              onChange={(v) => { setSelectedGroupId(v); setGroupMemberIds(null); setGroupFilterError(""); resetPage(); }}
             />
           </div>
-          {(search || selectedGroup || selectedType !== "all") && (
+          {groupMembersLoading && (
+            <span className="text-xs text-[#6B7280] animate-pulse">Loading group members…</span>
+          )}
+          {groupFilterError && (
+            <span className="text-xs text-amber-600">{groupFilterError}</span>
+          )}
+          {(search || selectedGroupId || selectedType !== "all") && (
             <button
-              onClick={() => { setSearch(""); setSelectedGroup(""); setSelectedType("all"); resetPage(); }}
+              onClick={() => { setSearch(""); setSelectedGroupId(""); setGroupMemberIds(null); setGroupFilterError(""); setSelectedType("all"); resetPage(); }}
               className="text-sm font-medium text-[#000080] underline hover:text-[#000066]"
             >
               Clear filters
@@ -325,7 +365,9 @@ export default function DirectoryPage() {
         </div>
       ) : paginated.length === 0 ? (
         <div className="rounded-xl border border-[#E5E7EB] bg-white p-12 text-center text-sm text-gray-400">
-          {entries.length === 0 ? "No members found in the database." : "No members match your filters."}
+          {entries.length === 0
+            ? "No members found in the database."
+            : "No members match your filters."}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

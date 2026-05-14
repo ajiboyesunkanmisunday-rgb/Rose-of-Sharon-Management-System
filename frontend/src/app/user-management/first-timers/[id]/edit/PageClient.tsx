@@ -68,6 +68,10 @@ export default function EditFirstTimerPage() {
       setCountry(u.country ?? "");
       setMaritalStatus(u.maritalStatus ?? "");
       setOccupation(u.occupation ?? "");
+      setHowDidYouHear(u.howDidYouHear ?? "");
+      setHowWasService(u.howWasService ?? "");
+      setFavouriteParts(u.favouriteParts ?? "");
+      setWorshippedOnline(u.worshippedOnline ?? false);
     } catch { /* silently fall back to empty fields */ }
   }, [id]);
 
@@ -113,8 +117,11 @@ export default function EditFirstTimerPage() {
         occupation: occupation || undefined,
         isVisiting: isVisiting || undefined,
         mediumOfInvitation: howDidYouHear || undefined,
+        howWasService: howWasService || undefined,
         favouritePartOfService: favouriteParts || undefined,
+        fromOnline: worshippedOnline || undefined,
         profilePictureUrl,
+        whatsappNumber: whatsappNumber || undefined,
       });
       router.back();
     } catch (err) {

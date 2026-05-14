@@ -22,6 +22,15 @@ function toTab(cat?: string): string {
   return "OTHER";
 }
 
+// Human-readable label for the badge
+const tabLabels: Record<string, string> = {
+  SERMONS:  "Sermon",
+  PODCASTS: "Podcast",
+  VIDEOS:   "Video",
+  PICTURES: "Picture",
+  OTHER:    "Media",
+};
+
 function fileSizeFmt(bytes?: number) {
   if (!bytes) return null;
   if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(1)} MB`;
@@ -177,7 +186,17 @@ export default function MediaPage() {
                 <div className="flex h-[160px] items-center justify-center overflow-hidden bg-[#F3F4F6]">
                   {isImage && mediaUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={mediaUrl} alt={item.title ?? ""} className="h-full w-full object-cover" />
+                    <img
+                      src={mediaUrl}
+                      alt={item.title ?? ""}
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        const t = e.currentTarget;
+                        t.onerror = null; // prevent infinite loop
+                        t.style.display = "none";
+                        t.parentElement?.classList.add("broken-img");
+                      }}
+                    />
                   ) : (
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#9CA3AF" stroke="#9CA3AF" strokeWidth="1">
                       <polygon points="5 3 19 12 5 21 5 3" />
@@ -186,7 +205,7 @@ export default function MediaPage() {
                 </div>
                 <div className="p-4">
                   <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${categoryColors[tabKey] ?? categoryColors.OTHER}`}>
-                    {cat ?? tabKey}
+                    {tabLabels[tabKey] ?? "Media"}
                   </span>
                   <h3 className="mt-3 text-sm font-semibold text-[#111827]">{item.title ?? item.displayName ?? "Untitled"}</h3>
                   {item.description && (

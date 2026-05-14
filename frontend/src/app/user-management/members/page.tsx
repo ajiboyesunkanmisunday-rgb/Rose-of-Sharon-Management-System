@@ -10,12 +10,12 @@ import ActionDropdown from "@/components/ui/ActionDropdown";
 import SendSMSModal from "@/components/user-management/SendSMSModal";
 import SendEmailModal from "@/components/user-management/SendEmailModal";
 import QRCodeModal from "@/components/user-management/QRCodeModal";
-import AddNotesModal from "@/components/user-management/AddNotesModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import BulkImportModal from "@/components/user-management/BulkImportModal";
 import NoLongerMemberModal from "@/components/user-management/NoLongerMemberModal";
-import { getMembers, deleteMembersBulk, type UserResponse } from "@/lib/api";
+import { getMembers, deleteMembersBulk, markUserAsInactive, type UserResponse } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
+import { SkeletonRow } from "@/components/ui/Skeleton";
 import { useAssignSuperAdmin } from "@/hooks/member/useAssignSuperAdmin";
 import { toast } from "sonner";
 import AssignSuperAdminModal from "@/components/user-management/AssignSuperAdminModal";
@@ -44,7 +44,6 @@ export default function MembersPage() {
   const [showQRCodeModal, setShowQRCodeModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
-  const [showNotesModal, setShowNotesModal] = useState(false);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [showNoLongerBulkModal, setShowNoLongerBulkModal] = useState(false);
   const [showNoLongerSingleModal, setShowNoLongerSingleModal] = useState(false);
@@ -139,11 +138,6 @@ export default function MembersPage() {
     } catch (err) {
       console.error("Bulk delete failed:", err);
     }
-  };
-
-  const handleAddNotesClick = (id: string) => {
-    setSelectedMemberId(id);
-    setShowNotesModal(true);
   };
 
   const handleNoLongerMemberClick = (id: string) => {
@@ -382,8 +376,51 @@ export default function MembersPage() {
         </div>
       )}
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      {/* Mobile card view — shown below sm breakpoint */}
+      <div className="sm:hidden space-y-3 mb-4">
+        {loading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-2">
+              <div className="skeleton h-4 w-32" />
+              <div className="skeleton h-3 w-24" />
+              <div className="skeleton h-3 w-28" />
+            </div>
+          ))
+        ) : displayedMembers.length === 0 ? (
+          <p className="text-center text-sm text-gray-400 py-8">No members found.</p>
+        ) : (
+          displayedMembers.map((member) => (
+            <div
+              key={member.id}
+              onClick={() => router.push(`/user-management/members/${member.id}`)}
+              className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E5E7EB]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-[#111827] truncate">{member.firstName} {member.lastName}</p>
+                <p className="text-xs text-[#6B7280] truncate">{member.phoneNumber}</p>
+                {member.email && <p className="text-xs text-[#9CA3AF] truncate">{member.email}</p>}
+              </div>
+              <div onClick={(e) => e.stopPropagation()}>
+                <ActionDropdown
+                  actions={[
+                    { label: "View Profile", onClick: () => router.push(`/user-management/members/${member.id}`) },
+                    { label: "Edit", onClick: () => router.push(`/user-management/members/${member.id}/edit`) },
+                    { label: "Delete", onClick: () => handleDeleteClick(member.id) },
+                  ]}
+                />
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Table — hidden on mobile */}
+      <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="bg-[#F3F4F6]">
@@ -413,11 +450,7 @@ export default function MembersPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
-                  Loading members…
-                </td>
-              </tr>
+              Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={7} />)
             ) : displayedMembers.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
@@ -488,10 +521,6 @@ export default function MembersPage() {
                             router.push(
                               `/user-management/members/${member.id}/edit`,
                             ),
-                        },
-                        {
-                          label: "Add Notes",
-                          onClick: () => handleAddNotesClick(member.id),
                         },
                         {
                           label: "Link Spouse",
@@ -586,13 +615,8 @@ export default function MembersPage() {
       <QRCodeModal
         isOpen={showQRCodeModal}
         onClose={() => setShowQRCodeModal(false)}
-      />
-      <AddNotesModal
-        isOpen={showNotesModal}
-        onClose={() => {
-          setShowNotesModal(false);
-          setSelectedMemberId(null);
-        }}
+        value="/user-management/members/add"
+        title="Member Registration QR Code"
       />
       <DeleteConfirmModal
         isOpen={showDeleteModal}
@@ -611,21 +635,34 @@ export default function MembersPage() {
       <NoLongerMemberModal
         isOpen={showNoLongerBulkModal}
         onClose={() => setShowNoLongerBulkModal(false)}
-        onConfirm={() => {
-          setSelectedRows(new Set());
-          setShowNoLongerBulkModal(false);
+        onConfirm={async (reason) => {
+          try {
+            await Promise.allSettled(
+              Array.from(selectedRows).map((id) => markUserAsInactive(id, reason))
+            );
+            setSelectedRows(new Set());
+            setShowNoLongerBulkModal(false);
+            fetchMembers(currentPage);
+            toast.success("Members marked as inactive.");
+          } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Failed to mark as inactive.");
+          }
         }}
         count={selectedRows.size}
       />
       <NoLongerMemberModal
         isOpen={showNoLongerSingleModal}
-        onClose={() => {
-          setShowNoLongerSingleModal(false);
-          setSelectedMemberId(null);
-        }}
-        onConfirm={() => {
-          setShowNoLongerSingleModal(false);
-          setSelectedMemberId(null);
+        onClose={() => { setShowNoLongerSingleModal(false); setSelectedMemberId(null); }}
+        onConfirm={async (reason) => {
+          try {
+            if (selectedMemberId) await markUserAsInactive(selectedMemberId, reason);
+            setShowNoLongerSingleModal(false);
+            setSelectedMemberId(null);
+            fetchMembers(currentPage);
+            toast.success("Member marked as inactive.");
+          } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Failed to mark as inactive.");
+          }
         }}
         count={1}
       />

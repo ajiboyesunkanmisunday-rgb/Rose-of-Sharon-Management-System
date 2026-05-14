@@ -6,6 +6,9 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { getUser, getUserRequests, markUserAsInactive, type UserResponse, type RequestResponse } from "@/lib/api";
+import Breadcrumbs from "@/components/ui/Breadcrumbs";
+import { useToast } from "@/context/ToastContext";
+import { SkeletonProfile } from "@/components/ui/Skeleton";
 
 type Tab = "details" | "requests";
 
@@ -46,6 +49,7 @@ const reqStatusColors: Record<string, string> = {
 
 export default function ViewMemberProfilePage() {
   const router = useRouter();
+  const { addToast } = useToast();
   const params = useParams();
   const paramId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
   const [id, setId] = useState(paramId);
@@ -62,9 +66,10 @@ export default function ViewMemberProfilePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [user,     setUser]     = useState<UserResponse | null>(null);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState("");
+  const [user,       setUser]       = useState<UserResponse | null>(null);
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState("");
+  const [photoError, setPhotoError] = useState(false);
 
   const [requests,     setRequests]     = useState<RequestResponse[]>([]);
   const [reqLoading,   setReqLoading]   = useState(false);
@@ -117,9 +122,12 @@ export default function ViewMemberProfilePage() {
     try {
       await markUserAsInactive(id, "Marked inactive by admin");
       setActionMsg("Member marked as inactive.");
+      addToast("Member marked as inactive.", "success");
       fetchUser(); // refresh so the profile reflects the new status
     } catch (err) {
-      setActionMsg(err instanceof Error ? err.message : "Failed to mark inactive.");
+      const msg = err instanceof Error ? err.message : "Failed to mark inactive.";
+      setActionMsg(msg);
+      addToast(msg, "error");
     } finally {
       setActionLoading(null);
     }
@@ -142,9 +150,14 @@ export default function ViewMemberProfilePage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
+      <div className="mb-4">
         <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
-        <div className="flex items-center gap-2">
+        <Breadcrumbs items={[
+          { label: "User Management" },
+          { label: "Members", href: "/user-management/members" },
+          { label: user ? fullName(user) : "Profile" },
+        ]} />
+        <div className="flex items-center gap-2 mt-1">
           <button onClick={() => router.push("/user-management/members")} className="flex items-center text-[#000080] transition-colors hover:text-[#000066]">
             <BackArrow />
           </button>
@@ -159,17 +172,25 @@ export default function ViewMemberProfilePage() {
       )}
 
       {loading ? (
-        <div className="flex h-48 items-center justify-center text-gray-400">Loading…</div>
+        <SkeletonProfile />
       ) : (
         <>
           {/* Profile Card */}
           <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
             <div className="flex flex-col gap-6 md:flex-row">
-              {/* Photo */}
-              <div className="relative flex h-[180px] w-[150px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] sm:h-[250px] sm:w-[200px]">
-                {user?.profilePictureUrl
-                  ? <img src={user.profilePictureUrl} alt="" className="h-full w-full object-cover" />
-                  : <UserIcon />}
+              {/* Photo — shrink-0 so it never squeezes the detail columns */}
+              <div className="relative mx-auto flex h-[160px] w-[130px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] sm:mx-0 sm:h-[220px] sm:w-[180px] md:h-[240px] md:w-[200px]">
+                {user?.profilePictureUrl && !photoError ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={user.profilePictureUrl}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    onError={() => setPhotoError(true)}
+                  />
+                ) : (
+                  <UserIcon />
+                )}
               </div>
 
               {/* Details */}
