@@ -1022,14 +1022,35 @@ export async function getEventForms(id: string): Promise<unknown> {
 
 // ─── Event Attendees ─────────────────────────────────────────────────────────
 
+const EMPTY_PAGE = <T>(): CustomPageResponse<T> => ({
+  content: [],
+  totalPages: 0,
+  size: 0,
+  totalElements: 0,
+  hasNext: false,
+  hasPrevious: false,
+});
+
+// Returns empty page on 404 — these backend sub-resource endpoints may not be
+// implemented yet; treat missing routes as "no data" rather than an error.
+function is404(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message.toLowerCase() : "";
+  return msg.includes("not found") || msg.includes("record not found");
+}
+
 export async function getEventFirstTimers(
   eventId: string,
   pageNo = 0,
   pageSize = 20
 ): Promise<CustomPageResponse<UserResponse>> {
-  return apiFetch<CustomPageResponse<UserResponse>>(
-    `/api/v1/events/${eventId}/first-timers?pageNo=${pageNo}&pageSize=${pageSize}`
-  );
+  try {
+    return await apiFetch<CustomPageResponse<UserResponse>>(
+      `/api/v1/events/${eventId}/first-timers?pageNo=${pageNo}&pageSize=${pageSize}`
+    );
+  } catch (err) {
+    if (is404(err)) return EMPTY_PAGE<UserResponse>();
+    throw err;
+  }
 }
 
 export async function getEventEMembers(
@@ -1037,9 +1058,14 @@ export async function getEventEMembers(
   pageNo = 0,
   pageSize = 20
 ): Promise<CustomPageResponse<UserResponse>> {
-  return apiFetch<CustomPageResponse<UserResponse>>(
-    `/api/v1/events/${eventId}/e-members?pageNo=${pageNo}&pageSize=${pageSize}`
-  );
+  try {
+    return await apiFetch<CustomPageResponse<UserResponse>>(
+      `/api/v1/events/${eventId}/e-members?pageNo=${pageNo}&pageSize=${pageSize}`
+    );
+  } catch (err) {
+    if (is404(err)) return EMPTY_PAGE<UserResponse>();
+    throw err;
+  }
 }
 
 export async function getEventNewConverts(
@@ -1047,9 +1073,14 @@ export async function getEventNewConverts(
   pageNo = 0,
   pageSize = 20
 ): Promise<CustomPageResponse<NewConvertResponse>> {
-  return apiFetch<CustomPageResponse<NewConvertResponse>>(
-    `/api/v1/events/${eventId}/new-converts?pageNo=${pageNo}&pageSize=${pageSize}`
-  );
+  try {
+    return await apiFetch<CustomPageResponse<NewConvertResponse>>(
+      `/api/v1/events/${eventId}/new-converts?pageNo=${pageNo}&pageSize=${pageSize}`
+    );
+  } catch (err) {
+    if (is404(err)) return EMPTY_PAGE<NewConvertResponse>();
+    throw err;
+  }
 }
 
 // Mark E-Member attendance for an event
