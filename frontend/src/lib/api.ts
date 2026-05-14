@@ -174,6 +174,9 @@ async function apiFetchRaw<T>(
       // non-JSON error body — ignore
     }
 
+    // Always log the raw backend message to the browser console for debugging.
+    console.error(`[api] ${status} on ${path} — backend said:`, backendMessage || "(no message)");
+
     // Always keep a meaningful backend message when the server provides one.
     // Only fall back to generic text when the backend gives us nothing useful,
     // or when the message is just a raw HTTP phrase (e.g. "Bad Request").
