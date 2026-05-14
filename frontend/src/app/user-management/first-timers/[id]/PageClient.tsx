@@ -219,8 +219,8 @@ export default function ViewFirstTimerPage() {
                     { label: "How They Heard", value: user?.howDidYouHear },
                     { label: "Service Rating", value: user?.howWasService },
                     { label: "Favourite Part", value: user?.favouriteParts },
-                    { label: "First Service",  value: user?.firstTimeService?.title },
-                    { label: "Date Visited",   value: fmtDate(user?.createdOn) },
+                    { label: "Last Service Attended", value: user?.firstTimeService?.title },
+                    { label: "Service Date",   value: fmtDate(user?.firstTimeService?.date ?? user?.createdOn) },
                   ].map(({ label, value }) => value ? (
                     <div key={label}>
                       <p className="text-xs font-medium text-[#6B7280]">{label}</p>

@@ -218,9 +218,10 @@ export default function ViewSecondTimerPage() {
                     { label: "Occupation",     value: user?.occupation },
                     { label: "How They Heard", value: user?.howDidYouHear },
                     { label: "Service Rating", value: user?.howWasService },
-                    { label: "First Service",  value: user?.firstTimeService?.title },
-                    { label: "Second Service", value: user?.secondTimeService?.title },
-                    { label: "Date Visited",   value: fmtDate(user?.createdOn) },
+                    { label: "First Service Attended",  value: user?.firstTimeService?.title },
+                    { label: "First Service Date",     value: fmtDate(user?.firstTimeService?.date) },
+                    { label: "Last Service Attended",  value: user?.secondTimeService?.title },
+                    { label: "Last Service Date",      value: fmtDate(user?.secondTimeService?.date ?? user?.createdOn) },
                   ].map(({ label, value }) => value ? (
                     <div key={label}>
                       <p className="text-xs font-medium text-[#6B7280]">{label}</p>
