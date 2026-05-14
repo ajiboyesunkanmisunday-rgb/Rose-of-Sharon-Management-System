@@ -207,9 +207,12 @@ export default function ViewMemberProfilePage() {
                     { label: "Gender",         value: user?.sex },
                     { label: "Date of Birth",  value: fmtDOB(user?.dayOfBirth, user?.monthOfBirth, user?.yearOfBirth) },
                     { label: "Marital Status", value: user?.maritalStatus },
-                    { label: "Occupation",     value: user?.occupation },
-                    { label: "Group",          value: groupNames },
-                    { label: "Date Joined",    value: fmtDate(user?.createdOn) },
+                    { label: "Occupation",              value: user?.occupation },
+                    { label: "Group",                   value: groupNames },
+                    { label: "First Church Visit",      value: user?.firstTimeService?.title },
+                    { label: "First Visit Date",        value: fmtDate(user?.firstTimeService?.date) },
+                    { label: "Last Service Attended",   value: user?.serviceAttended },
+                    { label: "Date Joined",             value: fmtDate(user?.createdOn) },
                   ].map(({ label, value }) => value ? (
                     <div key={label}>
                       <p className="text-xs font-medium text-[#6B7280]">{label}</p>
