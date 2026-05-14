@@ -154,12 +154,12 @@ export default function ViewSecondTimerPage() {
   };
 
   const address = user
-    ? [user.street, user.city, user.state, user.country].filter(Boolean).join(", ") || "—"
-    : "—";
+    ? [user.street, user.city, user.state, user.country].filter(Boolean).join(", ")
+    : "";
 
-  const phone = user
+  const phone = user?.phoneNumber
     ? `+${user.countryCode ?? ""} ${user.phoneNumber}`.trim()
-    : "—";
+    : "";
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "details",  label: "Details"  },
