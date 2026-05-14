@@ -8,22 +8,24 @@ import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
-import AddNotesModal from "@/components/user-management/AddNotesModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
+import NoLongerMemberModal from "@/components/user-management/NoLongerMemberModal";
 import AssignFollowUpModal from "@/components/user-management/AssignFollowUpModal";
 import BulkImportModal from "@/components/user-management/BulkImportModal";
+import QRCodeModal from "@/components/user-management/QRCodeModal";
 import Modal from "@/components/ui/Modal";
 import {
   getSecondTimers,
   deleteSecondTimersBulk,
   addCallReport,
-  addNote,
   assignFollowUp,
   convertToFullMember,
+  markUserAsInactive,
   type UserResponse,
 } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
 import { Users2 } from "lucide-react";
+import { SkeletonRow } from "@/components/ui/Skeleton";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -49,13 +51,15 @@ export default function SecondTimersPage() {
   const [actionError, setActionError] = useState("");
 
   // Modal states
-  const [showNotesModal, setShowNotesModal] = useState(false);
   const [showCallReportModal, setShowCallReportModal] = useState(false);
   const [callReport, setCallReport] = useState("");
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [showBulkAssignModal, setShowBulkAssignModal] = useState(false);
   const [showSingleAssignModal, setShowSingleAssignModal] = useState(false);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
+  const [showQRCodeModal, setShowQRCodeModal] = useState(false);
+  const [showInactiveSingleModal, setShowInactiveSingleModal] = useState(false);
+  const [showInactiveBulkModal, setShowInactiveBulkModal] = useState(false);
   const [selectedTimerId, setSelectedTimerId] = useState<string | null>(null);
   const [showFilter, setShowFilter] = useState(false);
   const [filterService, setFilterService] = useState("");
@@ -132,17 +136,6 @@ export default function SecondTimersPage() {
     }
   };
 
-  const handleSaveNote = async (note: string) => {
-    if (!selectedTimerId) return;
-    try {
-      await addNote(selectedTimerId, note);
-      setShowNotesModal(false);
-      setSelectedTimerId(null);
-    } catch {
-      // modal handles its own error display
-    }
-  };
-
   const handleBulkDeleteConfirm = async () => {
     setActionLoading(true);
     try {
@@ -191,6 +184,41 @@ export default function SecondTimersPage() {
     }
   };
 
+  const handleMarkInactive = async (reason: string) => {
+    if (!selectedTimerId) return;
+    setActionLoading(true);
+    setActionError("");
+    try {
+      await markUserAsInactive(selectedTimerId, reason);
+      setShowInactiveSingleModal(false);
+      setSelectedTimerId(null);
+      fetchTimers(currentPage);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to mark as inactive.");
+      setShowInactiveSingleModal(false);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleBulkMarkInactive = async (reason: string) => {
+    setActionLoading(true);
+    setActionError("");
+    try {
+      await Promise.allSettled(
+        Array.from(selectedRows).map((id) => markUserAsInactive(id, reason))
+      );
+      setSelectedRows(new Set());
+      setShowInactiveBulkModal(false);
+      fetchTimers(currentPage);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to mark as inactive.");
+      setShowInactiveBulkModal(false);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleConvertToMember = async (id: string) => {
     setActionLoading(true);
     setActionError("");
@@ -224,6 +252,7 @@ export default function SecondTimersPage() {
 
   const bulkActions = [
     { label: "Assign Follow-up", onClick: () => setShowBulkAssignModal(true) },
+    { label: "Mark as Inactive", onClick: () => setShowInactiveBulkModal(true) },
     { label: "Delete", onClick: () => setShowBulkDeleteModal(true) },
   ];
 
@@ -274,6 +303,18 @@ export default function SecondTimersPage() {
             }
           >
             <span className="hidden sm:inline">Filter</span>
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={() => setShowQRCodeModal(true)}
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h7v7"/>
+              </svg>
+            }
+          >
+            <span className="hidden sm:inline">QR Code</span>
           </Button>
 
           <Button
@@ -358,7 +399,48 @@ export default function SecondTimersPage() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      {/* Mobile card view */}
+      <div className="sm:hidden space-y-3 mb-4">
+        {loading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-2">
+              <div className="skeleton h-4 w-32" /><div className="skeleton h-3 w-24" />
+            </div>
+          ))
+        ) : displayedTimers.length === 0 ? (
+          <p className="text-center text-sm text-gray-400 py-8">No second timers found.</p>
+        ) : (
+          displayedTimers.map((st) => (
+            <div
+              key={st.id}
+              onClick={() => router.push(`/user-management/second-timers/${st.id}`)}
+              className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FEF3C7]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-[#111827] truncate">{fullName(st)}</p>
+                <p className="text-xs text-[#6B7280]">{st.phoneNumber}</p>
+                <p className="text-xs text-[#9CA3AF]">Calls: {st.noOfCalls ?? 0} · Visits: {st.noOfVisits ?? 0}</p>
+              </div>
+              <div onClick={(e) => e.stopPropagation()}>
+                <ActionDropdown
+                  actions={[
+                    { label: "View", onClick: () => router.push(`/user-management/second-timers/${st.id}`) },
+                    { label: "Edit", onClick: () => router.push(`/user-management/second-timers/${st.id}/edit`) },
+                  ]}
+                />
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Table — hidden on mobile */}
+      <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="bg-[#F3F4F6]">
@@ -382,9 +464,7 @@ export default function SecondTimersPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-gray-400">Loading second timers…</td>
-              </tr>
+              Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={9} />)
             ) : displayedTimers.length === 0 ? (
               <tr>
                 <td colSpan={9} className="px-4 py-8 text-center text-gray-400">No second timers found.</td>
@@ -422,10 +502,6 @@ export default function SecondTimersPage() {
                         { label: "View", onClick: () => router.push(`/user-management/second-timers/${st.id}`) },
                         { label: "Edit", onClick: () => router.push(`/user-management/second-timers/${st.id}/edit`) },
                         {
-                          label: "Add Notes",
-                          onClick: () => { setSelectedTimerId(st.id); setShowNotesModal(true); },
-                        },
-                        {
                           label: "Add Call Report",
                           onClick: () => { setSelectedTimerId(st.id); setShowCallReportModal(true); },
                         },
@@ -436,6 +512,10 @@ export default function SecondTimersPage() {
                         {
                           label: "Convert to Member",
                           onClick: () => handleConvertToMember(st.id),
+                        },
+                        {
+                          label: "Mark as Inactive",
+                          onClick: () => { setSelectedTimerId(st.id); setShowInactiveSingleModal(true); },
                         },
                       ]}
                     />
@@ -455,12 +535,6 @@ export default function SecondTimersPage() {
           onPageChange={setCurrentPage}
         />
       </div>
-
-      <AddNotesModal
-        isOpen={showNotesModal}
-        onClose={() => { setShowNotesModal(false); setSelectedTimerId(null); }}
-        onSave={handleSaveNote}
-      />
 
       <Modal
         isOpen={showCallReportModal}
@@ -519,6 +593,26 @@ export default function SecondTimersPage() {
         module="Second Timers"
         templateHeaders={["firstName","middleName","lastName","gender","countryCode","phone","email","serviceAttended","date"]}
         templateSampleRow={["Pat","","Lee","Female","+1","5551234567","pat@example.com","Sunday Service","2026-04-20"]}
+      />
+
+      <QRCodeModal
+        isOpen={showQRCodeModal}
+        onClose={() => setShowQRCodeModal(false)}
+        value="/user-management/second-timers/add"
+        title="Second Timer Registration QR Code"
+      />
+
+      <NoLongerMemberModal
+        isOpen={showInactiveSingleModal}
+        onClose={() => { setShowInactiveSingleModal(false); setSelectedTimerId(null); }}
+        onConfirm={handleMarkInactive}
+      />
+
+      <NoLongerMemberModal
+        isOpen={showInactiveBulkModal}
+        onClose={() => setShowInactiveBulkModal(false)}
+        onConfirm={handleBulkMarkInactive}
+        count={selectedRows.size}
       />
     </DashboardLayout>
   );

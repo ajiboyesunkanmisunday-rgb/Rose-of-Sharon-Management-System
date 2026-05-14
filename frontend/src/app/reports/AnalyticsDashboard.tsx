@@ -219,12 +219,12 @@ export default function AnalyticsDashboard() {
     setError("");
     try {
       const [mem, emem, ft, st, conv, grps, test, celeb, evts] = await Promise.all([
-        fetchAll((p, s) => getMembers(p, s)),
-        fetchAll((p, s) => getEMembers(p, s)),
-        fetchAll((p, s) => getFirstTimers(p, s)),
-        fetchAll((p, s) => getSecondTimers(p, s)),
-        fetchAll((p, s) => getNewConverts(p, s)) as Promise<NewConvertResponse[]>,
-        getAllGroups(),
+        fetchAll((p, s) => getMembers(p, s)).catch(() => []),
+        fetchAll((p, s) => getEMembers(p, s)).catch(() => []),
+        fetchAll((p, s) => getFirstTimers(p, s)).catch(() => []),
+        fetchAll((p, s) => getSecondTimers(p, s)).catch(() => []),
+        (fetchAll((p, s) => getNewConverts(p, s)) as Promise<NewConvertResponse[]>).catch(() => []),
+        getAllGroups().catch(() => []),
         fetchAll((p, s) => getTestimonies(p, s)).catch(() => []),
         fetchAll((p, s) => getCelebrations(p, s)).catch(() => []),
         fetchAll((p, s) => getEvents(p, s)).catch(() => []),

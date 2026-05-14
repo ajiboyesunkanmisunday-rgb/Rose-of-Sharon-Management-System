@@ -16,6 +16,7 @@ import NoLongerMemberModal from "@/components/user-management/NoLongerMemberModa
 import {
   getEMembers,
   deleteEMembersBulk,
+  markUserAsInactive,
   type UserResponse,
 } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
@@ -388,7 +389,12 @@ export default function EMembersPage() {
       {/* Modals */}
       <SendSMSModal isOpen={showSMSModal} onClose={() => setShowSMSModal(false)} selectedCount={selectedRows.size} />
       <SendEmailModal isOpen={showEmailModal} onClose={() => setShowEmailModal(false)} selectedCount={selectedRows.size} />
-      <QRCodeModal isOpen={showQRCodeModal} onClose={() => setShowQRCodeModal(false)} />
+      <QRCodeModal
+        isOpen={showQRCodeModal}
+        onClose={() => setShowQRCodeModal(false)}
+        value="/user-management/e-members/add"
+        title="E-Member Registration QR Code"
+      />
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         onClose={() => { setShowDeleteModal(false); setSelectedEMemberId(null); }}
@@ -403,13 +409,33 @@ export default function EMembersPage() {
       <NoLongerMemberModal
         isOpen={showNoLongerBulkModal}
         onClose={() => setShowNoLongerBulkModal(false)}
-        onConfirm={() => { setSelectedRows(new Set()); setShowNoLongerBulkModal(false); }}
+        onConfirm={async (reason) => {
+          try {
+            await Promise.allSettled(
+              Array.from(selectedRows).map((id) => markUserAsInactive(id, reason))
+            );
+            setSelectedRows(new Set());
+            setShowNoLongerBulkModal(false);
+            fetchEMembers(currentPage);
+          } catch (err) {
+            setApiError(err instanceof Error ? err.message : "Failed to mark as inactive.");
+          }
+        }}
         count={selectedRows.size}
       />
       <NoLongerMemberModal
         isOpen={showNoLongerSingleModal}
         onClose={() => { setShowNoLongerSingleModal(false); setSelectedEMemberId(null); }}
-        onConfirm={() => { setShowNoLongerSingleModal(false); setSelectedEMemberId(null); }}
+        onConfirm={async (reason) => {
+          try {
+            if (selectedEMemberId) await markUserAsInactive(selectedEMemberId, reason);
+            setShowNoLongerSingleModal(false);
+            setSelectedEMemberId(null);
+            fetchEMembers(currentPage);
+          } catch (err) {
+            setApiError(err instanceof Error ? err.message : "Failed to mark as inactive.");
+          }
+        }}
         count={1}
       />
       <BulkImportModal

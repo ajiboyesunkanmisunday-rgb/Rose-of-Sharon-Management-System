@@ -5,7 +5,11 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
-import { getUser, addNote, addCallReport, addVisitReport, getNotes, convertToSecondTimer, type UserResponse, type NoteResponse } from "@/lib/api";
+import { getUser, addCallReport, addVisitReport, getNotes, convertToSecondTimer, type UserResponse, type NoteResponse } from "@/lib/api";
+import ProfilePhoto from "@/components/ui/ProfilePhoto";
+import Breadcrumbs from "@/components/ui/Breadcrumbs";
+import { useToast } from "@/context/ToastContext";
+import { SkeletonProfile } from "@/components/ui/Skeleton";
 
 type Tab = "details" | "activity";
 
@@ -39,6 +43,7 @@ const UserIcon = () => (
 
 export default function ViewFirstTimerPage() {
   const router = useRouter();
+  const { addToast } = useToast();
   const params = useParams();
   const paramId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
   const [id, setId] = useState(paramId);
@@ -60,7 +65,6 @@ export default function ViewFirstTimerPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showConvertModal, setShowConvertModal] = useState(false);
 
-  const [noteText,  setNoteText]  = useState("");
   const [callText,  setCallText]  = useState("");
   const [visitText, setVisitText] = useState("");
   const [saving,      setSaving]      = useState(false);
@@ -103,26 +107,27 @@ export default function ViewFirstTimerPage() {
     router.push("/user-management/first-timers");
   };
 
-  const handleSaveActivity = async (type: "note" | "call" | "visit") => {
+  const handleSaveActivity = async (type: "call" | "visit") => {
     if (!id) return;
-    const text = type === "note" ? noteText : type === "call" ? callText : visitText;
+    const text = type === "call" ? callText : visitText;
     if (!text.trim()) return;
     setSaving(true);
     setSaveMsg("");
     setSaveFailed(false);
     try {
-      if (type === "note")  await addNote(id, text.trim());
       if (type === "call")  await addCallReport(id, text.trim());
       if (type === "visit") await addVisitReport(id, text.trim());
-      if (type === "note")  setNoteText("");
       if (type === "call")  setCallText("");
       if (type === "visit") setVisitText("");
       setSaveMsg("Saved successfully.");
       setTimeout(() => setSaveMsg(""), 3000);
+      addToast("Saved successfully.", "success");
       fetchNotes(); // refresh history
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to save.";
       setSaveFailed(true);
-      setSaveMsg(err instanceof Error ? err.message : "Failed to save.");
+      setSaveMsg(msg);
+      addToast(msg, "error");
     } finally {
       setSaving(false);
     }
@@ -138,9 +143,12 @@ export default function ViewFirstTimerPage() {
     setConverting(true);
     try {
       await convertToSecondTimer(id);
+      addToast("Converted to Second Timer successfully.", "success");
       router.push("/user-management/second-timers");
     } catch (err) {
-      setSaveMsg(err instanceof Error ? err.message : "Conversion failed.");
+      const msg = err instanceof Error ? err.message : "Conversion failed.";
+      setSaveMsg(msg);
+      addToast(msg, "error");
       setConverting(false);
     }
   };
@@ -160,9 +168,14 @@ export default function ViewFirstTimerPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
+      <div className="mb-4">
         <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
-        <div className="flex items-center gap-2">
+        <Breadcrumbs items={[
+          { label: "User Management" },
+          { label: "First Timers", href: "/user-management/first-timers" },
+          { label: user ? fullName(user) : "Profile" },
+        ]} />
+        <div className="flex items-center gap-2 mt-1">
           <button onClick={() => router.push("/user-management/first-timers")} className="flex items-center text-[#000080] transition-colors hover:text-[#000066]">
             <BackArrow />
           </button>
@@ -177,17 +190,15 @@ export default function ViewFirstTimerPage() {
       )}
 
       {loading ? (
-        <div className="flex h-48 items-center justify-center text-gray-400">Loading…</div>
+        <SkeletonProfile />
       ) : (
         <>
           {/* Profile Card */}
           <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
             <div className="flex flex-col gap-6 md:flex-row">
               {/* Photo */}
-              <div className="relative flex h-[180px] w-[150px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] sm:h-[250px] sm:w-[200px]">
-                {user?.profilePictureUrl
-                  ? <img src={user.profilePictureUrl} alt="" className="h-full w-full object-cover" />
-                  : <UserIcon />}
+              <div className="relative mx-auto flex h-[160px] w-[130px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] sm:mx-0 sm:h-[220px] sm:w-[180px] md:h-[240px] md:w-[200px]">
+                <ProfilePhoto src={user?.profilePictureUrl} />
               </div>
 
               {/* Details */}
@@ -254,23 +265,6 @@ export default function ViewFirstTimerPage() {
                 </div>
               )}
 
-              {/* Add Note */}
-              <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
-                <h3 className="mb-3 text-sm font-bold text-[#111827]">Add Note</h3>
-                <textarea
-                  value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
-                  placeholder="Enter note…"
-                  rows={3}
-                  className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
-                />
-                <div className="mt-2 flex justify-end">
-                  <Button variant="primary" onClick={() => handleSaveActivity("note")} disabled={saving || !noteText.trim()}>
-                    {saving ? "Saving…" : "Save Note"}
-                  </Button>
-                </div>
-              </div>
-
               {/* Log Call */}
               <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
                 <h3 className="mb-3 text-sm font-bold text-[#111827]">Log Call</h3>
@@ -315,8 +309,9 @@ export default function ViewFirstTimerPage() {
                 ) : (
                   <ul className="space-y-3">
                     {notes.map((n) => {
-                      const typeLabel = n.type === "CALL" ? "Call" : n.type === "VISIT" ? "Visit" : "Note";
-                      const typeBg    = n.type === "CALL" ? "bg-blue-50 text-blue-700" : n.type === "VISIT" ? "bg-green-50 text-green-700" : "bg-[#F3F4F6] text-[#374151]";
+                      const cat = (n.noteCategory ?? n.type ?? "").toUpperCase();
+                      const typeLabel = cat.includes("CALL") ? "Call Log" : cat.includes("VISIT") ? "Visit Log" : "Note";
+                      const typeBg    = cat.includes("CALL") ? "bg-blue-50 text-blue-700" : cat.includes("VISIT") ? "bg-green-50 text-green-700" : "bg-[#F3F4F6] text-[#374151]";
                       return (
                         <li key={n.id} className="rounded-lg border border-[#F3F4F6] bg-[#FAFAFA] px-4 py-3">
                           <div className="mb-1 flex items-center justify-between gap-2">
@@ -325,7 +320,7 @@ export default function ViewFirstTimerPage() {
                           </div>
                           <p className="text-sm text-[#374151]">{n.content ?? "—"}</p>
                           {(n.officerName ?? n.createdBy) && (
-                            <p className="mt-1 text-xs text-[#9CA3AF]">By {n.officerName ?? n.createdBy}</p>
+                            <p className="mt-1 text-xs text-[#9CA3AF]">By {n.officerName ?? (typeof n.createdBy === "string" ? n.createdBy : [n.createdBy?.firstName, n.createdBy?.lastName].filter(Boolean).join(" "))}</p>
                           )}
                         </li>
                       );

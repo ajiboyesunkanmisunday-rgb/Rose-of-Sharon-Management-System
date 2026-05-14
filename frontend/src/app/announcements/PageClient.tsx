@@ -154,7 +154,8 @@ export default function AnnouncementsPageClient() {
       setItems((prev) => prev.filter((a) => a.id !== id));
       setTotalItems((prev) => Math.max(0, prev - 1));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to approve.");
+      const msg = err instanceof Error ? err.message : "Failed to approve.";
+      setError(msg);
     } finally {
       setActioning(null);
     }

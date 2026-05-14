@@ -10,6 +10,8 @@ import ActionDropdown from "@/components/ui/ActionDropdown";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { getEvents, searchEvents, cancelEvent, type EventResponse } from "@/lib/api";
 import { CalendarClock } from "lucide-react";
+import { useToast } from "@/context/ToastContext";
+import { SkeletonRow } from "@/components/ui/Skeleton";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -45,10 +47,21 @@ function fmtDate(raw?: string | null): string {
   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+const EVENT_CATEGORIES = [
+  { value: "",               label: "All Categories" },
+  { value: "SERVICE",        label: "Service" },
+  { value: "SPECIAL_SERVICE",label: "Special Service" },
+  { value: "CONFERENCE",     label: "Conference" },
+  { value: "WEDDING",        label: "Wedding" },
+  { value: "FUNERAL",        label: "Funeral" },
+];
+
 export default function EventManagementPage() {
   const router = useRouter();
+  const { addToast } = useToast();
 
   const [events, setEvents] = useState<EventResponse[]>([]);
+  const [allEvents, setAllEvents] = useState<EventResponse[]>([]); // for client-side filter
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -60,6 +73,11 @@ export default function EventManagementPage() {
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState("");
 
+  // ── Filters ──────────────────────────────────────────────────────────────
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [dateFrom, setDateFrom]             = useState("");
+  const [dateTo, setDateTo]                 = useState("");
+
   const fetchEvents = useCallback(async (page: number, query: string) => {
     setLoading(true);
     setApiError("");
@@ -70,7 +88,7 @@ export default function EventManagementPage() {
       } else {
         res = await getEvents(page - 1, ITEMS_PER_PAGE);
       }
-      setEvents(res.content ?? []);
+      setAllEvents(res.content ?? []);
       setTotalPages(res.totalPages || 1);
       setTotalItems(res.totalElements || 0);
     } catch (err) {
@@ -80,6 +98,21 @@ export default function EventManagementPage() {
       setLoading(false);
     }
   }, []);
+
+  // Apply client-side category + date filters
+  useEffect(() => {
+    let filtered = allEvents;
+    if (categoryFilter) {
+      filtered = filtered.filter((e) => e.eventCategory === categoryFilter);
+    }
+    if (dateFrom) {
+      filtered = filtered.filter((e) => e.date && e.date >= dateFrom);
+    }
+    if (dateTo) {
+      filtered = filtered.filter((e) => e.date && e.date <= dateTo);
+    }
+    setEvents(filtered);
+  }, [allEvents, categoryFilter, dateFrom, dateTo]);
 
   useEffect(() => {
     fetchEvents(currentPage, search);
@@ -105,9 +138,12 @@ export default function EventManagementPage() {
       await cancelEvent(selectedId);
       setShowCancelModal(false);
       setSelectedId(null);
+      addToast("Event cancelled successfully.", "success");
       fetchEvents(currentPage, search);
     } catch (err) {
-      setCancelError(err instanceof Error ? err.message : "Failed to cancel event.");
+      const msg = err instanceof Error ? err.message : "Failed to cancel event.";
+      setCancelError(msg);
+      addToast(msg, "error");
     } finally {
       setCancelling(false);
     }
@@ -126,7 +162,7 @@ export default function EventManagementPage() {
       </div>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="w-full sm:w-72">
+        <div className="w-full sm:w-64">
           <SearchBar
             value={search}
             onChange={(val) => setSearch(val)}
@@ -134,17 +170,82 @@ export default function EventManagementPage() {
             placeholder="Search events..."
           />
         </div>
-        <Button
-          variant="primary"
-          onClick={() => router.push("/event-management/add")}
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+          >
+            {EVENT_CATEGORIES.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            title="From date"
+          />
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            title="To date"
+          />
+          {(categoryFilter || dateFrom || dateTo) && (
+            <button
+              onClick={() => { setCategoryFilter(""); setDateFrom(""); setDateTo(""); }}
+              className="text-xs text-[#6B7280] hover:text-red-500 underline"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Export CSV */}
+          <button
+            onClick={() => {
+              const rows = [
+                ["Title", "Date", "Category", "Location", "Preacher", "Status"],
+                ...events.map((e) => [
+                  e.title,
+                  e.date ?? "",
+                  e.eventCategory ?? "",
+                  e.locationType === "VIRTUAL" ? "Virtual" : [e.city, e.state].filter(Boolean).join(", "),
+                  e.preacher ?? "",
+                  e.isCanceled ? "Cancelled" : "Active",
+                ]),
+              ];
+              const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+              const blob = new Blob([csv], { type: "text/csv" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a"); a.href = url; a.download = "events.csv"; a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#374151] hover:bg-[#F3F4F6] transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
-          }
-        >
-          Create Event
-        </Button>
+            Export CSV
+          </button>
+          <Button
+            variant="primary"
+            onClick={() => router.push("/event-management/add")}
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            }
+          >
+            Create Event
+          </Button>
+        </div>
       </div>
 
       {apiError && (
@@ -156,7 +257,56 @@ export default function EventManagementPage() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      {/* Mobile card view */}
+      <div className="sm:hidden space-y-3 mb-4">
+        {loading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-2">
+              <div className="skeleton h-4 w-40" /><div className="skeleton h-3 w-24" />
+            </div>
+          ))
+        ) : events.length === 0 ? (
+          <p className="text-center text-sm text-gray-400 py-8">No events found.</p>
+        ) : (
+          events.map((event) => (
+            <div
+              key={event.id}
+              onClick={() => router.push(`/event-management/${event.id}`)}
+              className="flex items-start gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EDE9FE]">
+                <CalendarClock className="h-5 w-5 text-[#7C3AED]" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-[#111827] truncate">{event.title}</p>
+                <p className="text-xs text-[#6B7280]">{fmtDate(event.date)} · {locationLabel(event)}</p>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${categoryColors[event.eventCategory ?? ""] ?? "bg-gray-100 text-gray-600"}`}>
+                    {categoryLabel(event.eventCategory)}
+                  </span>
+                  {event.isCanceled ? (
+                    <span className="inline-block rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">Cancelled</span>
+                  ) : (
+                    <span className="inline-block rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Active</span>
+                  )}
+                </div>
+              </div>
+              <div onClick={(e) => e.stopPropagation()}>
+                <ActionDropdown
+                  actions={[
+                    { label: "View", onClick: () => router.push(`/event-management/${event.id}`) },
+                    { label: "Edit", onClick: () => router.push(`/event-management/${event.id}/edit`) },
+                    ...(event.isCanceled ? [] : [{ label: "Cancel Event", onClick: () => handleCancelClick(event.id) }]),
+                  ]}
+                />
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Table — hidden on mobile */}
+      <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="bg-[#F3F4F6]">
@@ -172,9 +322,7 @@ export default function EventManagementPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">Loading events…</td>
-              </tr>
+              Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} columns={8} />)
             ) : events.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-gray-400">No events found.</td>

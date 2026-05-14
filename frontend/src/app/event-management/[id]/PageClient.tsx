@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
@@ -10,15 +10,18 @@ import QRCodeModal from "@/components/user-management/QRCodeModal";
 import EventBroadcastModal from "@/components/events/EventBroadcastModal";
 import {
   getEvent,
-  getEventFirstTimers,
-  getEventEMembers,
-  getEventNewConverts,
+  getFirstTimers,
+  getEMembers,
+  getNewConverts,
   markEMemberEventAttendance,
+  markEventAttendance,
   cancelEvent,
   type EventResponse,
   type UserResponse,
   type NewConvertResponse,
 } from "@/lib/api";
+import Breadcrumbs from "@/components/ui/Breadcrumbs";
+import { SkeletonProfile } from "@/components/ui/Skeleton";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -115,6 +118,25 @@ export default function EventDetailClient() {
   const [ncTotalPages,   setNcTotalPages]   = useState(1);
   const [ncTotal,        setNcTotal]        = useState(0);
 
+  // IDs currently being marked attended (first-timers and new-converts)
+  const [markingFtId,    setMarkingFtId]    = useState<string | null>(null);
+  const [ftAttendError,  setFtAttendError]  = useState("");
+  const [markingNcId,    setMarkingNcId]    = useState<string | null>(null);
+  const [ncAttendError,  setNcAttendError]  = useState("");
+
+  // E-member attendance tracked locally (EventResponse has no eMembers array)
+  const [emAttendedIds, setEmAttendedIds] = useState<Set<string>>(new Set());
+
+  // Derive attended ID sets from the event's embedded arrays — updated after each mark
+  const ftAttendedIds = useMemo(
+    () => new Set((event?.firstTimers ?? []).map(ft => ft.id)),
+    [event]
+  );
+  const ncAttendedIds = useMemo(
+    () => new Set((event?.newConverts ?? []).map(nc => nc.id)),
+    [event]
+  );
+
   // ── Load event ─────────────────────────────────────────────────────────────
   useEffect(() => {
     // If we still have a placeholder ID, exit loading state so the page isn't
@@ -132,12 +154,23 @@ export default function EventDetailClient() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  // ── Load first timers ─────────────────────────────────────────────────────
+  // ── Refresh event (updates embedded firstTimers / newConverts) ────────────
+  const refreshEvent = useCallback(async () => {
+    if (!id || isPlaceholder(id)) return;
+    try {
+      const updated = await getEvent(id);
+      setEvent(updated);
+    } catch { /* non-fatal — keep stale event data */ }
+  }, [id]);
+
+  // ── Load first timers from global list ────────────────────────────────────
+  // The backend sub-resource endpoint /events/{id}/first-timers returns 404.
+  // We load all first-timers from the system; attended state comes from event.firstTimers.
   const loadFirstTimers = useCallback(async (page: number) => {
     setFtLoading(true);
     setFtError("");
     try {
-      const res = await getEventFirstTimers(id, page, 20);
+      const res = await getFirstTimers(page, 20);
       setFirstTimers(res.content ?? []);
       setFtTotalPages(res.totalPages ?? 1);
       setFtTotal(res.totalElements ?? 0);
@@ -146,14 +179,14 @@ export default function EventDetailClient() {
     } finally {
       setFtLoading(false);
     }
-  }, [id]);
+  }, []);
 
-  // ── Load E-Members ────────────────────────────────────────────────────────
+  // ── Load E-Members from global list ───────────────────────────────────────
   const loadEMembers = useCallback(async (page: number) => {
     setEmLoading(true);
     setEmError("");
     try {
-      const res = await getEventEMembers(id, page, 20);
+      const res = await getEMembers(page, 20);
       setEMembers(res.content ?? []);
       setEmTotalPages(res.totalPages ?? 1);
       setEmTotal(res.totalElements ?? 0);
@@ -162,14 +195,14 @@ export default function EventDetailClient() {
     } finally {
       setEmLoading(false);
     }
-  }, [id]);
+  }, []);
 
-  // ── Load New Converts ─────────────────────────────────────────────────────
+  // ── Load New Converts from global list ────────────────────────────────────
   const loadNewConverts = useCallback(async (page: number) => {
     setNcLoading(true);
     setNcError("");
     try {
-      const res = await getEventNewConverts(id, page, 20);
+      const res = await getNewConverts(page, 20);
       setNewConverts(res.content ?? []);
       setNcTotalPages(res.totalPages ?? 1);
       setNcTotal(res.totalElements ?? 0);
@@ -178,7 +211,7 @@ export default function EventDetailClient() {
     } finally {
       setNcLoading(false);
     }
-  }, [id]);
+  }, []);
 
   // Load data when tab changes — skip placeholder IDs and re-fire when id becomes a real UUID.
   useEffect(() => {
@@ -199,16 +232,47 @@ export default function EventDetailClient() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, ncPage, id]);
 
-  // ── Mark attendance ───────────────────────────────────────────────────────
+  // ── Mark attendance (e-members) ───────────────────────────────────────────
+  // EventResponse has no eMembers array so we track attended IDs locally.
   const handleMarkAttendance = async (eMemberId: string) => {
     setMarkingId(eMemberId);
+    setEmError("");
     try {
       await markEMemberEventAttendance(id, eMemberId);
-      await loadEMembers(emPage);
+      setEmAttendedIds(prev => new Set(prev).add(eMemberId));
     } catch (err) {
       setEmError(err instanceof Error ? err.message : "Failed to mark attendance.");
     } finally {
       setMarkingId(null);
+    }
+  };
+
+  // ── Mark attendance (first-timers) ────────────────────────────────────────
+  // After marking, refresh the event so event.firstTimers updates.
+  const handleMarkFtAttendance = async (userId: string) => {
+    setMarkingFtId(userId);
+    setFtAttendError("");
+    try {
+      await markEventAttendance(id, userId);
+      await refreshEvent();
+    } catch (err) {
+      setFtAttendError(err instanceof Error ? err.message : "Failed to mark attendance.");
+    } finally {
+      setMarkingFtId(null);
+    }
+  };
+
+  // ── Mark attendance (new-converts) ────────────────────────────────────────
+  const handleMarkNcAttendance = async (userId: string) => {
+    setMarkingNcId(userId);
+    setNcAttendError("");
+    try {
+      await markEventAttendance(id, userId);
+      await refreshEvent();
+    } catch (err) {
+      setNcAttendError(err instanceof Error ? err.message : "Failed to mark attendance.");
+    } finally {
+      setMarkingNcId(null);
     }
   };
 
@@ -234,7 +298,7 @@ export default function EventDetailClient() {
     return (
       <DashboardLayout>
         <PageHeader title="Event Management" subtitle="Loading…" backHref="/event-management" />
-        <div className="py-12 text-center text-sm text-gray-400">Loading event details…</div>
+        <SkeletonProfile />
       </DashboardLayout>
     );
   }
@@ -242,12 +306,28 @@ export default function EventDetailClient() {
   if (eventError || !event) {
     return (
       <DashboardLayout>
-        <PageHeader title="Event Management" subtitle="Error" backHref="/event-management" />
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {eventError || "Event not found."}
-          <button className="ml-2 font-medium underline" onClick={() => router.push("/event-management")}>
-            Go back
-          </button>
+        <PageHeader title="Event Management" subtitle="Event Not Found" backHref="/event-management" />
+        <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-6 text-sm text-red-700">
+          <p className="font-medium text-base mb-1">Unable to load event</p>
+          <p className="text-red-600">{eventError || "This event could not be found or may have been removed."}</p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Button variant="secondary" onClick={() => {
+              setEventError("");
+              setLoadingEvent(true);
+              getEvent(id)
+                .then(setEvent)
+                .catch(err => setEventError(err instanceof Error ? err.message : "Failed to load event."))
+                .finally(() => setLoadingEvent(false));
+            }}>
+              Retry
+            </Button>
+            <Button variant="secondary" onClick={() => router.push("/event-management")}>
+              Back to Events
+            </Button>
+            <Button variant="primary" onClick={() => router.push("/event-management/add")}>
+              Create New Event
+            </Button>
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -266,6 +346,10 @@ export default function EventDetailClient() {
         subtitle={event.title}
         backHref="/event-management"
       />
+      <Breadcrumbs items={[
+        { label: "Event Management", href: "/event-management" },
+        { label: event.title },
+      ]} />
 
       {/* ── Event info card ──────────────────────────────────────────────── */}
       <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
@@ -379,22 +463,65 @@ export default function EventDetailClient() {
 
       {/* ── First Timers tab ───────────────────────────────────────────────── */}
       {activeTab === "first-timers" && (
-        <AttendeeTable<UserResponse>
-          rows={firstTimers}
-          loading={ftLoading}
-          error={ftError}
-          currentPage={ftPage}
-          totalPages={ftTotalPages}
-          totalItems={ftTotal}
-          onPageChange={setFtPage}
-          onRetry={() => loadFirstTimers(ftPage)}
-          columns={[
-            { label: "Name",   render: r => fullName(r) },
-            { label: "Email",  render: r => r.email ?? "—" },
-            { label: "Phone",  render: r => r.phoneNumber ?? "—" },
-          ]}
-          emptyText="No first timers recorded for this event."
-        />
+        <>
+          {ftAttendError && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {ftAttendError}
+            </div>
+          )}
+          <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="bg-[#F3F4F6]">
+                  <th className="px-4 py-3 text-sm font-bold text-[#000080]">Name</th>
+                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Email</th>
+                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Phone</th>
+                  <th className="px-4 py-3"/>
+                </tr>
+              </thead>
+              <tbody>
+                {ftLoading ? (
+                  <tr><td colSpan={4} className="py-8 text-center text-sm text-gray-400">Loading…</td></tr>
+                ) : ftError ? (
+                  <tr><td colSpan={4} className="py-8 text-center text-sm text-red-500">
+                    {ftError} — <button className="underline" onClick={() => loadFirstTimers(ftPage)}>Retry</button>
+                  </td></tr>
+                ) : firstTimers.length === 0 ? (
+                  <tr><td colSpan={4} className="py-8 text-center text-sm text-gray-400">No first timers found.</td></tr>
+                ) : (
+                  firstTimers.map(ft => {
+                    const attended = ftAttendedIds.has(ft.id);
+                    return (
+                      <tr key={ft.id} className="border-b border-[#F3F4F6]">
+                        <td className="px-4 py-3 font-medium text-[#111827]">{fullName(ft)}</td>
+                        <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{ft.email ?? "—"}</td>
+                        <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{ft.phoneNumber ?? "—"}</td>
+                        <td className="px-4 py-3">
+                          {attended ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                              ✓ Attended
+                            </span>
+                          ) : (
+                            <button
+                              disabled={markingFtId === ft.id}
+                              onClick={() => handleMarkFtAttendance(ft.id)}
+                              className="rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080] hover:text-white disabled:opacity-50 transition-colors"
+                            >
+                              {markingFtId === ft.id ? "Marking…" : "Mark Attended"}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+          {ftTotalPages > 1 && (
+            <PageButtons page={ftPage} totalPages={ftTotalPages} total={ftTotal} onChange={setFtPage} />
+          )}
+        </>
       )}
 
       {/* ── E-Members Attendance tab ───────────────────────────────────────── */}
@@ -412,37 +539,40 @@ export default function EventDetailClient() {
                   <th className="px-4 py-3 text-sm font-bold text-[#000080]">Name</th>
                   <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Email</th>
                   <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Phone</th>
-                  <th className="px-4 py-3 text-sm font-bold text-[#000080]">Attendance</th>
                   <th className="px-4 py-3"/>
                 </tr>
               </thead>
               <tbody>
                 {emLoading ? (
-                  <tr><td colSpan={5} className="py-8 text-center text-sm text-gray-400">Loading…</td></tr>
+                  <tr><td colSpan={4} className="py-8 text-center text-sm text-gray-400">Loading…</td></tr>
                 ) : eMembers.length === 0 ? (
-                  <tr><td colSpan={5} className="py-8 text-center text-sm text-gray-400">No e-members recorded for this event.</td></tr>
+                  <tr><td colSpan={4} className="py-8 text-center text-sm text-gray-400">No e-members found.</td></tr>
                 ) : (
-                  eMembers.map(em => (
-                    <tr key={em.id} className="border-b border-[#F3F4F6]">
-                      <td className="px-4 py-3 font-medium text-[#111827]">{fullName(em)}</td>
-                      <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{em.email ?? "—"}</td>
-                      <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{em.phoneNumber ?? "—"}</td>
-                      <td className="px-4 py-3">
-                        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-                          Present
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          disabled={markingId === em.id}
-                          onClick={() => handleMarkAttendance(em.id)}
-                          className="rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080] hover:text-white disabled:opacity-50 transition-colors"
-                        >
-                          {markingId === em.id ? "Marking…" : "Mark Attended"}
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                  eMembers.map(em => {
+                    const attended = emAttendedIds.has(em.id);
+                    return (
+                      <tr key={em.id} className="border-b border-[#F3F4F6]">
+                        <td className="px-4 py-3 font-medium text-[#111827]">{fullName(em)}</td>
+                        <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{em.email ?? "—"}</td>
+                        <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{em.phoneNumber ?? "—"}</td>
+                        <td className="px-4 py-3">
+                          {attended ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                              ✓ Attended
+                            </span>
+                          ) : (
+                            <button
+                              disabled={markingId === em.id}
+                              onClick={() => handleMarkAttendance(em.id)}
+                              className="rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080] hover:text-white disabled:opacity-50 transition-colors"
+                            >
+                              {markingId === em.id ? "Marking…" : "Mark Attended"}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -455,23 +585,67 @@ export default function EventDetailClient() {
 
       {/* ── New Converts tab ───────────────────────────────────────────────── */}
       {activeTab === "new-converts" && (
-        <AttendeeTable<NewConvertResponse>
-          rows={newConverts}
-          loading={ncLoading}
-          error={ncError}
-          currentPage={ncPage}
-          totalPages={ncTotalPages}
-          totalItems={ncTotal}
-          onPageChange={setNcPage}
-          onRetry={() => loadNewConverts(ncPage)}
-          columns={[
-            { label: "Name",           render: r => fullName(r) },
-            { label: "Email",          render: r => r.email ?? "—" },
-            { label: "Phone",          render: r => r.phoneNumber ?? "—" },
-            { label: "Class Stage",    render: r => r.believerClassStage ?? "—" },
-          ]}
-          emptyText="No new converts recorded for this event."
-        />
+        <>
+          {ncAttendError && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {ncAttendError}
+            </div>
+          )}
+          <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="bg-[#F3F4F6]">
+                  <th className="px-4 py-3 text-sm font-bold text-[#000080]">Name</th>
+                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Email</th>
+                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Phone</th>
+                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Class Stage</th>
+                  <th className="px-4 py-3"/>
+                </tr>
+              </thead>
+              <tbody>
+                {ncLoading ? (
+                  <tr><td colSpan={5} className="py-8 text-center text-sm text-gray-400">Loading…</td></tr>
+                ) : ncError ? (
+                  <tr><td colSpan={5} className="py-8 text-center text-sm text-red-500">
+                    {ncError} — <button className="underline" onClick={() => loadNewConverts(ncPage)}>Retry</button>
+                  </td></tr>
+                ) : newConverts.length === 0 ? (
+                  <tr><td colSpan={5} className="py-8 text-center text-sm text-gray-400">No new converts found.</td></tr>
+                ) : (
+                  newConverts.map(nc => {
+                    const attended = ncAttendedIds.has(nc.id);
+                    return (
+                      <tr key={nc.id} className="border-b border-[#F3F4F6]">
+                        <td className="px-4 py-3 font-medium text-[#111827]">{fullName(nc)}</td>
+                        <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{nc.email ?? "—"}</td>
+                        <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{nc.phoneNumber ?? "—"}</td>
+                        <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{nc.believerClassStage ?? "—"}</td>
+                        <td className="px-4 py-3">
+                          {attended ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                              ✓ Attended
+                            </span>
+                          ) : (
+                            <button
+                              disabled={markingNcId === nc.id}
+                              onClick={() => handleMarkNcAttendance(nc.id)}
+                              className="rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080] hover:text-white disabled:opacity-50 transition-colors"
+                            >
+                              {markingNcId === nc.id ? "Marking…" : "Mark Attended"}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+          {ncTotalPages > 1 && (
+            <PageButtons page={ncPage} totalPages={ncTotalPages} total={ncTotal} onChange={setNcPage} />
+          )}
+        </>
       )}
 
       {/* ── Footer actions ───────────────────────────────────────────────── */}
@@ -497,7 +671,7 @@ export default function EventDetailClient() {
       <QRCodeModal
         isOpen={showQRModal}
         onClose={() => setShowQRModal(false)}
-        value={typeof window !== "undefined" ? `${window.location.origin}/events/${id}/check-in` : `/events/${id}/check-in`}
+        value={`/events/${id}/check-in`}
         title="Event Check-in QR Code"
       />
       <EventBroadcastModal

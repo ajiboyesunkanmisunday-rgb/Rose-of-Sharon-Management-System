@@ -105,7 +105,7 @@ const navItems: NavItem[] = [
     href: "/media",
   },
   {
-    label: "Announcements",
+    label: "Altar Announcements",
     icon: Megaphone,
     href: "/announcements",
   },
@@ -212,7 +212,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         "transition-transform duration-300 ease-in-out lg:transition-none",
       ].join(" ")}
       style={{
-        width: "322px",
+        width: "272px",
         backgroundColor: "#FEFEFF",
         boxShadow: "4px 0px 4px 0px rgba(0, 0, 128, 0.16)",
       }}
@@ -325,14 +325,17 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                                 <Link
                                   href={child.href}
                                   onClick={onClose}
-                                  className="block transition-colors"
+                                  className="block transition-colors relative"
                                   style={{
-                                    paddingLeft: "40px",
+                                    paddingLeft: childActive ? "36px" : "40px",
                                     paddingTop: "10px",
                                     paddingBottom: "10px",
                                     fontSize: "15px",
                                     fontWeight: childActive ? 600 : 400,
                                     color: childActive ? "#000080" : "#333333",
+                                    borderLeft: childActive ? "4px solid #000080" : "4px solid transparent",
+                                    borderRadius: "0 6px 6px 0",
+                                    backgroundColor: childActive ? "#EEF2FF" : "transparent",
                                   }}
                                 >
                                   {child.label}

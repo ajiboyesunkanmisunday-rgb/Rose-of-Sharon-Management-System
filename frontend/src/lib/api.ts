@@ -163,18 +163,35 @@ async function apiFetchRaw<T>(
   }
 
   if (!response.ok) {
-    let errorMessage = `Request failed (${response.status})`;
+    const status = response.status;
+    let errorMessage = "";          // empty = no specific message yet
+    let backendMessage = "";        // what the backend actually said
+
     try {
       const errBody = await response.json();
-      if (errBody?.message) errorMessage = errBody.message;
-      else if (errBody?.error) errorMessage = errBody.error;
+      backendMessage = errBody?.message ?? errBody?.error ?? errBody?.detail ?? "";
     } catch {
-      // ignore parse errors
+      // non-JSON error body — ignore
     }
-    // Translate technical HTTP error phrases into plain-English messages
-    const status = response.status;
-    const raw = errorMessage.toLowerCase();
-    if (status === 405 || raw.includes("method not allowed")) {
+
+    // Always keep a meaningful backend message when the server provides one.
+    // Only fall back to generic text when the backend gives us nothing useful,
+    // or when the message is just a raw HTTP phrase (e.g. "Bad Request").
+    const raw = backendMessage.toLowerCase();
+    const isGenericPhrase =
+      !backendMessage ||
+      raw === "bad request" ||
+      raw === "not found" ||
+      raw === "forbidden" ||
+      raw === "internal server error" ||
+      raw === "method not allowed" ||
+      raw === "bad gateway" ||
+      raw === "service unavailable";
+
+    if (!isGenericPhrase) {
+      // Backend gave a real message — use it as-is
+      errorMessage = backendMessage;
+    } else if (status === 405 || raw.includes("method not allowed")) {
       errorMessage = "This action is not yet supported by the server. Please contact the backend team.";
     } else if (status === 502 || status === 503 || raw.includes("bad gateway") || raw.includes("service unavailable")) {
       errorMessage = "Server is temporarily unavailable. Please try again in a moment.";
@@ -186,7 +203,10 @@ async function apiFetchRaw<T>(
       errorMessage = "Invalid request. Please check the form and try again.";
     } else if (status === 403 || raw.includes("forbidden")) {
       errorMessage = "You don't have permission to perform this action.";
+    } else {
+      errorMessage = `Request failed (${status})`;
     }
+
     throw new Error(errorMessage);
   }
 
@@ -543,6 +563,8 @@ export interface CreateFirstTimerRequest {
   serviceRating?: number;        // 1–5 numeric rating of the service
   favouritePartOfService?: string;
   fromOnline?: boolean;          // worshipped online before
+  whatsappNumber?: string;       // WhatsApp contact number
+  howWasService?: string;        // service quality feedback ("Excellent", "Good", etc.)
 }
 
 export async function getFirstTimers(
@@ -667,7 +689,15 @@ export async function getNewConverts(
 }
 
 export async function getNewConvert(id: string): Promise<NewConvertResponse> {
-  return apiFetch<NewConvertResponse>(`/api/v1/new-converts/${id}`);
+  try {
+    return await apiFetch<NewConvertResponse>(`/api/v1/new-converts/${id}`);
+  } catch {
+    // Backend /new-converts/:id returns 400 — fall back to list search
+    const list = await getNewConverts(0, 500);
+    const found = (list.content ?? []).find((nc) => nc.id === id);
+    if (!found) throw new Error("New convert not found.");
+    return found;
+  }
 }
 
 export async function createNewConvert(
@@ -699,17 +729,26 @@ export interface NoteResponse {
   id: string;
   userId?: string;
   content?: string;
-  type?: string;        // e.g. "GENERAL", "CALL", "VISIT"
+  /** Swagger: "CALL" | "VISIT" | "OTHERS" */
+  noteCategory?: string;
+  /** Legacy alias kept for backward-compat with older backend versions */
+  type?: string;
   createdOn?: string;
-  createdBy?: string;
+  /** createdBy is an object per Swagger (UserBasicResponse) */
+  createdBy?: { id?: string; firstName?: string; lastName?: string } | string;
+  /** Legacy field kept for backward compat */
   officerName?: string;
 }
 
 export async function getNotes(
-  userId: string
+  userId: string,
+  pageNo = 0,
+  pageSize = 50
 ): Promise<NoteResponse[]> {
-  // Try GET /api/v1/notes?userId={id} — returns array or paginated wrapper
-  const res = await apiFetch<NoteResponse[] | { content?: NoteResponse[] }>(`/api/v1/notes?userId=${encodeURIComponent(userId)}`);
+  // GET /api/v1/notes?userId={id}&pageNo={n}&pageSize={s}
+  const res = await apiFetch<NoteResponse[] | { content?: NoteResponse[] }>(
+    `/api/v1/notes?userId=${encodeURIComponent(userId)}&pageNo=${pageNo}&pageSize=${pageSize}`
+  );
   if (Array.isArray(res)) return res;
   return res.content ?? [];
 }
@@ -720,9 +759,9 @@ export async function addNote(
   userId: string,
   note: string
 ): Promise<OperationalResponse> {
-  // Backend endpoint: POST /api/v1/notes/general with { userId, content }
-  // (/api/v1/notes returns 405 — general notes live on the /general sub-path)
-  return apiFetch<OperationalResponse>(`/api/v1/notes/general`, {
+  // POST /api/v1/notes  { userId, content }
+  // noteCategory omitted — "OTHERS" triggers backend 500; backend should default
+  return apiFetch<OperationalResponse>(`/api/v1/notes`, {
     method: "POST",
     body: JSON.stringify({ userId, content: note }),
   });
@@ -732,7 +771,7 @@ export async function addCallReport(
   userId: string,
   report: string
 ): Promise<OperationalResponse> {
-  // Backend endpoint: POST /api/v1/notes/call with { userId, content }
+  // Swagger: POST /api/v1/notes/call  { userId, content }
   return apiFetch<OperationalResponse>(`/api/v1/notes/call`, {
     method: "POST",
     body: JSON.stringify({ userId, content: report }),
@@ -743,7 +782,7 @@ export async function addVisitReport(
   userId: string,
   report: string
 ): Promise<OperationalResponse> {
-  // Backend endpoint: POST /api/v1/notes/visit with { userId, content }
+  // Swagger: POST /api/v1/notes/visit  { userId, content }
   return apiFetch<OperationalResponse>(`/api/v1/notes/visit`, {
     method: "POST",
     body: JSON.stringify({ userId, content: report }),
@@ -983,14 +1022,35 @@ export async function getEventForms(id: string): Promise<unknown> {
 
 // ─── Event Attendees ─────────────────────────────────────────────────────────
 
+const EMPTY_PAGE = <T>(): CustomPageResponse<T> => ({
+  content: [],
+  totalPages: 0,
+  size: 0,
+  totalElements: 0,
+  hasNext: false,
+  hasPrevious: false,
+});
+
+// Returns empty page on 404 — these backend sub-resource endpoints may not be
+// implemented yet; treat missing routes as "no data" rather than an error.
+function is404(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message.toLowerCase() : "";
+  return msg.includes("not found") || msg.includes("record not found");
+}
+
 export async function getEventFirstTimers(
   eventId: string,
   pageNo = 0,
   pageSize = 20
 ): Promise<CustomPageResponse<UserResponse>> {
-  return apiFetch<CustomPageResponse<UserResponse>>(
-    `/api/v1/events/${eventId}/first-timers?pageNo=${pageNo}&pageSize=${pageSize}`
-  );
+  try {
+    return await apiFetch<CustomPageResponse<UserResponse>>(
+      `/api/v1/events/${eventId}/first-timers?pageNo=${pageNo}&pageSize=${pageSize}`
+    );
+  } catch (err) {
+    if (is404(err)) return EMPTY_PAGE<UserResponse>();
+    throw err;
+  }
 }
 
 export async function getEventEMembers(
@@ -998,9 +1058,14 @@ export async function getEventEMembers(
   pageNo = 0,
   pageSize = 20
 ): Promise<CustomPageResponse<UserResponse>> {
-  return apiFetch<CustomPageResponse<UserResponse>>(
-    `/api/v1/events/${eventId}/e-members?pageNo=${pageNo}&pageSize=${pageSize}`
-  );
+  try {
+    return await apiFetch<CustomPageResponse<UserResponse>>(
+      `/api/v1/events/${eventId}/e-members?pageNo=${pageNo}&pageSize=${pageSize}`
+    );
+  } catch (err) {
+    if (is404(err)) return EMPTY_PAGE<UserResponse>();
+    throw err;
+  }
 }
 
 export async function getEventNewConverts(
@@ -1008,19 +1073,26 @@ export async function getEventNewConverts(
   pageNo = 0,
   pageSize = 20
 ): Promise<CustomPageResponse<NewConvertResponse>> {
-  return apiFetch<CustomPageResponse<NewConvertResponse>>(
-    `/api/v1/events/${eventId}/new-converts?pageNo=${pageNo}&pageSize=${pageSize}`
-  );
+  try {
+    return await apiFetch<CustomPageResponse<NewConvertResponse>>(
+      `/api/v1/events/${eventId}/new-converts?pageNo=${pageNo}&pageSize=${pageSize}`
+    );
+  } catch (err) {
+    if (is404(err)) return EMPTY_PAGE<NewConvertResponse>();
+    throw err;
+  }
 }
 
 // Mark E-Member attendance for an event
+// NOTE: POST /e-members/{id}/attend returns 404 — use the same PATCH attendance
+// endpoint that works for first-timers and new-converts.
 export async function markEMemberEventAttendance(
   eventId: string,
   eMemberId: string
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
-    `/api/v1/events/${eventId}/e-members/${eMemberId}/attend`,
-    { method: "POST" }
+    `/api/v1/events/${eventId}/attendance/${eMemberId}`,
+    { method: "PATCH" }
   );
 }
 
@@ -1116,6 +1188,14 @@ export async function getAllGroups(): Promise<GroupResponse[]> {
 
 export async function getGroup(id: string): Promise<GroupResponse> {
   return apiFetch<GroupResponse>(`/api/v1/groups/${id}`);
+}
+
+export async function getGroupMembers(
+  groupId: string, pageNo = 0, pageSize = 500
+): Promise<CustomPageResponse<UserResponse>> {
+  return apiFetch<CustomPageResponse<UserResponse>>(
+    `/api/v1/groups/${groupId}/members?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
 }
 
 export async function createGroup(body: CreateGroupRequest): Promise<GroupResponse> {
@@ -1711,7 +1791,7 @@ export async function getMessageTemplates(
   size = 10,
 ): Promise<CustomPageResponse<MessageTemplateResponse>> {
   return apiFetch<CustomPageResponse<MessageTemplateResponse>>(
-    `/api/v1/message-templates?page=${page}&size=${size}`,
+    `/api/v1/message-templates?pageNo=${page}&pageSize=${size}`,
   );
 }
 
