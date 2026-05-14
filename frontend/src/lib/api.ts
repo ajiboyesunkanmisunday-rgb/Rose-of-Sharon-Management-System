@@ -676,6 +676,7 @@ export interface NewConvertResponse {
   countryCode?: string;
   phoneNumber: string;
   service?: EventResponse;
+  serviceAttended?: string;
   createdOn?: string;
 }
 

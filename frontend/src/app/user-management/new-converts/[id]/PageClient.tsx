@@ -136,12 +136,12 @@ export default function ViewNewConvertPage() {
   };
 
   const address = user
-    ? [user.street, user.city, user.state, user.country].filter(Boolean).join(", ") || "—"
-    : "—";
+    ? [user.street, user.city, user.state, user.country].filter(Boolean).join(", ")
+    : "";
 
-  const phone = user
+  const phone = user?.phoneNumber
     ? `+${user.countryCode ?? ""} ${user.phoneNumber}`.trim()
-    : "—";
+    : "";
 
   return (
     <DashboardLayout>
@@ -188,6 +188,7 @@ export default function ViewNewConvertPage() {
                     { label: "Believers Class",       value: user?.believerClassStage },
                     { label: "First Service Attended", value: user?.service?.title },
                     { label: "First Service Date",    value: fmtDate(user?.service?.date) },
+                    { label: "Last Service Attended", value: user?.serviceAttended },
                     { label: "Date Added",            value: fmtDate(user?.createdOn) },
                   ].map(({ label, value }) => value ? (
                     <div key={label}>
