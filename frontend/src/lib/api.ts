@@ -81,21 +81,18 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
 }
 
 /**
- * Returns true when the token should be rejected client-side:
- * - Not a valid JWT (no 3 dot-separated parts) — catches raw session keys
- *   and the legacy "session_<id>" fallback that should never reach the API
- * - Valid JWT with an exp claim that is already in the past
+ * Returns true only when we can confirm the token is an expired JWT.
+ * Non-JWT session tokens issued by the backend are passed through — the
+ * backend decides if they are valid or not.
  */
 function isTokenExpired(token: string): boolean {
-  // Reject anything that isn't a 3-part JWT immediately
-  if (!token || token.split(".").length !== 3) return true;
-
+  if (!token) return true;
   const payload = decodeJwtPayload(token);
-  if (!payload) return true; // couldn't parse — treat as invalid
+  if (!payload) return false; // not a JWT — let the backend decide
   if (typeof payload.exp === "number") {
     return payload.exp * 1000 < Date.now();
   }
-  return false; // valid JWT with no exp claim
+  return false;
 }
 
 async function apiFetchRaw<T>(
@@ -181,22 +178,6 @@ async function apiFetchRaw<T>(
     console.error(`[api] ${status} on ${path} — backend said:`, backendMessage || "(no message)");
 
     const raw = backendMessage.toLowerCase();
-
-    // The backend returns 400 for permission errors — treat these as 403.
-    const isPermissionError =
-      raw.includes("do not have permission") ||
-      raw.includes("access denied") ||
-      raw.includes("not authorized") ||
-      raw.includes("unauthorized");
-
-    if (isPermissionError) {
-      // Force re-login: clear the bad token so the next page load goes to /login
-      removeToken();
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
-      }
-      throw new Error("Your session has expired or you do not have access. Please log in again.");
-    }
 
     // Always keep a meaningful backend message when the server provides one.
     // Only fall back to generic text when the backend gives us nothing useful,
@@ -387,6 +368,11 @@ export async function loginUser(body: LoginRequest): Promise<UserResponse> {
 
   if (response.token) {
     setToken(response.token);
+  } else if (response.id) {
+    // Backend returned a valid user but no token field.
+    // Store a session marker so the UI remains accessible until the backend
+    // consistently returns a token on every login response.
+    setToken(`session_${response.id}`);
   }
 
   setStoredUser({
