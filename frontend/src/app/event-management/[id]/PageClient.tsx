@@ -14,6 +14,7 @@ import {
   getEventEMembers,
   getEventNewConverts,
   markEMemberEventAttendance,
+  markEventAttendance,
   cancelEvent,
   type EventResponse,
   type UserResponse,
@@ -117,6 +118,12 @@ export default function EventDetailClient() {
   const [ncTotalPages,   setNcTotalPages]   = useState(1);
   const [ncTotal,        setNcTotal]        = useState(0);
 
+  // IDs currently being marked attended (first-timers and new-converts)
+  const [markingFtId,    setMarkingFtId]    = useState<string | null>(null);
+  const [ftAttendError,  setFtAttendError]  = useState("");
+  const [markingNcId,    setMarkingNcId]    = useState<string | null>(null);
+  const [ncAttendError,  setNcAttendError]  = useState("");
+
   // ── Load event ─────────────────────────────────────────────────────────────
   useEffect(() => {
     // If we still have a placeholder ID, exit loading state so the page isn't
@@ -201,7 +208,7 @@ export default function EventDetailClient() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, ncPage, id]);
 
-  // ── Mark attendance ───────────────────────────────────────────────────────
+  // ── Mark attendance (e-members) ───────────────────────────────────────────
   const handleMarkAttendance = async (eMemberId: string) => {
     setMarkingId(eMemberId);
     try {
@@ -211,6 +218,34 @@ export default function EventDetailClient() {
       setEmError(err instanceof Error ? err.message : "Failed to mark attendance.");
     } finally {
       setMarkingId(null);
+    }
+  };
+
+  // ── Mark attendance (first-timers) ────────────────────────────────────────
+  const handleMarkFtAttendance = async (userId: string) => {
+    setMarkingFtId(userId);
+    setFtAttendError("");
+    try {
+      await markEventAttendance(id, userId);
+      await loadFirstTimers(ftPage);
+    } catch (err) {
+      setFtAttendError(err instanceof Error ? err.message : "Failed to mark attendance.");
+    } finally {
+      setMarkingFtId(null);
+    }
+  };
+
+  // ── Mark attendance (new-converts) ────────────────────────────────────────
+  const handleMarkNcAttendance = async (userId: string) => {
+    setMarkingNcId(userId);
+    setNcAttendError("");
+    try {
+      await markEventAttendance(id, userId);
+      await loadNewConverts(ncPage);
+    } catch (err) {
+      setNcAttendError(err instanceof Error ? err.message : "Failed to mark attendance.");
+    } finally {
+      setMarkingNcId(null);
     }
   };
 
@@ -401,22 +436,56 @@ export default function EventDetailClient() {
 
       {/* ── First Timers tab ───────────────────────────────────────────────── */}
       {activeTab === "first-timers" && (
-        <AttendeeTable<UserResponse>
-          rows={firstTimers}
-          loading={ftLoading}
-          error={ftError}
-          currentPage={ftPage}
-          totalPages={ftTotalPages}
-          totalItems={ftTotal}
-          onPageChange={setFtPage}
-          onRetry={() => loadFirstTimers(ftPage)}
-          columns={[
-            { label: "Name",   render: r => fullName(r) },
-            { label: "Email",  render: r => r.email ?? "—" },
-            { label: "Phone",  render: r => r.phoneNumber ?? "—" },
-          ]}
-          emptyText="No first timers recorded for this event."
-        />
+        <>
+          {ftAttendError && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {ftAttendError}
+            </div>
+          )}
+          <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="bg-[#F3F4F6]">
+                  <th className="px-4 py-3 text-sm font-bold text-[#000080]">Name</th>
+                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Email</th>
+                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Phone</th>
+                  <th className="px-4 py-3"/>
+                </tr>
+              </thead>
+              <tbody>
+                {ftLoading ? (
+                  <tr><td colSpan={4} className="py-8 text-center text-sm text-gray-400">Loading…</td></tr>
+                ) : ftError ? (
+                  <tr><td colSpan={4} className="py-8 text-center text-sm text-red-500">
+                    {ftError} — <button className="underline" onClick={() => loadFirstTimers(ftPage)}>Retry</button>
+                  </td></tr>
+                ) : firstTimers.length === 0 ? (
+                  <tr><td colSpan={4} className="py-8 text-center text-sm text-gray-400">No first timers recorded for this event.</td></tr>
+                ) : (
+                  firstTimers.map(ft => (
+                    <tr key={ft.id} className="border-b border-[#F3F4F6]">
+                      <td className="px-4 py-3 font-medium text-[#111827]">{fullName(ft)}</td>
+                      <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{ft.email ?? "—"}</td>
+                      <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{ft.phoneNumber ?? "—"}</td>
+                      <td className="px-4 py-3">
+                        <button
+                          disabled={markingFtId === ft.id}
+                          onClick={() => handleMarkFtAttendance(ft.id)}
+                          className="rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080] hover:text-white disabled:opacity-50 transition-colors"
+                        >
+                          {markingFtId === ft.id ? "Marking…" : "Mark Attended"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          {ftTotalPages > 1 && (
+            <PageButtons page={ftPage} totalPages={ftTotalPages} total={ftTotal} onChange={setFtPage} />
+          )}
+        </>
       )}
 
       {/* ── E-Members Attendance tab ───────────────────────────────────────── */}
@@ -477,23 +546,58 @@ export default function EventDetailClient() {
 
       {/* ── New Converts tab ───────────────────────────────────────────────── */}
       {activeTab === "new-converts" && (
-        <AttendeeTable<NewConvertResponse>
-          rows={newConverts}
-          loading={ncLoading}
-          error={ncError}
-          currentPage={ncPage}
-          totalPages={ncTotalPages}
-          totalItems={ncTotal}
-          onPageChange={setNcPage}
-          onRetry={() => loadNewConverts(ncPage)}
-          columns={[
-            { label: "Name",           render: r => fullName(r) },
-            { label: "Email",          render: r => r.email ?? "—" },
-            { label: "Phone",          render: r => r.phoneNumber ?? "—" },
-            { label: "Class Stage",    render: r => r.believerClassStage ?? "—" },
-          ]}
-          emptyText="No new converts recorded for this event."
-        />
+        <>
+          {ncAttendError && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {ncAttendError}
+            </div>
+          )}
+          <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="bg-[#F3F4F6]">
+                  <th className="px-4 py-3 text-sm font-bold text-[#000080]">Name</th>
+                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Email</th>
+                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Phone</th>
+                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Class Stage</th>
+                  <th className="px-4 py-3"/>
+                </tr>
+              </thead>
+              <tbody>
+                {ncLoading ? (
+                  <tr><td colSpan={5} className="py-8 text-center text-sm text-gray-400">Loading…</td></tr>
+                ) : ncError ? (
+                  <tr><td colSpan={5} className="py-8 text-center text-sm text-red-500">
+                    {ncError} — <button className="underline" onClick={() => loadNewConverts(ncPage)}>Retry</button>
+                  </td></tr>
+                ) : newConverts.length === 0 ? (
+                  <tr><td colSpan={5} className="py-8 text-center text-sm text-gray-400">No new converts recorded for this event.</td></tr>
+                ) : (
+                  newConverts.map(nc => (
+                    <tr key={nc.id} className="border-b border-[#F3F4F6]">
+                      <td className="px-4 py-3 font-medium text-[#111827]">{fullName(nc)}</td>
+                      <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{nc.email ?? "—"}</td>
+                      <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{nc.phoneNumber ?? "—"}</td>
+                      <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{nc.believerClassStage ?? "—"}</td>
+                      <td className="px-4 py-3">
+                        <button
+                          disabled={markingNcId === nc.id}
+                          onClick={() => handleMarkNcAttendance(nc.id)}
+                          className="rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080] hover:text-white disabled:opacity-50 transition-colors"
+                        >
+                          {markingNcId === nc.id ? "Marking…" : "Mark Attended"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          {ncTotalPages > 1 && (
+            <PageButtons page={ncPage} totalPages={ncTotalPages} total={ncTotal} onChange={setNcPage} />
+          )}
+        </>
       )}
 
       {/* ── Footer actions ───────────────────────────────────────────────── */}
@@ -519,7 +623,7 @@ export default function EventDetailClient() {
       <QRCodeModal
         isOpen={showQRModal}
         onClose={() => setShowQRModal(false)}
-        value={typeof window !== "undefined" ? `${window.location.origin}/events/${id}/check-in` : `/events/${id}/check-in`}
+        value={`/events/${id}/check-in`}
         title="Event Check-in QR Code"
       />
       <EventBroadcastModal

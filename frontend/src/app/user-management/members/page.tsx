@@ -13,7 +13,7 @@ import QRCodeModal from "@/components/user-management/QRCodeModal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import BulkImportModal from "@/components/user-management/BulkImportModal";
 import NoLongerMemberModal from "@/components/user-management/NoLongerMemberModal";
-import { getMembers, deleteMembersBulk, type UserResponse } from "@/lib/api";
+import { getMembers, deleteMembersBulk, markUserAsInactive, type UserResponse } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
 import { SkeletonRow } from "@/components/ui/Skeleton";
 import { useAssignSuperAdmin } from "@/hooks/member/useAssignSuperAdmin";
@@ -635,21 +635,24 @@ export default function MembersPage() {
       <NoLongerMemberModal
         isOpen={showNoLongerBulkModal}
         onClose={() => setShowNoLongerBulkModal(false)}
-        onConfirm={() => {
+        onConfirm={async (reason) => {
+          await Promise.allSettled(
+            Array.from(selectedRows).map((id) => markUserAsInactive(id, reason))
+          );
           setSelectedRows(new Set());
           setShowNoLongerBulkModal(false);
+          fetchMembers(currentPage);
         }}
         count={selectedRows.size}
       />
       <NoLongerMemberModal
         isOpen={showNoLongerSingleModal}
-        onClose={() => {
+        onClose={() => { setShowNoLongerSingleModal(false); setSelectedMemberId(null); }}
+        onConfirm={async (reason) => {
+          if (selectedMemberId) await markUserAsInactive(selectedMemberId, reason);
           setShowNoLongerSingleModal(false);
           setSelectedMemberId(null);
-        }}
-        onConfirm={() => {
-          setShowNoLongerSingleModal(false);
-          setSelectedMemberId(null);
+          fetchMembers(currentPage);
         }}
         count={1}
       />

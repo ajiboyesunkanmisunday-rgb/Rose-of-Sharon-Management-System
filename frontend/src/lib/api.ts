@@ -689,7 +689,15 @@ export async function getNewConverts(
 }
 
 export async function getNewConvert(id: string): Promise<NewConvertResponse> {
-  return apiFetch<NewConvertResponse>(`/api/v1/new-converts/${id}`);
+  try {
+    return await apiFetch<NewConvertResponse>(`/api/v1/new-converts/${id}`);
+  } catch {
+    // Backend /new-converts/:id returns 400 — fall back to list search
+    const list = await getNewConverts(0, 500);
+    const found = (list.content ?? []).find((nc) => nc.id === id);
+    if (!found) throw new Error("New convert not found.");
+    return found;
+  }
 }
 
 export async function createNewConvert(
