@@ -1062,6 +1062,16 @@ export async function searchMembers(
   );
 }
 
+export async function searchAllMembers(
+  text: string, pageNo = 0, pageSize = 10
+): Promise<CustomPageResponse<UserResponse>> {
+  return apiFetch<CustomPageResponse<UserResponse>>(
+    `/api/v1/users/users/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ text }) }
+  );
+}
+
+
 export async function searchEMembers(
   text: string, pageNo = 0, pageSize = 10
 ): Promise<CustomPageResponse<UserResponse>> {
@@ -1184,6 +1194,13 @@ export async function updateRole(
     body: JSON.stringify(body),
   });
 }
+
+export async function deleteRole(id: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/roles/${id}`, {
+    method: "DELETE",
+  });
+}
+
 
 // ─── Permissions ─────────────────────────────────────────────────────────────
 
@@ -1749,12 +1766,28 @@ export interface AdminResponse {
   lastLogin?: string;
 }
 
+export interface AssignAdminRequest {
+  userId: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export async function assignAdmin(
+  roleId: string,
+  body: AssignAdminRequest,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/users/assign-admin/${roleId}`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
 export async function getAdminUsers(
-  page = 0,
-  size = 20,
+  pageNo = 0,
+  pageSize = 20,
 ): Promise<CustomPageResponse<AdminResponse>> {
   return apiFetch<CustomPageResponse<AdminResponse>>(
-    `/api/v1/users/admin?page=${page}&size=${size}`,
+    `/api/v1/users/admin?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
@@ -2031,58 +2064,74 @@ export async function uploadProfilePicture(file: File): Promise<string> {
 
 // ─── Announcements ────────────────────────────────────────────────────────────
 
-export interface AnnouncementSubmission {
+export interface CreateAnnouncementRequest {
+  subject: string;
+  content: string;
+  submittedBy?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface AnnouncementResponse {
   id: string;
-  title: string;
+  subject: string;
   content: string;
-  submitterName: string;
-  submitterEmail?: string;
-  submitterPhone?: string;
-  status: "PENDING" | "APPROVED" | "DISCARDED";
-  createdAt: string;
+  submittedBy?: { id: string; firstName?: string; lastName?: string; email?: string };
+  announcementStatus: "RECEIVED" | "APPROVED" | "DECLINED";
+  reasonForDecline?: string;
+  startDate?: string;
+  endDate?: string;
+  createdOn?: string;
 }
 
-export interface AnnouncementSettings {
-  deadline: string; // ISO date-time
+export interface SystemSettings {
+  noOfDaysBeforeTriggeringFollowup: number;
+  announcementDeadline: string;
+  memberPerFollowupPersonnel: number;
 }
 
-export async function getAnnouncementSettings(): Promise<AnnouncementSettings> {
-  return apiFetch<AnnouncementSettings>("/api/v1/announcements/settings");
+export async function getSystemSettings(): Promise<SystemSettings> {
+  return apiFetch<SystemSettings>("/api/v1/settings");
 }
 
-export async function setAnnouncementDeadline(deadline: string): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>("/api/v1/announcements/settings", {
-    method: "PUT",
-    body: JSON.stringify({ deadline }),
-  });
-}
-
-export async function getAnnouncements(): Promise<AnnouncementSubmission[]> {
-  return apiFetch<AnnouncementSubmission[]>("/api/v1/announcements");
-}
-
-export async function submitAnnouncement(data: {
-  title: string;
-  content: string;
-  submitterName: string;
-  submitterEmail?: string;
-  submitterPhone?: string;
-}): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>("/api/v1/announcements", {
+export async function updateSystemSettings(data: SystemSettings): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/settings", {
     method: "POST",
     body: JSON.stringify(data),
   });
 }
 
-export async function approveAnnouncement(id: string): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/announcements/${id}/approve`, {
-    method: "PATCH",
+export async function getAnnouncements(
+  pageNo = 0,
+  pageSize = 20,
+  status?: string
+): Promise<CustomPageResponse<AnnouncementResponse>> {
+  const qs = status ? `&status=${encodeURIComponent(status)}` : "";
+  return apiFetch<CustomPageResponse<AnnouncementResponse>>(
+    `/api/v1/announcements?pageNo=${pageNo}&pageSize=${pageSize}${qs}`
+  );
+}
+
+export async function createAnnouncement(
+  data: CreateAnnouncementRequest
+): Promise<AnnouncementResponse> {
+  return apiFetch<AnnouncementResponse>("/api/v1/announcements", {
+    method: "POST",
+    body: JSON.stringify(data),
   });
 }
 
-export async function discardAnnouncement(id: string): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/announcements/${id}`, {
-    method: "DELETE",
+export async function approveAnnouncements(ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/announcements/approve", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export async function declineAnnouncement(id: string, text: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/announcements/${id}/decline`, {
+    method: "PATCH",
+    body: JSON.stringify({ text }),
   });
 }
 
