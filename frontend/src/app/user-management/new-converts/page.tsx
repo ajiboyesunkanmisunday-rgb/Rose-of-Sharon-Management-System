@@ -9,6 +9,7 @@ import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
+import NoLongerMemberModal from "@/components/user-management/NoLongerMemberModal";
 import MarkAttendanceModal from "@/components/user-management/MarkAttendanceModal";
 import BulkImportModal from "@/components/user-management/BulkImportModal";
 import QRCodeModal from "@/components/user-management/QRCodeModal";
@@ -21,6 +22,7 @@ import {
   updateBelieversClass,
   updateBelieversClassBulk,
   toBelieverClassStage,
+  markUserAsInactive,
   type NewConvertResponse,
 } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
@@ -61,6 +63,8 @@ export default function NewConvertsPage() {
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [showQRCodeModal, setShowQRCodeModal] = useState(false);
+  const [showInactiveSingleModal, setShowInactiveSingleModal] = useState(false);
+  const [showInactiveBulkModal, setShowInactiveBulkModal] = useState(false);
   const [showBulkClassModal, setShowBulkClassModal] = useState(false);
   const [bulkClassStage, setBulkClassStage] = useState("");
   const [callReport, setCallReport] = useState("");
@@ -185,6 +189,41 @@ export default function NewConvertsPage() {
     }
   };
 
+  const handleMarkInactive = async (reason: string) => {
+    if (!selectedConvertId) return;
+    setActionLoading(true);
+    setActionError("");
+    try {
+      await markUserAsInactive(selectedConvertId, reason);
+      setShowInactiveSingleModal(false);
+      setSelectedConvertId(null);
+      fetchConverts(currentPage);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to mark as inactive.");
+      setShowInactiveSingleModal(false);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleBulkMarkInactive = async (reason: string) => {
+    setActionLoading(true);
+    setActionError("");
+    try {
+      await Promise.allSettled(
+        Array.from(selectedRows).map((id) => markUserAsInactive(id, reason))
+      );
+      setSelectedRows(new Set());
+      setShowInactiveBulkModal(false);
+      fetchConverts(currentPage);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to mark as inactive.");
+      setShowInactiveBulkModal(false);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleBulkClassUpdate = async () => {
     if (!bulkClassStage) return;
     setActionLoading(true);
@@ -224,6 +263,7 @@ export default function NewConvertsPage() {
 
   const bulkActions = [
     { label: "Update Believers Class", onClick: () => setShowBulkClassModal(true) },
+    { label: "Mark as Inactive", onClick: () => setShowInactiveBulkModal(true) },
     { label: "Delete", onClick: () => setShowBulkDeleteModal(true) },
   ];
 
@@ -374,6 +414,7 @@ export default function NewConvertsPage() {
                     { label: "Add Call Report", onClick: () => { setSelectedConvertId(nc.id); setShowCallReportModal(true); } },
                     { label: "Add Visit Report", onClick: () => { setSelectedConvertId(nc.id); setShowVisitReportModal(true); } },
                     { label: "Mark Class Attendance", onClick: () => { setSelectedConvertId(nc.id); setShowAttendanceModal(true); } },
+                    { label: "Mark as Inactive", onClick: () => { setSelectedConvertId(nc.id); setShowInactiveSingleModal(true); } },
                   ]}
                 />
               </div>
@@ -453,6 +494,10 @@ export default function NewConvertsPage() {
                         {
                           label: "Mark Class Attendance",
                           onClick: () => { setSelectedConvertId(nc.id); setShowAttendanceModal(true); },
+                        },
+                        {
+                          label: "Mark as Inactive",
+                          onClick: () => { setSelectedConvertId(nc.id); setShowInactiveSingleModal(true); },
                         },
                       ]}
                     />
@@ -557,6 +602,19 @@ export default function NewConvertsPage() {
         onClose={() => setShowQRCodeModal(false)}
         value="/user-management/new-converts/add"
         title="New Convert Registration QR Code"
+      />
+
+      <NoLongerMemberModal
+        isOpen={showInactiveSingleModal}
+        onClose={() => { setShowInactiveSingleModal(false); setSelectedConvertId(null); }}
+        onConfirm={handleMarkInactive}
+      />
+
+      <NoLongerMemberModal
+        isOpen={showInactiveBulkModal}
+        onClose={() => setShowInactiveBulkModal(false)}
+        onConfirm={handleBulkMarkInactive}
+        count={selectedRows.size}
       />
 
       {/* Bulk Believers Class Update Modal */}
