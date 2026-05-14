@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
@@ -10,15 +10,9 @@ import QRCodeModal from "@/components/user-management/QRCodeModal";
 import EventBroadcastModal from "@/components/events/EventBroadcastModal";
 import {
   getEvent,
-  getFirstTimers,
-  getEMembers,
-  getNewConverts,
-  markEMemberEventAttendance,
-  markEventAttendance,
   cancelEvent,
   type EventResponse,
   type UserResponse,
-  type NewConvertResponse,
 } from "@/lib/api";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import { SkeletonProfile } from "@/components/ui/Skeleton";
@@ -57,7 +51,7 @@ const categoryColors: Record<string, string> = {
   FUNERAL:         "bg-gray-100 text-gray-600",
 };
 
-type Tab = "first-timers" | "e-members" | "new-converts";
+type Tab = "first-timers" | "second-timers";
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -67,9 +61,6 @@ export default function EventDetailClient() {
   const paramId = params.id as string;
   const [id, setId] = useState(paramId);
 
-  // Read real ID from the browser URL — handles Netlify static rewrites where
-  // the pre-built placeholder HTML (ev-1, ev-2…) is served for a real UUID path.
-  // We always prefer the URL so the correct event is loaded.
   useEffect(() => {
     if (typeof window !== "undefined") {
       const parts = window.location.pathname.replace(/\/$/, "").split("/");
@@ -79,7 +70,6 @@ export default function EventDetailClient() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Detect Netlify static placeholder IDs (ev-1, ev-2, …) — never fetch with these.
   const isPlaceholder = (v: string) => /^ev-\d+$/.test(v);
 
   const [event,        setEvent]        = useState<EventResponse | null>(null);
@@ -93,54 +83,8 @@ export default function EventDetailClient() {
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [cancelling,         setCancelling]         = useState(false);
 
-  // ── First Timers state ────────────────────────────────────────────────────
-  const [firstTimers,    setFirstTimers]    = useState<UserResponse[]>([]);
-  const [ftLoading,      setFtLoading]      = useState(false);
-  const [ftError,        setFtError]        = useState("");
-  const [ftPage,         setFtPage]         = useState(0);
-  const [ftTotalPages,   setFtTotalPages]   = useState(1);
-  const [ftTotal,        setFtTotal]        = useState(0);
-
-  // ── E-Members state ───────────────────────────────────────────────────────
-  const [eMembers,       setEMembers]       = useState<UserResponse[]>([]);
-  const [emLoading,      setEmLoading]      = useState(false);
-  const [emError,        setEmError]        = useState("");
-  const [emPage,         setEmPage]         = useState(0);
-  const [emTotalPages,   setEmTotalPages]   = useState(1);
-  const [emTotal,        setEmTotal]        = useState(0);
-  const [markingId,      setMarkingId]      = useState<string | null>(null);
-
-  // ── New Converts state ────────────────────────────────────────────────────
-  const [newConverts,    setNewConverts]    = useState<NewConvertResponse[]>([]);
-  const [ncLoading,      setNcLoading]      = useState(false);
-  const [ncError,        setNcError]        = useState("");
-  const [ncPage,         setNcPage]         = useState(0);
-  const [ncTotalPages,   setNcTotalPages]   = useState(1);
-  const [ncTotal,        setNcTotal]        = useState(0);
-
-  // IDs currently being marked attended (first-timers and new-converts)
-  const [markingFtId,    setMarkingFtId]    = useState<string | null>(null);
-  const [ftAttendError,  setFtAttendError]  = useState("");
-  const [markingNcId,    setMarkingNcId]    = useState<string | null>(null);
-  const [ncAttendError,  setNcAttendError]  = useState("");
-
-  // E-member attendance tracked locally (EventResponse has no eMembers array)
-  const [emAttendedIds, setEmAttendedIds] = useState<Set<string>>(new Set());
-
-  // Derive attended ID sets from the event's embedded arrays — updated after each mark
-  const ftAttendedIds = useMemo(
-    () => new Set((event?.firstTimers ?? []).map(ft => ft.id)),
-    [event]
-  );
-  const ncAttendedIds = useMemo(
-    () => new Set((event?.newConverts ?? []).map(nc => nc.id)),
-    [event]
-  );
-
   // ── Load event ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    // If we still have a placeholder ID, exit loading state so the page isn't
-    // permanently stuck on "Loading…" while waiting for the URL effect.
     if (!id || isPlaceholder(id)) {
       setLoadingEvent(false);
       return;
@@ -153,128 +97,6 @@ export default function EventDetailClient() {
       .finally(() => setLoadingEvent(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
-
-  // ── Refresh event (updates embedded firstTimers / newConverts) ────────────
-  const refreshEvent = useCallback(async () => {
-    if (!id || isPlaceholder(id)) return;
-    try {
-      const updated = await getEvent(id);
-      setEvent(updated);
-    } catch { /* non-fatal — keep stale event data */ }
-  }, [id]);
-
-  // ── Load first timers from global list ────────────────────────────────────
-  // The backend sub-resource endpoint /events/{id}/first-timers returns 404.
-  // We load all first-timers from the system; attended state comes from event.firstTimers.
-  const loadFirstTimers = useCallback(async (page: number) => {
-    setFtLoading(true);
-    setFtError("");
-    try {
-      const res = await getFirstTimers(page, 20);
-      setFirstTimers(res.content ?? []);
-      setFtTotalPages(res.totalPages ?? 1);
-      setFtTotal(res.totalElements ?? 0);
-    } catch (err) {
-      setFtError(err instanceof Error ? err.message : "Failed to load first timers.");
-    } finally {
-      setFtLoading(false);
-    }
-  }, []);
-
-  // ── Load E-Members from global list ───────────────────────────────────────
-  const loadEMembers = useCallback(async (page: number) => {
-    setEmLoading(true);
-    setEmError("");
-    try {
-      const res = await getEMembers(page, 20);
-      setEMembers(res.content ?? []);
-      setEmTotalPages(res.totalPages ?? 1);
-      setEmTotal(res.totalElements ?? 0);
-    } catch (err) {
-      setEmError(err instanceof Error ? err.message : "Failed to load e-members.");
-    } finally {
-      setEmLoading(false);
-    }
-  }, []);
-
-  // ── Load New Converts from global list ────────────────────────────────────
-  const loadNewConverts = useCallback(async (page: number) => {
-    setNcLoading(true);
-    setNcError("");
-    try {
-      const res = await getNewConverts(page, 20);
-      setNewConverts(res.content ?? []);
-      setNcTotalPages(res.totalPages ?? 1);
-      setNcTotal(res.totalElements ?? 0);
-    } catch (err) {
-      setNcError(err instanceof Error ? err.message : "Failed to load new converts.");
-    } finally {
-      setNcLoading(false);
-    }
-  }, []);
-
-  // Load data when tab changes — skip placeholder IDs and re-fire when id becomes a real UUID.
-  useEffect(() => {
-    if (!id || isPlaceholder(id)) return;
-    if (activeTab === "first-timers") loadFirstTimers(ftPage);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, ftPage, id]);
-
-  useEffect(() => {
-    if (!id || isPlaceholder(id)) return;
-    if (activeTab === "e-members") loadEMembers(emPage);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, emPage, id]);
-
-  useEffect(() => {
-    if (!id || isPlaceholder(id)) return;
-    if (activeTab === "new-converts") loadNewConverts(ncPage);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, ncPage, id]);
-
-  // ── Mark attendance (e-members) ───────────────────────────────────────────
-  // EventResponse has no eMembers array so we track attended IDs locally.
-  const handleMarkAttendance = async (eMemberId: string) => {
-    setMarkingId(eMemberId);
-    setEmError("");
-    try {
-      await markEMemberEventAttendance(id, eMemberId);
-      setEmAttendedIds(prev => new Set(prev).add(eMemberId));
-    } catch (err) {
-      setEmError(err instanceof Error ? err.message : "Failed to mark attendance.");
-    } finally {
-      setMarkingId(null);
-    }
-  };
-
-  // ── Mark attendance (first-timers) ────────────────────────────────────────
-  // After marking, refresh the event so event.firstTimers updates.
-  const handleMarkFtAttendance = async (userId: string) => {
-    setMarkingFtId(userId);
-    setFtAttendError("");
-    try {
-      await markEventAttendance(id, userId);
-      await refreshEvent();
-    } catch (err) {
-      setFtAttendError(err instanceof Error ? err.message : "Failed to mark attendance.");
-    } finally {
-      setMarkingFtId(null);
-    }
-  };
-
-  // ── Mark attendance (new-converts) ────────────────────────────────────────
-  const handleMarkNcAttendance = async (userId: string) => {
-    setMarkingNcId(userId);
-    setNcAttendError("");
-    try {
-      await markEventAttendance(id, userId);
-      await refreshEvent();
-    } catch (err) {
-      setNcAttendError(err instanceof Error ? err.message : "Failed to mark attendance.");
-    } finally {
-      setMarkingNcId(null);
-    }
-  };
 
   // ── Cancel event ──────────────────────────────────────────────────────────
   const handleCancel = async () => {
@@ -291,9 +113,13 @@ export default function EventDetailClient() {
     }
   };
 
-  // ── Loading / error state for event ──────────────────────────────────────
-  // Show loading while fetching OR while still holding a placeholder ID
-  // (the URL effect will swap it for the real UUID momentarily).
+  // ── Attendee data comes directly from the event response ──────────────────
+  // event.firstTimers  = first-timers who registered on this event's date
+  // event.secondTimers = second-timers who returned on this event's date
+  const firstTimers:  UserResponse[] = event?.firstTimers  ?? [];
+  const secondTimers: UserResponse[] = event?.secondTimers ?? [];
+
+  // ── Loading / error states ─────────────────────────────────────────────────
   if (loadingEvent || isPlaceholder(id)) {
     return (
       <DashboardLayout>
@@ -333,11 +159,12 @@ export default function EventDetailClient() {
     );
   }
 
-  const tabs: { key: Tab; label: string }[] = [
-    { key: "first-timers",  label: "First Timers"   },
-    { key: "e-members",     label: "E-Members Attendance" },
-    { key: "new-converts",  label: "New Converts"   },
+  const tabs: { key: Tab; label: string; count: number }[] = [
+    { key: "first-timers",  label: "First Timers",  count: firstTimers.length  },
+    { key: "second-timers", label: "Second Timers", count: secondTimers.length },
   ];
+
+  const activeRows = activeTab === "first-timers" ? firstTimers : secondTimers;
 
   return (
     <DashboardLayout>
@@ -429,9 +256,7 @@ export default function EventDetailClient() {
           {event.createdOn && (
             <div>
               <p className="text-xs font-medium text-[#6B7280]">Created</p>
-              <p className="mt-1 text-sm font-medium text-[#111827]">
-                {fmtDate(event.createdOn)}
-              </p>
+              <p className="mt-1 text-sm font-medium text-[#111827]">{fmtDate(event.createdOn)}</p>
             </div>
           )}
         </div>
@@ -444,208 +269,105 @@ export default function EventDetailClient() {
         )}
       </div>
 
+      {/* ── Attendance header ────────────────────────────────────────────── */}
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="text-base font-bold text-[#111827]">Attendance</h3>
+        <p className="text-xs text-[#6B7280]">
+          Showing visitors registered on <span className="font-medium">{fmtDate(event.date)}</span>
+        </p>
+      </div>
+
       {/* ── Tabs ──────────────────────────────────────────────────────────── */}
-      <div className="mb-6 flex items-center gap-6 overflow-x-auto border-b border-[#E5E7EB]">
+      <div className="mb-4 flex items-center gap-6 overflow-x-auto border-b border-[#E5E7EB]">
         {tabs.map(tab => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`whitespace-nowrap pb-3 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 whitespace-nowrap pb-3 text-sm font-medium transition-colors ${
               activeTab === tab.key
                 ? "border-b-2 border-[#000080] text-[#000080]"
                 : "text-[#6B7280] hover:text-[#374151]"
             }`}
           >
             {tab.label}
+            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+              activeTab === tab.key ? "bg-[#000080] text-white" : "bg-[#F3F4F6] text-[#6B7280]"
+            }`}>
+              {tab.count}
+            </span>
           </button>
         ))}
       </div>
 
-      {/* ── First Timers tab ───────────────────────────────────────────────── */}
-      {activeTab === "first-timers" && (
-        <>
-          {ftAttendError && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {ftAttendError}
-            </div>
-          )}
-          <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="bg-[#F3F4F6]">
-                  <th className="px-4 py-3 text-sm font-bold text-[#000080]">Name</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Email</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Phone</th>
-                  <th className="px-4 py-3"/>
-                </tr>
-              </thead>
-              <tbody>
-                {ftLoading ? (
-                  <tr><td colSpan={4} className="py-8 text-center text-sm text-gray-400">Loading…</td></tr>
-                ) : ftError ? (
-                  <tr><td colSpan={4} className="py-8 text-center text-sm text-red-500">
-                    {ftError} — <button className="underline" onClick={() => loadFirstTimers(ftPage)}>Retry</button>
-                  </td></tr>
-                ) : firstTimers.length === 0 ? (
-                  <tr><td colSpan={4} className="py-8 text-center text-sm text-gray-400">No first timers found.</td></tr>
-                ) : (
-                  firstTimers.map(ft => {
-                    const attended = ftAttendedIds.has(ft.id);
-                    return (
-                      <tr key={ft.id} className="border-b border-[#F3F4F6]">
-                        <td className="px-4 py-3 font-medium text-[#111827]">{fullName(ft)}</td>
-                        <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{ft.email ?? "—"}</td>
-                        <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{ft.phoneNumber ?? "—"}</td>
-                        <td className="px-4 py-3">
-                          {attended ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-                              ✓ Attended
-                            </span>
-                          ) : (
-                            <button
-                              disabled={markingFtId === ft.id}
-                              onClick={() => handleMarkFtAttendance(ft.id)}
-                              className="rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080] hover:text-white disabled:opacity-50 transition-colors"
-                            >
-                              {markingFtId === ft.id ? "Marking…" : "Mark Attended"}
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-          {ftTotalPages > 1 && (
-            <PageButtons page={ftPage} totalPages={ftTotalPages} total={ftTotal} onChange={setFtPage} />
-          )}
-        </>
-      )}
+      {/* ── Attendee table ────────────────────────────────────────────────── */}
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="bg-[#F3F4F6]">
+              <th className="px-4 py-3 text-sm font-bold text-[#000080]">Name</th>
+              <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Phone</th>
+              <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Email</th>
+              <th className="hidden md:table-cell px-4 py-3 text-sm font-bold text-[#000080]">
+                {activeTab === "first-timers" ? "First Visit" : "Second Visit"}
+              </th>
+              <th className="px-4 py-3 text-sm font-bold text-[#000080]">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {activeRows.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-12 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <p className="text-sm text-[#9CA3AF]">
+                      No {activeTab === "first-timers" ? "first timers" : "second timers"} recorded for this event.
+                    </p>
+                    <p className="text-xs text-[#C4C4C4]">
+                      {activeTab === "first-timers" ? "First timers" : "Second timers"} who registered on {fmtDate(event.date)} will appear here.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              activeRows.map((person) => {
+                const serviceDate = activeTab === "first-timers"
+                  ? person.firstTimeService?.date
+                  : person.secondTimeService?.date;
+                return (
+                  <tr
+                    key={person.id}
+                    className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
+                    onClick={() => router.push(`/user-management/${activeTab}/${person.id}`)}
+                  >
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-[#111827]">{fullName(person)}</p>
+                      <p className="text-xs text-[#9CA3AF] sm:hidden">{person.phoneNumber ?? "—"}</p>
+                    </td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{person.phoneNumber ?? "—"}</td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{person.email ?? "—"}</td>
+                    <td className="hidden md:table-cell px-4 py-3 text-[#374151]">
+                      {serviceDate ? fmtDate(serviceDate) : fmtDate(event.date)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
+                        ✓ Attended
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      {/* ── E-Members Attendance tab ───────────────────────────────────────── */}
-      {activeTab === "e-members" && (
-        <>
-          {emError && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {emError} — <button className="font-medium underline" onClick={() => loadEMembers(emPage)}>Retry</button>
-            </div>
-          )}
-          <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="bg-[#F3F4F6]">
-                  <th className="px-4 py-3 text-sm font-bold text-[#000080]">Name</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Email</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Phone</th>
-                  <th className="px-4 py-3"/>
-                </tr>
-              </thead>
-              <tbody>
-                {emLoading ? (
-                  <tr><td colSpan={4} className="py-8 text-center text-sm text-gray-400">Loading…</td></tr>
-                ) : eMembers.length === 0 ? (
-                  <tr><td colSpan={4} className="py-8 text-center text-sm text-gray-400">No e-members found.</td></tr>
-                ) : (
-                  eMembers.map(em => {
-                    const attended = emAttendedIds.has(em.id);
-                    return (
-                      <tr key={em.id} className="border-b border-[#F3F4F6]">
-                        <td className="px-4 py-3 font-medium text-[#111827]">{fullName(em)}</td>
-                        <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{em.email ?? "—"}</td>
-                        <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{em.phoneNumber ?? "—"}</td>
-                        <td className="px-4 py-3">
-                          {attended ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-                              ✓ Attended
-                            </span>
-                          ) : (
-                            <button
-                              disabled={markingId === em.id}
-                              onClick={() => handleMarkAttendance(em.id)}
-                              className="rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080] hover:text-white disabled:opacity-50 transition-colors"
-                            >
-                              {markingId === em.id ? "Marking…" : "Mark Attended"}
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-          {emTotalPages > 1 && (
-            <PageButtons page={emPage} totalPages={emTotalPages} total={emTotal} onChange={setEmPage} />
-          )}
-        </>
-      )}
-
-      {/* ── New Converts tab ───────────────────────────────────────────────── */}
-      {activeTab === "new-converts" && (
-        <>
-          {ncAttendError && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {ncAttendError}
-            </div>
-          )}
-          <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="bg-[#F3F4F6]">
-                  <th className="px-4 py-3 text-sm font-bold text-[#000080]">Name</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Email</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Phone</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Class Stage</th>
-                  <th className="px-4 py-3"/>
-                </tr>
-              </thead>
-              <tbody>
-                {ncLoading ? (
-                  <tr><td colSpan={5} className="py-8 text-center text-sm text-gray-400">Loading…</td></tr>
-                ) : ncError ? (
-                  <tr><td colSpan={5} className="py-8 text-center text-sm text-red-500">
-                    {ncError} — <button className="underline" onClick={() => loadNewConverts(ncPage)}>Retry</button>
-                  </td></tr>
-                ) : newConverts.length === 0 ? (
-                  <tr><td colSpan={5} className="py-8 text-center text-sm text-gray-400">No new converts found.</td></tr>
-                ) : (
-                  newConverts.map(nc => {
-                    const attended = ncAttendedIds.has(nc.id);
-                    return (
-                      <tr key={nc.id} className="border-b border-[#F3F4F6]">
-                        <td className="px-4 py-3 font-medium text-[#111827]">{fullName(nc)}</td>
-                        <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{nc.email ?? "—"}</td>
-                        <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{nc.phoneNumber ?? "—"}</td>
-                        <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{nc.believerClassStage ?? "—"}</td>
-                        <td className="px-4 py-3">
-                          {attended ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-                              ✓ Attended
-                            </span>
-                          ) : (
-                            <button
-                              disabled={markingNcId === nc.id}
-                              onClick={() => handleMarkNcAttendance(nc.id)}
-                              className="rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080] hover:text-white disabled:opacity-50 transition-colors"
-                            >
-                              {markingNcId === nc.id ? "Marking…" : "Mark Attended"}
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-          {ncTotalPages > 1 && (
-            <PageButtons page={ncPage} totalPages={ncTotalPages} total={ncTotal} onChange={setNcPage} />
-          )}
-        </>
+      {/* ── Summary strip ────────────────────────────────────────────────── */}
+      {activeRows.length > 0 && (
+        <p className="mt-3 text-xs text-[#9CA3AF]">
+          {activeRows.length} {activeTab === "first-timers" ? "first timer" : "second timer"}{activeRows.length !== 1 ? "s" : ""} attended this event.
+        </p>
       )}
 
       {/* ── Footer actions ───────────────────────────────────────────────── */}
@@ -680,85 +402,5 @@ export default function EventDetailClient() {
         eventName={event.title}
       />
     </DashboardLayout>
-  );
-}
-
-// ─── Reusable attendee table ──────────────────────────────────────────────────
-
-interface Col<T> { label: string; render: (row: T) => string; }
-
-function AttendeeTable<T extends { id: string }>({
-  rows, loading, error, currentPage, totalPages, totalItems,
-  onPageChange, onRetry, columns, emptyText,
-}: {
-  rows: T[];
-  loading: boolean;
-  error: string;
-  currentPage: number;
-  totalPages: number;
-  totalItems: number;
-  onPageChange: (p: number) => void;
-  onRetry: () => void;
-  columns: Col<T>[];
-  emptyText: string;
-}) {
-  return (
-    <>
-      {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error} — <button className="font-medium underline" onClick={onRetry}>Retry</button>
-        </div>
-      )}
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="bg-[#F3F4F6]">
-              {columns.map(c => (
-                <th key={c.label} className="px-4 py-3 text-sm font-bold text-[#000080]">{c.label}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={columns.length} className="py-8 text-center text-sm text-gray-400">Loading…</td></tr>
-            ) : rows.length === 0 ? (
-              <tr><td colSpan={columns.length} className="py-8 text-center text-sm text-gray-400">{emptyText}</td></tr>
-            ) : (
-              rows.map(row => (
-                <tr key={row.id} className="border-b border-[#F3F4F6]">
-                  {columns.map(c => (
-                    <td key={c.label} className="px-4 py-3 text-[#374151]">{c.render(row)}</td>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      {totalPages > 1 && (
-        <PageButtons page={currentPage} totalPages={totalPages} total={totalItems} onChange={onPageChange} />
-      )}
-    </>
-  );
-}
-
-function PageButtons({ page, totalPages, total, onChange }: {
-  page: number; totalPages: number; total: number; onChange: (p: number) => void;
-}) {
-  return (
-    <div className="mt-4 flex items-center justify-between text-sm text-[#6B7280]">
-      <span>{total} total</span>
-      <div className="flex items-center gap-2">
-        <button disabled={page === 0} onClick={() => onChange(page - 1)}
-          className="rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-[#374151] hover:bg-[#F3F4F6] disabled:opacity-40">
-          ‹ Prev
-        </button>
-        <span>Page {page + 1} of {totalPages}</span>
-        <button disabled={page >= totalPages - 1} onClick={() => onChange(page + 1)}
-          className="rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-[#374151] hover:bg-[#F3F4F6] disabled:opacity-40">
-          Next ›
-        </button>
-      </div>
-    </div>
   );
 }
