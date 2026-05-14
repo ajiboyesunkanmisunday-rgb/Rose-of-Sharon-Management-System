@@ -61,7 +61,6 @@ const navItems: NavItem[] = [
     icon: Contact,
     children: [
       { label: "Messages", href: "/communication/messages" },
-      { label: "Announcements", href: "/communication/announcements" },
       { label: "Templates", href: "/communication/templates" },
     ],
   },
@@ -147,6 +146,7 @@ const navItems: NavItem[] = [
     children: [
       { label: "My Settings", href: "/settings" },
       { label: "General", href: "/settings/general" },
+      { label: "Admin Users", href: "/settings/admins" },
       { label: "Roles & Permissions", href: "/settings/roles" },
       { label: "Groups", href: "/settings/groups" },
       { label: "Change Password", href: "/settings/change-password" },

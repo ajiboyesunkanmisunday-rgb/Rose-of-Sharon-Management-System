@@ -9,6 +9,7 @@ import {
   getRoles,
   createRole,
   updateRole,
+  deleteRole,
   getPermissions,
   getRolePermissions,
   assignPermissionsToRole,
@@ -42,6 +43,8 @@ export default function RolesPage() {
   const [saveError, setSaveError] = useState("");
 
   const [formData, setFormData] = useState({ name: "", description: "" });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingRole, setDeletingRole] = useState<RoleResponse | null>(null);
 
   // Permissions modal state
   const [showPermModal, setShowPermModal] = useState(false);
@@ -81,6 +84,12 @@ export default function RolesPage() {
     setFormData({ name: role.name, description: role.description ?? "" });
     setSaveError("");
     setShowEditModal(true);
+  };
+  
+  const openDelete = (role: RoleResponse) => {
+    setDeletingRole(role);
+    setSaveError("");
+    setShowDeleteModal(true);
   };
 
   const openPermissions = (role: RoleResponse) => {
@@ -201,6 +210,25 @@ export default function RolesPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!deletingRole) return;
+    setSaving(true);
+    setSaveError("");
+    try {
+      await deleteRole(deletingRole.id);
+      setShowDeleteModal(false);
+      setDeletingRole(null);
+      fetchRoles();
+    } catch (err) {
+      setSaveError(
+        err instanceof Error ? err.message : "Failed to delete role."
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+
   return (
     <DashboardLayout>
       <div className="mb-6 flex items-center gap-3">
@@ -305,6 +333,11 @@ export default function RolesPage() {
                         {
                           label: "Manage Permissions",
                           onClick: () => openPermissions(role),
+                        },
+                        {
+                          label: "Delete",
+                          onClick: () => openDelete(role),
+                          danger: true,
                         },
                       ]}
                     />
@@ -533,6 +566,52 @@ export default function RolesPage() {
               disabled={savingPerms || loadingPerms}
             >
               {savingPerms ? "Saving…" : "Save Permissions"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+      {/* Delete Role Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setDeletingRole(null);
+          setSaveError("");
+        }}
+        title="Delete Role"
+      >
+        <div className="space-y-4">
+          {saveError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {saveError}
+            </div>
+          )}
+          <p className="text-sm text-[#374151]">
+            Are you sure you want to delete the role{" "}
+            <span className="font-bold text-[#111827]">
+              "{deletingRole?.name}"
+            </span>
+            ? This action cannot be undone and may affect users assigned to this
+            role.
+          </p>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowDeleteModal(false);
+                setDeletingRole(null);
+                setSaveError("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleDelete}
+              disabled={saving}
+              className="bg-red-600 hover:bg-red-700 border-red-600"
+            >
+              {saving ? "Deleting…" : "Delete Role"}
             </Button>
           </div>
         </div>

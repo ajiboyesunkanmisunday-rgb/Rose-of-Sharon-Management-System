@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 interface Action {
   label: string;
   onClick: () => void;
+  danger?: boolean;
 }
 
 interface ActionDropdownProps {
@@ -112,7 +113,9 @@ export default function ActionDropdown({ actions }: ActionDropdownProps) {
                 action.onClick();
                 setIsOpen(false);
               }}
-              className="block w-full px-4 py-2.5 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
+              className={`block w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 ${
+                action.danger ? "text-red-600 font-medium" : "text-gray-700"
+              }`}
             >
               {action.label}
             </button>
