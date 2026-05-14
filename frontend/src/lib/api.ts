@@ -2210,7 +2210,7 @@ export async function approveAnnouncements(ids: string[]): Promise<OperationalRe
 
 export async function declineAnnouncement(id: string, text: string): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(`/api/v1/announcements/${id}/decline`, {
-    method: "PATCH",
+    method: "PUT",
     body: JSON.stringify({ text }),
   });
 }
