@@ -34,34 +34,13 @@ exports.handler = async function (event) {
       body = { message: raw };
     }
 
-    // 1. Check Authorization header
-    const authHeader = response.headers.get("authorization") || "";
-    if (authHeader && !body.token) {
-      body.token = authHeader.replace(/^Bearer\s+/i, "").trim();
-    }
+    const isJwt = (v) => typeof v === "string" && v.split(".").length === 3 && v.startsWith("eyJ");
 
-    // 2. Scan every response header for a Bearer token or raw JWT
-    if (!body.token) {
-      for (const [, val] of response.headers.entries()) {
-        const v = String(val || "");
-        if (v.toLowerCase().startsWith("bearer ")) {
-          body.token = v.replace(/^Bearer\s+/i, "").trim();
-          break;
-        }
-        if (v.startsWith("eyJ") && v.includes(".")) {
-          body.token = v.trim();
-          break;
-        }
-      }
-    }
-
-    // 3. Deep-scan body for any JWT-shaped string
-    if (!body.token) {
+    // 1. Deep-scan body first — prefer an explicit JWT in the response payload
+    if (!body.token || !isJwt(body.token)) {
       const extractJwt = (obj) => {
         for (const val of Object.values(obj)) {
-          if (typeof val === "string" && val.startsWith("eyJ") && val.includes(".")) {
-            return val;
-          }
+          if (isJwt(val)) return val;
           if (val && typeof val === "object" && !Array.isArray(val)) {
             const found = extractJwt(val);
             if (found) return found;
@@ -71,6 +50,28 @@ exports.handler = async function (event) {
       };
       const jwt = extractJwt(body);
       if (jwt) body.token = jwt;
+    }
+
+    // 2. Scan response headers for a JWT (eyJ...) — skip raw session keys
+    if (!body.token || !isJwt(body.token)) {
+      for (const [, val] of response.headers.entries()) {
+        const v = String(val || "");
+        const candidate = v.toLowerCase().startsWith("bearer ")
+          ? v.replace(/^Bearer\s+/i, "").trim()
+          : v.trim();
+        if (isJwt(candidate)) {
+          body.token = candidate;
+          break;
+        }
+      }
+    }
+
+    // 3. Last resort: Authorization header value even if not a JWT
+    if (!body.token) {
+      const authHeader = response.headers.get("authorization") || "";
+      if (authHeader) {
+        body.token = authHeader.replace(/^Bearer\s+/i, "").trim();
+      }
     }
 
     return {
