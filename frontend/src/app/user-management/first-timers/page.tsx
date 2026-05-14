@@ -9,6 +9,7 @@ import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
+import NoLongerMemberModal from "@/components/user-management/NoLongerMemberModal";
 import AssignFollowUpModal from "@/components/user-management/AssignFollowUpModal";
 import BulkImportModal from "@/components/user-management/BulkImportModal";
 import QRCodeModal from "@/components/user-management/QRCodeModal";
@@ -19,6 +20,7 @@ import {
   addCallReport,
   assignFollowUp,
   convertToSecondTimer,
+  markUserAsInactive,
   type UserResponse,
 } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
@@ -56,6 +58,8 @@ export default function FirstTimersPage() {
   const [showSingleAssignModal, setShowSingleAssignModal] = useState(false);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [showQRCodeModal, setShowQRCodeModal] = useState(false);
+  const [showInactiveSingleModal, setShowInactiveSingleModal] = useState(false);
+  const [showInactiveBulkModal, setShowInactiveBulkModal] = useState(false);
   const [selectedTimerId, setSelectedTimerId] = useState<string | null>(null);
   const [showFilter, setShowFilter] = useState(false);
   const [filterService, setFilterService] = useState("");
@@ -181,6 +185,41 @@ export default function FirstTimersPage() {
     }
   };
 
+  const handleMarkInactive = async (reason: string) => {
+    if (!selectedTimerId) return;
+    setActionLoading(true);
+    setActionError("");
+    try {
+      await markUserAsInactive(selectedTimerId, reason);
+      setShowInactiveSingleModal(false);
+      setSelectedTimerId(null);
+      fetchTimers(currentPage);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to mark as inactive.");
+      setShowInactiveSingleModal(false);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleBulkMarkInactive = async (reason: string) => {
+    setActionLoading(true);
+    setActionError("");
+    try {
+      await Promise.allSettled(
+        Array.from(selectedRows).map((id) => markUserAsInactive(id, reason))
+      );
+      setSelectedRows(new Set());
+      setShowInactiveBulkModal(false);
+      fetchTimers(currentPage);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to mark as inactive.");
+      setShowInactiveBulkModal(false);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleConvertToSecondTimer = async (id: string) => {
     setActionLoading(true);
     setActionError("");
@@ -214,6 +253,7 @@ export default function FirstTimersPage() {
 
   const bulkActions = [
     { label: "Assign Follow-up", onClick: () => setShowBulkAssignModal(true) },
+    { label: "Mark as Inactive", onClick: () => setShowInactiveBulkModal(true) },
     { label: "Delete", onClick: () => setShowBulkDeleteModal(true) },
   ];
 
@@ -480,6 +520,10 @@ export default function FirstTimersPage() {
                           label: "Convert to Second Timer",
                           onClick: () => handleConvertToSecondTimer(ft.id),
                         },
+                        {
+                          label: "Mark as Inactive",
+                          onClick: () => { setSelectedTimerId(ft.id); setShowInactiveSingleModal(true); },
+                        },
                       ]}
                     />
                   </td>
@@ -564,6 +608,19 @@ export default function FirstTimersPage() {
         onClose={() => setShowQRCodeModal(false)}
         value="/user-management/first-timers/add"
         title="First Timer Registration QR Code"
+      />
+
+      <NoLongerMemberModal
+        isOpen={showInactiveSingleModal}
+        onClose={() => { setShowInactiveSingleModal(false); setSelectedTimerId(null); }}
+        onConfirm={handleMarkInactive}
+      />
+
+      <NoLongerMemberModal
+        isOpen={showInactiveBulkModal}
+        onClose={() => setShowInactiveBulkModal(false)}
+        onConfirm={handleBulkMarkInactive}
+        count={selectedRows.size}
       />
     </DashboardLayout>
   );
