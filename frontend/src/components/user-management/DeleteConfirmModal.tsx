@@ -5,19 +5,23 @@ import { useEffect, useRef } from "react";
 interface DeleteConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
+  title?: string;
   message?: string;
   confirmLabel?: string;
   confirmDisabled?: boolean;
+  isLoading?: boolean;
 }
 
 export default function DeleteConfirmModal({
   isOpen,
   onClose,
   onConfirm,
+  title,
   message = "Are you sure you want to delete the selected member?",
   confirmLabel = "Delete",
   confirmDisabled = false,
+  isLoading = false,
 }: DeleteConfirmModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -52,7 +56,7 @@ export default function DeleteConfirmModal({
       <div className="relative w-full max-w-[400px] overflow-hidden rounded-2xl bg-white shadow-xl">
         {/* Navy Header */}
         <div className="flex items-center justify-between bg-[#000080] px-6 py-4">
-          <h2 className="text-lg font-bold text-white">Delete</h2>
+          <h2 className="text-lg font-bold text-white">{title ?? "Delete"}</h2>
           <button
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center text-white transition-colors hover:text-gray-200"
@@ -90,10 +94,10 @@ export default function DeleteConfirmModal({
           </button>
           <button
             onClick={onConfirm}
-            disabled={confirmDisabled}
+            disabled={confirmDisabled || isLoading}
             className="rounded-xl bg-[#DC2626] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {confirmLabel}
+            {isLoading ? "Processing…" : confirmLabel}
           </button>
         </div>
       </div>
