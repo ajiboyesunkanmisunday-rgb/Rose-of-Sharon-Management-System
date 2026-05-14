@@ -1084,13 +1084,15 @@ export async function getEventNewConverts(
 }
 
 // Mark E-Member attendance for an event
+// NOTE: POST /e-members/{id}/attend returns 404 — use the same PATCH attendance
+// endpoint that works for first-timers and new-converts.
 export async function markEMemberEventAttendance(
   eventId: string,
   eMemberId: string
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
-    `/api/v1/events/${eventId}/e-members/${eMemberId}/attend`,
-    { method: "POST" }
+    `/api/v1/events/${eventId}/attendance/${eMemberId}`,
+    { method: "PATCH" }
   );
 }
 
