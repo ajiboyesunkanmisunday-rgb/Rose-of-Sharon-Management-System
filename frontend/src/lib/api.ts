@@ -979,6 +979,25 @@ export interface CreateEventRequest {
   requiresRegistration?: boolean;
 }
 
+export interface UploadCalendarRequest {
+  eventId?: string;
+  title?: string;
+  preacherTitle?: string;
+  preacherEmail: string;
+  topic?: string;
+  category?: string;
+  date: string;
+  startTime: number;
+  endTime: number;
+  locationType?: string;
+  virtualMeetingLink?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  additionalInformation?: string;
+}
+
 export async function getEvents(
   pageNo = 0,
   pageSize = 10
@@ -1005,6 +1024,24 @@ export async function getUpcomingEvents(
 ): Promise<EventResponse[]> {
   return apiFetch<EventResponse[]>(
     `/api/v1/events/calendar/upcoming?startDay=${encodeURIComponent(startDay)}&endDay=${encodeURIComponent(endDay)}`
+  );
+}
+
+export async function uploadCalendar(
+  entries: UploadCalendarRequest[]
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/events/calendar", {
+    method: "POST",
+    body: JSON.stringify(entries),
+  });
+}
+
+export async function getCalendar(
+  startDay: string,
+  endDay: string
+): Promise<EventResponse[]> {
+  return apiFetch<EventResponse[]>(
+    `/api/v1/events/calendar?startDay=${encodeURIComponent(startDay)}&endDay=${encodeURIComponent(endDay)}`
   );
 }
 

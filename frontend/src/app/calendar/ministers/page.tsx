@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
-import { ministersOnDuty } from "@/lib/mock-data";
-import { MinisterOnDuty, MinistryProgram } from "@/lib/types";
+import { MinistryProgram } from "@/lib/types";
 import { downloadCSV } from "@/lib/csv";
+import { uploadCalendar, getCalendar, UploadCalendarRequest, EventResponse } from "@/lib/api";
 
 const PROGRAM_COLORS: Record<MinistryProgram, string> = {
   "Fresh Anointing": "bg-purple-100 text-purple-800",
@@ -28,23 +29,41 @@ const PROGRAM_OPTIONS: Array<MinistryProgram | "All"> = [
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function MinistersOnDutyPage() {
-  const [entries, setEntries] = useState<MinisterOnDuty[]>(ministersOnDuty);
-  const [programFilter, setProgramFilter] = useState<MinistryProgram | "All">(
-    "All"
-  );
+  const [entries, setEntries] = useState<EventResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [programFilter, setProgramFilter] = useState<string>("All");
   const [toast, setToast] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentYear = 2026;
-  const currentMonth = 3; // April
+  const currentMonth = 4; // May
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      try {
+        // Fetch for the current month
+        const start = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-01`;
+        const lastDay = new Date(currentYear, currentMonth + 1, 0).getDate();
+        const end = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${lastDay}`;
+        const data = await getCalendar(start, end);
+        setEntries(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [currentYear, currentMonth]);
 
   const filtered = useMemo(() => {
     if (programFilter === "All") return entries;
-    return entries.filter((e) => e.program === programFilter);
+    return entries.filter((e) => e.eventCategory === programFilter);
   }, [entries, programFilter]);
 
   const entriesByDate = useMemo(() => {
-    const map: Record<string, MinisterOnDuty[]> = {};
+    const map: Record<string, EventResponse[]> = {};
     for (const e of filtered) {
       if (!map[e.date]) map[e.date] = [];
       map[e.date].push(e);
@@ -60,14 +79,6 @@ export default function MinistersOnDutyPage() {
   for (let d = 1; d <= daysInMonth; d++) calendarCells.push(d);
   while (calendarCells.length % 7 !== 0) calendarCells.push(null);
 
-  const handleToggleReminder = (id: string) => {
-    setEntries((prev) =>
-      prev.map((e) =>
-        e.id === id ? { ...e, reminderEnabled: !e.reminderEnabled } : e
-      )
-    );
-  };
-
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
@@ -77,29 +88,83 @@ export default function MinistersOnDutyPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       const text = String(ev.target?.result || "");
       const rows = text.split(/\r?\n/).filter((r) => r.trim());
+      if (rows.length < 2) {
+        showToast("No valid rows found in CSV.");
+        return;
+      }
+
       // Skip header
-      const newEntries: MinisterOnDuty[] = [];
+      const entries: UploadCalendarRequest[] = [];
+      const headers = rows[0].split(",").map(h => h.trim());
+      
       for (let i = 1; i < rows.length; i++) {
         const parts = rows[i].split(",").map((p) => p.trim());
-        if (parts.length < 4) continue;
-        const [date, program, minister, phone] = parts;
-        newEntries.push({
-          id: `mod-upload-${Date.now()}-${i}`,
-          date,
-          program: (program as MinistryProgram) || "Other",
-          minister,
-          phone,
-          reminderEnabled: false,
-        });
+        if (parts.length < headers.length) continue;
+        
+      const entry: any = {};
+      headers.forEach((header, idx) => {
+        const val = parts[idx];
+        entry[header] = val;
+      });
+      
+      if (entry.preacherEmail && entry.title && entry.date) {
+        // Handle multiple date formats (M/D/YYYY or YYYY-MM-DD)
+        const dateParts = entry.date.split(/[-/]/).map(Number);
+        
+        if (dateParts.length === 3) {
+          let year, month, day;
+          
+          if (dateParts[0] > 1000) {
+            // YYYY-MM-DD
+            [year, month, day] = dateParts;
+          } else {
+            // M/D/YYYY or D/M/YYYY - assuming M/D/YYYY for Excel standard
+            [month, day, year] = dateParts;
+          }
+          
+          const normalizedDate = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+          
+          const parseToTimestamp = (timeStr: string) => {
+            const t = parseInt(timeStr);
+            if (isNaN(t)) return 0;
+            const hh = Math.floor(t / 100);
+            const mm = t % 100;
+            return new Date(year, month - 1, day, hh, mm).getTime();
+          };
+
+          const payload: UploadCalendarRequest = {
+            ...entry,
+            date: normalizedDate,
+            startTime: parseToTimestamp(entry.startTime),
+            endTime: parseToTimestamp(entry.endTime),
+            category: "SPECIAL_SERVICE",
+            locationType: "VIRTUAL",
+            country: "Nigeria",
+            virtualMeetingLink: "",
+            additionalInformation: "",
+            city: "",
+            state: "",
+            street: "",
+            topic: ""
+          };
+          entries.push(payload);
+        }
       }
-      if (newEntries.length > 0) {
-        setEntries((prev) => [...prev, ...newEntries]);
-        showToast(`Imported ${newEntries.length} minister(s).`);
+      }
+
+      if (entries.length > 0) {
+        try {
+          await uploadCalendar(entries);
+          showToast(`Successfully uploaded ${entries.length} entry(s).`);
+          // Note: In a real app we might want to refresh the calendar list here
+        } catch (err: any) {
+          showToast(err.message || "Upload failed.");
+        }
       } else {
-        showToast("No valid rows found in CSV.");
+        showToast("No valid rows found in CSV (eventId/title and preacherEmail are required).");
       }
     };
     reader.readAsText(file);
@@ -107,7 +172,13 @@ export default function MinistersOnDutyPage() {
   };
 
   const handleDownloadTemplate = () => {
-    const csv = "date,program,minister,phone\n2026-04-19,Sunday Sermon,Pastor David,+234 801 111 2222";
+    const headers = [
+      "title", "preacherTitle", "preacherEmail", "date", "startTime", "endTime"
+    ];
+    const example = [
+      "Sunday Service", "Pastor", "pastor@example.com", "2026-05-31", "0900", "1100"
+    ];
+    const csv = headers.join(",") + "\n" + example.join(",");
     downloadCSV(csv, "ministers-on-duty-template.csv");
   };
 
@@ -136,6 +207,11 @@ export default function MinistersOnDutyPage() {
           onChange={handleFileUpload}
           className="hidden"
         />
+        <Link href="/calendar/ministers/add">
+          <Button variant="outline" className="border-[#000080] text-[#000080] hover:bg-[#F3F4F6]">
+            Add Minister to Event
+          </Button>
+        </Link>
         <button
           onClick={handleDownloadTemplate}
           className="text-sm font-medium text-[#000080] underline transition-colors hover:text-[#000055]"
@@ -189,10 +265,10 @@ export default function MinistersOnDutyPage() {
                           {dayEntries.slice(0, 2).map((e) => (
                             <div
                               key={e.id}
-                              className={`truncate rounded px-1 py-0.5 text-[10px] ${PROGRAM_COLORS[e.program]}`}
-                              title={`${e.program} · ${e.minister}`}
+                              className={`truncate rounded px-1 py-0.5 text-[10px] bg-[#000080] text-white`}
+                              title={`${e.title} · ${e.preacher}`}
                             >
-                              {e.minister}
+                              {e.title}
                             </div>
                           ))}
                           {dayEntries.length > 2 && (
@@ -217,23 +293,28 @@ export default function MinistersOnDutyPage() {
             <select
               value={programFilter}
               onChange={(e) =>
-                setProgramFilter(e.target.value as MinistryProgram | "All")
+                setProgramFilter(e.target.value)
               }
               className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             >
-              {PROGRAM_OPTIONS.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
+              <option value="All">All Categories</option>
+              <option value="SERVICE">Service</option>
+              <option value="SPECIAL_SERVICE">Special Service</option>
+              <option value="WEDDING">Wedding</option>
+              <option value="FUNERAL">Funeral</option>
+              <option value="CONFERENCE">Conference</option>
             </select>
           </div>
 
           <div className="space-y-3">
-            {filtered.length === 0 ? (
-              <p className="rounded-xl border border-[#E5E7EB] bg-white p-6 text-sm text-[#6B7280]">
-                No ministers scheduled.
-              </p>
+            {loading ? (
+              Array(3).fill(0).map((_, i) => (
+                <div key={i} className="h-24 animate-pulse rounded-xl border border-[#E5E7EB] bg-gray-50" />
+              ))
+            ) : filtered.length === 0 ? (
+              <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 text-center text-sm text-[#6B7280]">
+                No ministers scheduled for this period.
+              </div>
             ) : (
               filtered
                 .slice()
@@ -246,26 +327,16 @@ export default function MinistersOnDutyPage() {
                     <div className="flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span
-                          className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${PROGRAM_COLORS[m.program]}`}
+                          className="rounded-full px-2.5 py-1 text-[11px] font-medium bg-blue-50 text-blue-700"
                         >
-                          {m.program}
+                          {m.title}
                         </span>
                         <span className="text-xs text-[#6B7280]">{m.date}</span>
                       </div>
                       <p className="mt-2 text-sm font-semibold text-[#111827]">
-                        {m.minister}
+                        {m.preacher || "TBA"}
                       </p>
-                      <p className="text-xs text-[#6B7280]">{m.phone}</p>
                     </div>
-                    <label className="flex items-center gap-2 text-xs text-[#374151]">
-                      <input
-                        type="checkbox"
-                        checked={m.reminderEnabled}
-                        onChange={() => handleToggleReminder(m.id)}
-                        className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
-                      />
-                      Reminder 48h before
-                    </label>
                   </div>
                 ))
             )}
