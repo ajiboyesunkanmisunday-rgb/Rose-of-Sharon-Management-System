@@ -143,6 +143,12 @@ export default function ViewMemberProfilePage() {
 
   const groupNames = user?.groups?.map((g) => g.name).join(", ") || "—";
 
+  // Spouse logic — only married members can have / link a spouse
+  const isMarried   = user?.maritalStatus?.toUpperCase() === "MARRIED";
+  const hasSpouse   = !!user?.spouse;
+  // Edge-case: backend data has a spouse linked but status is not MARRIED
+  const spouseLinkedIncorrectly = hasSpouse && !isMarried;
+
   const tabs: { key: Tab; label: string }[] = [
     { key: "details",  label: "Details"  },
     { key: "requests", label: "Requests" },
@@ -220,25 +226,27 @@ export default function ViewMemberProfilePage() {
                     </div>
                   ) : null)}
 
-                  {/* Spouse */}
-                  <div>
-                    <p className="text-xs font-medium text-[#6B7280]">Spouse</p>
-                    {user?.spouse ? (
-                      <button
-                        onClick={() => router.push(`/user-management/members/${user.spouse!.id}`)}
-                        className="mt-1 text-sm font-medium text-[#000080] underline hover:text-[#000066]"
-                      >
-                        {fullName(user.spouse)}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => router.push(`/user-management/members/${id}/link-spouse`)}
-                        className="mt-1 text-sm font-medium text-[#000080] underline hover:text-[#000066]"
-                      >
-                        Link Spouse
-                      </button>
-                    )}
-                  </div>
+                  {/* Spouse — only relevant for married members */}
+                  {(isMarried || hasSpouse) && (
+                    <div>
+                      <p className="text-xs font-medium text-[#6B7280]">Spouse</p>
+                      {spouseLinkedIncorrectly && (
+                        <p className="mb-0.5 text-[10px] font-semibold text-amber-600">
+                          ⚠ Marital status is {user?.maritalStatus} but a spouse is linked
+                        </p>
+                      )}
+                      {user?.spouse ? (
+                        <button
+                          onClick={() => router.push(`/user-management/members/${user.spouse!.id}`)}
+                          className="mt-1 text-sm font-medium text-[#000080] underline hover:text-[#000066]"
+                        >
+                          {fullName(user.spouse)}
+                        </button>
+                      ) : (
+                        <p className="mt-1 text-sm text-[#9CA3AF]">Not linked</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -301,7 +309,10 @@ export default function ViewMemberProfilePage() {
           )}
           <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
             <Button variant="secondary" onClick={() => router.push(`/user-management/members/${id}/edit`)}>Edit</Button>
-            <Button variant="primary"   onClick={() => router.push(`/user-management/members/${id}/link-spouse`)}>Link Spouse</Button>
+            {/* Link Spouse is only meaningful for married members without a spouse already linked */}
+            {isMarried && !hasSpouse && (
+              <Button variant="primary" onClick={() => router.push(`/user-management/members/${id}/link-spouse`)}>Link Spouse</Button>
+            )}
             <Button variant="secondary" onClick={handleMarkInactive} disabled={actionLoading === "inactive"}>
               {actionLoading === "inactive" ? "Marking…" : "Mark Inactive"}
             </Button>
