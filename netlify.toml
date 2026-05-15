@@ -370,3 +370,39 @@
   from   = "/events/:id/check-in/"
   to     = "/events/ev-1/check-in/"
   status = 200
+
+# ── Test / QA Hub ─────────────────────────────────────────────────────────────
+[[redirects]]
+  from   = "/test/"
+  to     = "/test/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/test/testimonies/"
+  to     = "/test/testimonies/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/test/prayer-requests/"
+  to     = "/test/prayer-requests/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/test/celebrations/"
+  to     = "/test/celebrations/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/test/announcements/"
+  to     = "/test/announcements/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/test/new-convert/"
+  to     = "/test/new-convert/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/sod/test/"
+  to     = "/trainings/sod/test/index.html"
+  status = 200

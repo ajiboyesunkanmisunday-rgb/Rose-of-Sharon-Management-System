@@ -219,12 +219,18 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     >
       {/* Logo Area */}
       <div className="flex items-center justify-between px-5 py-5">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/rccg-combined-logo.svg"
-          alt="Rose of Sharon - RCCG"
-          className="h-[54px] w-auto"
-        />
+        <div className="flex items-center gap-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/rccg-icon-small.png"
+            alt="RCCG Rose of Sharon"
+            className="h-[50px] w-[50px] rounded-full object-cover"
+          />
+          <div className="leading-tight">
+            <p className="text-[13px] font-bold text-[#000080]">Rose of Sharon</p>
+            <p className="text-[11px] font-semibold text-[#DA251D] tracking-wide">RCCG</p>
+          </div>
+        </div>
         {/* Close button — only shown on mobile */}
         {onClose && (
           <button
