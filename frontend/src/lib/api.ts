@@ -2221,3 +2221,163 @@ export async function declineAnnouncement(id: string, text: string): Promise<Ope
 }
 
 // searchEMembers and searchMembers are declared earlier in this file.
+
+// ─── School of Disciples (SOD) ───────────────────────────────────────────────
+
+export interface SchoolOfDisciplesResponse {
+  id: string;
+  userId?: string;
+  set?: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  maidenName?: string;
+  email?: string;
+  profilePictureUrl?: string;
+  sex?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+  otherPhoneNumber?: string;
+  dateOfBirth?: string;
+  maritalStatus?: string;
+  spouseName?: string;
+  noOfChildren?: number;
+  nextOfKinName?: string;
+  nextOfKinRelationship?: string;
+  nextOfKinPhoneNumber?: string;
+  nextOfKinFullAddress?: string;
+  occupation?: string;
+  employer?: string;
+  officeFullAddress?: string;
+  officePhoneNumber?: string;
+  officeEmail?: string;
+  salvationDate?: string;
+  salvationLocation?: string;
+  waterBaptismDate?: string;
+  waterBaptismLocation?: string;
+  holySpiritBaptismDate?: string;
+  holySpiritBaptismLocation?: string;
+  reasonForLeavingPastChurch?: string;
+  lifeCenterAttended?: string;
+  nonRCCGChristianGroups?: string[];
+  yourMinistry?: string;
+  giftsManifesting?: string[];
+  reasonForApplying?: string;
+  consent?: boolean;
+  officialRemarks?: string;
+  graduationDate?: string;
+  createdOn?: string;
+}
+
+export interface CreateSchoolOfDisciplesRequest {
+  userId?: string;
+  set?: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  maidenName?: string;
+  countryCode: string;
+  phoneNumber: string;
+  email?: string;
+  sex?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  otherPhoneNumber?: string;
+  dateOfBirth?: string;
+  maritalStatus?: string;
+  spouseName?: string;
+  noOfChildren?: number;
+  nextOfKinName?: string;
+  nextOfKinRelationship?: string;
+  nextOfKinPhoneNumber?: string;
+  nextOfKinFullAddress?: string;
+  occupation?: string;
+  employer?: string;
+  officeFullAddress?: string;
+  officePhoneNumber?: string;
+  officeEmail?: string;
+  salvationDate?: string;
+  salvationLocation?: string;
+  waterBaptismDate?: string;
+  waterBaptismLocation?: string;
+  holySpiritBaptismDate?: string;
+  holySpiritBaptismLocation?: string;
+  reasonForLeavingPastChurch?: string;
+  lifeCenterAttended?: string;
+  nonRCCGChristianGroups?: string[];
+  yourMinistry?: string;
+  giftsManifesting?: string[];
+  reasonForApplying?: string;
+  consent?: boolean;
+}
+
+export async function getSchoolOfDisciples(
+  pageNo = 0,
+  pageSize = 20,
+  set?: string
+): Promise<CustomPageResponse<SchoolOfDisciplesResponse>> {
+  const qs = set ? `&set=${encodeURIComponent(set)}` : "";
+  return apiFetch<CustomPageResponse<SchoolOfDisciplesResponse>>(
+    `/api/v1/school-of-disciples?pageNo=${pageNo}&pageSize=${pageSize}${qs}`
+  );
+}
+
+export async function getSchoolOfDisciple(
+  id: string
+): Promise<SchoolOfDisciplesResponse> {
+  return apiFetch<SchoolOfDisciplesResponse>(`/api/v1/school-of-disciples/${id}`);
+}
+
+export async function searchSchoolOfDisciples(
+  text: string,
+  pageNo = 0,
+  pageSize = 20
+): Promise<CustomPageResponse<SchoolOfDisciplesResponse>> {
+  return apiFetch<CustomPageResponse<SchoolOfDisciplesResponse>>(
+    `/api/v1/school-of-disciples/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ text }) }
+  );
+}
+
+export async function createSchoolOfDisciple(
+  body: CreateSchoolOfDisciplesRequest
+): Promise<SchoolOfDisciplesResponse> {
+  return apiFetch<SchoolOfDisciplesResponse>("/api/v1/school-of-disciples", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function markSodAsGraduated(
+  ids: string[]
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/school-of-disciples/mark-as-graduated", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export async function giveSodOfficialRemark(
+  id: string,
+  text: string
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/school-of-disciples/${id}/give-official-remark`,
+    { method: "PATCH", body: JSON.stringify({ text }) }
+  );
+}
+
+export async function deleteSodBulk(
+  ids: string[]
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/school-of-disciples", {
+    method: "DELETE",
+    body: JSON.stringify({ ids }),
+  });
+}
