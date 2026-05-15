@@ -27,6 +27,13 @@ export const COUNSELING_COLUMNS: ColumnConfig[] = [
   { status: "RESOLVED",    label: "Resolved",   headerBg: "bg-green-50",  headerText: "text-green-800", dotColor: "bg-green-400" },
 ];
 
+export const GUEST_COLUMNS: ColumnConfig[] = [
+  { status: "RECEIVED",    label: "First Timers",     headerBg: "bg-blue-50",   headerText: "text-blue-800",  dotColor: "bg-blue-400"   },
+  { status: "ASSIGNED",    label: "Follow-up Call",   headerBg: "bg-yellow-50", headerText: "text-yellow-800",dotColor: "bg-yellow-400" },
+  { status: "IN_PROGRESS", label: "Follow-up Visit",  headerBg: "bg-purple-50", headerText: "text-purple-800",dotColor: "bg-purple-400" },
+  { status: "RESOLVED",    label: "Second Timers",    headerBg: "bg-green-50",  headerText: "text-green-800", dotColor: "bg-green-400"  },
+];
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function fullName(u?: { firstName?: string; middleName?: string; lastName?: string } | null) {
   if (!u) return "—";
