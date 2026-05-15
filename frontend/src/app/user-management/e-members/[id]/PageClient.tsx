@@ -135,6 +135,10 @@ export default function EMemberProfilePage() {
 
   const groupNames = user?.groups?.map((g) => g.name).join(", ") || "—";
 
+  const isMarried = user?.maritalStatus?.toUpperCase() === "MARRIED";
+  const hasSpouse = !!user?.spouse;
+  const spouseLinkedIncorrectly = hasSpouse && !isMarried;
+
   const tabs: { key: Tab; label: string }[] = [
     { key: "details",  label: "Details"  },
     { key: "activity", label: "Activity" },
@@ -197,20 +201,27 @@ export default function EMemberProfilePage() {
                     </div>
                   ) : null)}
 
-                  {/* Spouse */}
-                  <div>
-                    <p className="text-xs font-medium text-[#6B7280]">Spouse</p>
-                    {user?.spouse ? (
-                      <button
-                        onClick={() => router.push(`/user-management/members/${user.spouse!.id}`)}
-                        className="mt-1 text-sm font-medium text-[#000080] underline hover:text-[#000066]"
-                      >
-                        {fullName(user.spouse)}
-                      </button>
-                    ) : (
-                      <p className="mt-1 text-sm text-[#9CA3AF]">—</p>
-                    )}
-                  </div>
+                  {/* Spouse — only shown for married members */}
+                  {(isMarried || hasSpouse) && (
+                    <div>
+                      <p className="text-xs font-medium text-[#6B7280]">Spouse</p>
+                      {spouseLinkedIncorrectly && (
+                        <p className="mb-0.5 text-[10px] font-semibold text-amber-600">
+                          ⚠ Marital status is {user?.maritalStatus} but a spouse is linked
+                        </p>
+                      )}
+                      {user?.spouse ? (
+                        <button
+                          onClick={() => router.push(`/user-management/members/${user.spouse!.id}`)}
+                          className="mt-1 text-sm font-medium text-[#000080] underline hover:text-[#000066]"
+                        >
+                          {fullName(user.spouse)}
+                        </button>
+                      ) : (
+                        <p className="mt-1 text-sm text-[#9CA3AF]">Not linked</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
