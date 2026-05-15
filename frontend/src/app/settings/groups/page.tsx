@@ -193,8 +193,8 @@ export default function GroupsPage() {
                   <td className="px-4 py-3">
                     <ActionDropdown
                       actions={[
-                        { label: "View Members", onClick: () => router.push(`/settings/groups/${group.id}`) },
-                        { label: "Edit", onClick: () => router.push(`/settings/groups/${group.id}/edit`) },
+                        { label: "View Members", onClick: () => router.push(`/settings/groups/grp-1/?id=${encodeURIComponent(group.id)}`) },
+                        { label: "Edit", onClick: () => router.push(`/settings/groups/grp-1/edit/?id=${encodeURIComponent(group.id)}`) },
                         { label: "Delete", onClick: () => handleDeleteGroup(group.id) },
                       ]}
                     />

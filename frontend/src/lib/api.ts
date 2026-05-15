@@ -1232,11 +1232,40 @@ export async function getGroup(id: string): Promise<GroupResponse> {
   return apiFetch<GroupResponse>(`/api/v1/groups/${id}`);
 }
 
+export interface GroupMemberResponse {
+  id: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  email?: string;
+  profilePictureUrl?: string;
+  sex?: "FEMALE" | "MALE" | string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+  dayOfBirth?: number;
+  monthOfBirth?: number;
+  yearOfBirth?: number;
+  dayOfWedding?: number;
+  monthOfWedding?: number;
+  yearOfWedding?: number;
+  maritalStatus?: string;
+  spouse?: string;
+  couplePictureUrl?: string;
+  occupation?: string;
+  assignedFollowUp?: string;
+  noOfCalls?: number;
+  noOfVisits?: number;
+}
+
 export async function getGroupMembers(
   groupId: string, pageNo = 0, pageSize = 500
-): Promise<CustomPageResponse<UserResponse>> {
-  return apiFetch<CustomPageResponse<UserResponse>>(
-    `/api/v1/groups/${groupId}/members?pageNo=${pageNo}&pageSize=${pageSize}`
+): Promise<CustomPageResponse<GroupMemberResponse>> {
+  return apiFetch<CustomPageResponse<GroupMemberResponse>>(
+    `/api/v1/groups/${groupId}?pageNo=${pageNo}&pageSize=${pageSize}`
   );
 }
 
