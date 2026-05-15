@@ -15,9 +15,16 @@ export default function EditGroupClient() {
   const [id, setId] = useState(paramId);
   useEffect(() => {
     if (typeof window !== "undefined") {
+      // Prefer ?id= query (used by client-side nav under output: export)
+      const qsId = new URLSearchParams(window.location.search).get("id");
+      if (qsId && qsId !== id) {
+        setId(qsId);
+        return;
+      }
+      // Fall back to URL path segment (Netlify rewrites real UUIDs in prod)
       const parts = window.location.pathname.replace(/\/$/, "").split("/");
       const urlId = parts[parts.length - 2] ?? "";
-      if (urlId && urlId !== id) setId(urlId);
+      if (urlId && !urlId.startsWith("grp-") && urlId !== id) setId(urlId);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -57,7 +64,7 @@ export default function EditGroupClient() {
         description: formData.description || undefined,
         whatsAppLink: formData.whatsAppLink || undefined,
       });
-      router.push(`/settings/groups/${id}`);
+      router.push(`/settings/groups/grp-1/?id=${encodeURIComponent(id)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update group.");
       setSubmitting(false);
@@ -83,7 +90,7 @@ export default function EditGroupClient() {
           <FormField label="WhatsApp Link" name="whatsAppLink" value={formData.whatsAppLink} onChange={handleChange} placeholder="https://chat.whatsapp.com/..." />
 
           <div className="flex items-center justify-end gap-3 pt-4">
-            <Button variant="secondary" type="button" onClick={() => router.push(`/settings/groups/${id}`)}>
+            <Button variant="secondary" type="button" onClick={() => router.push(`/settings/groups/grp-1/?id=${encodeURIComponent(id)}`)}>
               Cancel
             </Button>
             <Button variant="primary" type="submit" disabled={submitting}>
