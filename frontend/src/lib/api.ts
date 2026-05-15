@@ -2224,6 +2224,13 @@ export async function declineAnnouncement(id: string, text: string): Promise<Ope
 
 // ─── School of Disciples (SOD) ───────────────────────────────────────────────
 
+export interface SodAttendanceRecord {
+  classNumber: number;
+  date?: string;
+  markedBy?: string;
+  markedOn?: string;
+}
+
 export interface SchoolOfDisciplesResponse {
   id: string;
   userId?: string;
@@ -2271,6 +2278,9 @@ export interface SchoolOfDisciplesResponse {
   officialRemarks?: string;
   graduationDate?: string;
   createdOn?: string;
+  // Attendance tracking
+  classAttendance?: SodAttendanceRecord[];
+  examAttendance?: SodAttendanceRecord[];
 }
 
 export interface CreateSchoolOfDisciplesRequest {
@@ -2380,4 +2390,24 @@ export async function deleteSodBulk(
     method: "DELETE",
     body: JSON.stringify({ ids }),
   });
+}
+
+export async function markSodClassAttendance(
+  id: string,
+  classNumber: number
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/school-of-disciples/${id}/mark-class-attendance`,
+    { method: "POST", body: JSON.stringify({ classNumber }) }
+  );
+}
+
+export async function markSodExamAttendance(
+  id: string,
+  classNumber: number
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/school-of-disciples/${id}/mark-exam-attendance`,
+    { method: "POST", body: JSON.stringify({ classNumber }) }
+  );
 }
