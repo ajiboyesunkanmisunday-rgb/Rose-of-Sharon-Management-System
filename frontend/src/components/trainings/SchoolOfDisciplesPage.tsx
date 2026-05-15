@@ -9,16 +9,24 @@ import {
   searchSchoolOfDisciples,
   markSodAsGraduated,
   giveSodOfficialRemark,
+  markSodClassAttendance,
+  markSodExamAttendance,
   type SchoolOfDisciplesResponse,
+  type SodAttendanceRecord,
 } from "@/lib/api";
 import {
   BookOpen, Phone, Mail, RefreshCw, Award, Users,
   CheckCircle, Clock, Star, ChevronDown, X, MessageSquare,
+  CalendarCheck, BookCheck, ClipboardList,
 } from "lucide-react";
 
 const ACCENT   = "#D97706";
 const ACCENT10 = "#D9770618";
 const ITEMS_PER_PAGE = 12;
+
+// Classes 1–4; Class 1 has no exam
+const SOD_CLASSES = [1, 2, 3, 4] as const;
+const HAS_EXAM = (classNum: number) => classNum > 1;
 
 const avatarBgColors = [
   "bg-[#B5B5F3]", "bg-[#BFDBFE]", "bg-[#BBF7D0]",
@@ -42,6 +50,288 @@ function fullName(u: SchoolOfDisciplesResponse) {
 function fmtDate(s?: string) {
   if (!s) return "—";
   return new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function fmtDateTime(s?: string) {
+  if (!s) return null;
+  return new Date(s).toLocaleDateString("en-GB", {
+    day: "2-digit", month: "short", year: "numeric",
+  });
+}
+
+// ─── Attendance Modal ─────────────────────────────────────────────────────────
+function AttendanceModal({
+  student,
+  onClose,
+  onSave,
+}: {
+  student: SchoolOfDisciplesResponse;
+  onClose: () => void;
+  onSave: (id: string, classNum: number, markClass: boolean, markExam: boolean) => Promise<void>;
+}) {
+  const [classNum, setClassNum]   = useState<number>(1);
+  const [markClass, setMarkClass] = useState(true);
+  const [markExam,  setMarkExam]  = useState(false);
+  const [saving,    setSaving]    = useState(false);
+  const [error,     setError]     = useState("");
+
+  const classAttended = useMemo(() => {
+    const set = new Set<number>();
+    (student.classAttendance ?? []).forEach((r: SodAttendanceRecord) => set.add(r.classNumber));
+    return set;
+  }, [student.classAttendance]);
+
+  const examAttended = useMemo(() => {
+    const set = new Set<number>();
+    (student.examAttendance ?? []).forEach((r: SodAttendanceRecord) => set.add(r.classNumber));
+    return set;
+  }, [student.examAttendance]);
+
+  // When class changes, reset exam checkbox; disable exam for class 1
+  const handleClassChange = (n: number) => {
+    setClassNum(n);
+    setMarkExam(false);
+    setError("");
+  };
+
+  const handleSave = async () => {
+    if (!markClass && !markExam) {
+      setError("Select at least one attendance type to mark.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      await onSave(student.id, classNum, markClass, markExam);
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to mark attendance.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const alreadyClassMarked = classAttended.has(classNum);
+  const alreadyExamMarked  = examAttended.has(classNum);
+
+  // Find attendance record for selected class
+  const classRecord = (student.classAttendance ?? []).find((r) => r.classNumber === classNum);
+  const examRecord  = (student.examAttendance  ?? []).find((r) => r.classNumber === classNum);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl">
+
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[#E5E7EB] px-5 py-4">
+          <div className="flex items-center gap-2">
+            <CalendarCheck className="h-5 w-5" style={{ color: ACCENT }} />
+            <div>
+              <h2 className="text-base font-bold text-[#111827]">Mark Attendance</h2>
+              <p className="text-xs text-[#6B7280]">{fullName(student)}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-[#F3F4F6]">
+            <X className="h-4 w-4 text-[#6B7280]" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-5">
+
+          {/* Attendance History Grid */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
+              Attendance History
+            </p>
+            <div className="overflow-hidden rounded-xl border border-[#E5E7EB]">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
+                    <th className="py-2 pl-4 pr-2 text-left text-xs font-semibold text-[#374151]">Class</th>
+                    <th className="py-2 px-2 text-center text-xs font-semibold text-[#374151]">
+                      <span className="flex items-center justify-center gap-1">
+                        <ClipboardList className="h-3 w-3" /> Attended
+                      </span>
+                    </th>
+                    <th className="py-2 px-2 text-center text-xs font-semibold text-[#374151]">
+                      <span className="flex items-center justify-center gap-1">
+                        <BookCheck className="h-3 w-3" /> Exam
+                      </span>
+                    </th>
+                    <th className="py-2 pl-2 pr-4 text-left text-xs font-semibold text-[#374151]">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {SOD_CLASSES.map((cn) => {
+                    const cRec = (student.classAttendance ?? []).find((r) => r.classNumber === cn);
+                    const eRec = (student.examAttendance  ?? []).find((r) => r.classNumber === cn);
+                    const cDone = classAttended.has(cn);
+                    const eDone = examAttended.has(cn);
+                    return (
+                      <tr
+                        key={cn}
+                        className={`border-b border-[#F3F4F6] last:border-0 ${cn === classNum ? "bg-amber-50" : ""}`}
+                      >
+                        <td className="py-2.5 pl-4 pr-2 text-sm font-medium text-[#111827]">
+                          Class {cn}
+                        </td>
+                        <td className="py-2.5 px-2 text-center">
+                          {cDone ? (
+                            <span className="inline-flex items-center justify-center">
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                            </span>
+                          ) : (
+                            <span className="text-[#D1D5DB] text-lg leading-none">—</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-2 text-center">
+                          {!HAS_EXAM(cn) ? (
+                            <span className="text-[10px] text-[#9CA3AF]">N/A</span>
+                          ) : eDone ? (
+                            <span className="inline-flex items-center justify-center">
+                              <CheckCircle className="h-4 w-4 text-blue-500" />
+                            </span>
+                          ) : (
+                            <span className="text-[#D1D5DB] text-lg leading-none">—</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 pl-2 pr-4 text-xs text-[#6B7280]">
+                          {fmtDateTime(cRec?.date ?? cRec?.markedOn) ??
+                           fmtDateTime(eRec?.date ?? eRec?.markedOn) ??
+                           (cDone || eDone ? "—" : "")}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Mark New Attendance */}
+          <div>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
+              Mark Attendance
+            </p>
+
+            {/* Class selector */}
+            <div className="mb-4">
+              <label className="mb-1.5 block text-xs font-medium text-[#374151]">Select Class</label>
+              <div className="relative">
+                <select
+                  value={classNum}
+                  onChange={(e) => handleClassChange(Number(e.target.value))}
+                  className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2.5 pr-8 text-sm text-[#111827] outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]"
+                >
+                  {SOD_CLASSES.map((cn) => (
+                    <option key={cn} value={cn}>Class {cn}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
+              </div>
+            </div>
+
+            {/* Checkboxes */}
+            <div className="space-y-3">
+              {/* Class Attendance */}
+              <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
+                markClass ? "border-amber-300 bg-amber-50" : "border-[#E5E7EB] hover:border-[#D97706]/40"
+              }`}>
+                <input
+                  type="checkbox"
+                  checked={markClass}
+                  onChange={(e) => setMarkClass(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 cursor-pointer"
+                  style={{ accentColor: ACCENT }}
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <ClipboardList className="h-4 w-4 text-[#D97706]" />
+                    <span className="text-sm font-semibold text-[#111827]">Class Attendance</span>
+                    {alreadyClassMarked && (
+                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700">
+                        Already marked
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-xs text-[#6B7280]">
+                    Student was present for Class {classNum}
+                    {classRecord?.date || classRecord?.markedOn
+                      ? ` · marked ${fmtDateTime(classRecord.date ?? classRecord.markedOn)}`
+                      : ""}
+                  </p>
+                </div>
+              </label>
+
+              {/* Exam Attendance — only for classes 2+ */}
+              {HAS_EXAM(classNum) ? (
+                <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
+                  markExam ? "border-blue-300 bg-blue-50" : "border-[#E5E7EB] hover:border-blue-300/40"
+                }`}>
+                  <input
+                    type="checkbox"
+                    checked={markExam}
+                    onChange={(e) => setMarkExam(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 cursor-pointer"
+                    style={{ accentColor: "#2563EB" }}
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <BookCheck className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-semibold text-[#111827]">Exam Attendance</span>
+                      {alreadyExamMarked && (
+                        <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700">
+                          Already marked
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-xs text-[#6B7280]">
+                      Student sat the exam for Class {classNum}
+                      {examRecord?.date || examRecord?.markedOn
+                        ? ` · marked ${fmtDateTime(examRecord.date ?? examRecord.markedOn)}`
+                        : ""}
+                    </p>
+                  </div>
+                </label>
+              ) : (
+                <div className="flex items-start gap-3 rounded-xl border border-[#F3F4F6] bg-[#F9FAFB] p-4">
+                  <BookCheck className="mt-0.5 h-4 w-4 text-[#D1D5DB]" />
+                  <div>
+                    <span className="text-sm font-medium text-[#9CA3AF]">Exam Attendance</span>
+                    <p className="mt-0.5 text-xs text-[#9CA3AF]">Class 1 has no exam</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {error && (
+              <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                {error}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-2 border-t border-[#E5E7EB] px-5 py-4">
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-[#E5E7EB] px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F9FAFB]"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving || (!markClass && !markExam)}
+            className="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            style={{ backgroundColor: ACCENT }}
+          >
+            {saving ? "Saving…" : "Mark Attendance"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ─── Official Remark Modal ────────────────────────────────────────────────────
@@ -110,17 +400,49 @@ function RemarkModal({
   );
 }
 
+// ─── Attendance Mini-Summary (shown on card) ──────────────────────────────────
+function AttendanceSummaryBar({ student }: { student: SchoolOfDisciplesResponse }) {
+  const classAttended = new Set((student.classAttendance ?? []).map((r) => r.classNumber));
+  const examAttended  = new Set((student.examAttendance  ?? []).map((r) => r.classNumber));
+  const anyAttendance = classAttended.size > 0 || examAttended.size > 0;
+  if (!anyAttendance) return null;
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-1">
+      {SOD_CLASSES.map((cn) => {
+        const cDone = classAttended.has(cn);
+        const eDone = examAttended.has(cn);
+        if (!cDone && !eDone) return null;
+        return (
+          <span
+            key={cn}
+            title={`Class ${cn}${cDone ? " ✓ Attended" : ""}${eDone ? " · Exam ✓" : ""}`}
+            className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold"
+            style={{ backgroundColor: ACCENT10, color: ACCENT }}
+          >
+            C{cn}
+            {cDone && <CheckCircle className="h-2.5 w-2.5 text-green-600" />}
+            {eDone && <BookCheck className="h-2.5 w-2.5 text-blue-600" />}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── Student Card ─────────────────────────────────────────────────────────────
 function StudentCard({
   student,
   selected,
   onToggleSelect,
   onRemark,
+  onAttendance,
 }: {
   student: SchoolOfDisciplesResponse;
   selected: boolean;
   onToggleSelect: (id: string) => void;
   onRemark: (s: SchoolOfDisciplesResponse) => void;
+  onAttendance: (s: SchoolOfDisciplesResponse) => void;
 }) {
   const bg = avatarColor(student.id);
   const phone = student.phoneNumber
@@ -201,6 +523,9 @@ function StudentCard({
         </div>
       )}
 
+      {/* Attendance summary */}
+      <AttendanceSummaryBar student={student} />
+
       {/* Official remark badge */}
       {student.officialRemarks && (
         <div className="mt-2 rounded-lg bg-amber-50 px-2.5 py-1.5 text-[10px] text-amber-700">
@@ -232,30 +557,40 @@ function StudentCard({
         <p className="mt-0.5 text-[10px] font-medium text-green-600">Graduated {fmtDate(student.graduationDate)}</p>
       )}
 
-      {/* Remark button */}
-      <button
-        onClick={() => onRemark(student)}
-        className="mt-3 flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium text-[#374151] transition-colors hover:border-[#D97706] hover:text-[#D97706]"
-      >
-        <MessageSquare className="h-3 w-3" />
-        {student.officialRemarks ? "Edit Remark" : "Give Remark"}
-      </button>
+      {/* Action buttons */}
+      <div className="mt-3 flex gap-2">
+        <button
+          onClick={() => onAttendance(student)}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium text-[#374151] transition-colors hover:border-[#D97706] hover:text-[#D97706]"
+        >
+          <CalendarCheck className="h-3 w-3" />
+          Attendance
+        </button>
+        <button
+          onClick={() => onRemark(student)}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium text-[#374151] transition-colors hover:border-[#D97706] hover:text-[#D97706]"
+        >
+          <MessageSquare className="h-3 w-3" />
+          {student.officialRemarks ? "Edit Remark" : "Remark"}
+        </button>
+      </div>
     </div>
   );
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function SchoolOfDisciplesPage() {
-  const [allStudents,   setAllStudents]   = useState<SchoolOfDisciplesResponse[]>([]);
-  const [loading,       setLoading]       = useState(true);
-  const [error,         setError]         = useState("");
-  const [search,        setSearch]        = useState("");
-  const [setFilter,     setSetFilter]     = useState("");
-  const [page,          setPage]          = useState(1);
-  const [selected,      setSelected]      = useState<Set<string>>(new Set());
-  const [graduating,    setGraduating]    = useState(false);
-  const [remarkStudent, setRemarkStudent] = useState<SchoolOfDisciplesResponse | null>(null);
-  const [successMsg,    setSuccessMsg]    = useState("");
+  const [allStudents,       setAllStudents]       = useState<SchoolOfDisciplesResponse[]>([]);
+  const [loading,           setLoading]           = useState(true);
+  const [error,             setError]             = useState("");
+  const [search,            setSearch]            = useState("");
+  const [setFilter,         setSetFilter]         = useState("");
+  const [page,              setPage]              = useState(1);
+  const [selected,          setSelected]          = useState<Set<string>>(new Set());
+  const [graduating,        setGraduating]        = useState(false);
+  const [remarkStudent,     setRemarkStudent]     = useState<SchoolOfDisciplesResponse | null>(null);
+  const [attendanceStudent, setAttendanceStudent] = useState<SchoolOfDisciplesResponse | null>(null);
+  const [successMsg,        setSuccessMsg]        = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -307,7 +642,7 @@ export default function SchoolOfDisciplesPage() {
   const safePage   = Math.min(page, totalPages);
   const paginated  = filtered.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
 
-  const graduated = allStudents.filter((s) => !!s.graduationDate);
+  const graduated  = allStudents.filter((s) => !!s.graduationDate);
   const inTraining = allStudents.filter((s) => !s.graduationDate);
 
   const toggleSelect = (id: string) =>
@@ -319,14 +654,18 @@ export default function SchoolOfDisciplesPage() {
         : new Set(paginated.map((s) => s.id))
     );
 
+  const flash = (msg: string) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(""), 4000);
+  };
+
   const handleGraduate = async () => {
     if (selected.size === 0) return;
     setGraduating(true);
     try {
       await markSodAsGraduated([...selected]);
       setSelected(new Set());
-      setSuccessMsg(`${selected.size} student${selected.size > 1 ? "s" : ""} marked as graduated.`);
-      setTimeout(() => setSuccessMsg(""), 4000);
+      flash(`${selected.size} student${selected.size > 1 ? "s" : ""} marked as graduated.`);
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to mark as graduated.");
@@ -337,8 +676,24 @@ export default function SchoolOfDisciplesPage() {
 
   const handleSaveRemark = async (id: string, text: string) => {
     await giveSodOfficialRemark(id, text);
-    setSuccessMsg("Official remark saved.");
-    setTimeout(() => setSuccessMsg(""), 4000);
+    flash("Official remark saved.");
+    await load();
+  };
+
+  const handleSaveAttendance = async (
+    id: string,
+    classNum: number,
+    markClass: boolean,
+    markExam: boolean
+  ) => {
+    const calls: Promise<unknown>[] = [];
+    if (markClass) calls.push(markSodClassAttendance(id, classNum));
+    if (markExam)  calls.push(markSodExamAttendance(id, classNum));
+    await Promise.all(calls);
+    const parts: string[] = [];
+    if (markClass) parts.push("class");
+    if (markExam)  parts.push("exam");
+    flash(`Attendance marked — ${parts.join(" & ")} for Class ${classNum}.`);
     await load();
   };
 
@@ -363,6 +718,13 @@ export default function SchoolOfDisciplesPage() {
           student={remarkStudent}
           onClose={() => setRemarkStudent(null)}
           onSave={handleSaveRemark}
+        />
+      )}
+      {attendanceStudent && (
+        <AttendanceModal
+          student={attendanceStudent}
+          onClose={() => setAttendanceStudent(null)}
+          onSave={handleSaveAttendance}
         />
       )}
 
@@ -510,6 +872,7 @@ export default function SchoolOfDisciplesPage() {
               selected={selected.has(s.id)}
               onToggleSelect={toggleSelect}
               onRemark={setRemarkStudent}
+              onAttendance={setAttendanceStudent}
             />
           ))}
         </div>
@@ -526,6 +889,11 @@ export default function SchoolOfDisciplesPage() {
           </span>
           <span className="flex items-center gap-1.5">
             <Star className="h-3.5 w-3.5" style={{ color: ACCENT }} /> Set badge
+          </span>
+          <span className="flex items-center gap-1.5">
+            <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+            <BookCheck className="h-3.5 w-3.5 text-blue-500" />
+            Class attended · Exam sat
           </span>
         </div>
       )}
