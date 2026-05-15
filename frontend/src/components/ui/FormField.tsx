@@ -13,6 +13,7 @@ interface BaseProps {
   required?: boolean;
   error?: string;
   className?: string;
+  icon?: React.ReactNode;
 }
 
 interface FormFieldProps
@@ -23,6 +24,7 @@ export function FormField({
   label,
   required,
   error,
+  icon,
   className = "",
   ...inputProps
 }: FormFieldProps) {
@@ -32,10 +34,17 @@ export function FormField({
         {label}
         {required && <span className="text-red-500"> *</span>}
       </label>
-      <input
-        className={`${inputBase} ${error ? "border-red-500" : ""}`}
-        {...inputProps}
-      />
+      <div className="relative">
+        {icon && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]">
+            {icon}
+          </div>
+        )}
+        <input
+          className={`${inputBase} ${icon ? "pl-10" : ""} ${error ? "border-red-500" : ""}`}
+          {...inputProps}
+        />
+      </div>
       {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
     </div>
   );
