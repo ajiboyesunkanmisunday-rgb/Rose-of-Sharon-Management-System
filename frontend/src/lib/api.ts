@@ -1526,6 +1526,10 @@ export async function getCounselingWorkflow(): Promise<BoardResponse> {
   return apiFetch<BoardResponse>("/api/v1/requests/counseling/workflow");
 }
 
+export async function getGuestWorkflow(): Promise<BoardResponse> {
+  return apiFetch<BoardResponse>("/api/v1/requests/guest/workflow");
+}
+
 export async function getRequest(id: string): Promise<RequestResponse> {
   // Backend has no GET /api/v1/requests/{id} endpoint.
   // Fetch the full list and find by ID across all request types.

@@ -11,13 +11,15 @@ import {
   giveSodOfficialRemark,
   markSodClassAttendance,
   markSodExamAttendance,
+  createSchoolOfDisciple,
   type SchoolOfDisciplesResponse,
   type SodAttendanceRecord,
+  type CreateSchoolOfDisciplesRequest,
 } from "@/lib/api";
 import {
   BookOpen, Phone, Mail, RefreshCw, Award, Users,
   CheckCircle, Clock, Star, ChevronDown, X, MessageSquare,
-  CalendarCheck, BookCheck, ClipboardList,
+  CalendarCheck, BookCheck, ClipboardList, Plus,
 } from "lucide-react";
 
 const ACCENT   = "#D97706";
@@ -578,6 +580,136 @@ function StudentCard({
   );
 }
 
+// ─── Add Student Modal ────────────────────────────────────────────────────────
+function AddStudentModal({
+  onClose,
+  onSaved,
+}: {
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const blank: CreateSchoolOfDisciplesRequest = {
+    firstName: "", lastName: "", countryCode: "234", phoneNumber: "",
+  };
+  const [form, setForm]     = useState<CreateSchoolOfDisciplesRequest>(blank);
+  const [saving, setSaving] = useState(false);
+  const [error,  setError]  = useState("");
+
+  const set = (field: keyof CreateSchoolOfDisciplesRequest, value: string) =>
+    setForm((f) => ({ ...f, [field]: value }));
+
+  const handleSubmit = async () => {
+    if (!form.firstName.trim() || !form.lastName.trim() || !form.phoneNumber.trim()) return;
+    setSaving(true);
+    setError("");
+    try {
+      await createSchoolOfDisciple({
+        ...form,
+        firstName:   form.firstName.trim(),
+        lastName:    form.lastName.trim(),
+        countryCode: form.countryCode.trim() || "234",
+        phoneNumber: form.phoneNumber.trim(),
+        middleName:  form.middleName?.trim() || undefined,
+        email:       form.email?.trim()      || undefined,
+        set:         form.set?.trim()        || undefined,
+        sex:         form.sex               || undefined,
+      });
+      onSaved();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to enroll student.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inp = "w-full rounded-lg border border-[#E5E7EB] px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]";
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[#E5E7EB] px-6 py-4">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: ACCENT10 }}>
+              <BookOpen className="h-4 w-4" style={{ color: ACCENT }} />
+            </div>
+            <h2 className="text-base font-bold text-[#111827]">Enroll New Student</h2>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-[#9CA3AF] hover:bg-[#F3F4F6] hover:text-[#374151]">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="grid grid-cols-1 gap-4 px-6 py-5 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-[#374151]">First Name *</label>
+            <input value={form.firstName} onChange={(e) => set("firstName", e.target.value)} placeholder="First name" className={inp} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-[#374151]">Middle Name</label>
+            <input value={form.middleName ?? ""} onChange={(e) => set("middleName", e.target.value)} placeholder="Middle name" className={inp} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-[#374151]">Last Name *</label>
+            <input value={form.lastName} onChange={(e) => set("lastName", e.target.value)} placeholder="Last name" className={inp} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-[#374151]">Gender</label>
+            <div className="relative">
+              <select value={form.sex ?? ""} onChange={(e) => set("sex", e.target.value)} className={`${inp} appearance-none pr-8`}>
+                <option value="">Prefer not to say</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-[#374151]">Country Code *</label>
+            <input value={form.countryCode} onChange={(e) => set("countryCode", e.target.value)} placeholder="234" className={inp} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-[#374151]">Phone Number *</label>
+            <input value={form.phoneNumber} onChange={(e) => set("phoneNumber", e.target.value)} placeholder="08012345678" className={inp} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs font-semibold text-[#374151]">Email</label>
+            <input type="email" value={form.email ?? ""} onChange={(e) => set("email", e.target.value)} placeholder="email@example.com" className={inp} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-[#374151]">Set / Batch</label>
+            <input value={form.set ?? ""} onChange={(e) => set("set", e.target.value)} placeholder="e.g. A, B, 2024…" className={inp} />
+          </div>
+        </div>
+
+        {error && (
+          <div className="mx-6 mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+        )}
+
+        {/* Footer */}
+        <div className="flex justify-end gap-3 border-t border-[#E5E7EB] px-6 py-4">
+          <button onClick={onClose} className="rounded-lg border border-[#E5E7EB] px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F9FAFB]">
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={saving || !form.firstName.trim() || !form.lastName.trim() || !form.phoneNumber.trim()}
+            className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            style={{ backgroundColor: ACCENT }}
+          >
+            <Plus className="h-4 w-4" />
+            {saving ? "Enrolling…" : "Enroll Student"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function SchoolOfDisciplesPage() {
   const [allStudents,       setAllStudents]       = useState<SchoolOfDisciplesResponse[]>([]);
@@ -591,6 +723,7 @@ export default function SchoolOfDisciplesPage() {
   const [remarkStudent,     setRemarkStudent]     = useState<SchoolOfDisciplesResponse | null>(null);
   const [attendanceStudent, setAttendanceStudent] = useState<SchoolOfDisciplesResponse | null>(null);
   const [successMsg,        setSuccessMsg]        = useState("");
+  const [showAddModal,      setShowAddModal]      = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -713,6 +846,16 @@ export default function SchoolOfDisciplesPage() {
 
   return (
     <DashboardLayout>
+      {showAddModal && (
+        <AddStudentModal
+          onClose={() => setShowAddModal(false)}
+          onSaved={() => {
+            setShowAddModal(false);
+            flash("Student enrolled successfully.");
+            load();
+          }}
+        />
+      )}
       {remarkStudent && (
         <RemarkModal
           student={remarkStudent}
@@ -737,14 +880,24 @@ export default function SchoolOfDisciplesPage() {
           <h1 className="text-[28px] font-bold text-[#000000]">School of Disciples</h1>
           <p className="text-sm text-[#6B7280]">Members enrolled in the SOD programme</p>
         </div>
-        <button
-          onClick={load}
-          disabled={loading}
-          className="ml-auto flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:text-[#D97706] hover:border-[#D97706] disabled:opacity-50"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-white"
+            style={{ backgroundColor: ACCENT }}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Enroll Student
+          </button>
+          <button
+            onClick={load}
+            disabled={loading}
+            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:text-[#D97706] hover:border-[#D97706] disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
