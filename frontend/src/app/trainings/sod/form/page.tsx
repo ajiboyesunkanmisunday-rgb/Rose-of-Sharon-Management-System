@@ -9,7 +9,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Printer } from "lucide-react";
+import { Printer, Send, CheckCircle, XCircle } from "lucide-react";
+import { createSchoolOfDisciple } from "@/lib/api";
 
 /* ─── Primitive dotted-line input ────────────────────────────────────────── */
 function F({
@@ -202,6 +203,84 @@ export default function SODApplicationFormPage() {
   const [remarks1, setRemarks1] = useState("");
   const [remarks2, setRemarks2] = useState("");
 
+  /* ── Submit state ── */
+  const [submitting,     setSubmitting]     = useState(false);
+  const [submitSuccess,  setSubmitSuccess]  = useState(false);
+  const [submitError,    setSubmitError]    = useState("");
+
+  /* ─── Map form → API and submit ────────────────────────────────────────── */
+  const handleSubmit = async () => {
+    if (!firstName.trim() || !surname.trim() || !phone.trim()) {
+      setSubmitError("First Name, Surname, and Phone Number are required before submitting.");
+      return;
+    }
+    setSubmitError("");
+    setSubmitting(true);
+    try {
+      const maritalMap: Record<string, string> = {
+        Single: "SINGLE", Married: "MARRIED", Engaged: "ENGAGED",
+        Divorced: "DIVORCED", Widowed: "WIDOWED",
+      };
+      const sexNorm = sex.trim().toLowerCase().startsWith("f") ? "FEMALE"
+                    : sex.trim().toLowerCase().startsWith("m") ? "MALE"
+                    : sex.trim() || undefined;
+
+      await createSchoolOfDisciple({
+        region:   region   || undefined,
+        province: province || undefined,
+        centre:   centre   || undefined,
+        firstName:  firstName.trim(),
+        lastName:   surname.trim(),
+        middleName: middleName.trim() || undefined,
+        countryCode: "234",
+        phoneNumber: phone.trim(),
+        email:       email.trim() || undefined,
+        sex:         sexNorm as string | undefined,
+        dateOfBirth: dob.trim() || undefined,
+        maritalStatus: marital ? (maritalMap[marital] ?? marital.toUpperCase()) : undefined,
+        spouseName:      spouseName.trim()  || undefined,
+        spousePhoneNumber: spousePhone.trim() || undefined,
+        spouseOccupation:  spouseOcc.trim()   || undefined,
+        noOfChildren:    numChildren.trim() ? Number(numChildren.trim()) : undefined,
+        nationality:   nationality.trim()   || undefined,
+        homeTown:      homeTown.trim()      || undefined,
+        stateOfOrigin: stateOfOrigin.trim() || undefined,
+        street:          [addr1, addr2, addr3].filter(Boolean).join(", ") || undefined,
+        occupation:      occupation.trim()  || undefined,
+        officeFullAddress: [offAddr1, offAddr2].filter(Boolean).join(", ") || undefined,
+        salvationDate:             salvationDate.trim()     || undefined,
+        salvationLocation:         salvationWhere.trim()    || undefined,
+        waterBaptismDate:          waterBaptismDate.trim()  || undefined,
+        waterBaptismLocation:      waterBaptismChurch.trim()|| undefined,
+        holySpiritBaptismDate:     holyGhostDate.trim()     || undefined,
+        holySpiritBaptismLocation: holyGhostWhere.trim()    || undefined,
+        currentParishPastorName:        pastorName.trim()  || undefined,
+        currentParishPastorPhoneNumber: pastorPhone.trim() || undefined,
+        activityInCurrentParish: [activity1, activity2].filter(Boolean).join(" ") || undefined,
+        hasAnotherSimultaneousProgram: otherTraining === "yes" ? true
+                                      : otherTraining === "no"  ? false
+                                      : undefined,
+        otherInformation: [otherInfo1, otherInfo2].filter(Boolean).join(" ") || undefined,
+        qualificationRequests: [inst1, inst2, inst3]
+          .filter(Boolean)
+          .map((institution) => ({ institution })),
+        createPastPlaceOfWorshipRequests: wp
+          .filter((r) => r.name.trim())
+          .map((r) => ({ name: r.name, location: r.address })),
+        createPositionHeldRequests: ph
+          .filter((r) => r.name.trim() || r.position.trim())
+          .map((r) => ({ organisation: r.name, title: r.position })),
+        consent: true,
+      });
+      setSubmitSuccess(true);
+      setSubmitError("");
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Failed to submit. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   /* ─────────────────────────────────────────────────────────────────────── */
 
   return (
@@ -244,32 +323,91 @@ export default function SODApplicationFormPage() {
       {/* ── Toolbar ────────────────────────────────────────────────────── */}
       <div className="sod-no-print" style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: "#000080", padding: "10px 24px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+        background: "#000080", boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
       }}>
-        <button onClick={() => window.history.back()}
-          style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, background: "none", border: "none", cursor: "pointer" }}>
-          ← Back
-        </button>
-        <span style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>
-          SOD Application Form — Fill &amp; Print
-        </span>
-        <button onClick={() => window.print()} style={{
-          display: "flex", alignItems: "center", gap: 6,
-          background: "#fff", color: "#000080", border: "none",
-          borderRadius: 8, padding: "7px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer",
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "10px 24px",
         }}>
-          <Printer size={14} />
-          Print / Download PDF
-        </button>
+          <button onClick={() => window.history.back()}
+            style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, background: "none", border: "none", cursor: "pointer" }}>
+            ← Back
+          </button>
+          <span style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>
+            SOD Application Form — Fill &amp; Print
+          </span>
+          <div style={{ display: "flex", gap: 10 }}>
+            {/* Submit to system */}
+            <button
+              onClick={handleSubmit}
+              disabled={submitting || submitSuccess}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                background: submitSuccess ? "#16A34A" : "#22c55e",
+                color: "#fff", border: "none",
+                borderRadius: 8, padding: "7px 18px", fontSize: 13, fontWeight: 700,
+                cursor: submitting || submitSuccess ? "not-allowed" : "pointer",
+                opacity: submitting ? 0.7 : 1,
+              }}
+            >
+              {submitSuccess
+                ? <><CheckCircle size={14} /> Saved to System</>
+                : submitting
+                  ? <><Send size={14} /> Submitting…</>
+                  : <><Send size={14} /> Submit to System</>}
+            </button>
+            {/* Print */}
+            <button onClick={() => window.print()} style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: "#fff", color: "#000080", border: "none",
+              borderRadius: 8, padding: "7px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer",
+            }}>
+              <Printer size={14} />
+              Print / Download PDF
+            </button>
+          </div>
+        </div>
+
+        {/* Error banner */}
+        {submitError && (
+          <div style={{
+            background: "#FEF2F2", color: "#991B1B",
+            padding: "8px 24px", fontSize: 12, fontWeight: 600,
+            display: "flex", alignItems: "center", gap: 8,
+            borderTop: "1px solid #FECACA",
+          }}>
+            <XCircle size={14} />
+            {submitError}
+            <button onClick={() => setSubmitError("")}
+              style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "#991B1B", fontWeight: 700 }}>
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Success banner */}
+        {submitSuccess && (
+          <div style={{
+            background: "#F0FDF4", color: "#15803D",
+            padding: "8px 24px", fontSize: 12, fontWeight: 600,
+            display: "flex", alignItems: "center", gap: 8,
+            borderTop: "1px solid #BBF7D0",
+          }}>
+            <CheckCircle size={14} />
+            Application submitted successfully! The student record has been saved.
+            <a href="/trainings/sod" style={{ marginLeft: 12, color: "#15803D", textDecoration: "underline", fontWeight: 700 }}>
+              View SOD List →
+            </a>
+          </div>
+        )}
       </div>
 
       {/* ── Gray screen wrapper ─────────────────────────────────────────── */}
       <div className="sod-wrapper" style={{
         minHeight: "100vh", background: "#b0bec5",
-        paddingTop: 72, paddingBottom: 48,
+        paddingTop: submitError || submitSuccess ? 110 : 72, paddingBottom: 48,
         display: "flex", flexDirection: "column", gap: 32,
+        transition: "padding-top 0.2s",
       }}>
 
         {/* ════════════════════════════════════════════════════════════════

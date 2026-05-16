@@ -2549,3 +2549,92 @@ export async function markSodExamAttendance(
     { method: "POST", body: JSON.stringify({ classNumber }) }
   );
 }
+
+// ─── Report / Statistics Endpoints ──────────────────────────────────────────
+
+export interface FeatureColumn {
+  feature: string;
+  totalCount: number;
+}
+export interface FeatureStatResponse {
+  columns: FeatureColumn[];
+}
+export interface CountStatisticsResponse {
+  totalCount: number;
+}
+
+export async function getTotalMembers(): Promise<CountStatisticsResponse> {
+  return apiFetch<CountStatisticsResponse>("/api/v1/users/total-members");
+}
+
+export async function getTotalMembersInPeriod(
+  startTime: string,
+  endTime: string
+): Promise<CountStatisticsResponse> {
+  return apiFetch<CountStatisticsResponse>(
+    `/api/v1/users/total-created-members?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`
+  );
+}
+
+export async function getTotalFirstTimersInPeriod(
+  startTime: string,
+  endTime: string
+): Promise<CountStatisticsResponse> {
+  return apiFetch<CountStatisticsResponse>(
+    `/api/v1/users/total-first-timers?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`
+  );
+}
+
+export async function getTotalSecondTimersInPeriod(
+  startTime: string,
+  endTime: string
+): Promise<CountStatisticsResponse> {
+  return apiFetch<CountStatisticsResponse>(
+    `/api/v1/users/total-second-timers?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`
+  );
+}
+
+export async function getTotalNewConvertsInPeriod(
+  startTime: string,
+  endTime: string
+): Promise<CountStatisticsResponse> {
+  return apiFetch<CountStatisticsResponse>(
+    `/api/v1/new-converts/total-new-converts?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`
+  );
+}
+
+export async function getUrgentFollowup(
+  pageNo = 0,
+  pageSize = 20
+): Promise<CustomPageResponse<UserBasicResponse>> {
+  return apiFetch<CustomPageResponse<UserBasicResponse>>(
+    `/api/v1/users/urgent-followup?pageNo=${pageNo}&pageSize=${pageSize}`
+  );
+}
+
+export async function getVisitingVsNotVisiting(
+  startTime: string,
+  endTime: string
+): Promise<FeatureStatResponse> {
+  return apiFetch<FeatureStatResponse>(
+    `/api/v1/users/visiting-vs-not-visiting?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`
+  );
+}
+
+export async function getServiceSectionsStats(
+  startTime: string,
+  endTime: string
+): Promise<FeatureStatResponse> {
+  return apiFetch<FeatureStatResponse>(
+    `/api/v1/users/service-sections-statistics-count?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`
+  );
+}
+
+export async function getMediumOfInvitationStats(
+  startTime: string,
+  endTime: string
+): Promise<FeatureStatResponse> {
+  return apiFetch<FeatureStatResponse>(
+    `/api/v1/users/medium-of-invitation-statistics-count?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`
+  );
+}

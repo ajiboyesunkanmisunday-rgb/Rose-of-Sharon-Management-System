@@ -88,6 +88,11 @@ export default function GuestWorkflowTestPage() {
         setUploading(false);
       }
 
+      // Map the dropdown to a numeric rating (same mapping as admin form)
+      const ratingMap: Record<string, number> = { Excellent: 5, Good: 4, Fair: 3, Poor: 2 };
+      const resolvedRating =
+        rating !== "" ? Number(rating) : howWas ? ratingMap[howWas] : undefined;
+
       await createFirstTimer({
         firstName:             firstName.trim(),
         middleName:            middleName.trim() || undefined,
@@ -101,9 +106,8 @@ export default function GuestWorkflowTestPage() {
         isVisiting:            isVisiting || undefined,
         fromOnline:            fromOnline || undefined,
         mediumOfInvitation:    medium || undefined,
-        serviceRating:         rating !== "" ? Number(rating) : undefined,
+        serviceRating:         resolvedRating,
         favouritePartOfService:favPart.trim() || undefined,
-        howWasService:         howWas || undefined,
         profilePictureUrl,
       });
 

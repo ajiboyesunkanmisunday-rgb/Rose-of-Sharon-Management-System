@@ -8,9 +8,14 @@ import {
 import {
   getMembers, getEMembers, getFirstTimers, getSecondTimers,
   getNewConverts, getAllGroups, getTestimonies, getCelebrations, getEvents,
+  getTotalMembers, getTotalMembersInPeriod, getTotalFirstTimersInPeriod,
+  getTotalSecondTimersInPeriod, getTotalNewConvertsInPeriod,
+  getUrgentFollowup, getVisitingVsNotVisiting, getServiceSectionsStats,
+  getMediumOfInvitationStats,
   type UserResponse, type NewConvertResponse, type GroupResponse,
+  type CountStatisticsResponse, type FeatureStatResponse, type UserBasicResponse,
 } from "@/lib/api";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Calendar, AlertTriangle } from "lucide-react";
 
 // ─── Palette ────────────────────────────────────────────────────────────────
 const C = {
@@ -198,10 +203,40 @@ const TOOLTIP_STYLE = {
   contentStyle: { borderRadius: 8, border: "1px solid #E5E7EB", fontSize: 12 },
 };
 
+// ─── Helper: default date range (current month) ─────────────────────────────
+function isoDate(d: Date) { return d.toISOString().split("T")[0]; }
+function defaultRange() {
+  const now   = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end   = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  return { start: isoDate(start), end: isoDate(end) };
+}
+
+interface ServerStats {
+  totalMembers: number;
+  membersInPeriod: number;
+  firstTimersInPeriod: number;
+  secondTimersInPeriod: number;
+  newConvertsInPeriod: number;
+  visiting: FeatureStatResponse | null;
+  service: FeatureStatResponse | null;
+  invitation: FeatureStatResponse | null;
+  urgentFollowup: UserBasicResponse[];
+  urgentTotal: number;
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState("");
+
+  // Server-side analytics
+  const { start: defStart, end: defEnd } = defaultRange();
+  const [startDate,   setStartDate]   = useState(defStart);
+  const [endDate,     setEndDate]     = useState(defEnd);
+  const [svrLoading,  setSvrLoading]  = useState(false);
+  const [svrError,    setSvrError]    = useState("");
+  const [svrStats,    setSvrStats]    = useState<ServerStats | null>(null);
 
   // Raw data
   const [members,      setMembers]      = useState<UserResponse[]>([]);
@@ -245,7 +280,47 @@ export default function AnalyticsDashboard() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  const loadServerStats = async (from: string, to: string) => {
+    setSvrLoading(true);
+    setSvrError("");
+    // ISO-8601 datetimes expected by backend
+    const startTime = `${from}T00:00:00`;
+    const endTime   = `${to}T23:59:59`;
+    try {
+      const [
+        totMem, memPeriod, ftPeriod, stPeriod, ncPeriod,
+        visiting, service, invitation, urgent,
+      ] = await Promise.all([
+        getTotalMembers().catch((): CountStatisticsResponse => ({ totalCount: 0 })),
+        getTotalMembersInPeriod(startTime, endTime).catch((): CountStatisticsResponse => ({ totalCount: 0 })),
+        getTotalFirstTimersInPeriod(startTime, endTime).catch((): CountStatisticsResponse => ({ totalCount: 0 })),
+        getTotalSecondTimersInPeriod(startTime, endTime).catch((): CountStatisticsResponse => ({ totalCount: 0 })),
+        getTotalNewConvertsInPeriod(startTime, endTime).catch((): CountStatisticsResponse => ({ totalCount: 0 })),
+        getVisitingVsNotVisiting(startTime, endTime).catch((): FeatureStatResponse => ({ columns: [] })),
+        getServiceSectionsStats(startTime, endTime).catch((): FeatureStatResponse => ({ columns: [] })),
+        getMediumOfInvitationStats(startTime, endTime).catch((): FeatureStatResponse => ({ columns: [] })),
+        getUrgentFollowup(0, 20).catch(() => ({ content: [], totalElements: 0 })),
+      ]);
+      setSvrStats({
+        totalMembers:        totMem.totalCount,
+        membersInPeriod:     memPeriod.totalCount,
+        firstTimersInPeriod: ftPeriod.totalCount,
+        secondTimersInPeriod: stPeriod.totalCount,
+        newConvertsInPeriod: ncPeriod.totalCount,
+        visiting:            visiting.columns.length ? visiting : null,
+        service:             service.columns.length  ? service  : null,
+        invitation:          invitation.columns.length ? invitation : null,
+        urgentFollowup:      urgent.content ?? [],
+        urgentTotal:         (urgent as { totalElements?: number }).totalElements ?? (urgent.content ?? []).length,
+      });
+    } catch (err) {
+      setSvrError(err instanceof Error ? err.message : "Failed to load server stats.");
+    } finally {
+      setSvrLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); loadServerStats(startDate, endDate); }, []);
 
   // ── Derived data ──────────────────────────────────────────────────────────
 
@@ -393,6 +468,203 @@ export default function AnalyticsDashboard() {
           className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-xs font-medium text-[#374151] shadow-sm hover:border-[#000080] hover:text-[#000080]">
           <RefreshCw className="h-3.5 w-3.5" /> Refresh Data
         </button>
+      </div>
+
+      {/* ── Server-Side Analytics ─────────────────────────────────── */}
+      <div className="rounded-xl border border-[#000080] bg-white p-5 shadow-sm">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-bold text-[#000080]">Server-Side Analytics</h2>
+            <p className="text-xs text-[#6B7280]">Counts pulled directly from the backend — set a date range and fetch</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-[#6B7280]" />
+              <span className="text-xs text-[#6B7280]">From</span>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs text-[#374151] outline-none focus:border-[#000080]"
+              />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-[#6B7280]">To</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs text-[#374151] outline-none focus:border-[#000080]"
+              />
+            </div>
+            <button
+              onClick={() => loadServerStats(startDate, endDate)}
+              disabled={svrLoading}
+              className="flex items-center gap-1.5 rounded-lg bg-[#000080] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#000066] disabled:opacity-60"
+            >
+              <RefreshCw className={`h-3 w-3 ${svrLoading ? "animate-spin" : ""}`} />
+              {svrLoading ? "Loading…" : "Fetch"}
+            </button>
+          </div>
+        </div>
+
+        {svrError && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs text-red-700">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            {svrError}
+          </div>
+        )}
+
+        {svrStats ? (
+          <div className="space-y-5">
+            {/* KPI row */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              <div className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">Total Members</p>
+                <p className="mt-1 text-2xl font-bold text-[#000080]">{svrStats.totalMembers.toLocaleString()}</p>
+                <p className="text-[10px] text-[#9CA3AF]">Members + E-Members (all time)</p>
+              </div>
+              <div className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">New Members</p>
+                <p className="mt-1 text-2xl font-bold text-[#16A34A]">{svrStats.membersInPeriod.toLocaleString()}</p>
+                <p className="text-[10px] text-[#9CA3AF]">In selected period</p>
+              </div>
+              <div className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">First Timers</p>
+                <p className="mt-1 text-2xl font-bold text-[#EA580C]">{svrStats.firstTimersInPeriod.toLocaleString()}</p>
+                <p className="text-[10px] text-[#9CA3AF]">In selected period</p>
+              </div>
+              <div className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">Second Timers</p>
+                <p className="mt-1 text-2xl font-bold text-[#9333EA]">{svrStats.secondTimersInPeriod.toLocaleString()}</p>
+                <p className="text-[10px] text-[#9CA3AF]">In selected period</p>
+              </div>
+              <div className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">New Converts</p>
+                <p className="mt-1 text-2xl font-bold text-[#DB2777]">{svrStats.newConvertsInPeriod.toLocaleString()}</p>
+                <p className="text-[10px] text-[#9CA3AF]">In selected period</p>
+              </div>
+            </div>
+
+            {/* Charts row */}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+              {/* Visiting vs Not Visiting */}
+              <ChartCard title="Visiting vs Not Visiting">
+                {!svrStats.visiting ? (
+                  <p className="py-8 text-center text-xs text-[#9CA3AF]">No data for selected period.</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart
+                      data={svrStats.visiting.columns.map((c) => ({ name: c.feature, count: c.totalCount }))}
+                      margin={{ top: 4, right: 10, left: -10, bottom: 40 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+                      <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-20} textAnchor="end" />
+                      <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                      <Tooltip {...TOOLTIP_STYLE} />
+                      <Bar dataKey="count" name="Count" fill={C.orange} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </ChartCard>
+
+              {/* Service sections */}
+              <ChartCard title="Favourite Parts of Service">
+                {!svrStats.service ? (
+                  <p className="py-8 text-center text-xs text-[#9CA3AF]">No data for selected period.</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart
+                      data={svrStats.service.columns.map((c) => ({ name: c.feature.length > 14 ? c.feature.slice(0, 12) + "…" : c.feature, count: c.totalCount }))}
+                      layout="vertical"
+                      margin={{ top: 4, right: 16, left: 10, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
+                      <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={90} />
+                      <Tooltip {...TOOLTIP_STYLE} />
+                      <Bar dataKey="count" name="Responses" fill={C.indigo} radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </ChartCard>
+
+              {/* Medium of invitation */}
+              <ChartCard title="Medium of Invitation">
+                {!svrStats.invitation ? (
+                  <p className="py-8 text-center text-xs text-[#9CA3AF]">No data for selected period.</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart
+                      data={svrStats.invitation.columns.map((c) => ({ name: c.feature.length > 14 ? c.feature.slice(0, 12) + "…" : c.feature, count: c.totalCount }))}
+                      layout="vertical"
+                      margin={{ top: 4, right: 16, left: 10, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
+                      <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={90} />
+                      <Tooltip {...TOOLTIP_STYLE} />
+                      <Bar dataKey="count" name="Responses" fill={C.teal} radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </ChartCard>
+            </div>
+
+            {/* Urgent Followup table */}
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-sm font-bold text-[#111827]">
+                  People Needing Urgent Followup
+                  {svrStats.urgentTotal > 0 && (
+                    <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                      {svrStats.urgentTotal} total
+                    </span>
+                  )}
+                </h3>
+                <p className="text-[10px] text-[#9CA3AF]">Visitors with 0 calls and 0 visits · showing first 20</p>
+              </div>
+              <div className="max-h-[280px] overflow-y-auto rounded-lg border border-[#E5E7EB]">
+                {svrStats.urgentFollowup.length === 0 ? (
+                  <p className="py-8 text-center text-xs text-[#9CA3AF]">All visitors have been contacted.</p>
+                ) : (
+                  <table className="w-full text-xs">
+                    <thead className="sticky top-0 bg-[#F9FAFB]">
+                      <tr className="border-b border-[#E5E7EB]">
+                        <th className="px-3 py-2 text-left text-[#6B7280]">#</th>
+                        <th className="px-3 py-2 text-left text-[#6B7280]">Name</th>
+                        <th className="px-3 py-2 text-left text-[#6B7280]">Phone</th>
+                        <th className="px-3 py-2 text-left text-[#6B7280]">Assigned To</th>
+                        <th className="px-3 py-2 text-left text-[#6B7280]">Calls</th>
+                        <th className="px-3 py-2 text-left text-[#6B7280]">Visits</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {svrStats.urgentFollowup.map((u, i) => (
+                        <tr key={u.id ?? i} className="border-b border-[#F3F4F6] hover:bg-[#FAFAFA]">
+                          <td className="px-3 py-2 text-[#9CA3AF]">{i + 1}</td>
+                          <td className="px-3 py-2 font-medium text-[#111827]">
+                            {[u.firstName, u.lastName].filter(Boolean).join(" ") || "—"}
+                          </td>
+                          <td className="px-3 py-2 text-[#374151]">
+                            {u.phoneNumber ? `+${u.countryCode ?? ""} ${u.phoneNumber}` : "—"}
+                          </td>
+                          <td className="px-3 py-2 text-[#374151]">{u.assignedFollowUp ?? "—"}</td>
+                          <td className="px-3 py-2 text-[#374151]">{u.noOfCalls ?? 0}</td>
+                          <td className="px-3 py-2 text-[#374151]">{u.noOfVisits ?? 0}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : !svrLoading ? (
+          <p className="py-6 text-center text-xs text-[#9CA3AF]">
+            Select a date range and click <strong>Fetch</strong> to load server-side statistics.
+          </p>
+        ) : null}
       </div>
 
       {/* ── Row 1: KPI Cards ─────────────────────────────────────── */}
