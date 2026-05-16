@@ -66,7 +66,7 @@ export default function GuestWorkflowTestPage() {
     setPhotoPreview(URL.createObjectURL(file));
   };
 
-  const canSubmit = !submitting && !uploading && firstName.trim() && lastName.trim() && phone.trim();
+  const canSubmit = !submitting && !uploading && firstName.trim() && lastName.trim() && phone.trim() && sex;
 
   const reset = () => {
     setFirstName(""); setMiddleName(""); setLastName(""); setSex("");
@@ -209,10 +209,10 @@ export default function GuestWorkflowTestPage() {
                 <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" className={inp} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">Gender</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151]">Gender <span className="text-red-500">*</span></label>
                 <div className="relative">
-                  <select value={sex} onChange={(e) => setSex(e.target.value)} className={sel}>
-                    <option value="">Select…</option>
+                  <select value={sex} onChange={(e) => setSex(e.target.value)} className={`${sel} ${!sex ? "border-red-300" : ""}`}>
+                    <option value="">Select gender…</option>
                     <option value="MALE">Male</option>
                     <option value="FEMALE">Female</option>
                   </select>
