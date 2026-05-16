@@ -1261,7 +1261,7 @@ export async function getGroupMembers(
   groupId: string, pageNo = 0, pageSize = 500
 ): Promise<CustomPageResponse<UserResponse>> {
   return apiFetch<CustomPageResponse<UserResponse>>(
-    `/api/v1/groups/${groupId}/members?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/groups/${groupId}?pageNo=${pageNo}&pageSize=${pageSize}`
   );
 }
 
@@ -1588,8 +1588,35 @@ export async function getCounselingWorkflow(): Promise<BoardResponse> {
   return apiFetch<BoardResponse>("/api/v1/requests/counseling/workflow");
 }
 
-export async function getGuestWorkflow(): Promise<BoardResponse> {
-  return apiFetch<BoardResponse>("/api/v1/requests/guest/workflow");
+// Guest workflow uses /api/v1/users/guest/workflow and returns users (not requests)
+export interface UserBasicResponse {
+  id: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  email?: string;
+  profilePictureUrl?: string;
+  phoneNumber?: string;
+  countryCode?: string;
+  sex?: string;
+  occupation?: string;
+  assignedFollowUp?: string;
+  noOfCalls?: number;
+  noOfVisits?: number;
+}
+
+export interface GuestBoardColumn {
+  status: string;
+  totalCount: number;
+  users: UserBasicResponse[];
+}
+
+export interface GuestBoardResponse {
+  columns: GuestBoardColumn[];
+}
+
+export async function getGuestWorkflow(): Promise<GuestBoardResponse> {
+  return apiFetch<GuestBoardResponse>("/api/v1/users/guest/workflow");
 }
 
 export async function getRequest(id: string): Promise<RequestResponse> {
