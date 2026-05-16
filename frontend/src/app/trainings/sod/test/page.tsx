@@ -336,6 +336,12 @@ export default function SodTestPage() {
             >
               <ExternalLink className="h-3 w-3" /> Open School of Disciples
             </button>
+            <button
+              onClick={() => router.push("/trainings/sod/form")}
+              className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#000080] bg-[#EFF6FF] px-3 py-2 text-xs font-semibold text-[#000080] hover:bg-[#DBEAFE]"
+            >
+              <ExternalLink className="h-3 w-3" /> Print Application Form
+            </button>
           </div>
 
           <div className="rounded-xl border border-[#E5E7EB] bg-white p-4">

@@ -7,6 +7,7 @@ import Button from "@/components/ui/Button";
 import PhoneInput from "@/components/ui/PhoneInput";
 import { createNewConvert } from "@/lib/api";
 import { NIGERIA_STATES, COUNTRIES } from "@/lib/nigeria-states";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 export default function AddNewConvertPage() {
   const router = useRouter();
@@ -200,32 +201,20 @@ export default function AddNewConvertPage() {
                 className={inputStyles}
               />
             </div>
-            <div>
-              <label className={labelStyles}>State</label>
-              <select
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-                className={selectStyles}
-              >
-                <option value="">Select State</option>
-                {NIGERIA_STATES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelStyles}>Country</label>
-              <select
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className={selectStyles}
-              >
-                <option value="">Select Country</option>
-                {COUNTRIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
+            <SearchableSelect
+              label="State"
+              placeholder="Select State"
+              options={NIGERIA_STATES}
+              value={state}
+              onChange={setState}
+            />
+            <SearchableSelect
+              label="Country"
+              placeholder="Select Country"
+              options={COUNTRIES}
+              value={country}
+              onChange={setCountry}
+            />
           </div>
         </div>
 
