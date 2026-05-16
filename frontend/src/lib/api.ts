@@ -179,6 +179,21 @@ async function apiFetchRaw<T>(
 
     const raw = backendMessage.toLowerCase();
 
+    // Backend sometimes returns session-expiry messages with a non-401 status.
+    // Treat any such message as an auth failure: clear the token and send the
+    // user to the login page immediately.
+    const isSessionExpired =
+      raw.includes("session") && (raw.includes("expired") || raw.includes("login again")) ||
+      raw.includes("please login") ||
+      raw.includes("please log in");
+    if (isSessionExpired) {
+      removeToken();
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+      throw new Error("Session expired. Please log in again.");
+    }
+
     // Always keep a meaningful backend message when the server provides one.
     // Only fall back to generic text when the backend gives us nothing useful,
     // or when the message is just a raw HTTP phrase (e.g. "Bad Request").
@@ -1787,14 +1802,27 @@ export async function uploadMedia(fields: {
       if (raw) {
         try {
           const errBody = JSON.parse(raw);
-          if (errBody?.message) errorMessage = errBody.message;
-          else if (errBody?.error) errorMessage = errBody.error;
+          const msg: string = errBody?.message ?? errBody?.error ?? "";
+          const msgLow = msg.toLowerCase();
+          const isExpired =
+            msgLow.includes("session") && (msgLow.includes("expired") || msgLow.includes("login again")) ||
+            msgLow.includes("please login") ||
+            msgLow.includes("please log in");
+          if (isExpired) {
+            removeToken();
+            if (typeof window !== "undefined") window.location.href = "/login";
+            throw new Error("Session expired. Please log in again.");
+          }
+          if (msg) errorMessage = msg;
           else errorMessage = raw;
-        } catch {
-          errorMessage = raw; // plain-text error from backend
+        } catch (e) {
+          if ((e as Error).message === "Session expired. Please log in again.") throw e;
+          errorMessage = raw;
         }
       }
-    } catch { /* ignore */ }
+    } catch (e) {
+      if ((e as Error).message === "Session expired. Please log in again.") throw e;
+    }
     throw new Error(errorMessage);
   }
 
