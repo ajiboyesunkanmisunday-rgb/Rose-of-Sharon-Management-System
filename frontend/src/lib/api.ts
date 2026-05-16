@@ -809,6 +809,12 @@ export async function addVisitReport(
   });
 }
 
+export async function deleteNote(noteId: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/notes/${noteId}`, {
+    method: "DELETE",
+  });
+}
+
 export async function assignFollowUp(
   userId: string,
   officerId: string,

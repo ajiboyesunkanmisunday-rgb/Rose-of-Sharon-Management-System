@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
-import { getNewConvert, addCallReport, addVisitReport, getNotes, updateBelieversClass, type NewConvertResponse, type NoteResponse } from "@/lib/api";
+import { getNewConvert, addCallReport, addVisitReport, getNotes, deleteNote, updateBelieversClass, type NewConvertResponse, type NoteResponse } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
 import { SkeletonProfile } from "@/components/ui/Skeleton";
 
@@ -56,8 +56,9 @@ export default function ViewNewConvertPage() {
   const [saveMsg,     setSaveMsg]     = useState("");
   const [saveFailed,  setSaveFailed]  = useState(false);
 
-  const [notes,        setNotes]        = useState<NoteResponse[]>([]);
-  const [notesLoading, setNotesLoading] = useState(false);
+  const [notes,          setNotes]          = useState<NoteResponse[]>([]);
+  const [notesLoading,   setNotesLoading]   = useState(false);
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
 
   const { addToast } = useToast();
 
@@ -114,6 +115,19 @@ export default function ViewNewConvertPage() {
       addToast(msg, "error");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    setDeletingNoteId(noteId);
+    try {
+      await deleteNote(noteId);
+      setNotes((prev) => prev.filter((n) => n.id !== noteId));
+      addToast("Entry deleted.", "success");
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "Failed to delete.", "error");
+    } finally {
+      setDeletingNoteId(null);
     }
   };
 
@@ -294,7 +308,17 @@ export default function ViewNewConvertPage() {
                         <li key={n.id} className="rounded-lg border border-[#F3F4F6] bg-[#FAFAFA] px-4 py-3">
                           <div className="mb-1 flex items-center justify-between gap-2">
                             <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${typeBg}`}>{typeLabel}</span>
-                            <span className="text-xs text-[#9CA3AF]">{n.createdOn ? new Date(n.createdOn).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-[#9CA3AF]">{n.createdOn ? new Date(n.createdOn).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</span>
+                              <button
+                                onClick={() => handleDeleteNote(n.id)}
+                                disabled={deletingNoteId === n.id}
+                                className="rounded p-0.5 text-[#9CA3AF] hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+                                title="Delete"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                              </button>
+                            </div>
                           </div>
                           <p className="text-sm text-[#374151]">{n.content ?? "—"}</p>
                           {(n.officerName ?? n.createdBy) && (
