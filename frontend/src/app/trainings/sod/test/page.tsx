@@ -5,17 +5,15 @@
  *
  * Test page for School of Disciples enrolment.
  * Submits real API calls — students created here appear in /trainings/sod.
- * Use this to verify the SOD feature works end-to-end before the
- * enrolment form is embedded in a public-facing page.
  */
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { createSchoolOfDisciple } from "@/lib/api";
+import { createSchoolOfDisciple, uploadProfilePicture } from "@/lib/api";
 import {
   ArrowLeft, BookOpen, CheckCircle, ExternalLink,
-  AlertTriangle, Send, ChevronDown,
+  AlertTriangle, Send, ChevronDown, Camera,
 } from "lucide-react";
 
 interface Submission {
@@ -28,37 +26,64 @@ interface Submission {
 
 export default function SodTestPage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [firstName,   setFirstName]   = useState("");
-  const [middleName,  setMiddleName]  = useState("");
-  const [lastName,    setLastName]    = useState("");
-  const [countryCode, setCountryCode] = useState("234");
-  const [phone,       setPhone]       = useState("");
-  const [email,       setEmail]       = useState("");
-  const [sex,         setSex]         = useState("");
-  const [set,         setSet]         = useState("");
-  const [region,      setRegion]      = useState("");
-  const [province,    setProvince]    = useState("");
-  const [centre,      setCentre]      = useState("");
-  const [submitting,  setSubmitting]  = useState(false);
-  const [history,     setHistory]     = useState<Submission[]>([]);
+  const [firstName,    setFirstName]    = useState("");
+  const [middleName,   setMiddleName]   = useState("");
+  const [lastName,     setLastName]     = useState("");
+  const [countryCode,  setCountryCode]  = useState("234");
+  const [phone,        setPhone]        = useState("");
+  const [email,        setEmail]        = useState("");
+  const [sex,          setSex]          = useState("");
+  const [set,          setSet]          = useState("");
+  const [region,       setRegion]       = useState("");
+  const [province,     setProvince]     = useState("");
+  const [centre,       setCentre]       = useState("");
+  const [photoFile,    setPhotoFile]    = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploading,    setUploading]    = useState(false);
+  const [submitting,   setSubmitting]   = useState(false);
+  const [history,      setHistory]      = useState<Submission[]>([]);
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const canSubmit =
+    !submitting &&
+    !uploading &&
+    firstName.trim() &&
+    lastName.trim() &&
+    phone.trim() &&
+    region.trim() &&
+    province.trim() &&
+    centre.trim() &&
+    !!photoFile;
 
   const handleSubmit = async () => {
-    if (!firstName.trim() || !lastName.trim() || !phone.trim() || !region.trim() || !province.trim() || !centre.trim()) return;
+    if (!canSubmit) return;
     setSubmitting(true);
     try {
+      setUploading(true);
+      const profilePictureUrl = await uploadProfilePicture(photoFile!);
+      setUploading(false);
+
       await createSchoolOfDisciple({
-        firstName:   firstName.trim(),
-        middleName:  middleName.trim() || undefined,
-        lastName:    lastName.trim(),
-        countryCode: countryCode.trim() || "234",
-        phoneNumber: phone.trim(),
-        email:       email.trim() || undefined,
-        sex:         sex || undefined,
-        set:         set.trim() || undefined,
-        region:      region.trim() || undefined,
-        province:    province.trim() || undefined,
-        centre:      centre.trim() || undefined,
+        firstName:          firstName.trim(),
+        middleName:         middleName.trim() || undefined,
+        lastName:           lastName.trim(),
+        countryCode:        countryCode.trim() || "234",
+        phoneNumber:        phone.trim(),
+        email:              email.trim() || undefined,
+        sex:                sex || undefined,
+        set:                set.trim() || undefined,
+        region:             region.trim(),
+        province:           province.trim(),
+        centre:             centre.trim(),
+        profilePictureUrl,
       });
       setHistory((p) => [{
         name: `${firstName} ${lastName}`,
@@ -68,8 +93,11 @@ export default function SodTestPage() {
         message: "Student enrolled successfully — check /trainings/sod.",
       }, ...p]);
       setFirstName(""); setMiddleName(""); setLastName("");
-      setPhone(""); setEmail(""); setSex(""); setSet(""); setRegion(""); setProvince(""); setCentre("");
+      setPhone(""); setEmail(""); setSex(""); setSet("");
+      setRegion(""); setProvince(""); setCentre("");
+      setPhotoFile(null); setPhotoPreview(null);
     } catch (e) {
+      setUploading(false);
       setHistory((p) => [{
         name: `${firstName} ${lastName}`,
         phone,
@@ -115,10 +143,7 @@ export default function SodTestPage() {
               <p className="text-xs text-amber-700">
                 <span className="font-semibold">Hits the real API.</span>{" "}
                 Students created here will appear in{" "}
-                <button
-                  onClick={() => router.push("/trainings/sod")}
-                  className="font-semibold underline"
-                >
+                <button onClick={() => router.push("/trainings/sod")} className="font-semibold underline">
                   School of Disciples
                 </button>
                 . Do not use with fake data you don&apos;t want to keep.
@@ -127,6 +152,41 @@ export default function SodTestPage() {
 
             <h2 className="mb-1 text-base font-bold text-[#111827]">SOD Enrolment Form</h2>
             <p className="mb-5 text-xs text-[#6B7280]">Fill in the student&apos;s details to enrol them in the programme.</p>
+
+            {/* Photo upload */}
+            <div className="mb-5">
+              <label className="mb-1 block text-xs font-semibold text-[#374151]">Profile Photo *</label>
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-[#D1D5DB] hover:border-[#D97706]"
+                >
+                  {photoPreview ? (
+                    <img src={photoPreview} alt="Preview" className="h-full w-full object-cover" />
+                  ) : (
+                    <Camera className="h-7 w-7 text-[#9CA3AF]" />
+                  )}
+                </button>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium hover:bg-[#F9FAFB]"
+                  >
+                    {photoPreview ? "Change photo" : "Choose photo"}
+                  </button>
+                  <p className="mt-1 text-[10px] text-[#9CA3AF]">Required by backend. JPG, PNG accepted.</p>
+                </div>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handlePhotoChange}
+              />
+            </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
@@ -166,11 +226,11 @@ export default function SodTestPage() {
               </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-[#374151]">Set / Batch</label>
-                <input value={set} onChange={(e) => setSet(e.target.value)} placeholder="e.g. A, 2024…" className={inp} />
+                <input value={set} onChange={(e) => setSet(e.target.value)} placeholder="e.g. 2026" className={inp} />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-[#374151]">Region *</label>
-                <input value={region} onChange={(e) => setRegion(e.target.value)} placeholder="e.g. Region 31" className={inp} />
+                <input value={region} onChange={(e) => setRegion(e.target.value)} placeholder="e.g. Region 35" className={inp} />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-[#374151]">Province *</label>
@@ -184,11 +244,11 @@ export default function SodTestPage() {
 
             <button
               onClick={handleSubmit}
-              disabled={submitting || !firstName.trim() || !lastName.trim() || !phone.trim() || !region.trim() || !province.trim() || !centre.trim()}
+              disabled={!canSubmit}
               className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-amber-600 py-3 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
             >
               <Send className="h-4 w-4" />
-              {submitting ? "Enrolling…" : "Enrol Student"}
+              {uploading ? "Uploading photo…" : submitting ? "Enrolling…" : "Enrol Student"}
             </button>
           </div>
         </div>
@@ -202,6 +262,7 @@ export default function SodTestPage() {
                 "Student appears in School of Disciples list",
                 "Name, phone, and email are correct",
                 "Gender and set are saved",
+                "Profile photo displays correctly",
                 "Can mark class attendance",
                 "Can mark exam attendance",
                 "Can add official remark",
