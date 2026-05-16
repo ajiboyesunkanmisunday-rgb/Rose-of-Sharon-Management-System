@@ -208,6 +208,21 @@ export default function SODApplicationFormPage() {
   const [submitSuccess,  setSubmitSuccess]  = useState(false);
   const [submitError,    setSubmitError]    = useState("");
 
+  /* ─── Date helper: parse flexible input → ISO YYYY-MM-DD or undefined ─── */
+  const safeDate = (v: string): string | undefined => {
+    const s = v.trim();
+    if (!s) return undefined;
+    // Try native parse first (handles YYYY-MM-DD, MM/DD/YYYY, etc.)
+    let d = new Date(s);
+    // Also try DD-MM-YYYY (common Nigerian format)
+    if (isNaN(d.getTime())) {
+      const m = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+      if (m) d = new Date(`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`);
+    }
+    if (isNaN(d.getTime())) return undefined;
+    return d.toISOString().split("T")[0]; // YYYY-MM-DD
+  };
+
   /* ─── Map form → API and submit ────────────────────────────────────────── */
   const handleSubmit = async () => {
     if (!firstName.trim() || !surname.trim() || !phone.trim()) {
@@ -236,7 +251,7 @@ export default function SODApplicationFormPage() {
         phoneNumber: phone.trim(),
         email:       email.trim() || undefined,
         sex:         sexNorm as string | undefined,
-        dateOfBirth: dob.trim() || undefined,
+        dateOfBirth: safeDate(dob),
         maritalStatus: marital ? (maritalMap[marital] ?? marital.toUpperCase()) : undefined,
         spouseName:      spouseName.trim()  || undefined,
         spousePhoneNumber: spousePhone.trim() || undefined,
@@ -248,11 +263,11 @@ export default function SODApplicationFormPage() {
         street:          [addr1, addr2, addr3].filter(Boolean).join(", ") || undefined,
         occupation:      occupation.trim()  || undefined,
         officeFullAddress: [offAddr1, offAddr2].filter(Boolean).join(", ") || undefined,
-        salvationDate:             salvationDate.trim()     || undefined,
+        salvationDate:             safeDate(salvationDate),
         salvationLocation:         salvationWhere.trim()    || undefined,
-        waterBaptismDate:          waterBaptismDate.trim()  || undefined,
+        waterBaptismDate:          safeDate(waterBaptismDate),
         waterBaptismLocation:      waterBaptismChurch.trim()|| undefined,
-        holySpiritBaptismDate:     holyGhostDate.trim()     || undefined,
+        holySpiritBaptismDate:     safeDate(holyGhostDate),
         holySpiritBaptismLocation: holyGhostWhere.trim()    || undefined,
         currentParishPastorName:        pastorName.trim()  || undefined,
         currentParishPastorPhoneNumber: pastorPhone.trim() || undefined,
