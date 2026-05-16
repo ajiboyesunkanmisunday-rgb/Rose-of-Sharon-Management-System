@@ -110,7 +110,7 @@ export default function NewConvertTestPage() {
               </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-[#374151]">Phone Number *</label>
-                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="08012345678" className={inputCls} />
+                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="08012345678" maxLength={10} className={inputCls} />
               </div>
               <div className="sm:col-span-2">
                 <label className="mb-1 block text-xs font-semibold text-[#374151]">Email</label>

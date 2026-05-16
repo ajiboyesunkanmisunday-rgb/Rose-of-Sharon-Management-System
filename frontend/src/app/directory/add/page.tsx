@@ -94,6 +94,7 @@ export default function AddContactPage() {
               value={formData.phone}
               onChange={handleChange}
               placeholder="+234 800 000 0000"
+              maxLength={10}
               required
             />
             <FormField

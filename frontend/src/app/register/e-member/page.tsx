@@ -297,6 +297,7 @@ export default function EMemberRegisterPage() {
                   onChange={handleChange}
                   placeholder="Enter phone number"
                   className={inputClass}
+                  maxLength={10}
                 />
               </div>
             </div>

@@ -180,6 +180,7 @@ export default function EditContactClient() {
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleChange}
+                maxLength={10}
                 required
               />
               <FormField
