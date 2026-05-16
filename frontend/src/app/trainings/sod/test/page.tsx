@@ -39,11 +39,12 @@ export default function SodTestPage() {
   const [set,         setSet]         = useState("");
   const [region,      setRegion]      = useState("");
   const [province,    setProvince]    = useState("");
+  const [centre,      setCentre]      = useState("");
   const [submitting,  setSubmitting]  = useState(false);
   const [history,     setHistory]     = useState<Submission[]>([]);
 
   const handleSubmit = async () => {
-    if (!firstName.trim() || !lastName.trim() || !phone.trim() || !region.trim() || !province.trim()) return;
+    if (!firstName.trim() || !lastName.trim() || !phone.trim() || !region.trim() || !province.trim() || !centre.trim()) return;
     setSubmitting(true);
     try {
       await createSchoolOfDisciple({
@@ -57,6 +58,7 @@ export default function SodTestPage() {
         set:         set.trim() || undefined,
         region:      region.trim() || undefined,
         province:    province.trim() || undefined,
+        centre:      centre.trim() || undefined,
       });
       setHistory((p) => [{
         name: `${firstName} ${lastName}`,
@@ -66,7 +68,7 @@ export default function SodTestPage() {
         message: "Student enrolled successfully — check /trainings/sod.",
       }, ...p]);
       setFirstName(""); setMiddleName(""); setLastName("");
-      setPhone(""); setEmail(""); setSex(""); setSet(""); setRegion(""); setProvince("");
+      setPhone(""); setEmail(""); setSex(""); setSet(""); setRegion(""); setProvince(""); setCentre("");
     } catch (e) {
       setHistory((p) => [{
         name: `${firstName} ${lastName}`,
@@ -174,11 +176,15 @@ export default function SodTestPage() {
                 <label className="mb-1 block text-xs font-semibold text-[#374151]">Province *</label>
                 <input value={province} onChange={(e) => setProvince(e.target.value)} placeholder="e.g. Province 9" className={inp} />
               </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#374151]">Centre *</label>
+                <input value={centre} onChange={(e) => setCentre(e.target.value)} placeholder="e.g. Rose of Sharon" className={inp} />
+              </div>
             </div>
 
             <button
               onClick={handleSubmit}
-              disabled={submitting || !firstName.trim() || !lastName.trim() || !phone.trim() || !region.trim() || !province.trim()}
+              disabled={submitting || !firstName.trim() || !lastName.trim() || !phone.trim() || !region.trim() || !province.trim() || !centre.trim()}
               className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-amber-600 py-3 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
             >
               <Send className="h-4 w-4" />

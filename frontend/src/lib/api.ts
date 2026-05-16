@@ -2378,48 +2378,57 @@ export interface SchoolOfDisciplesResponse {
 }
 
 export interface CreateSchoolOfDisciplesRequest {
-  userId?: string;
+  // Church location identifiers (all required by backend)
   set?: string;
+  region?: string;
+  province?: string;
+  centre?: string;
+  // Personal
   firstName: string;
   middleName?: string;
   lastName: string;
-  maidenName?: string;
   countryCode: string;
   phoneNumber: string;
   email?: string;
   sex?: string;
-  street?: string;
-  city?: string;
-  state?: string;
-  region?: string;
-  province?: string;
-  country?: string;
-  otherPhoneNumber?: string;
+  profilePictureUrl?: string;
   dateOfBirth?: string;
   maritalStatus?: string;
   spouseName?: string;
+  spousePhoneNumber?: string;
+  spouseOccupation?: string;
   noOfChildren?: number;
-  nextOfKinName?: string;
-  nextOfKinRelationship?: string;
-  nextOfKinPhoneNumber?: string;
-  nextOfKinFullAddress?: string;
+  nationality?: string;
+  homeTown?: string;
+  stateOfOrigin?: string;
+  // Address
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  // Work
   occupation?: string;
-  employer?: string;
   officeFullAddress?: string;
-  officePhoneNumber?: string;
-  officeEmail?: string;
+  // Faith history
   salvationDate?: string;
   salvationLocation?: string;
   waterBaptismDate?: string;
   waterBaptismLocation?: string;
   holySpiritBaptismDate?: string;
   holySpiritBaptismLocation?: string;
-  reasonForLeavingPastChurch?: string;
-  lifeCenterAttended?: string;
-  nonRCCGChristianGroups?: string[];
-  yourMinistry?: string;
-  giftsManifesting?: string[];
-  reasonForApplying?: string;
+  // Current parish
+  currentParishPastorName?: string;
+  currentParishPastorPhoneNumber?: string;
+  activityInCurrentParish?: string;
+  // Past places of worship
+  createPastPlaceOfWorshipRequests?: { name?: string; location?: string; role?: string }[];
+  // Positions held
+  createPositionHeldRequests?: { title?: string; organisation?: string }[];
+  // Qualifications
+  qualificationRequests?: { degree?: string; institution?: string; year?: string }[];
+  // Misc
+  hasAnotherSimultaneousProgram?: boolean;
+  otherInformation?: string;
   consent?: boolean;
 }
 
