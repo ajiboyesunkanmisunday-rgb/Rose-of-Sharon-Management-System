@@ -2392,6 +2392,7 @@ export interface CreateSchoolOfDisciplesRequest {
   city?: string;
   state?: string;
   region?: string;
+  province?: string;
   country?: string;
   otherPhoneNumber?: string;
   dateOfBirth?: string;
