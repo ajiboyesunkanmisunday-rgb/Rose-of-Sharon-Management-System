@@ -537,13 +537,13 @@ export default function MembersPage() {
                           label: "Delete",
                           onClick: () => handleDeleteClick(member.id),
                         },
-                        {
-                          label: "Assign Super Admin",
-                          onClick: () => {
-                            setSelectedMemberId(member.id);
-                            setShowAssignSuperAdminModal(true);
-                          },
-                        },
+                        // {
+                        //   label: "Assign Super Admin",
+                        //   onClick: () => {
+                        //     setSelectedMemberId(member.id);
+                        //     setShowAssignSuperAdminModal(true);
+                        //   },
+                        // },
                       ]}
                     />
                   </td>

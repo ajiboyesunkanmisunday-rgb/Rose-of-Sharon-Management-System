@@ -958,6 +958,16 @@ export async function assignSuperAdmin(
   });
 }
 
+export async function reassignAdminRole(
+  userId: string,
+  roleId: string
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/users/${userId}/reassign-admin/${roleId}`,
+    { method: "PUT" }
+  );
+}
+
 // ─── Events ─────────────────────────────────────────────────────────────────────
 
 export interface CreateEventRequest {
@@ -1828,6 +1838,7 @@ export interface CreateMessageTemplateRequest {
 export interface UpdateMessageTemplateRequest {
   category?: string;
   channel?: string;
+  name?: string;
   subject?: string;
   content?: string;
 }
@@ -1872,6 +1883,20 @@ export async function deleteMessageTemplate(
   return apiFetch<OperationalResponse>(`/api/v1/message-templates/${id}`, {
     method: "DELETE",
   });
+}
+
+export async function searchMessageTemplates(
+  text: string,
+  pageNo = 0,
+  pageSize = 10,
+): Promise<CustomPageResponse<MessageTemplateResponse>> {
+  return apiFetch<CustomPageResponse<MessageTemplateResponse>>(
+    `/api/v1/message-templates/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    },
+  );
 }
 
 // ─── Admin Users ──────────────────────────────────────────────────────────────
