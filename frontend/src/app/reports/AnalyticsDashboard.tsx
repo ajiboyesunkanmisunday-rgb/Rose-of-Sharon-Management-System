@@ -10,8 +10,7 @@ import {
   getNewConverts, getAllGroups, getTestimonies, getCelebrations, getEvents,
   getTotalMembers, getTotalMembersInPeriod, getTotalFirstTimersInPeriod,
   getTotalSecondTimersInPeriod, getTotalNewConvertsInPeriod,
-  getUrgentFollowup, getVisitingVsNotVisiting, getServiceSectionsStats,
-  getMediumOfInvitationStats,
+  getVisitingVsNotVisiting, getServiceSectionsStats, getMediumOfInvitationStats,
   type UserResponse, type NewConvertResponse, type GroupResponse,
   type CountStatisticsResponse, type FeatureStatResponse, type UserBasicResponse,
 } from "@/lib/api";
@@ -221,7 +220,7 @@ interface ServerStats {
   visiting: FeatureStatResponse | null;
   service: FeatureStatResponse | null;
   invitation: FeatureStatResponse | null;
-  urgentFollowup: UserBasicResponse[];
+  urgentFollowup: never[];
   urgentTotal: number;
 }
 
@@ -289,7 +288,7 @@ export default function AnalyticsDashboard() {
     try {
       const [
         totMem, memPeriod, ftPeriod, stPeriod, ncPeriod,
-        visiting, service, invitation, urgent,
+        visiting, service, invitation,
       ] = await Promise.all([
         getTotalMembers().catch((): CountStatisticsResponse => ({ totalCount: 0 })),
         getTotalMembersInPeriod(startTime, endTime).catch((): CountStatisticsResponse => ({ totalCount: 0 })),
@@ -299,19 +298,18 @@ export default function AnalyticsDashboard() {
         getVisitingVsNotVisiting(startTime, endTime).catch((): FeatureStatResponse => ({ columns: [] })),
         getServiceSectionsStats(startTime, endTime).catch((): FeatureStatResponse => ({ columns: [] })),
         getMediumOfInvitationStats(startTime, endTime).catch((): FeatureStatResponse => ({ columns: [] })),
-        getUrgentFollowup(0, 20).catch(() => ({ content: [], totalElements: 0 })),
       ]);
       setSvrStats({
-        totalMembers:        totMem.totalCount,
-        membersInPeriod:     memPeriod.totalCount,
-        firstTimersInPeriod: ftPeriod.totalCount,
+        totalMembers:         totMem.totalCount,
+        membersInPeriod:      memPeriod.totalCount,
+        firstTimersInPeriod:  ftPeriod.totalCount,
         secondTimersInPeriod: stPeriod.totalCount,
-        newConvertsInPeriod: ncPeriod.totalCount,
-        visiting:            visiting.columns.length ? visiting : null,
-        service:             service.columns.length  ? service  : null,
-        invitation:          invitation.columns.length ? invitation : null,
-        urgentFollowup:      urgent.content ?? [],
-        urgentTotal:         (urgent as { totalElements?: number }).totalElements ?? (urgent.content ?? []).length,
+        newConvertsInPeriod:  ncPeriod.totalCount,
+        visiting:   visiting.columns.length   ? visiting   : null,
+        service:    service.columns.length    ? service    : null,
+        invitation: invitation.columns.length ? invitation : null,
+        urgentFollowup: [],
+        urgentTotal:    0,
       });
     } catch (err) {
       setSvrError(err instanceof Error ? err.message : "Failed to load server stats.");
@@ -555,7 +553,7 @@ export default function AnalyticsDashboard() {
                 ) : (
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart
-                      data={svrStats.visiting.columns.map((c) => ({ name: c.feature, count: c.totalCount }))}
+                      data={svrStats.visiting.columns.map((c) => ({ name: c.feature ?? "Unknown", count: c.totalCount }))}
                       margin={{ top: 4, right: 10, left: -10, bottom: 40 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
@@ -575,7 +573,7 @@ export default function AnalyticsDashboard() {
                 ) : (
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart
-                      data={svrStats.service.columns.map((c) => ({ name: c.feature.length > 14 ? c.feature.slice(0, 12) + "…" : c.feature, count: c.totalCount }))}
+                      data={svrStats.service.columns.map((c) => { const f = c.feature ?? "Unknown"; return { name: f.length > 14 ? f.slice(0, 12) + "…" : f, count: c.totalCount }; })}
                       layout="vertical"
                       margin={{ top: 4, right: 16, left: 10, bottom: 0 }}
                     >
@@ -596,7 +594,7 @@ export default function AnalyticsDashboard() {
                 ) : (
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart
-                      data={svrStats.invitation.columns.map((c) => ({ name: c.feature.length > 14 ? c.feature.slice(0, 12) + "…" : c.feature, count: c.totalCount }))}
+                      data={svrStats.invitation.columns.map((c) => { const f = c.feature ?? "Unknown"; return { name: f.length > 14 ? f.slice(0, 12) + "…" : f, count: c.totalCount }; })}
                       layout="vertical"
                       margin={{ top: 4, right: 16, left: 10, bottom: 0 }}
                     >
@@ -611,54 +609,7 @@ export default function AnalyticsDashboard() {
               </ChartCard>
             </div>
 
-            {/* Urgent Followup table */}
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-sm font-bold text-[#111827]">
-                  People Needing Urgent Followup
-                  {svrStats.urgentTotal > 0 && (
-                    <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
-                      {svrStats.urgentTotal} total
-                    </span>
-                  )}
-                </h3>
-                <p className="text-[10px] text-[#9CA3AF]">Visitors with 0 calls and 0 visits · showing first 20</p>
-              </div>
-              <div className="max-h-[280px] overflow-y-auto rounded-lg border border-[#E5E7EB]">
-                {svrStats.urgentFollowup.length === 0 ? (
-                  <p className="py-8 text-center text-xs text-[#9CA3AF]">All visitors have been contacted.</p>
-                ) : (
-                  <table className="w-full text-xs">
-                    <thead className="sticky top-0 bg-[#F9FAFB]">
-                      <tr className="border-b border-[#E5E7EB]">
-                        <th className="px-3 py-2 text-left text-[#6B7280]">#</th>
-                        <th className="px-3 py-2 text-left text-[#6B7280]">Name</th>
-                        <th className="px-3 py-2 text-left text-[#6B7280]">Phone</th>
-                        <th className="px-3 py-2 text-left text-[#6B7280]">Assigned To</th>
-                        <th className="px-3 py-2 text-left text-[#6B7280]">Calls</th>
-                        <th className="px-3 py-2 text-left text-[#6B7280]">Visits</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {svrStats.urgentFollowup.map((u, i) => (
-                        <tr key={u.id ?? i} className="border-b border-[#F3F4F6] hover:bg-[#FAFAFA]">
-                          <td className="px-3 py-2 text-[#9CA3AF]">{i + 1}</td>
-                          <td className="px-3 py-2 font-medium text-[#111827]">
-                            {[u.firstName, u.lastName].filter(Boolean).join(" ") || "—"}
-                          </td>
-                          <td className="px-3 py-2 text-[#374151]">
-                            {u.phoneNumber ? `+${u.countryCode ?? ""} ${u.phoneNumber}` : "—"}
-                          </td>
-                          <td className="px-3 py-2 text-[#374151]">{u.assignedFollowUp ?? "—"}</td>
-                          <td className="px-3 py-2 text-[#374151]">{u.noOfCalls ?? 0}</td>
-                          <td className="px-3 py-2 text-[#374151]">{u.noOfVisits ?? 0}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            </div>
+            {/* Urgent followup — shown in the existing section below (server endpoint not yet available) */}
           </div>
         ) : !svrLoading ? (
           <p className="py-6 text-center text-xs text-[#9CA3AF]">
