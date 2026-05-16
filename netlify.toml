@@ -403,6 +403,11 @@
   status = 200
 
 [[redirects]]
+  from   = "/test/guest-workflow/"
+  to     = "/test/guest-workflow/index.html"
+  status = 200
+
+[[redirects]]
   from   = "/trainings/sod/test/"
   to     = "/trainings/sod/test/index.html"
   status = 200
