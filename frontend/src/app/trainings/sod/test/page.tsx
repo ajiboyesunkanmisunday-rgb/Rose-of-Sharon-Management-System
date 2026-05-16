@@ -38,11 +38,12 @@ export default function SodTestPage() {
   const [sex,         setSex]         = useState("");
   const [set,         setSet]         = useState("");
   const [region,      setRegion]      = useState("");
+  const [province,    setProvince]    = useState("");
   const [submitting,  setSubmitting]  = useState(false);
   const [history,     setHistory]     = useState<Submission[]>([]);
 
   const handleSubmit = async () => {
-    if (!firstName.trim() || !lastName.trim() || !phone.trim()) return;
+    if (!firstName.trim() || !lastName.trim() || !phone.trim() || !region.trim() || !province.trim()) return;
     setSubmitting(true);
     try {
       await createSchoolOfDisciple({
@@ -55,6 +56,7 @@ export default function SodTestPage() {
         sex:         sex || undefined,
         set:         set.trim() || undefined,
         region:      region.trim() || undefined,
+        province:    province.trim() || undefined,
       });
       setHistory((p) => [{
         name: `${firstName} ${lastName}`,
@@ -64,7 +66,7 @@ export default function SodTestPage() {
         message: "Student enrolled successfully — check /trainings/sod.",
       }, ...p]);
       setFirstName(""); setMiddleName(""); setLastName("");
-      setPhone(""); setEmail(""); setSex(""); setSet(""); setRegion("");
+      setPhone(""); setEmail(""); setSex(""); setSet(""); setRegion(""); setProvince("");
     } catch (e) {
       setHistory((p) => [{
         name: `${firstName} ${lastName}`,
@@ -166,13 +168,17 @@ export default function SodTestPage() {
               </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-[#374151]">Region *</label>
-                <input value={region} onChange={(e) => setRegion(e.target.value)} placeholder="e.g. Lagos, South-West…" className={inp} />
+                <input value={region} onChange={(e) => setRegion(e.target.value)} placeholder="e.g. Region 31" className={inp} />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#374151]">Province *</label>
+                <input value={province} onChange={(e) => setProvince(e.target.value)} placeholder="e.g. Province 9" className={inp} />
               </div>
             </div>
 
             <button
               onClick={handleSubmit}
-              disabled={submitting || !firstName.trim() || !lastName.trim() || !phone.trim() || !region.trim()}
+              disabled={submitting || !firstName.trim() || !lastName.trim() || !phone.trim() || !region.trim() || !province.trim()}
               className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-amber-600 py-3 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
             >
               <Send className="h-4 w-4" />
