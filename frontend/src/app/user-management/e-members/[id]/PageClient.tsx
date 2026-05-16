@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
-import { getUser, addCallReport, addVisitReport, getNotes, type UserResponse, type NoteResponse } from "@/lib/api";
+import { getUser, addCallReport, addVisitReport, getNotes, deleteNote, type UserResponse, type NoteResponse } from "@/lib/api";
 import ProfilePhoto from "@/components/ui/ProfilePhoto";
 
 type Tab = "details" | "activity";
@@ -65,8 +65,9 @@ export default function EMemberProfilePage() {
   const [saving,     setSaving]     = useState(false);
   const [saveMsg,    setSaveMsg]    = useState("");
 
-  const [notes,       setNotes]       = useState<NoteResponse[]>([]);
-  const [notesLoading, setNotesLoading] = useState(false);
+  const [notes,          setNotes]          = useState<NoteResponse[]>([]);
+  const [notesLoading,   setNotesLoading]   = useState(false);
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
 
   const fetchNotes = useCallback(async () => {
     if (!id || id.startsWith("em-")) return;
@@ -102,6 +103,18 @@ export default function EMemberProfilePage() {
   const handleConfirmDelete = () => {
     setShowDeleteModal(false);
     router.push("/user-management/e-members");
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    setDeletingNoteId(noteId);
+    try {
+      await deleteNote(noteId);
+      setNotes((prev) => prev.filter((n) => n.id !== noteId));
+    } catch (err) {
+      setSaveMsg(err instanceof Error ? err.message : "Failed to delete.");
+    } finally {
+      setDeletingNoteId(null);
+    }
   };
 
   const handleSaveActivity = async (type: "call" | "visit") => {
@@ -314,9 +327,21 @@ export default function EMemberProfilePage() {
                         noteType.includes("VISIT") ? "Visit Log" : "Note";
                       return (
                         <div key={n.id ?? i} className="rounded-lg border border-[#E5E7EB] p-3">
-                          <div className="flex items-center gap-2">
-                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badgeClass}`}>{badgeLabel}</span>
-                            <span className="text-xs text-[#9CA3AF]">{fmtDate(n.createdOn)}</span>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badgeClass}`}>{badgeLabel}</span>
+                              <span className="text-xs text-[#9CA3AF]">{fmtDate(n.createdOn)}</span>
+                            </div>
+                            {n.id && (
+                              <button
+                                onClick={() => handleDeleteNote(n.id!)}
+                                disabled={deletingNoteId === n.id}
+                                className="rounded p-0.5 text-[#9CA3AF] hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+                                title="Delete"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                              </button>
+                            )}
                           </div>
                           <p className="mt-2 text-sm text-[#374151]">{n.content ?? "—"}</p>
                         </div>

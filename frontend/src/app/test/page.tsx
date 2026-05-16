@@ -83,9 +83,9 @@ const CARDS: Card[] = [
     tag: "public",
   },
   {
-    title: "Guest Registration",
+    title: "Guest Workflow [TEST]",
     description:
-      "Register a first-time visitor as they would fill the guest form on the public website. Verify they appear in the Guest Workflow board under 'First Timers'.",
+      "Test the guest workflow: register a first-time visitor as they would fill the guest form on the public website. Verify they appear in the Guest Workflow board under 'First Timers'.",
     href: "/test/guest-workflow",
     adminHref: "/workflows/guest",
     adminLabel: "View Guest Workflow",
