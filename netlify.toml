@@ -411,3 +411,8 @@
   from   = "/trainings/sod/test/"
   to     = "/trainings/sod/test/index.html"
   status = 200
+
+[[redirects]]
+  from   = "/trainings/sod/form/"
+  to     = "/trainings/sod/form/index.html"
+  status = 200
