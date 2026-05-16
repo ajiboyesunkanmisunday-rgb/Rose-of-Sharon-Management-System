@@ -145,15 +145,17 @@ export default function AddTemplatePage() {
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Enter template content. Use {name}, {date}, {event} as placeholders."
+                placeholder="Enter template content. Use {firstName} and {name} as placeholders."
                 rows={7}
                 className={inputCls}
                 required
               />
               <p className="mt-1 text-xs text-[#6B7280]">
-                Placeholders: <code className="rounded bg-gray-100 px-1">{"{name}"}</code>{" "}
-                <code className="rounded bg-gray-100 px-1">{"{date}"}</code>{" "}
-                <code className="rounded bg-gray-100 px-1">{"{event}"}</code>
+               Placeholders:{" "}
+                <code className="rounded bg-gray-100 px-1">
+                  {"{firstName}"}
+                </code>
+                <code className="rounded bg-gray-100 px-1">{"{name}"}</code>{" "}
               </p>
             </div>
           </div>
