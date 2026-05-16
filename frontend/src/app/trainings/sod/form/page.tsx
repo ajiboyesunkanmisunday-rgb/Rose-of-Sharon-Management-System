@@ -200,7 +200,7 @@ export default function SODApplicationFormPage() {
 
             {/* Logo + church name block */}
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <Image src="/rccg-icon.png" alt="RCCG" width={58} height={58} style={{ objectFit: "contain", flexShrink: 0 }} />
+              <Image src="/sod-logo.svg" alt="School of Disciples" width={64} height={64} style={{ objectFit: "contain", flexShrink: 0 }} />
               <div style={{ textAlign: "center", lineHeight: 1.6 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase" }}>The Redeemed Christian Church of God</div>
                 <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase" }}>Rose of Sharon Parish</div>
