@@ -37,6 +37,7 @@ export default function SodTestPage() {
   const [email,       setEmail]       = useState("");
   const [sex,         setSex]         = useState("");
   const [set,         setSet]         = useState("");
+  const [region,      setRegion]      = useState("");
   const [submitting,  setSubmitting]  = useState(false);
   const [history,     setHistory]     = useState<Submission[]>([]);
 
@@ -53,6 +54,7 @@ export default function SodTestPage() {
         email:       email.trim() || undefined,
         sex:         sex || undefined,
         set:         set.trim() || undefined,
+        region:      region.trim() || undefined,
       });
       setHistory((p) => [{
         name: `${firstName} ${lastName}`,
@@ -62,7 +64,7 @@ export default function SodTestPage() {
         message: "Student enrolled successfully — check /trainings/sod.",
       }, ...p]);
       setFirstName(""); setMiddleName(""); setLastName("");
-      setPhone(""); setEmail(""); setSex(""); setSet("");
+      setPhone(""); setEmail(""); setSex(""); setSet(""); setRegion("");
     } catch (e) {
       setHistory((p) => [{
         name: `${firstName} ${lastName}`,
@@ -152,7 +154,7 @@ export default function SodTestPage() {
               </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-[#374151]">Phone Number *</label>
-                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="08012345678" className={inp} />
+                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="08012345678" maxLength={10} className={inp} />
               </div>
               <div className="sm:col-span-2">
                 <label className="mb-1 block text-xs font-semibold text-[#374151]">Email</label>
@@ -162,11 +164,15 @@ export default function SodTestPage() {
                 <label className="mb-1 block text-xs font-semibold text-[#374151]">Set / Batch</label>
                 <input value={set} onChange={(e) => setSet(e.target.value)} placeholder="e.g. A, 2024…" className={inp} />
               </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#374151]">Region *</label>
+                <input value={region} onChange={(e) => setRegion(e.target.value)} placeholder="e.g. Lagos, South-West…" className={inp} />
+              </div>
             </div>
 
             <button
               onClick={handleSubmit}
-              disabled={submitting || !firstName.trim() || !lastName.trim() || !phone.trim()}
+              disabled={submitting || !firstName.trim() || !lastName.trim() || !phone.trim() || !region.trim()}
               className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-amber-600 py-3 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
             >
               <Send className="h-4 w-4" />

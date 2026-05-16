@@ -245,6 +245,7 @@ export default function EditMemberPage() {
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="Enter Phone Number"
                     className={inputStyles}
+                    maxLength={10}
                   />
                 </div>
               </div>

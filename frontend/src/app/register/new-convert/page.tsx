@@ -272,6 +272,7 @@ export default function NewConvertRegisterPage() {
                   onChange={handleChange}
                   placeholder="Enter phone number"
                   className={inputClass}
+                  maxLength={10}
                   required
                 />
               </div>
