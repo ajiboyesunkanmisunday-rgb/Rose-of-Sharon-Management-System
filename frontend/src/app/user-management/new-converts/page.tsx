@@ -135,7 +135,12 @@ export default function NewConvertsPage() {
       setSelectedConvertId(null);
       fetchConverts(currentPage);
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Failed to save call report.");
+      const msg = err instanceof Error ? err.message : "Failed to save call report.";
+      setActionError(
+        msg.toLowerCase().includes("user not found") || msg.toLowerCase().includes("not found")
+          ? "Call reports for New Converts are not yet supported by the backend. Please ask the backend team to enable notes for the new_converts table."
+          : msg
+      );
     } finally {
       setActionLoading(false);
     }
@@ -152,7 +157,12 @@ export default function NewConvertsPage() {
       setSelectedConvertId(null);
       fetchConverts(currentPage);
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Failed to save visit report.");
+      const msg = err instanceof Error ? err.message : "Failed to save visit report.";
+      setActionError(
+        msg.toLowerCase().includes("user not found") || msg.toLowerCase().includes("not found")
+          ? "Visit reports for New Converts are not yet supported by the backend. Please ask the backend team to enable notes for the new_converts table."
+          : msg
+      );
     } finally {
       setActionLoading(false);
     }
