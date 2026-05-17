@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
 import Pagination from "@/components/ui/Pagination";
@@ -13,7 +14,7 @@ import {
 } from "@/lib/api";
 import {
   GraduationCap, Phone, Mail, RefreshCw, Award, Users,
-  CheckCircle, Clock, Star, ChevronDown, X, MessageSquare,
+  CheckCircle, Clock, Star, ChevronDown, X, MessageSquare, PlusCircle,
 } from "lucide-react";
 
 const ITEMS_PER_PAGE = 12;
@@ -239,6 +240,7 @@ function WorkerCard({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function WorkersInTrainingPage() {
+  const router = useRouter();
   const [allWorkers,    setAllWorkers]    = useState<WorkersInTrainingResponse[]>([]);
   const [loading,       setLoading]       = useState(true);
   const [error,         setError]         = useState("");
@@ -375,14 +377,23 @@ export default function WorkersInTrainingPage() {
           <h1 className="text-[28px] font-bold text-[#000000]">Workers-in-Training</h1>
           <p className="text-sm text-[#6B7280]">Members enrolled in the WIT programme</p>
         </div>
-        <button
-          onClick={load}
-          disabled={loading}
-          className="ml-auto flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:border-[#7C3AED] hover:text-[#7C3AED] disabled:opacity-50"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => router.push("/trainings/workers/form")}
+            className="flex items-center gap-2 rounded-lg bg-[#000080] px-4 py-2 text-xs font-semibold text-white hover:bg-[#000066]"
+          >
+            <PlusCircle className="h-3.5 w-3.5" />
+            New Application
+          </button>
+          <button
+            onClick={load}
+            disabled={loading}
+            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:border-[#7C3AED] hover:text-[#7C3AED] disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
