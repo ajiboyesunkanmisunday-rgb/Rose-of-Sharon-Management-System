@@ -7,13 +7,13 @@ import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import {
   getNewConvert, addCallReport, addVisitReport, getNotes, deleteNote,
-  updateBelieversClass, updateNewConvert,
+  updateBelieversClass,
   type NewConvertResponse, type NoteResponse,
 } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
 import { SkeletonProfile } from "@/components/ui/Skeleton";
 
-type Tab = "details" | "edit" | "activity";
+type Tab = "details" | "activity";
 
 const BackArrow = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -42,25 +42,6 @@ function Field({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
-function Input({
-  label, value, onChange, type = "text", required,
-}: {
-  label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean;
-}) {
-  return (
-    <div>
-      <label className="mb-1 block text-xs font-medium text-[#374151]">
-        {label}{required && <span className="ml-0.5 text-red-500">*</span>}
-      </label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
-      />
-    </div>
-  );
-}
 
 export default function ViewNewConvertPage() {
   const router = useRouter();
@@ -82,20 +63,6 @@ export default function ViewNewConvertPage() {
   const [error,   setError]   = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("details");
-
-  // ── Edit form state ────────────────────────────────────────────────────────
-  const [editFirstName,   setEditFirstName]   = useState("");
-  const [editMiddleName,  setEditMiddleName]  = useState("");
-  const [editLastName,    setEditLastName]    = useState("");
-  const [editEmail,       setEditEmail]       = useState("");
-  const [editPhone,       setEditPhone]       = useState("");
-  const [editCountryCode, setEditCountryCode] = useState("234");
-  const [editSex,         setEditSex]         = useState("");
-  const [editStreet,      setEditStreet]      = useState("");
-  const [editCity,        setEditCity]        = useState("");
-  const [editState,       setEditState]       = useState("");
-  const [editCountry,     setEditCountry]     = useState("");
-  const [editSaving,      setEditSaving]      = useState(false);
 
   // ── Activity state ─────────────────────────────────────────────────────────
   const [callText,  setCallText]  = useState("");
@@ -121,20 +88,6 @@ export default function ViewNewConvertPage() {
     finally { setNotesLoading(false); }
   }, [id]);
 
-  const populateEditForm = useCallback((u: NewConvertResponse) => {
-    setEditFirstName(u.firstName ?? "");
-    setEditMiddleName(u.middleName ?? "");
-    setEditLastName(u.lastName ?? "");
-    setEditEmail(u.email ?? "");
-    setEditPhone(u.phoneNumber ?? "");
-    setEditCountryCode(u.countryCode ?? "234");
-    setEditSex(u.sex ?? "");
-    setEditStreet(u.street ?? "");
-    setEditCity(u.city ?? "");
-    setEditState(u.state ?? "");
-    setEditCountry(u.country ?? "");
-  }, []);
-
   const fetchUser = useCallback(async () => {
     if (!id || id.startsWith("nc-")) return;
     setLoading(true);
@@ -142,13 +95,12 @@ export default function ViewNewConvertPage() {
     try {
       const data = await getNewConvert(id);
       setUser(data);
-      populateEditForm(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load profile.");
     } finally {
       setLoading(false);
     }
-  }, [id, populateEditForm]);
+  }, [id]);
 
   useEffect(() => { fetchUser(); }, [fetchUser]);
   useEffect(() => { if (activeTab === "activity") fetchNotes(); }, [activeTab, fetchNotes]);
@@ -156,37 +108,6 @@ export default function ViewNewConvertPage() {
   const handleConfirmDelete = () => {
     setShowDeleteModal(false);
     router.push("/user-management/new-converts");
-  };
-
-  // ── Save edits ─────────────────────────────────────────────────────────────
-  const handleSaveEdit = async () => {
-    if (!id || !editFirstName.trim() || !editLastName.trim() || !editPhone.trim()) {
-      addToast("First name, last name and phone are required.", "error");
-      return;
-    }
-    setEditSaving(true);
-    try {
-      await updateNewConvert(id, {
-        firstName:   editFirstName.trim(),
-        middleName:  editMiddleName.trim() || undefined,
-        lastName:    editLastName.trim(),
-        email:       editEmail.trim() || undefined,
-        countryCode: editCountryCode.trim() || "234",
-        phoneNumber: editPhone.trim(),
-        sex:         editSex || undefined,
-        street:      editStreet.trim() || undefined,
-        city:        editCity.trim() || undefined,
-        state:       editState.trim() || undefined,
-        country:     editCountry.trim() || undefined,
-      });
-      addToast("Profile updated successfully.", "success");
-      await fetchUser();
-      setActiveTab("details");
-    } catch (err) {
-      addToast(err instanceof Error ? err.message : "Failed to update.", "error");
-    } finally {
-      setEditSaving(false);
-    }
   };
 
   // ── Activity ───────────────────────────────────────────────────────────────
@@ -304,53 +225,14 @@ export default function ViewNewConvertPage() {
           {/* Tabs */}
           <div className="mb-4 border-b border-[#E5E7EB]">
             <div className="flex gap-8">
-              {(["details", "edit", "activity"] as Tab[]).map((key) => (
+              {(["details", "activity"] as Tab[]).map((key) => (
                 <button key={key} onClick={() => setActiveTab(key)}
                   className={`pb-3 text-sm font-medium capitalize transition-colors ${activeTab === key ? "border-b-2 border-[#000080] text-[#000080]" : "text-[#6B7280] hover:text-[#374151]"}`}>
-                  {key === "edit" ? "Edit Profile" : key}
+                  {key}
                 </button>
               ))}
             </div>
           </div>
-
-          {/* ── Edit Profile Tab ─────────────────────────────────────────── */}
-          {activeTab === "edit" && (
-            <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
-              <h3 className="mb-5 text-sm font-bold text-[#111827]">Edit Profile</h3>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-                <Input label="First Name"   value={editFirstName}   onChange={setEditFirstName}   required />
-                <Input label="Middle Name"  value={editMiddleName}  onChange={setEditMiddleName} />
-                <Input label="Last Name"    value={editLastName}    onChange={setEditLastName}    required />
-                <Input label="Email"        value={editEmail}       onChange={setEditEmail}       type="email" />
-                <Input label="Phone Number" value={editPhone}       onChange={setEditPhone}       required />
-                <Input label="Country Code" value={editCountryCode} onChange={setEditCountryCode} />
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-[#374151]">Gender</label>
-                  <select
-                    value={editSex}
-                    onChange={(e) => setEditSex(e.target.value)}
-                    className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
-                  >
-                    <option value="">Select…</option>
-                    <option value="MALE">Male</option>
-                    <option value="FEMALE">Female</option>
-                  </select>
-                </div>
-                <Input label="Street"  value={editStreet}  onChange={setEditStreet} />
-                <Input label="City"    value={editCity}    onChange={setEditCity} />
-                <Input label="State"   value={editState}   onChange={setEditState} />
-                <Input label="Country" value={editCountry} onChange={setEditCountry} />
-              </div>
-              <div className="mt-6 flex justify-end gap-3">
-                <Button variant="secondary" onClick={() => { populateEditForm(user!); setActiveTab("details"); }}>
-                  Cancel
-                </Button>
-                <Button variant="primary" onClick={handleSaveEdit} disabled={editSaving}>
-                  {editSaving ? "Saving…" : "Save Changes"}
-                </Button>
-              </div>
-            </div>
-          )}
 
           {/* ── Activity Tab ─────────────────────────────────────────────── */}
           {activeTab === "activity" && (
@@ -462,6 +344,7 @@ export default function ViewNewConvertPage() {
           {/* Actions */}
           <div className="mt-6 flex items-center justify-end gap-3">
             <Button variant="danger" onClick={() => setShowDeleteModal(true)}>Delete</Button>
+            <Button variant="primary" onClick={() => router.push(`/user-management/new-converts/${id}/edit`)}>Edit</Button>
           </div>
         </>
       )}
