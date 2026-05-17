@@ -7,10 +7,10 @@
  * Fill in the browser → Print / Download PDF.
  */
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import { Printer, Send, CheckCircle, XCircle } from "lucide-react";
-import { createSchoolOfDisciple } from "@/lib/api";
+import { createSchoolOfDisciple, uploadProfilePicture } from "@/lib/api";
 
 /* ─── Primitive dotted-line input ────────────────────────────────────────── */
 function F({
@@ -203,6 +203,18 @@ export default function SODApplicationFormPage() {
   const [remarks1, setRemarks1] = useState("");
   const [remarks2, setRemarks2] = useState("");
 
+  /* ── Photo upload ── */
+  const [photo,         setPhoto]         = useState<File | null>(null);
+  const [photoPreview,  setPhotoPreview]  = useState<string | null>(null);
+  const [uploading,     setUploading]     = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setPhoto(file);
+    setPhotoPreview(file ? URL.createObjectURL(file) : null);
+  };
+
   /* ── Submit state ── */
   const [submitting,     setSubmitting]     = useState(false);
   const [submitSuccess,  setSubmitSuccess]  = useState(false);
@@ -231,7 +243,15 @@ export default function SODApplicationFormPage() {
     }
     setSubmitError("");
     setSubmitting(true);
+    setUploading(false);
     try {
+      let profilePictureUrl: string | undefined;
+      if (photo) {
+        setUploading(true);
+        profilePictureUrl = await uploadProfilePicture(photo);
+        setUploading(false);
+      }
+
       const maritalMap: Record<string, string> = {
         Single: "SINGLE", Married: "MARRIED", Engaged: "ENGAGED",
         Divorced: "DIVORCED", Widowed: "WIDOWED",
@@ -241,8 +261,9 @@ export default function SODApplicationFormPage() {
                     : sex.trim() || undefined;
 
       await createSchoolOfDisciple({
-        set:      session.trim(),
-        region:   region   || undefined,
+        set:               session.trim(),
+        profilePictureUrl: profilePictureUrl,
+        region:            region   || undefined,
         province: province || undefined,
         centre:   centre   || undefined,
         firstName:  firstName.trim(),
@@ -306,7 +327,8 @@ export default function SODApplicationFormPage() {
         @page { size: A4 portrait; margin: 12mm 16mm; }
 
         @media print {
-          .sod-no-print { display: none !important; }
+          .sod-no-print  { display: none !important; }
+          .sod-print-only { display: flex !important; }
           .sod-wrapper  { background: #fff !important; padding: 0 !important; min-height: auto !important; }
           .sod-paper    { box-shadow: none !important; width: 100% !important; max-width: none !important;
                           margin: 0 !important; padding: 0 !important; }
@@ -356,21 +378,23 @@ export default function SODApplicationFormPage() {
             {/* Submit to system */}
             <button
               onClick={handleSubmit}
-              disabled={submitting || submitSuccess}
+              disabled={submitting || uploading || submitSuccess}
               style={{
                 display: "flex", alignItems: "center", gap: 6,
                 background: submitSuccess ? "#16A34A" : "#22c55e",
                 color: "#fff", border: "none",
                 borderRadius: 8, padding: "7px 18px", fontSize: 13, fontWeight: 700,
-                cursor: submitting || submitSuccess ? "not-allowed" : "pointer",
-                opacity: submitting ? 0.7 : 1,
+                cursor: submitting || uploading || submitSuccess ? "not-allowed" : "pointer",
+                opacity: submitting || uploading ? 0.7 : 1,
               }}
             >
               {submitSuccess
                 ? <><CheckCircle size={14} /> Saved to System</>
-                : submitting
-                  ? <><Send size={14} /> Submitting…</>
-                  : <><Send size={14} /> Submit to System</>}
+                : uploading
+                  ? <><Send size={14} /> Uploading Photo…</>
+                  : submitting
+                    ? <><Send size={14} /> Submitting…</>
+                    : <><Send size={14} /> Submit to System</>}
             </button>
             {/* Print */}
             <button onClick={() => window.print()} style={{
@@ -449,15 +473,58 @@ export default function SODApplicationFormPage() {
               </div>
             </div>
 
-            {/* Passport photo box */}
-            <div style={{
-              width: 90, height: 110, border: "1px solid #000",
-              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-            }}>
-              <span style={{ fontSize: 9, textAlign: "center", color: "#666", lineHeight: 1.6 }}>
-                Passport<br />Photograph
-              </span>
+            {/* Passport photo box — clickable upload */}
+            <div
+              className="sod-no-print"
+              onClick={() => photoInputRef.current?.click()}
+              style={{
+                width: 90, height: 110, border: "2px dashed #000080", borderRadius: 6,
+                display: "flex", flexDirection: "column", alignItems: "center",
+                justifyContent: "center", flexShrink: 0, cursor: "pointer",
+                overflow: "hidden", background: photoPreview ? "transparent" : "#f0f4ff",
+              }}
+              title="Click to upload passport photo"
+            >
+              {photoPreview ? (
+                <img src={photoPreview} alt="Passport" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000080" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  <span style={{ fontSize: 8, textAlign: "center", color: "#000080", lineHeight: 1.4, marginTop: 4 }}>
+                    Passport<br />Photograph<br /><span style={{ color: "#666" }}>(click)</span>
+                  </span>
+                </>
+              )}
             </div>
+
+            {/* Print-only static photo box */}
+            <div
+              className="sod-print-only"
+              style={{
+                width: 90, height: 110, border: "1px solid #000",
+                display: "none", alignItems: "center", justifyContent: "center",
+                flexShrink: 0, overflow: "hidden",
+              }}
+            >
+              {photoPreview ? (
+                <img src={photoPreview} alt="Passport" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                <span style={{ fontSize: 9, textAlign: "center", color: "#666", lineHeight: 1.6 }}>
+                  Passport<br />Photograph
+                </span>
+              )}
+            </div>
+
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              style={{ display: "none" }}
+            />
           </div>
 
           {/* ── REGION / PROVINCE / CENTRE ──────────────────────────── */}
