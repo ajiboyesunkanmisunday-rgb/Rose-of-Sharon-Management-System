@@ -225,8 +225,8 @@ export default function SODApplicationFormPage() {
 
   /* ─── Map form → API and submit ────────────────────────────────────────── */
   const handleSubmit = async () => {
-    if (!firstName.trim() || !surname.trim() || !phone.trim()) {
-      setSubmitError("First Name, Surname, and Phone Number are required before submitting.");
+    if (!session.trim() || !firstName.trim() || !surname.trim() || !phone.trim()) {
+      setSubmitError("Session/Set, First Name, Surname, and Phone Number are required before submitting.");
       return;
     }
     setSubmitError("");
@@ -241,6 +241,7 @@ export default function SODApplicationFormPage() {
                     : sex.trim() || undefined;
 
       await createSchoolOfDisciple({
+        set:      session.trim(),
         region:   region   || undefined,
         province: province || undefined,
         centre:   centre   || undefined,
@@ -442,8 +443,8 @@ export default function SODApplicationFormPage() {
                 <div style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase" }}>The School of Disciples</div>
                 <div style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase" }}>Application Form</div>
                 <div style={{ fontSize: 11, marginTop: 4, display: "flex", alignItems: "baseline", justifyContent: "center", gap: 4 }}>
-                  <span>SESSION</span>
-                  <F value={session} onChange={setSession} style={{ width: 120 }} />
+                  <span>SESSION <span style={{ color: "red" }}>*</span></span>
+                  <F value={session} onChange={setSession} style={{ width: 120, borderBottom: session.trim() ? undefined : "1.5px solid red" }} />
                 </div>
               </div>
             </div>
