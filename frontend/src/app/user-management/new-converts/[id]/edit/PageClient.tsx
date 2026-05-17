@@ -34,6 +34,7 @@ export default function EditNewConvertPage() {
   const [state,       setState]       = useState("");
   const [country,     setCountry]     = useState("");
   const [photo,       setPhoto]       = useState<File | null>(null);
+  const [eventId,     setEventId]     = useState<string | undefined>(undefined);
   const [submitting,  setSubmitting]  = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -52,6 +53,7 @@ export default function EditNewConvertPage() {
       setCity(u.city ?? "");
       setState(u.state ?? "");
       setCountry(u.country ?? "");
+      setEventId(u.service?.id ?? undefined);
     } catch { /* silently fall back */ }
   }, [id]);
 
@@ -72,13 +74,13 @@ export default function EditNewConvertPage() {
         middleName:       middleName  || undefined,
         lastName:         lastName    || undefined,
         sex:              gender      || undefined,
-        email:            email       || undefined,
         countryCode:      rawCode     || undefined,
         phoneNumber:      phone       || undefined,
         street:           street      || undefined,
         city:             city        || undefined,
         state:            state       || undefined,
         country:          country     || undefined,
+        eventId:          eventId,
         profilePictureUrl,
       });
       router.back();
