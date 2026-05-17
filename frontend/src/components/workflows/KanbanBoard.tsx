@@ -43,6 +43,11 @@ function fmtDate(s?: string) {
   if (!s) return "";
   return new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
+function limitWords(text: string, max: number): string {
+  const words = text.trim().split(/\s+/);
+  if (words.length <= max) return text;
+  return words.slice(0, max).join(" ") + "…";
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ColumnsState { [status: string]: RequestResponse[] }
@@ -392,15 +397,15 @@ function KanbanCard({
           <GripVertical className="h-4 w-4 shrink-0 text-[#D1D5DB] group-hover:text-[#9CA3AF]" />
         </div>
 
-        {/* Subject — 2-line clamp */}
-        <p className="text-sm font-semibold text-[#111827] leading-snug line-clamp-2 break-all">
-          {card.subject || "—"}
+        {/* Subject — 10 words max */}
+        <p className="text-sm font-semibold text-[#111827] leading-snug break-all">
+          {limitWords(card.subject || "—", 10)}
         </p>
 
-        {/* Content — 2-line clamp */}
+        {/* Content — 18 words max */}
         {card.content && (
-          <p className="mt-1 text-xs text-[#6B7280] leading-relaxed line-clamp-2 break-all">
-            {card.content}
+          <p className="mt-1 text-xs text-[#6B7280] leading-relaxed break-all">
+            {limitWords(card.content, 18)}
           </p>
         )}
 
