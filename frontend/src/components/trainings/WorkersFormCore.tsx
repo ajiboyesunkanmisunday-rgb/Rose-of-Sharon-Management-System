@@ -11,7 +11,7 @@
  * mode = "view"   → read-only, pre-filled from initialData, Print Filled Form button only
  */
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Printer, Send, CheckCircle } from "lucide-react";
 import {
   createWorkerInTraining,
@@ -185,6 +185,7 @@ export default function WorkersFormCore({
   initialData?: WorkersInTrainingResponse;
 }) {
   const ro = mode !== "fill";
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   /* ── A. Biographical ─────────────────────────────────────────────────── */
   const [photo,        setPhoto]        = useState<File | null>(null);
@@ -371,15 +372,17 @@ export default function WorkersFormCore({
       <style>{`
         @page { size: A4 portrait; margin: 10mm 14mm; }
         @media print {
-          .wit-no-print  { display: none !important; }
-          .wit-wrapper   { background: #fff !important; padding: 0 !important; }
-          .wit-paper     { box-shadow: none !important; width: 100% !important; max-width: none !important;
-                           margin: 0 !important; padding: 0 !important; }
-          .wit-p2        { page-break-before: always; break-before: page; }
-          .wit-p3        { page-break-before: always; break-before: page; }
+          .wit-no-print       { display: none !important; }
+          .wit-print-only     { display: flex !important; }
+          .wit-wrapper        { background: #fff !important; padding: 0 !important; }
+          .wit-paper          { box-shadow: none !important; width: 100% !important; max-width: none !important;
+                                margin: 0 !important; padding: 0 !important; }
+          .wit-p2             { page-break-before: always; break-before: page; }
+          .wit-p3             { page-break-before: always; break-before: page; }
         }
+        .wit-print-only { display: none; }
         .wit-ci:focus { background: #eef2ff !important; }
-        .wit-ci[readonly]  { cursor: default; }
+        .wit-ci[readonly] { cursor: default; }
       `}</style>
 
       {/* ── Toolbar ─────────────────────────────────────────────────────── */}
@@ -445,46 +448,86 @@ export default function WorkersFormCore({
         <div className="wit-paper" style={PAPER}>
 
           {/* Header */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-            <div style={{ textAlign: "center", flex: 1 }}>
-              {/* Logo placeholder */}
-              <div style={{
-                width: 48, height: 48, borderRadius: "50%", border: "2px solid #000080",
-                margin: "0 auto 4px", display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 9, fontWeight: 700, color: "#000080", textAlign: "center", lineHeight: 1.2,
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+
+            {/* Logo + church name */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/rccg-icon.png" alt="RCCG" width={72} height={72} style={{ objectFit: "contain", flexShrink: 0 }} />
+              <div style={{ textAlign: "center", lineHeight: 1.6 }}>
+                <div style={{ fontWeight: 900, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.3 }}>
+                  The Redeemed Christian Church of God
+                </div>
+                <div style={{ fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>Rose of Sharon Parish</div>
+                <div style={{ fontWeight: 900, fontSize: 14, marginTop: 4, textDecoration: "underline", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  Workers Registration Form
+                </div>
+              </div>
+            </div>
+
+            {/* Passport photo — fill mode: dashed + clickable */}
+            {mode === "fill" ? (
+              <div
+                className="wit-no-print"
+                onClick={() => photoInputRef.current?.click()}
+                style={{
+                  width: 85, height: 105, border: "2px dashed #000080", flexShrink: 0,
+                  marginLeft: 14, display: "flex", flexDirection: "column",
+                  alignItems: "center", justifyContent: "center", cursor: "pointer",
+                  overflow: "hidden", background: photoPreview ? "transparent" : "#f0f4ff",
+                }}
+                title="Click to upload passport photo"
+              >
+                {photoPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={photoPreview} alt="Photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000080" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <span style={{ fontSize: 8, color: "#000080", textAlign: "center", lineHeight: 1.4, marginTop: 4 }}>
+                      Passport<br />Photograph<br /><span style={{ color: "#666" }}>(click)</span>
+                    </span>
+                  </>
+                )}
+              </div>
+            ) : (
+              /* view/blank — solid border, shows photo if available */
+              <div className="wit-no-print" style={{
+                width: 85, height: 105, border: "1px solid #000", flexShrink: 0,
+                marginLeft: 14, display: "flex", alignItems: "center",
+                justifyContent: "center", overflow: "hidden",
               }}>
-                RCCG
+                {photoPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={photoPreview} alt="Photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <span style={{ fontSize: 9, textAlign: "center", color: "#555", lineHeight: 1.6 }}>
+                    Passport<br />Photograph
+                  </span>
+                )}
               </div>
-              <div style={{ fontWeight: 900, fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                The Redeemed Christian Church of God
-              </div>
-              <div style={{ fontWeight: 700, fontSize: 11, marginTop: 2 }}>Rose of Sharon Parish</div>
-              <div style={{ fontWeight: 900, fontSize: 14, marginTop: 4, textDecoration: "underline", textTransform: "uppercase" }}>
-                Workers Registration Form
-              </div>
-            </div>
-            {/* Passport photo box */}
-            <div
-              className="wit-no-print"
-              style={{
-                width: 80, height: 96, border: "1px solid #000", flexShrink: 0,
-                marginLeft: 16, display: "flex", flexDirection: "column",
-                alignItems: "center", justifyContent: "center", fontSize: 9,
-                color: "#555", textAlign: "center", cursor: ro ? "default" : "pointer", overflow: "hidden",
-              }}
-              onClick={() => !ro && document.getElementById("wit-photo")?.click()}
-            >
-              {photoPreview
-                // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={photoPreview} alt="Photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : <>Passport<br />photograph</>}
-              {!ro && <input id="wit-photo" type="file" accept="image/*" hidden onChange={handlePhotoChange} />}
-            </div>
+            )}
+
             {/* Print-only photo box */}
-            <div style={{ width: 80, height: 96, border: "1px solid #000", flexShrink: 0, marginLeft: 16, display: "none" }}
-              className="wit-print-photo">
-              <div style={{ padding: 4, fontSize: 9, textAlign: "center" }}>Passport<br />photograph</div>
+            <div className="wit-print-only" style={{
+              width: 85, height: 105, border: "1px solid #000", flexShrink: 0,
+              marginLeft: 14, alignItems: "center", justifyContent: "center", overflow: "hidden",
+            }}>
+              {photoPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={photoPreview} alt="Photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                <span style={{ fontSize: 9, textAlign: "center", color: "#555", lineHeight: 1.6 }}>
+                  Passport<br />Photograph
+                </span>
+              )}
             </div>
+
+            {/* Hidden file input */}
+            <input ref={photoInputRef} type="file" accept="image/*" hidden onChange={handlePhotoChange} />
           </div>
 
           {/* ══ A. BIOGRAPHICAL DATA ══════════════════════════════════════ */}
