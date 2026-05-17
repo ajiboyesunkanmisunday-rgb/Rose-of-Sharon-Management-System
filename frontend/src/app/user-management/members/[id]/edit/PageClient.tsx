@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import MultiSelect from "@/components/ui/MultiSelect";
 import { getUser, updateMember, assignMemberGroups, uploadProfilePicture, getAllGroups } from "@/lib/api";
-import { NIGERIA_STATES, COUNTRIES } from "@/lib/nigeria-states";
+import { COUNTRIES, getStatesForCountry } from "@/lib/nigeria-states";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 
 export default function EditMemberPage() {
@@ -36,6 +36,12 @@ export default function EditMemberPage() {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [country, setCountry] = useState("");
+  const stateOptions = getStatesForCountry(country);
+  useEffect(() => {
+    if (country && state && !stateOptions.includes(state)) {
+      setState("");
+    }
+  }, [country, state, stateOptions]);
   const [maritalStatus, setMaritalStatus] = useState("");
   const [allGroups, setAllGroups]       = useState<{ id: string; name: string }[]>([]);
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
@@ -324,7 +330,7 @@ export default function EditMemberPage() {
                   <SearchableSelect
                     placeholder="Select State"
                     searchPlaceholder="Search states…"
-                    options={NIGERIA_STATES}
+                    options={stateOptions}
                     value={state}
                     onChange={setState}
                   />

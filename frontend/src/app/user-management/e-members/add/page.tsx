@@ -9,7 +9,7 @@ import PhotoUpload from "@/components/ui/PhotoUpload";
 import MultiSelect from "@/components/ui/MultiSelect";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { createEMember, uploadProfilePicture, getAllGroups, type GroupResponse } from "@/lib/api";
+import { createEMember, uploadProfilePicture, getAllGroups, getEvents, EventResponse, type GroupResponse } from "@/lib/api";
 import { NIGERIA_STATES } from "@/lib/nigeria-states";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 
@@ -21,7 +21,19 @@ export default function AddEMemberPage() {
   useEffect(() => {
     getAllGroups().then(setAvailableGroups).catch(() => {});
   }, []);
+  useEffect(() => {
+    async function loadServices() {
+      try {
+        const page = await getEvents(0, 100);
+        setServices(page.content ?? []);
+      } catch {
+        setServices([]);
+      }
+    }
+    loadServices();
+  }, []);
   const groupNames = availableGroups.map((g) => g.name);
+  const serviceOptions = services.map((event) => event.title || event.topic || event.id);
 
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
@@ -36,6 +48,7 @@ export default function AddEMemberPage() {
   const [state, setState] = useState("");
   const [maritalStatus, setMaritalStatus] = useState("");
   const [serviceAttended, setServiceAttended] = useState("");
+  const [services, setServices] = useState<EventResponse[]>([]);
   const [groups, setGroups] = useState<string[]>([]);
   const [photo, setPhoto] = useState<File | null>(null);
   const [spouse, setSpouse] = useState<SpouseData | null>(null);
@@ -308,10 +321,17 @@ export default function AddEMemberPage() {
                 className={selectStyles}
               >
                 <option value="">Select Service</option>
-                <option value="Sunday">Sunday</option>
-                <option value="Tuesday">Tuesday</option>
-                <option value="Thursday">Thursday</option>
-                <option value="Special Service">Special Service</option>
+                {serviceOptions.length === 0 ? (
+                  <option value="" disabled>
+                    Loading services...
+                  </option>
+                ) : (
+                  serviceOptions.map((label) => (
+                    <option key={label} value={label}>
+                      {label}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
