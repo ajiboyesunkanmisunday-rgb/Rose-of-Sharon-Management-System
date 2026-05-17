@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Users, UserPlus, UserCheck, Star, Cake, Heart, PhoneCall } from "lucide-react";
+import { Users, UserPlus, UserCheck, Star, Cake, PhoneCall } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   getMembers,
   getEMembers,
   getFirstTimers,
   getSecondTimers,
-  getNewConverts,
+  getTotalNewConvertsInPeriod,
   getCelebrations,
   type UserResponse,
 } from "@/lib/api";
@@ -25,11 +25,10 @@ const attendanceData = [
 ];
 
 interface KpiStats {
-  members: number;
-  eMembers: number;
-  firstTimers: number;
-  secondTimers: number;
-  newConverts: number;
+  activeMembers: number;
+  firstTimersMonth: number;
+  secondTimersMonth: number;
+  newConvertsMonth: number;
   loading: boolean;
 }
 
@@ -53,7 +52,7 @@ export default function DashboardPage() {
   const maxAttendance = Math.max(...attendanceData.map((d) => d.value));
 
   const [stats, setStats] = useState<KpiStats>({
-    members: 0, eMembers: 0, firstTimers: 0, secondTimers: 0, newConverts: 0, loading: true,
+    activeMembers: 0, firstTimersMonth: 0, secondTimersMonth: 0, newConvertsMonth: 0, loading: true,
   });
 
   const [topFollowUps, setTopFollowUps] = useState<FollowUpItem[]>([]);
@@ -64,20 +63,44 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function loadStats() {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+      const isThisMonth = (dateStr?: string) => {
+        if (!dateStr) return false;
+        const d = new Date(dateStr);
+        return d >= monthStart && d <= monthEnd;
+      };
+
+      const startIso = monthStart.toISOString();
+      const endIso   = monthEnd.toISOString();
+
       try {
         const [mem, emem, ft, st, nc] = await Promise.allSettled([
           getMembers(0, 1),
           getEMembers(0, 1),
-          getFirstTimers(0, 1),
-          getSecondTimers(0, 1),
-          getNewConverts(0, 1),
+          getFirstTimers(0, 500),
+          getSecondTimers(0, 500),
+          getTotalNewConvertsInPeriod(startIso, endIso),
         ]);
+
+        const membersTotal  = mem.status  === "fulfilled" ? (mem.value.totalElements  ?? 0) : 0;
+        const eMembersTotal = emem.status === "fulfilled" ? (emem.value.totalElements ?? 0) : 0;
+
+        const ftThisMonth = ft.status === "fulfilled"
+          ? (ft.value.content ?? []).filter((u) => isThisMonth(u.createdOn)).length
+          : 0;
+        const stThisMonth = st.status === "fulfilled"
+          ? (st.value.content ?? []).filter((u) => isThisMonth(u.createdOn)).length
+          : 0;
+        const ncThisMonth = nc.status === "fulfilled" ? (nc.value.totalCount ?? 0) : 0;
+
         setStats({
-          members:      mem.status      === "fulfilled" ? (mem.value.totalElements      ?? 0) : 0,
-          eMembers:     emem.status     === "fulfilled" ? (emem.value.totalElements     ?? 0) : 0,
-          firstTimers:  ft.status       === "fulfilled" ? (ft.value.totalElements       ?? 0) : 0,
-          secondTimers: st.status       === "fulfilled" ? (st.value.totalElements       ?? 0) : 0,
-          newConverts:  nc.status       === "fulfilled" ? (nc.value.totalElements       ?? 0) : 0,
+          activeMembers:    membersTotal + eMembersTotal,
+          firstTimersMonth: ftThisMonth,
+          secondTimersMonth: stThisMonth,
+          newConvertsMonth:  ncThisMonth,
           loading: false,
         });
       } catch {
@@ -144,41 +167,44 @@ export default function DashboardPage() {
       .finally(() => setCelebrationsLoading(false));
   }, []);
 
-  const totalPeople = stats.members + stats.eMembers + stats.firstTimers + stats.secondTimers + stats.newConverts;
-  const totalGuests = stats.firstTimers + stats.secondTimers;
+  const monthLabel = new Date().toLocaleString("en-GB", { month: "long", year: "numeric" });
 
   const kpiCards = [
     {
-      label: "Total Members",
-      value: stats.loading ? "—" : stats.members.toLocaleString(),
-      icon: Users,
-      iconBg: "bg-[#EEF2FF]",
-      iconColor: "text-[#000080]",
-      href: "/user-management/members",
-    },
-    {
-      label: "E-Members",
-      value: stats.loading ? "—" : stats.eMembers.toLocaleString(),
-      icon: UserCheck,
-      iconBg: "bg-[#F0FDF4]",
-      iconColor: "text-[#16A34A]",
-      href: "/user-management/e-members",
-    },
-    {
-      label: "Guests (First & Second Timers)",
-      value: stats.loading ? "—" : totalGuests.toLocaleString(),
+      label: "First Timers",
+      sublabel: monthLabel,
+      value: stats.loading ? "—" : stats.firstTimersMonth.toLocaleString(),
       icon: UserPlus,
       iconBg: "bg-[#FFF7ED]",
       iconColor: "text-[#EA580C]",
       href: "/user-management/first-timers",
     },
     {
+      label: "Second Timers",
+      sublabel: monthLabel,
+      value: stats.loading ? "—" : stats.secondTimersMonth.toLocaleString(),
+      icon: UserCheck,
+      iconBg: "bg-[#F0FDF4]",
+      iconColor: "text-[#16A34A]",
+      href: "/user-management/second-timers",
+    },
+    {
       label: "New Converts",
-      value: stats.loading ? "—" : stats.newConverts.toLocaleString(),
+      sublabel: monthLabel,
+      value: stats.loading ? "—" : stats.newConvertsMonth.toLocaleString(),
       icon: Star,
       iconBg: "bg-[#FDF4FF]",
       iconColor: "text-[#A21CAF]",
       href: "/user-management/new-converts",
+    },
+    {
+      label: "Active Members",
+      sublabel: "Members + E-Members",
+      value: stats.loading ? "—" : stats.activeMembers.toLocaleString(),
+      icon: Users,
+      iconBg: "bg-[#EEF2FF]",
+      iconColor: "text-[#000080]",
+      href: "/user-management/members",
     },
   ];
 
@@ -188,7 +214,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-[28px] font-bold text-[#000000]">Dashboard</h1>
           <p className="text-sm text-[#6B7280]">
-            {stats.loading ? "Loading congregation data…" : `${totalPeople.toLocaleString()} total congregation records`}
+            {stats.loading ? "Loading congregation data…" : `${stats.activeMembers.toLocaleString()} active members · ${monthLabel} snapshot`}
           </p>
         </div>
       </div>
@@ -210,7 +236,8 @@ export default function DashboardPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-2xl font-bold text-[#111827]">{card.value}</p>
-                    <p className="text-xs text-[#6B7280] leading-tight mt-0.5">{card.label}</p>
+                    <p className="text-xs font-semibold text-[#374151] leading-tight mt-0.5">{card.label}</p>
+                    <p className="text-[11px] text-[#9CA3AF] leading-tight mt-0.5">{card.sublabel}</p>
                   </div>
                 </button>
               );
