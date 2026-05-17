@@ -281,10 +281,10 @@ export default function SODApplicationFormPage() {
           .map((institution) => ({ institution })),
         createPastPlaceOfWorshipRequests: wp
           .filter((r) => r.name.trim())
-          .map((r) => ({ name: r.name, location: r.address })),
+          .map((r) => ({ date: safeDate(r.date), name: r.name, address: r.address })),
         createPositionHeldRequests: ph
           .filter((r) => r.name.trim() || r.position.trim())
-          .map((r) => ({ organisation: r.name, title: r.position })),
+          .map((r) => ({ worshipPlace: r.name, positionHeld: r.position })),
         consent: true,
       });
       setSubmitSuccess(true);

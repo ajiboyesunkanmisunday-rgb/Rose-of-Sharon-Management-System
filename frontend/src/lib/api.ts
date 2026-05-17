@@ -2453,12 +2453,9 @@ export interface CreateSchoolOfDisciplesRequest {
   currentParishPastorName?: string;
   currentParishPastorPhoneNumber?: string;
   activityInCurrentParish?: string;
-  // Past places of worship
-  createPastPlaceOfWorshipRequests?: { name?: string; location?: string; role?: string }[];
-  // Positions held
-  createPositionHeldRequests?: { title?: string; organisation?: string }[];
-  // Qualifications
-  qualificationRequests?: { degree?: string; institution?: string; year?: string }[];
+  createPastPlaceOfWorshipRequests?: { date?: string; name?: string; address?: string }[];
+  createPositionHeldRequests?: { worshipPlace?: string; positionHeld?: string }[];
+  qualificationRequests?: { date?: string; institution?: string; qualificationReceived?: string }[];
   // Misc
   hasAnotherSimultaneousProgram?: boolean;
   otherInformation?: string;
