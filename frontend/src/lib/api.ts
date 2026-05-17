@@ -1263,8 +1263,8 @@ export async function getGroup(id: string): Promise<GroupResponse> {
 
 export async function getGroupMembers(
   groupId: string, pageNo = 0, pageSize = 500
-): Promise<CustomPageResponse<UserResponse>> {
-  return apiFetch<CustomPageResponse<UserResponse>>(
+): Promise<CustomPageResponse<UserBasicResponse>> {
+  return apiFetch<CustomPageResponse<UserBasicResponse>>(
     `/api/v1/groups/${groupId}?pageNo=${pageNo}&pageSize=${pageSize}`
   );
 }
