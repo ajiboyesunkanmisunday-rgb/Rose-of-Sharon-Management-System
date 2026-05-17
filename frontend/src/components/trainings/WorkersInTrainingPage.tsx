@@ -15,6 +15,7 @@ import {
 import {
   GraduationCap, Phone, Mail, RefreshCw, Award, Users,
   CheckCircle, Clock, Star, ChevronDown, X, MessageSquare, PlusCircle,
+  FileText, Eye,
 } from "lucide-react";
 
 const ITEMS_PER_PAGE = 12;
@@ -114,11 +115,13 @@ function WorkerCard({
   selected,
   onToggleSelect,
   onRemark,
+  onViewForm,
 }: {
   worker: WorkersInTrainingResponse;
   selected: boolean;
   onToggleSelect: (id: string) => void;
   onRemark: (w: WorkersInTrainingResponse) => void;
+  onViewForm: (id: string) => void;
 }) {
   const bg = avatarColor(worker.id);
   const phone = worker.phoneNumber
@@ -226,14 +229,23 @@ function WorkerCard({
         </p>
       )}
 
-      {/* Give remark button */}
-      <button
-        onClick={() => onRemark(worker)}
-        className="mt-3 flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium text-[#374151] hover:border-[#7C3AED] hover:text-[#7C3AED] transition-colors"
-      >
-        <MessageSquare className="h-3 w-3" />
-        {worker.officialRemarks ? "Edit Remark" : "Give Remark"}
-      </button>
+      {/* Action buttons */}
+      <div className="mt-3 flex flex-col gap-2">
+        <button
+          onClick={() => onRemark(worker)}
+          className="flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium text-[#374151] hover:border-[#7C3AED] hover:text-[#7C3AED] transition-colors"
+        >
+          <MessageSquare className="h-3 w-3" />
+          {worker.officialRemarks ? "Edit Remark" : "Give Remark"}
+        </button>
+        <button
+          onClick={() => onViewForm(worker.id)}
+          className="flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium text-[#374151] hover:border-[#000080] hover:text-[#000080] transition-colors"
+        >
+          <Eye className="h-3 w-3" />
+          View Form
+        </button>
+      </div>
     </div>
   );
 }
@@ -386,6 +398,13 @@ export default function WorkersInTrainingPage() {
             New Application
           </button>
           <button
+            onClick={() => router.push("/trainings/workers/form?mode=blank")}
+            className="flex items-center gap-2 rounded-lg border border-[#000080] bg-white px-4 py-2 text-xs font-semibold text-[#000080] hover:bg-[#000080] hover:text-white transition-colors"
+          >
+            <FileText className="h-3.5 w-3.5" />
+            Download Blank Form
+          </button>
+          <button
             onClick={load}
             disabled={loading}
             className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:border-[#7C3AED] hover:text-[#7C3AED] disabled:opacity-50"
@@ -524,6 +543,7 @@ export default function WorkersInTrainingPage() {
               selected={selected.has(w.id)}
               onToggleSelect={toggleSelect}
               onRemark={setRemarkWorker}
+              onViewForm={(id) => router.push(`/trainings/workers/form/${id}`)}
             />
           ))}
         </div>

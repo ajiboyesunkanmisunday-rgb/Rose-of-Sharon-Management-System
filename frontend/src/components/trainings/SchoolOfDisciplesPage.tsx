@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
 import Pagination from "@/components/ui/Pagination";
@@ -17,7 +18,7 @@ import {
 import {
   BookOpen, Phone, Mail, RefreshCw, Award, Users,
   CheckCircle, Clock, Star, ChevronDown, X, MessageSquare,
-  CalendarCheck, BookCheck, ClipboardList,
+  CalendarCheck, BookCheck, ClipboardList, PlusCircle, FileText, Eye,
 } from "lucide-react";
 
 const ACCENT   = "#D97706";
@@ -437,12 +438,14 @@ function StudentCard({
   onToggleSelect,
   onRemark,
   onAttendance,
+  onViewForm,
 }: {
   student: SchoolOfDisciplesResponse;
   selected: boolean;
   onToggleSelect: (id: string) => void;
   onRemark: (s: SchoolOfDisciplesResponse) => void;
   onAttendance: (s: SchoolOfDisciplesResponse) => void;
+  onViewForm: (id: string) => void;
 }) {
   const bg = avatarColor(student.id);
   const phone = student.phoneNumber
@@ -574,12 +577,20 @@ function StudentCard({
           {student.officialRemarks ? "Edit Remark" : "Remark"}
         </button>
       </div>
+      <button
+        onClick={() => onViewForm(student.id)}
+        className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium text-[#374151] transition-colors hover:border-[#000080] hover:text-[#000080]"
+      >
+        <Eye className="h-3 w-3" />
+        View Form
+      </button>
     </div>
   );
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function SchoolOfDisciplesPage() {
+  const router = useRouter();
   const [allStudents,       setAllStudents]       = useState<SchoolOfDisciplesResponse[]>([]);
   const [loading,           setLoading]           = useState(true);
   const [error,             setError]             = useState("");
@@ -737,14 +748,30 @@ export default function SchoolOfDisciplesPage() {
           <h1 className="text-[28px] font-bold text-[#000000]">School of Disciples</h1>
           <p className="text-sm text-[#6B7280]">Members enrolled in the SOD programme</p>
         </div>
-        <button
-          onClick={load}
-          disabled={loading}
-          className="ml-auto flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:text-[#D97706] hover:border-[#D97706] disabled:opacity-50"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => router.push("/trainings/sod/form")}
+            className="flex items-center gap-2 rounded-lg bg-[#000080] px-4 py-2 text-xs font-semibold text-white hover:bg-[#000066]"
+          >
+            <PlusCircle className="h-3.5 w-3.5" />
+            New Application
+          </button>
+          <button
+            onClick={() => router.push("/trainings/sod/form?mode=blank")}
+            className="flex items-center gap-2 rounded-lg border border-[#000080] bg-white px-4 py-2 text-xs font-semibold text-[#000080] hover:bg-[#000080] hover:text-white transition-colors"
+          >
+            <FileText className="h-3.5 w-3.5" />
+            Download Blank Form
+          </button>
+          <button
+            onClick={load}
+            disabled={loading}
+            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:text-[#D97706] hover:border-[#D97706] disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -873,6 +900,7 @@ export default function SchoolOfDisciplesPage() {
               onToggleSelect={toggleSelect}
               onRemark={setRemarkStudent}
               onAttendance={setAttendanceStudent}
+              onViewForm={(id) => router.push(`/trainings/sod/form/${id}`)}
             />
           ))}
         </div>
