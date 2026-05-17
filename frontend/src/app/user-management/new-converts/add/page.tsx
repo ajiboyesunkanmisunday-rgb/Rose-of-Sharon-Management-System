@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import PhoneInput from "@/components/ui/PhoneInput";
-import { createNewConvert, getEvents, EventResponse } from "@/lib/api";
-import { COUNTRIES, getStatesForCountry } from "@/lib/nigeria-states";
+import { createNewConvert } from "@/lib/api";
 import SearchableSelect from "@/components/ui/SearchableSelect";
+import CountryStateSelect from "@/components/ui/CountryStateSelect";
+import { useEventServices } from "@/hooks/useEventServices";
 
 export default function AddNewConvertPage() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function AddNewConvertPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [serviceAttended, setServiceAttended] = useState("");
-  const [services, setServices] = useState<EventResponse[]>([]);
+  const { services: eventServices, loading: servicesLoading } = useEventServices();
   const [street, setStreet] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
@@ -58,29 +59,6 @@ export default function AddNewConvertPage() {
     "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
   const selectStyles = inputStyles;
   const labelStyles = "mb-1 block text-sm font-medium text-[#374151]";
-  const stateOptions = getStatesForCountry(country);
-  const serviceOptions = [...services].sort((a, b) => {
-    if (!a.date || !b.date) return 0;
-    return b.date.localeCompare(a.date);
-  });
-
-  useEffect(() => {
-    async function loadServices() {
-      try {
-        const page = await getEvents(0, 100);
-        setServices(page.content ?? []);
-      } catch {
-        setServices([]);
-      }
-    }
-    loadServices();
-  }, []);
-
-  useEffect(() => {
-    if (country && state && !stateOptions.includes(state)) {
-      setState("");
-    }
-  }, [country, state, stateOptions]);
 
   return (
     <DashboardLayout>
@@ -185,24 +163,16 @@ export default function AddNewConvertPage() {
 
             <div>
               <label className={labelStyles}>Service Attended</label>
-              <select
+              <SearchableSelect
+                placeholder={servicesLoading ? "Loading services..." : "Select Service"}
+                searchPlaceholder="Search services..."
+                options={eventServices.map((s) => ({
+                  label: `${s.title ?? s.topic ?? "Event"}${s.date ? " — " + new Date(s.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : ""}`,
+                  value: s.id,
+                }))}
                 value={serviceAttended}
-                onChange={(e) => setServiceAttended(e.target.value)}
-                className={selectStyles}
-              >
-                <option value="">Select Service</option>
-                {serviceOptions.length === 0 ? (
-                  <option value="" disabled>
-                    Loading services...
-                  </option>
-                ) : (
-                  serviceOptions.map((event) => (
-                    <option key={event.id} value={event.id}>
-                      {event.title || event.topic || event.id}
-                    </option>
-                  ))
-                )}
-              </select>
+                onChange={setServiceAttended}
+              />
             </div>
           </div>
         </div>
@@ -232,19 +202,13 @@ export default function AddNewConvertPage() {
                 className={inputStyles}
               />
             </div>
-            <SearchableSelect
-              label="State"
-              placeholder="Select State"
-              options={stateOptions}
-              value={state}
-              onChange={setState}
-            />
-            <SearchableSelect
-              label="Country"
-              placeholder="Select Country"
-              options={COUNTRIES}
-              value={country}
-              onChange={setCountry}
+            <CountryStateSelect
+              country={country}
+              state={state}
+              onCountryChange={(c) => { setCountry(c); setState(""); }}
+              onStateChange={setState}
+              labelStyles={labelStyles}
+              inputStyles={inputStyles}
             />
           </div>
         </div>

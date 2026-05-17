@@ -9,8 +9,8 @@ import MultiSelect from "@/components/ui/MultiSelect";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
 import { createMember, uploadProfilePicture, getAllGroups, type GroupResponse } from "@/lib/api";
-import { COUNTRIES, getStatesForCountry } from "@/lib/nigeria-states";
 import SearchableSelect from "@/components/ui/SearchableSelect";
+import CountryStateSelect from "@/components/ui/CountryStateSelect";
 
 export default function AddMemberPage() {
   const router = useRouter();
@@ -37,12 +37,6 @@ export default function AddMemberPage() {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [country, setCountry] = useState("");
-  const stateOptions = getStatesForCountry(country);
-  useEffect(() => {
-    if (country && state && !stateOptions.includes(state)) {
-      setState("");
-    }
-  }, [country, state, stateOptions]);
   const [maritalStatus, setMaritalStatus] = useState("");
   const [groups, setGroups] = useState<string[]>([]);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -375,29 +369,15 @@ export default function AddMemberPage() {
                   />
                 </div>
 
-                {/* State */}
-                <div>
-                  <label className={labelStyles}>State</label>
-                  <SearchableSelect
-                    placeholder="Select State"
-                    searchPlaceholder="Search states…"
-                    options={stateOptions}
-                    value={state}
-                    onChange={setState}
-                  />
-                </div>
-
-                {/* Country */}
-                <div>
-                  <label className={labelStyles}>Country</label>
-                  <SearchableSelect
-                    placeholder="Select Country"
-                    searchPlaceholder="Search countries…"
-                    options={COUNTRIES}
-                    value={country}
-                    onChange={setCountry}
-                  />
-                </div>
+                {/* Country / State */}
+                <CountryStateSelect
+                  country={country}
+                  state={state}
+                  onCountryChange={(c) => { setCountry(c); setState(""); }}
+                  onStateChange={setState}
+                  labelStyles={labelStyles}
+                  inputStyles={inputStyles}
+                />
 
                 {/* Marital Status */}
                 <div>
