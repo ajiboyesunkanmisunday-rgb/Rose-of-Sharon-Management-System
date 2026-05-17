@@ -452,8 +452,11 @@ export default function WorkersFormCore({
 
             {/* Logo + church name */}
             <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1 }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/rccg-icon.png" alt="RCCG" width={72} height={72} style={{ objectFit: "contain", flexShrink: 0 }} />
+              {/* Clip the combined SVG to just the icon (left 54×54 of the 202×54 viewbox) */}
+              <div style={{ width: 72, height: 72, overflow: "hidden", flexShrink: 0 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/rccg-combined-logo-new.svg" alt="RCCG" style={{ width: 269, height: 72, display: "block", objectFit: "none", objectPosition: "left center" }} />
+              </div>
               <div style={{ textAlign: "center", lineHeight: 1.6 }}>
                 <div style={{ fontWeight: 900, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.3 }}>
                   The Redeemed Christian Church of God
