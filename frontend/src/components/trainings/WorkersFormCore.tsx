@@ -447,86 +447,87 @@ export default function WorkersFormCore({
         ══════════════════════════════════════════════════════════════════ */}
         <div className="wit-paper" style={PAPER}>
 
-          {/* Header */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+          {/* Header — logo centered above text, passport photo top-right */}
+          <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 14 }}>
 
-            {/* Logo + church name */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1 }}>
-              {/* Clip the combined SVG to just the icon (left 54×54 of the 202×54 viewbox) */}
-              <div style={{ width: 72, height: 72, overflow: "hidden", flexShrink: 0 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/rccg-combined-logo-new.svg" alt="RCCG" style={{ width: 269, height: 72, display: "block", objectFit: "none", objectPosition: "left center" }} />
+            {/* Left spacer — balances the photo box so the center block stays truly centred */}
+            <div style={{ width: 90, flexShrink: 0 }} />
+
+            {/* Centre: logo then church name stack */}
+            <div style={{ flex: 1, textAlign: "center" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/rccg-icon.png" alt="RCCG" style={{ width: 70, height: 70, objectFit: "contain", margin: "0 auto 6px", display: "block" }} />
+              <div style={{ fontWeight: 900, fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5, lineHeight: 1.4 }}>
+                The Redeemed Christian Church of God
               </div>
-              <div style={{ textAlign: "center", lineHeight: 1.6 }}>
-                <div style={{ fontWeight: 900, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.3 }}>
-                  The Redeemed Christian Church of God
-                </div>
-                <div style={{ fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>Rose of Sharon Parish</div>
-                <div style={{ fontWeight: 900, fontSize: 14, marginTop: 4, textDecoration: "underline", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  Workers Registration Form
-                </div>
+              <div style={{ fontWeight: 700, fontSize: 11, textTransform: "uppercase", marginTop: 2 }}>
+                Rose of Sharon Parish
+              </div>
+              <div style={{ fontWeight: 900, fontSize: 14, textTransform: "uppercase", textDecoration: "underline", marginTop: 5, letterSpacing: 0.3 }}>
+                Workers Registration Form
               </div>
             </div>
 
-            {/* Passport photo — fill mode: dashed + clickable */}
-            {mode === "fill" ? (
-              <div
-                className="wit-no-print"
-                onClick={() => photoInputRef.current?.click()}
-                style={{
-                  width: 85, height: 105, border: "2px dashed #000080", flexShrink: 0,
-                  marginLeft: 14, display: "flex", flexDirection: "column",
-                  alignItems: "center", justifyContent: "center", cursor: "pointer",
-                  overflow: "hidden", background: photoPreview ? "transparent" : "#f0f4ff",
-                }}
-                title="Click to upload passport photo"
-              >
-                {photoPreview ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={photoPreview} alt="Photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000080" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                      <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-                    </svg>
-                    <span style={{ fontSize: 8, color: "#000080", textAlign: "center", lineHeight: 1.4, marginTop: 4 }}>
-                      Passport<br />Photograph<br /><span style={{ color: "#666" }}>(click)</span>
+            {/* Right: passport photo box */}
+            <div style={{ width: 90, flexShrink: 0, marginLeft: 10 }}>
+              {/* Screen — fill mode: dashed + clickable */}
+              {mode === "fill" ? (
+                <div
+                  className="wit-no-print"
+                  onClick={() => photoInputRef.current?.click()}
+                  style={{
+                    width: 90, height: 110, border: "2px dashed #000080",
+                    display: "flex", flexDirection: "column",
+                    alignItems: "center", justifyContent: "center", cursor: "pointer",
+                    overflow: "hidden", background: photoPreview ? "transparent" : "#f0f4ff",
+                  }}
+                  title="Click to upload passport photo"
+                >
+                  {photoPreview ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={photoPreview} alt="Photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000080" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                      </svg>
+                      <span style={{ fontSize: 8, color: "#000080", textAlign: "center", lineHeight: 1.4, marginTop: 4 }}>
+                        Passport<br />Photograph<br /><span style={{ color: "#666" }}>(click)</span>
+                      </span>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="wit-no-print" style={{
+                  width: 90, height: 110, border: "1px solid #000",
+                  display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
+                }}>
+                  {photoPreview ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={photoPreview} alt="Photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <span style={{ fontSize: 9, textAlign: "center", color: "#555", lineHeight: 1.6 }}>
+                      Passport<br />photograph
                     </span>
-                  </>
-                )}
-              </div>
-            ) : (
-              /* view/blank — solid border, shows photo if available */
-              <div className="wit-no-print" style={{
-                width: 85, height: 105, border: "1px solid #000", flexShrink: 0,
-                marginLeft: 14, display: "flex", alignItems: "center",
-                justifyContent: "center", overflow: "hidden",
+                  )}
+                </div>
+              )}
+
+              {/* Print-only photo box */}
+              <div className="wit-print-only" style={{
+                width: 90, height: 110, border: "1px solid #000",
+                alignItems: "center", justifyContent: "center", overflow: "hidden",
               }}>
                 {photoPreview ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={photoPreview} alt="Photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
                   <span style={{ fontSize: 9, textAlign: "center", color: "#555", lineHeight: 1.6 }}>
-                    Passport<br />Photograph
+                    Passport<br />photograph
                   </span>
                 )}
               </div>
-            )}
-
-            {/* Print-only photo box */}
-            <div className="wit-print-only" style={{
-              width: 85, height: 105, border: "1px solid #000", flexShrink: 0,
-              marginLeft: 14, alignItems: "center", justifyContent: "center", overflow: "hidden",
-            }}>
-              {photoPreview ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={photoPreview} alt="Photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              ) : (
-                <span style={{ fontSize: 9, textAlign: "center", color: "#555", lineHeight: 1.6 }}>
-                  Passport<br />Photograph
-                </span>
-              )}
             </div>
 
             {/* Hidden file input */}
