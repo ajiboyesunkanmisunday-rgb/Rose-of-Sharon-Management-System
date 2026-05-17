@@ -7,6 +7,9 @@ import Button from "@/components/ui/Button";
 import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import { getNewConvert, updateNewConvert, uploadProfilePicture } from "@/lib/api";
+import CountryStateSelect from "@/components/ui/CountryStateSelect";
+import SearchableSelect from "@/components/ui/SearchableSelect";
+import { useEventServices } from "@/hooks/useEventServices";
 
 export default function EditNewConvertPage() {
   const router = useRouter();
@@ -34,7 +37,8 @@ export default function EditNewConvertPage() {
   const [state,       setState]       = useState("");
   const [country,     setCountry]     = useState("");
   const [photo,       setPhoto]       = useState<File | null>(null);
-  const [eventId,     setEventId]     = useState<string | undefined>(undefined);
+  const [eventId,     setEventId]     = useState<string>("");
+  const { services: eventServices, loading: servicesLoading } = useEventServices();
   const [submitting,  setSubmitting]  = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -53,7 +57,7 @@ export default function EditNewConvertPage() {
       setCity(u.city ?? "");
       setState(u.state ?? "");
       setCountry(u.country ?? "");
-      setEventId(u.service?.id ?? undefined);
+      setEventId(u.service?.id ?? "");
     } catch { /* silently fall back */ }
   }, [id]);
 
@@ -80,7 +84,7 @@ export default function EditNewConvertPage() {
         city:             city        || undefined,
         state:            state       || undefined,
         country:          country     || undefined,
-        eventId:          eventId,
+        eventId:          eventId || undefined,
         profilePictureUrl,
       });
       router.back();
@@ -156,6 +160,19 @@ export default function EditNewConvertPage() {
               onNumberChange={setPhone}
               placeholder="Enter Phone Number"
             />
+            <div>
+              <label className={labelStyles}>Service Attended</label>
+              <SearchableSelect
+                placeholder={servicesLoading ? "Loading services..." : "Select Service"}
+                searchPlaceholder="Search services..."
+                options={eventServices.map((s) => ({
+                  label: `${s.title ?? s.topic ?? "Event"}${s.date ? " — " + new Date(s.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : ""}`,
+                  value: s.id,
+                }))}
+                value={eventId}
+                onChange={setEventId}
+              />
+            </div>
           </div>
 
           <div className="mt-6">
@@ -177,16 +194,14 @@ export default function EditNewConvertPage() {
               <input type="text" value={city} onChange={(e) => setCity(e.target.value)}
                 placeholder="Enter City" className={inputStyles} />
             </div>
-            <div>
-              <label className={labelStyles}>State</label>
-              <input type="text" value={state} onChange={(e) => setState(e.target.value)}
-                placeholder="Enter State" className={inputStyles} />
-            </div>
-            <div>
-              <label className={labelStyles}>Country</label>
-              <input type="text" value={country} onChange={(e) => setCountry(e.target.value)}
-                placeholder="Enter Country" className={inputStyles} />
-            </div>
+            <CountryStateSelect
+              country={country}
+              state={state}
+              onCountryChange={(c) => { setCountry(c); setState(""); }}
+              onStateChange={setState}
+              labelStyles={labelStyles}
+              inputStyles={inputStyles}
+            />
           </div>
         </div>
 

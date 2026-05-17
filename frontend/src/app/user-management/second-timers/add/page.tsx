@@ -8,9 +8,11 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { createSecondTimer, getEvents, uploadProfilePicture, EventResponse } from "@/lib/api";
-import { COUNTRIES, getStatesForCountry } from "@/lib/nigeria-states";
+import { createSecondTimer, uploadProfilePicture } from "@/lib/api";
 import SearchableSelect from "@/components/ui/SearchableSelect";
+import CountryStateSelect from "@/components/ui/CountryStateSelect";
+import { OCCUPATIONS } from "@/lib/occupations";
+import { useEventServices } from "@/hooks/useEventServices";
 
 export default function AddSecondTimerPage() {
   const router = useRouter();
@@ -35,7 +37,7 @@ export default function AddSecondTimerPage() {
   const [occupation, setOccupation] = useState("");
   const [isVisiting, setIsVisiting] = useState(false);
   const [serviceAttended, setServiceAttended] = useState("");
-  const [services, setServices] = useState<EventResponse[]>([]);
+  const { services: eventServices, loading: servicesLoading } = useEventServices();
   const [howDidYouHear, setHowDidYouHear] = useState("");
   const [howWasService, setHowWasService] = useState("");
   const [favouriteParts, setFavouriteParts] = useState("");
@@ -115,29 +117,6 @@ export default function AddSecondTimerPage() {
   ];
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 100 }, (_, i) => String(currentYear - i));
-  const stateOptions = getStatesForCountry(country);
-  const serviceOptions = [...services].sort((a, b) => {
-    if (!a.date || !b.date) return 0;
-    return b.date.localeCompare(a.date);
-  });
-
-  useEffect(() => {
-    async function loadServices() {
-      try {
-        const page = await getEvents(0, 100);
-        setServices(page.content ?? []);
-      } catch {
-        setServices([]);
-      }
-    }
-    loadServices();
-  }, []);
-
-  useEffect(() => {
-    if (country && state && !stateOptions.includes(state)) {
-      setState("");
-    }
-  }, [country, state, stateOptions]);
 
   return (
     <DashboardLayout>
@@ -300,24 +279,16 @@ export default function AddSecondTimerPage() {
             {/* Select Service */}
             <div>
               <label className={labelStyles}>Select Service</label>
-              <select
+              <SearchableSelect
+                placeholder={servicesLoading ? "Loading services..." : "Select Service"}
+                searchPlaceholder="Search services..."
+                options={eventServices.map((s) => ({
+                  label: `${s.title ?? s.topic ?? "Event"}${s.date ? " — " + new Date(s.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : ""}`,
+                  value: s.id,
+                }))}
                 value={serviceAttended}
-                onChange={(e) => setServiceAttended(e.target.value)}
-                className={selectStyles}
-              >
-                <option value="">Select Service</option>
-                {serviceOptions.length === 0 ? (
-                  <option value="" disabled>
-                    Loading services...
-                  </option>
-                ) : (
-                  serviceOptions.map((event) => (
-                    <option key={event.id} value={event.id}>
-                      {event.title || event.topic || event.id}
-                    </option>
-                  ))
-                )}
-              </select>
+                onChange={setServiceAttended}
+              />
             </div>
           </div>
 
@@ -356,26 +327,14 @@ export default function AddSecondTimerPage() {
                 className={inputStyles}
               />
             </div>
-            <div>
-              <label className={labelStyles}>State</label>
-              <SearchableSelect
-                placeholder="Select State"
-                searchPlaceholder="Search states…"
-                options={stateOptions}
-                value={state}
-                onChange={setState}
-              />
-            </div>
-            <div>
-              <label className={labelStyles}>Country</label>
-              <SearchableSelect
-                placeholder="Select Country"
-                searchPlaceholder="Search countries…"
-                options={COUNTRIES}
-                value={country}
-                onChange={setCountry}
-              />
-            </div>
+            <CountryStateSelect
+              country={country}
+              state={state}
+              onCountryChange={(c) => { setCountry(c); setState(""); }}
+              onStateChange={setState}
+              labelStyles={labelStyles}
+              inputStyles={inputStyles}
+            />
           </div>
         </div>
 
@@ -413,13 +372,7 @@ export default function AddSecondTimerPage() {
                 className={selectStyles}
               >
                 <option value="">Select Occupation</option>
-                <option value="Student">Student</option>
-                <option value="Engineer">Engineer</option>
-                <option value="Doctor">Doctor</option>
-                <option value="Teacher">Teacher</option>
-                <option value="Business Owner">Business Owner</option>
-                <option value="Tech">Tech</option>
-                <option value="Other">Other</option>
+                {OCCUPATIONS.map((o) => <option key={o} value={o}>{o}</option>)}
               </select>
             </div>
             <div>
