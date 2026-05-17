@@ -108,6 +108,11 @@
   status = 200
 
 [[redirects]]
+  from   = "/user-management/new-converts/:id/edit/"
+  to     = "/user-management/new-converts/nc-1/edit/"
+  status = 200
+
+[[redirects]]
   from   = "/event-management/:id/"
   to     = "/event-management/ev-1/"
   status = 200
