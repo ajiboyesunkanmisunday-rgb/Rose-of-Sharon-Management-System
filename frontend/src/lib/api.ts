@@ -791,9 +791,9 @@ export async function addCallReport(
   userId: string,
   report: string
 ): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/notes`, {
+  return apiFetch<OperationalResponse>(`/api/v1/notes/call`, {
     method: "POST",
-    body: JSON.stringify({ userId, content: report, noteCategory: "CALL" }),
+    body: JSON.stringify({ userId, content: report }),
   });
 }
 
@@ -801,9 +801,9 @@ export async function addVisitReport(
   userId: string,
   report: string
 ): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/notes`, {
+  return apiFetch<OperationalResponse>(`/api/v1/notes/visit`, {
     method: "POST",
-    body: JSON.stringify({ userId, content: report, noteCategory: "VISIT" }),
+    body: JSON.stringify({ userId, content: report }),
   });
 }
 
