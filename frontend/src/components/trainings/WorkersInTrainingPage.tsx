@@ -543,7 +543,7 @@ export default function WorkersInTrainingPage() {
               selected={selected.has(w.id)}
               onToggleSelect={toggleSelect}
               onRemark={setRemarkWorker}
-              onViewForm={(id) => router.push(`/trainings/workers/form/${id}`)}
+              onViewForm={(id) => router.push(`/trainings/workers/form?mode=view&id=${id}`)}
             />
           ))}
         </div>

@@ -900,7 +900,7 @@ export default function SchoolOfDisciplesPage() {
               onToggleSelect={toggleSelect}
               onRemark={setRemarkStudent}
               onAttendance={setAttendanceStudent}
-              onViewForm={(id) => router.push(`/trainings/sod/form/${id}`)}
+              onViewForm={(id) => router.push(`/trainings/sod/form?mode=view&id=${id}`)}
             />
           ))}
         </div>
