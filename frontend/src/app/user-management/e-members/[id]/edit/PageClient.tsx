@@ -8,7 +8,7 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { getUser, updateEMember, uploadProfilePicture } from "@/lib/api";
+import { getEvents, getUser, updateEMember, uploadProfilePicture, EventResponse } from "@/lib/api";
 
 export default function EditEMemberPage() {
   const router = useRouter();
@@ -38,6 +38,7 @@ export default function EditEMemberPage() {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [maritalStatus, setMaritalStatus] = useState("");
   const [serviceAttended, setServiceAttended] = useState<string>("");
+  const [services, setServices] = useState<EventResponse[]>([]);
   const [photo, setPhoto] = useState<File | null>(null);
   const [spouse, setSpouse] = useState<SpouseData | null>(null);
   const [showSpouseModal, setShowSpouseModal] = useState(false);
@@ -74,6 +75,19 @@ export default function EditEMemberPage() {
   }, [id]);
 
   useEffect(() => { populate(); }, [populate]);
+  const serviceOptions = [...services].map((event) => event.title || event.topic || event.id);
+
+  useEffect(() => {
+    async function loadServices() {
+      try {
+        const page = await getEvents(0, 100);
+        setServices(page.content ?? []);
+      } catch {
+        setServices([]);
+      }
+    }
+    loadServices();
+  }, []);
 
   const inputStyles =
     "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
@@ -255,10 +269,17 @@ export default function EditEMemberPage() {
                 className={selectStyles}
               >
                 <option value="">Select Service</option>
-                <option value="Sunday">Sunday</option>
-                <option value="Tuesday">Tuesday</option>
-                <option value="Thursday">Thursday</option>
-                <option value="Special Service">Special Service</option>
+                {serviceOptions.length === 0 ? (
+                  <option value="" disabled>
+                    Loading services...
+                  </option>
+                ) : (
+                  serviceOptions.map((label) => (
+                    <option key={label} value={label}>
+                      {label}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
           </div>

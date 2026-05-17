@@ -8,8 +8,8 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { getUser, updateSecondTimer, uploadProfilePicture } from "@/lib/api";
-import { NIGERIA_STATES, COUNTRIES } from "@/lib/nigeria-states";
+import { getUser, updateSecondTimer, getEvents, uploadProfilePicture, EventResponse } from "@/lib/api";
+import { COUNTRIES, getStatesForCountry } from "@/lib/nigeria-states";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 
 export default function EditSecondTimerPage() {
@@ -77,6 +77,7 @@ export default function EditSecondTimerPage() {
 
   useEffect(() => { populate(); }, [populate]);
   const [serviceAttended, setServiceAttended] = useState("");
+  const [services, setServices] = useState<EventResponse[]>([]);
   const [isVisiting, setIsVisiting] = useState(false);
   const [howDidYouHear, setHowDidYouHear] = useState("");
   const [howWasService, setHowWasService] = useState("");
@@ -120,6 +121,7 @@ export default function EditSecondTimerPage() {
         howWasService: howWasService || undefined,
         favouritePartOfService: favouriteParts || undefined,
         fromOnline: worshippedOnline || undefined,
+        eventId: serviceAttended || undefined,
         profilePictureUrl,
         whatsappNumber: whatsappNumber || undefined,
       });
@@ -143,6 +145,29 @@ export default function EditSecondTimerPage() {
   ];
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 100 }, (_, i) => String(currentYear - i));
+  const stateOptions = getStatesForCountry(country);
+  const serviceOptions = [...services].sort((a, b) => {
+    if (!a.date || !b.date) return 0;
+    return b.date.localeCompare(a.date);
+  });
+
+  useEffect(() => {
+    async function loadServices() {
+      try {
+        const page = await getEvents(0, 100);
+        setServices(page.content ?? []);
+      } catch {
+        setServices([]);
+      }
+    }
+    loadServices();
+  }, []);
+
+  useEffect(() => {
+    if (country && state && !stateOptions.includes(state)) {
+      setState("");
+    }
+  }, [country, state, stateOptions]);
 
   return (
     <DashboardLayout>
@@ -251,7 +276,7 @@ export default function EditSecondTimerPage() {
               <SearchableSelect
                 placeholder="Select State"
                 searchPlaceholder="Search states…"
-                options={NIGERIA_STATES}
+                options={stateOptions}
                 value={state}
                 onChange={setState}
               />
@@ -291,10 +316,17 @@ export default function EditSecondTimerPage() {
               <label className={labelStyles}>Select Service</label>
               <select value={serviceAttended} onChange={(e) => setServiceAttended(e.target.value)} className={selectStyles}>
                 <option value="">Select Service</option>
-                <option value="Sunday Service">Sunday Service</option>
-                <option value="Tuesday Bible Study">Tuesday Bible Study</option>
-                <option value="Thursday Prayer Meeting">Thursday Prayer Meeting</option>
-                <option value="Special Service">Special Service</option>
+                {serviceOptions.length === 0 ? (
+                  <option value="" disabled>
+                    Loading services...
+                  </option>
+                ) : (
+                  serviceOptions.map((event) => (
+                    <option key={event.id} value={event.id}>
+                      {event.title || event.topic || event.id}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
             <div>

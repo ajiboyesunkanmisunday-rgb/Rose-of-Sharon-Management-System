@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
@@ -8,8 +8,8 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { createFirstTimer, uploadProfilePicture } from "@/lib/api";
-import { NIGERIA_STATES, COUNTRIES } from "@/lib/nigeria-states";
+import { createFirstTimer, getEvents, uploadProfilePicture, EventResponse } from "@/lib/api";
+import { COUNTRIES, getStatesForCountry } from "@/lib/nigeria-states";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 
 export default function AddFirstTimerPage() {
@@ -34,6 +34,7 @@ export default function AddFirstTimerPage() {
   const [maritalStatus, setMaritalStatus] = useState("");
   const [occupation, setOccupation] = useState("");
   const [serviceAttended, setServiceAttended] = useState("");
+  const [services, setServices] = useState<EventResponse[]>([]);
   const [isVisiting, setIsVisiting] = useState(false);
   const [howDidYouHear, setHowDidYouHear] = useState("");
   const [howWasService, setHowWasService] = useState("");
@@ -78,6 +79,7 @@ export default function AddFirstTimerPage() {
         maritalStatus: maritalStatus || undefined,
         occupation: occupation || undefined,
         profilePictureUrl,
+        eventId: serviceAttended || undefined,
         isVisiting: isVisiting || undefined,
         mediumOfInvitation: howDidYouHear || undefined,
         serviceRating: howWasService ? ratingMap[howWasService] : undefined,
@@ -114,6 +116,29 @@ export default function AddFirstTimerPage() {
   ];
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 100 }, (_, i) => String(currentYear - i));
+  const stateOptions = getStatesForCountry(country);
+  const serviceOptions = [...services].sort((a, b) => {
+    if (!a.date || !b.date) return 0;
+    return b.date.localeCompare(a.date);
+  });
+
+  useEffect(() => {
+    async function loadServices() {
+      try {
+        const page = await getEvents(0, 100);
+        setServices(page.content ?? []);
+      } catch {
+        setServices([]);
+      }
+    }
+    loadServices();
+  }, []);
+
+  useEffect(() => {
+    if (country && state && !stateOptions.includes(state)) {
+      setState("");
+    }
+  }, [country, state, stateOptions]);
 
   return (
     <DashboardLayout>
@@ -330,7 +355,7 @@ export default function AddFirstTimerPage() {
               <SearchableSelect
                 placeholder="Select State"
                 searchPlaceholder="Search states…"
-                options={NIGERIA_STATES}
+                options={stateOptions}
                 value={state}
                 onChange={setState}
               />
@@ -385,10 +410,17 @@ export default function AddFirstTimerPage() {
                 className={selectStyles}
               >
                 <option value="">Select Service</option>
-                <option value="Sunday Service">Sunday Service</option>
-                <option value="Tuesday Bible Study">Tuesday Bible Study</option>
-                <option value="Thursday Prayer Meeting">Thursday Prayer Meeting</option>
-                <option value="Special Service">Special Service</option>
+                {serviceOptions.length === 0 ? (
+                  <option value="" disabled>
+                    Loading services...
+                  </option>
+                ) : (
+                  serviceOptions.map((event) => (
+                    <option key={event.id} value={event.id}>
+                      {event.title || event.topic || event.id}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -406,7 +438,12 @@ export default function AddFirstTimerPage() {
                 <option value="Doctor">Doctor</option>
                 <option value="Teacher">Teacher</option>
                 <option value="Business Owner">Business Owner</option>
-                <option value="Tech">Tech</option>
+                <option value="Accountant">Accountant</option>
+                <option value="Lawyer">Lawyer</option>
+                <option value="Pastor">Pastor</option>
+                <option value="Sales">Sales</option>
+                <option value="Entrepreneur">Entrepreneur</option>
+                <option value="Retired">Retired</option>
                 <option value="Other">Other</option>
               </select>
             </div>

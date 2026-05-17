@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import PhoneInput from "@/components/ui/PhoneInput";
-import { createNewConvert } from "@/lib/api";
-import { NIGERIA_STATES, COUNTRIES } from "@/lib/nigeria-states";
+import { createNewConvert, getEvents, EventResponse } from "@/lib/api";
+import { COUNTRIES, getStatesForCountry } from "@/lib/nigeria-states";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 
 export default function AddNewConvertPage() {
@@ -20,6 +20,7 @@ export default function AddNewConvertPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [serviceAttended, setServiceAttended] = useState("");
+  const [services, setServices] = useState<EventResponse[]>([]);
   const [street, setStreet] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
@@ -44,7 +45,7 @@ export default function AddNewConvertPage() {
         city: city || undefined,
         state: state || undefined,
         country: country || undefined,
-        // serviceAttended maps to eventId on the backend - link via event later
+        eventId: serviceAttended || undefined,
       });
       router.push("/user-management/new-converts");
     } catch (err) {
@@ -57,6 +58,29 @@ export default function AddNewConvertPage() {
     "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
   const selectStyles = inputStyles;
   const labelStyles = "mb-1 block text-sm font-medium text-[#374151]";
+  const stateOptions = getStatesForCountry(country);
+  const serviceOptions = [...services].sort((a, b) => {
+    if (!a.date || !b.date) return 0;
+    return b.date.localeCompare(a.date);
+  });
+
+  useEffect(() => {
+    async function loadServices() {
+      try {
+        const page = await getEvents(0, 100);
+        setServices(page.content ?? []);
+      } catch {
+        setServices([]);
+      }
+    }
+    loadServices();
+  }, []);
+
+  useEffect(() => {
+    if (country && state && !stateOptions.includes(state)) {
+      setState("");
+    }
+  }, [country, state, stateOptions]);
 
   return (
     <DashboardLayout>
@@ -167,10 +191,17 @@ export default function AddNewConvertPage() {
                 className={selectStyles}
               >
                 <option value="">Select Service</option>
-                <option value="Sunday">Sunday</option>
-                <option value="Tuesday">Tuesday</option>
-                <option value="Thursday">Thursday</option>
-                <option value="Special Service">Special Service</option>
+                {serviceOptions.length === 0 ? (
+                  <option value="" disabled>
+                    Loading services...
+                  </option>
+                ) : (
+                  serviceOptions.map((event) => (
+                    <option key={event.id} value={event.id}>
+                      {event.title || event.topic || event.id}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
           </div>
@@ -204,7 +235,7 @@ export default function AddNewConvertPage() {
             <SearchableSelect
               label="State"
               placeholder="Select State"
-              options={NIGERIA_STATES}
+              options={stateOptions}
               value={state}
               onChange={setState}
             />
