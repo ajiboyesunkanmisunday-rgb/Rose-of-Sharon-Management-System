@@ -298,15 +298,16 @@ export default function SODApplicationFormPage() {
                                       : otherTraining === "no"  ? false
                                       : undefined,
         otherInformation: [otherInfo1, otherInfo2].filter(Boolean).join(" ") || undefined,
-        qualificationRequests: [inst1, inst2, inst3]
-          .filter(Boolean)
-          .map((institution) => ({ institution })),
-        createPastPlaceOfWorshipRequests: wp
-          .filter((r) => r.name.trim())
-          .map((r) => ({ date: safeDate(r.date), name: r.name, address: r.address })),
-        createPositionHeldRequests: ph
-          .filter((r) => r.name.trim() || r.position.trim())
-          .map((r) => ({ worshipPlace: r.name, positionHeld: r.position })),
+        ...(() => {
+          const quals = [inst1, inst2, inst3].filter(Boolean).map((institution) => ({ institution }));
+          const wpItems = wp.filter((r) => r.name.trim()).map((r) => ({ date: safeDate(r.date), name: r.name, address: r.address }));
+          const phItems = ph.filter((r) => r.name.trim() || r.position.trim()).map((r) => ({ worshipPlace: r.name, positionHeld: r.position }));
+          return {
+            ...(quals.length ? { qualificationRequests: quals } : {}),
+            ...(wpItems.length ? { createPastPlaceOfWorshipRequests: wpItems } : {}),
+            ...(phItems.length ? { createPositionHeldRequests: phItems } : {}),
+          };
+        })(),
         consent: true,
       });
       setSubmitSuccess(true);
