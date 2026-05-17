@@ -175,13 +175,13 @@ export default function TemplatesPage() {
                   className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
                   style={{ height: "56px" }}
                 >
-                  <td className="px-4 py-3 text-sm font-medium text-[#374151]">{t.name}</td>
+                  <td className="px-4 py-3 text-sm font-medium text-[#374151] max-w-[180px]"><span className="block truncate">{t.name}</span></td>
                   <td className="px-4 py-3">{getChannelBadge(t.channel)}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                     {CATEGORY_LABELS[t.messageTemplateCategory] ?? t.messageTemplateCategory}
                   </td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
-                    {t.subject ?? <span className="text-[#9CA3AF]">—</span>}
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] max-w-[200px]">
+                    <span className="block truncate">{t.subject ?? <span className="text-[#9CA3AF]">—</span>}</span>
                   </td>
                   <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{fmtDate(t.createdOn)}</td>
                   <td className="px-4 py-3">

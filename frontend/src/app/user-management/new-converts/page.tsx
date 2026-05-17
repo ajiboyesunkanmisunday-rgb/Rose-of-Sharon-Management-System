@@ -467,7 +467,7 @@ export default function NewConvertsPage() {
                       className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
                     />
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">{fullName(nc)}</td>
+                  <td className="px-4 py-3 text-sm text-[#374151] max-w-[200px]"><span className="block truncate">{fullName(nc)}</span></td>
                   <td className="px-4 py-3 text-sm text-[#374151]">{nc.phoneNumber}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{nc.email}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">

@@ -207,7 +207,7 @@ export default function MediaPage() {
                   <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${categoryColors[tabKey] ?? categoryColors.OTHER}`}>
                     {tabLabels[tabKey] ?? "Media"}
                   </span>
-                  <h3 className="mt-3 text-sm font-semibold text-[#111827]">{item.title ?? item.displayName ?? "Untitled"}</h3>
+                  <h3 className="mt-3 text-sm font-semibold text-[#111827] line-clamp-2 break-all">{item.title ?? item.displayName ?? "Untitled"}</h3>
                   {item.description && (
                     <p className="mt-1 line-clamp-2 text-xs text-[#6B7280]">{item.description}</p>
                   )}
