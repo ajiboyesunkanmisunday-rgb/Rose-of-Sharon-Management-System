@@ -482,13 +482,13 @@ export default function SODApplicationFormPage() {
           </table>
 
           {/* ══ SECTION A ═══════════════════════════════════════════════ */}
-          <SectionHead>A.&nbsp;&nbsp;Personal Information</SectionHead>
+          <SectionHead>A.  Personal Information</SectionHead>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
             {/* 1. Name */}
             <div>
-              <div style={{ marginBottom: 6 }}>1.&nbsp;&nbsp;Name:</div>
+              <div style={{ marginBottom: 6 }}>1.  Name:</div>
               <div style={{ display: "flex", gap: 14, paddingLeft: 18 }}>
                 {(
                   [
@@ -507,44 +507,44 @@ export default function SODApplicationFormPage() {
 
             {/* 2. Current Home Address */}
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              <FullRow label="2.&nbsp;&nbsp;Current Home Address:" value={addr1} onChange={setAddr1} />
+              <FullRow label="2.  Current Home Address:" value={addr1} onChange={setAddr1} />
               <F value={addr2} onChange={setAddr2} style={{ width: "100%" }} />
               <F value={addr3} onChange={setAddr3} style={{ width: "100%" }} />
             </div>
 
             {/* 3 & 3b */}
             <PairedRow
-              left={{ label: "3.&nbsp;&nbsp;Date of Birth:", value: dob, onChange: setDob }}
+              left={{ label: "3.  Date of Birth:", value: dob, onChange: setDob }}
               right={{ label: "3b. Sex:", value: sex, onChange: setSex }}
             />
 
             {/* 4 & 4b */}
             <PairedRow
-              left={{ label: "4.&nbsp;&nbsp;Nationality:", value: nationality, onChange: setNationality }}
+              left={{ label: "4.  Nationality:", value: nationality, onChange: setNationality }}
               right={{ label: "4b. State of Origin:", value: stateOfOrigin, onChange: setStateOfOrigin }}
             />
 
             {/* 5 & 5b */}
             <PairedRow
-              left={{ label: "5.&nbsp;&nbsp;Home Town:", value: homeTown, onChange: setHomeTown }}
+              left={{ label: "5.  Home Town:", value: homeTown, onChange: setHomeTown }}
               right={{ label: "5b. Phone Number:", value: phone, onChange: setPhone }}
             />
 
             {/* 6 & 6b */}
             <PairedRow
-              left={{ label: "6.&nbsp;&nbsp;Email Address:", value: email, onChange: setEmail }}
+              left={{ label: "6.  Email Address:", value: email, onChange: setEmail }}
               right={{ label: "6b. Occupation:", value: occupation, onChange: setOccupation }}
             />
 
             {/* 7. Occupation Address */}
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              <FullRow label="7.&nbsp;&nbsp;Occupation Address:" value={offAddr1} onChange={setOffAddr1} />
+              <FullRow label="7.  Occupation Address:" value={offAddr1} onChange={setOffAddr1} />
               <F value={offAddr2} onChange={setOffAddr2} style={{ width: "100%" }} />
             </div>
 
             {/* 8. Marital Status */}
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16 }}>
-              <span>8.&nbsp;&nbsp;Marital status:</span>
+              <span>8.  Marital status:</span>
               {MARITAL.map((m) => (
                 <Chk key={m} label={m} checked={marital === m} onChange={() => setMarital(marital === m ? "" : m)} />
               ))}
@@ -552,7 +552,7 @@ export default function SODApplicationFormPage() {
 
             {/* 9 & 9b */}
             <PairedRow
-              left={{ label: "9.&nbsp;&nbsp;Spouse Name:", value: spouseName, onChange: setSpouseName }}
+              left={{ label: "9.  Spouse Name:", value: spouseName, onChange: setSpouseName }}
               right={{ label: "Spouse Phone Number:", value: spousePhone, onChange: setSpousePhone }}
             />
 
@@ -564,7 +564,7 @@ export default function SODApplicationFormPage() {
           </div>
 
           {/* ══ SECTION B ═══════════════════════════════════════════════ */}
-          <SectionHead>B.&nbsp;&nbsp;Educational and Professional Qualifications</SectionHead>
+          <SectionHead>B.  Educational and Professional Qualifications</SectionHead>
 
           <div>
             <div style={{ marginBottom: 10 }}>11. Institution:</div>
@@ -594,7 +594,7 @@ export default function SODApplicationFormPage() {
           <div style={{ textAlign: "center", fontSize: 12, marginBottom: 16 }}>2</div>
 
           {/* ══ SECTION C ═══════════════════════════════════════════════ */}
-          <SectionHead>C.&nbsp;&nbsp;Spiritual Information</SectionHead>
+          <SectionHead>C.  Spiritual Information</SectionHead>
 
           {/* 12. Places of worship */}
           <div style={{ marginBottom: 14 }}>
@@ -716,18 +716,18 @@ export default function SODApplicationFormPage() {
           </div>
 
           {/* ══ SECTION D ═══════════════════════════════════════════════ */}
-          <SectionHead>D.&nbsp;&nbsp;Other Relevant Information:</SectionHead>
+          <SectionHead>D.  Other Relevant Information:</SectionHead>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <F value={otherInfo1} onChange={setOtherInfo1} style={{ width: "100%" }} />
             <F value={otherInfo2} onChange={setOtherInfo2} style={{ width: "100%" }} />
           </div>
 
           {/* ══ SECTION E ═══════════════════════════════════════════════ */}
-          <SectionHead>E.&nbsp;&nbsp;Decleration:</SectionHead>
+          <SectionHead>E.  Decleration:</SectionHead>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
             <span>I,</span>
             <F value={declName} onChange={setDeclName} style={{ flex: 1 }} />
-            <span style={{ whiteSpace: "nowrap" }}>&nbsp;of</span>
+            <span style={{ whiteSpace: "nowrap" }}> of</span>
             <F value={declOf} onChange={setDeclOf} style={{ flex: 1 }} />
           </div>
           <p style={{ fontSize: 12, lineHeight: 1.7, margin: 0 }}>
@@ -737,7 +737,7 @@ export default function SODApplicationFormPage() {
           </p>
 
           {/* ══ SECTION F ═══════════════════════════════════════════════ */}
-          <SectionHead>F.&nbsp;&nbsp;Official Remarks:</SectionHead>
+          <SectionHead>F.  Official Remarks:</SectionHead>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <F value={remarks1} onChange={setRemarks1} style={{ width: "100%" }} />
             <F value={remarks2} onChange={setRemarks2} style={{ width: "100%" }} />
