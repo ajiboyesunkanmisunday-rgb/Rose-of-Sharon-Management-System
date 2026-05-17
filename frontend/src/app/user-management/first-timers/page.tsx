@@ -492,7 +492,7 @@ export default function FirstTimersPage() {
                       className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
                     />
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">{fullName(ft)}</td>
+                  <td className="px-4 py-3 text-sm text-[#374151] max-w-[200px]"><span className="block truncate">{fullName(ft)}</span></td>
                   <td className="px-4 py-3 text-sm text-[#374151]">{ft.phoneNumber}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{ft.email}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">

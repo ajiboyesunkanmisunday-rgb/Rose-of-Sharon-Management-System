@@ -485,7 +485,7 @@ export default function SecondTimersPage() {
                       className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
                     />
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">{fullName(st)}</td>
+                  <td className="px-4 py-3 text-sm text-[#374151] max-w-[200px]"><span className="block truncate">{fullName(st)}</span></td>
                   <td className="px-4 py-3 text-sm text-[#374151]">{st.phoneNumber}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{st.email}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
