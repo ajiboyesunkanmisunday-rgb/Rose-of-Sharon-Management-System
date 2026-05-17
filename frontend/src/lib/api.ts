@@ -2840,6 +2840,7 @@ export interface SetupNewConvertRequest {
   state?: string;
   country?: string;
   eventId?: string;
+  profilePictureUrl?: string;
 }
 
 export async function updateSodNewConvert(
