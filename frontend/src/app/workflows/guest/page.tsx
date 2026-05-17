@@ -6,10 +6,10 @@ import { getGuestWorkflow, type GuestBoardColumn, type UserBasicResponse } from 
 import { GitBranch, RefreshCw, User } from "lucide-react";
 
 const COLUMNS: { status: string; label: string; headerBg: string; headerText: string; dot: string }[] = [
-  { status: "RECEIVED",    label: "First Timers",    headerBg: "bg-blue-50",   headerText: "text-blue-800",   dot: "bg-blue-400"   },
-  { status: "ASSIGNED",    label: "Follow-up Call",  headerBg: "bg-yellow-50", headerText: "text-yellow-800", dot: "bg-yellow-400" },
-  { status: "IN_PROGRESS", label: "Follow-up Visit", headerBg: "bg-purple-50", headerText: "text-purple-800", dot: "bg-purple-400" },
-  { status: "RESOLVED",    label: "Second Timers",   headerBg: "bg-green-50",  headerText: "text-green-800",  dot: "bg-green-400"  },
+  { status: "FIRST_TIMER",              label: "First Timers",          headerBg: "bg-blue-50",   headerText: "text-blue-800",   dot: "bg-blue-400"   },
+  { status: "SECOND_TIMER_WITHOUT_GROUP", label: "2nd Timer (No Group)", headerBg: "bg-yellow-50", headerText: "text-yellow-800", dot: "bg-yellow-400" },
+  { status: "SECOND_TIMER_WITH_GROUP",  label: "2nd Timer (In Group)",  headerBg: "bg-purple-50", headerText: "text-purple-800", dot: "bg-purple-400" },
+  { status: "FULL_MEMBER",              label: "Full Members",          headerBg: "bg-green-50",  headerText: "text-green-800",  dot: "bg-green-400"  },
 ];
 
 function fullName(u: UserBasicResponse) {
