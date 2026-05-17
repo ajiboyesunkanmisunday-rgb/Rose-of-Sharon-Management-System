@@ -135,10 +135,9 @@ async function apiFetchRaw<T>(
   // call the function directly.
   let fetchUrl = `${BASE_URL}${path}`;
   let fetchMethod = method;
-  const needsProxy =
-    typeof window !== "undefined" &&
-    path.startsWith("/api/") &&
-    !BASE_URL;
+  // Backend now accepts the Netlify origin header directly.
+  // All /api/* requests route through the [[redirects]] rule in netlify.toml.
+  const needsProxy = false;
   if (needsProxy) {
     // Separate the path from any query string the caller already attached
     const [basePath, existingQs] = path.split("?");
@@ -2095,6 +2094,10 @@ export interface CreateWorkersInTrainingRequest {
   giftsManifesting?: string[];
   reasonForApplying?: string;
   consent?: boolean;
+  baptismCertificateUrl?: string;
+  createPastPlaceOfWorshipRequests?: { date?: string; name?: string; address?: string }[];
+  createPositionHeldRequests?: { worshipPlace?: string; positionHeld?: string }[];
+  qualificationRequests?: { date?: string; institution?: string; qualificationReceived?: string }[];
 }
 
 export async function getWorkersInTraining(
