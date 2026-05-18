@@ -363,7 +363,7 @@ export default function SodFormCore({
           positionHeld: r.position.trim() || undefined,
         }));
 
-      await createSchoolOfDisciple({
+      const created = await createSchoolOfDisciple({
         set:               set.trim(),
         region:            region.trim()   || undefined,
         province:          province.trim() || undefined,
@@ -411,6 +411,20 @@ export default function SodFormCore({
         ...(wpItems.length   ? { createPastPlaceOfWorshipRequests: wpItems } : {}),
         ...(phItems.length   ? { createPositionHeldRequests: phItems }       : {}),
       });
+
+      // Log the full backend response so we can verify the record was created.
+      // If `created.id` is present, the backend saved it. If empty, it's a backend bug.
+      console.log("[SoD submit] backend response:", JSON.stringify(created));
+
+      const savedId = (created as { id?: string })?.id;
+      if (!savedId) {
+        // Backend returned 200 but no record ID — treat as backend failure
+        setSubmitError(
+          "The server accepted the form but did not return a record ID, which means the record may not have been saved. Please check the SoD list or contact the backend team. (Check browser console for the full server response.)"
+        );
+        return;
+      }
+
       setSubmitSuccess(true);
       setSubmitError("");
       // Navigate to the list so the new record is immediately visible

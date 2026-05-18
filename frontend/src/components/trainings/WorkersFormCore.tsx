@@ -329,7 +329,7 @@ export default function WorkersFormCore({
 
       const nonRccg = [group1, group2].filter(Boolean);
 
-      await createWorkerInTraining({
+      const created = await createWorkerInTraining({
         set:               set.trim() || undefined,
         profilePictureUrl,
         firstName:         firstName.trim(),
@@ -374,6 +374,16 @@ export default function WorkersFormCore({
         ...(wpItems.length   ? { createPastPlaceOfWorshipRequests: wpItems } : {}),
         ...(phItems.length   ? { createPositionHeldRequests: phItems } : {}),
       });
+
+      console.log("[WiT submit] backend response:", JSON.stringify(created));
+
+      const savedId = (created as { id?: string })?.id;
+      if (!savedId) {
+        setSubmitError(
+          "The server accepted the form but did not return a record ID — the record may not have been saved. Please check the WiT list or contact the backend team. (Check browser console for the full server response.)"
+        );
+        return;
+      }
 
       setSubmitSuccess(true);
       setSubmitError("");
