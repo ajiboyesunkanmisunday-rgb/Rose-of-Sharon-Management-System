@@ -12,6 +12,8 @@ import SearchBar from "@/components/ui/SearchBar";
 import {
   getAllGroups,
   getGroupMembers,
+  getMembers,
+  getEMembers,
   updateGroupHead,
   deleteGroupsBulk,
   type GroupResponse,
@@ -165,8 +167,9 @@ export default function GroupDetailClient() {
     safePage * MEMBERS_PER_PAGE,
   );
 
-  // Open assign head modal — load from the group's own members so the IDs
-  // are exactly what the backend's group-head endpoint expects.
+  // Open assign head modal — load candidates from group members first,
+  // then fall back / merge with all church Members + E-Members so there
+  // is always a full candidate list even when the group is empty.
   const openHeadModal = async () => {
     setShowHeadModal(true);
     setHeadSearch("");
@@ -174,8 +177,40 @@ export default function GroupDetailClient() {
     setAssigningId(null);
     setAllMembersLoading(true);
     try {
-      const res = await getGroupMembers(id, 0, 500);
-      setAllMembers(res.content ?? []);
+      const [groupRes, memRes, ememRes] = await Promise.allSettled([
+        getGroupMembers(id, 0, 500),
+        getMembers(0, 500),
+        getEMembers(0, 500),
+      ]);
+
+      const toBasic = (u: { id: string; firstName?: string; middleName?: string; lastName?: string; email?: string; profilePictureUrl?: string; phoneNumber?: string; countryCode?: string; sex?: string; occupation?: string }): UserBasicResponse => ({
+        id: u.id,
+        firstName: u.firstName,
+        middleName: u.middleName,
+        lastName: u.lastName,
+        email: u.email,
+        profilePictureUrl: u.profilePictureUrl,
+        phoneNumber: u.phoneNumber,
+        countryCode: u.countryCode,
+        sex: u.sex,
+        occupation: u.occupation,
+      });
+
+      const groupItems = groupRes.status === "fulfilled" ? (groupRes.value.content ?? []) : [];
+      const memItems  = memRes.status  === "fulfilled" ? (memRes.value.content  ?? []).map(toBasic) : [];
+      const ememItems = ememRes.status === "fulfilled" ? (ememRes.value.content ?? []).map(toBasic) : [];
+
+      // Merge: group members first (they should be the most valid candidates),
+      // then add any church members/e-members not already in the list.
+      const seen = new Set<string>();
+      const merged: UserBasicResponse[] = [];
+      for (const u of [...groupItems, ...memItems, ...ememItems]) {
+        if (!seen.has(u.id)) {
+          seen.add(u.id);
+          merged.push(u);
+        }
+      }
+      setAllMembers(merged);
     } catch {
       setAllMembers([]);
     } finally {
@@ -492,7 +527,7 @@ export default function GroupDetailClient() {
         size="md"
       >
         <p className="mb-3 text-sm text-[#6B7280]">
-          Select a member from user management to set as the head of{" "}
+          Select a church member to set as the head of{" "}
           <span className="font-medium text-[#111827]">{group?.name}</span>.
         </p>
 
