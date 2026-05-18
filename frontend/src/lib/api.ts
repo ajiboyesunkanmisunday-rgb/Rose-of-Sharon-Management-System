@@ -55,6 +55,17 @@ export function isAuthenticated(): boolean {
   return !!getToken();
 }
 
+/**
+ * True when the stored token is a JWT we can prove is expired.
+ * Returns false when there is no token, or when the token is opaque
+ * (non-JWT) — those cases are handled elsewhere (apiFetchRaw / login flow).
+ */
+export function isSessionExpired(): boolean {
+  const token = getToken();
+  if (!token) return false;
+  return isTokenExpired(token);
+}
+
 // ─── Core fetch wrapper ─────────────────────────────────────────────────────────
 
 interface ApiFetchResult<T> {

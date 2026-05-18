@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
 import TopNav from "./TopNav";
-import { isAuthenticated } from "@/lib/api";
+import { isAuthenticated, isSessionExpired, logoutUser } from "@/lib/api";
 import { ToastProvider } from "@/context/ToastContext";
 
 export default function LayoutClient({
@@ -22,6 +22,23 @@ export default function LayoutClient({
       router.replace("/login");
     }
   }, [router]);
+
+  // Passive token expiry — check every 60 s and on tab focus
+  useEffect(() => {
+    function checkExpiry() {
+      if (isSessionExpired()) {
+        logoutUser();
+      }
+    }
+
+    const interval = setInterval(checkExpiry, 60_000);
+    document.addEventListener("visibilitychange", checkExpiry);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", checkExpiry);
+    };
+  }, []);
 
   const openSidebar = useCallback(() => setSidebarOpen(true), []);
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
