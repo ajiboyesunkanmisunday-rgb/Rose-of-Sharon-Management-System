@@ -82,6 +82,18 @@ const CARDS: Card[] = [
     bg: "#E0F2FE",
     tag: "public",
   },
+  {
+    title: "Guest Workflow [TEST]",
+    description:
+      "Test the guest workflow: register a first-time visitor as they would fill the guest form on the public website. Verify they appear in the Guest Workflow board under 'First Timers'.",
+    href: "/test/guest-workflow",
+    adminHref: "/workflows/guest",
+    adminLabel: "View Guest Workflow",
+    icon: <Users className="h-6 w-6" />,
+    color: "#2563EB",
+    bg: "#EFF6FF",
+    tag: "public",
+  },
   // ── Member self-registration ──────────────────────────────────────────────
   {
     title: "New Convert Registration",

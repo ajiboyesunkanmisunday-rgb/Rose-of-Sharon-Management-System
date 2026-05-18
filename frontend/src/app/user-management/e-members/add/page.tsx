@@ -10,8 +10,9 @@ import MultiSelect from "@/components/ui/MultiSelect";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
 import { createEMember, uploadProfilePicture, getAllGroups, type GroupResponse } from "@/lib/api";
-import { NIGERIA_STATES } from "@/lib/nigeria-states";
+import CountryStateSelect from "@/components/ui/CountryStateSelect";
 import SearchableSelect from "@/components/ui/SearchableSelect";
+import { useEventServices } from "@/hooks/useEventServices";
 
 export default function AddEMemberPage() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function AddEMemberPage() {
     getAllGroups().then(setAvailableGroups).catch(() => {});
   }, []);
   const groupNames = availableGroups.map((g) => g.name);
+  const { services: eventServices, loading: servicesLoading } = useEventServices();
 
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
@@ -34,6 +36,7 @@ export default function AddEMemberPage() {
   const [dobMonth, setDobMonth] = useState("");
   const [dobYear, setDobYear] = useState("");
   const [state, setState] = useState("");
+  const [country, setCountry] = useState("Nigeria");
   const [maritalStatus, setMaritalStatus] = useState("");
   const [serviceAttended, setServiceAttended] = useState("");
   const [groups, setGroups] = useState<string[]>([]);
@@ -89,7 +92,7 @@ export default function AddEMemberPage() {
         countryCode: countryCode.replace(/^\+/, ""),
         sex: gender || undefined,
         state: state || undefined,
-        country: "Nigeria",
+        country: country || "Nigeria",
         dayOfBirth: dobDay ? Number(dobDay) : undefined,
         monthOfBirth: dobMonth ? Number(dobMonth) : undefined,
         yearOfBirth: dobYear ? Number(dobYear) : undefined,
@@ -287,32 +290,29 @@ export default function AddEMemberPage() {
               )}
             </div>
 
-            {/* State */}
-            <div>
-              <label className={labelStyles}>State</label>
-              <SearchableSelect
-                placeholder="Select State"
-                searchPlaceholder="Search states…"
-                options={NIGERIA_STATES}
-                value={state}
-                onChange={setState}
-              />
-            </div>
+            {/* Country / State */}
+            <CountryStateSelect
+              country={country}
+              state={state}
+              onCountryChange={(c) => { setCountry(c); setState(""); }}
+              onStateChange={setState}
+              labelStyles={labelStyles}
+              inputStyles={inputStyles}
+            />
 
             {/* Service Attended */}
             <div>
               <label className={labelStyles}>Service Attended</label>
-              <select
+              <SearchableSelect
+                placeholder={servicesLoading ? "Loading services..." : "Select Service"}
+                searchPlaceholder="Search services..."
+                options={eventServices.map((s) => ({
+                  label: `${s.title ?? s.topic ?? "Event"}${s.date ? " — " + new Date(s.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : ""}`,
+                  value: s.id,
+                }))}
                 value={serviceAttended}
-                onChange={(e) => setServiceAttended(e.target.value)}
-                className={selectStyles}
-              >
-                <option value="">Select Service</option>
-                <option value="Sunday">Sunday</option>
-                <option value="Tuesday">Tuesday</option>
-                <option value="Thursday">Thursday</option>
-                <option value="Special Service">Special Service</option>
-              </select>
+                onChange={setServiceAttended}
+              />
             </div>
 
             {/* Groups (multi-select dropdown) */}

@@ -5,7 +5,11 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
-import { getNewConvert, addCallReport, addVisitReport, getNotes, updateBelieversClass, type NewConvertResponse, type NoteResponse } from "@/lib/api";
+import {
+  getNewConvert, addCallReport, addVisitReport, getNotes, deleteNote,
+  updateBelieversClass,
+  type NewConvertResponse, type NoteResponse,
+} from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
 import { SkeletonProfile } from "@/components/ui/Skeleton";
 
@@ -28,6 +32,17 @@ function fmtDate(s?: string) {
   return new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+function Field({ label, value }: { label: string; value?: string | null }) {
+  if (!value) return null;
+  return (
+    <div>
+      <p className="text-xs font-medium text-[#6B7280]">{label}</p>
+      <p className="mt-1 text-sm text-[#111827]">{value}</p>
+    </div>
+  );
+}
+
+
 export default function ViewNewConvertPage() {
   const router = useRouter();
   const params = useParams();
@@ -49,6 +64,7 @@ export default function ViewNewConvertPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("details");
 
+  // ── Activity state ─────────────────────────────────────────────────────────
   const [callText,  setCallText]  = useState("");
   const [visitText, setVisitText] = useState("");
   const [classStage, setClassStage] = useState("");
@@ -56,8 +72,9 @@ export default function ViewNewConvertPage() {
   const [saveMsg,     setSaveMsg]     = useState("");
   const [saveFailed,  setSaveFailed]  = useState(false);
 
-  const [notes,        setNotes]        = useState<NoteResponse[]>([]);
-  const [notesLoading, setNotesLoading] = useState(false);
+  const [notes,          setNotes]          = useState<NoteResponse[]>([]);
+  const [notesLoading,   setNotesLoading]   = useState(false);
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
 
   const { addToast } = useToast();
 
@@ -93,6 +110,7 @@ export default function ViewNewConvertPage() {
     router.push("/user-management/new-converts");
   };
 
+  // ── Activity ───────────────────────────────────────────────────────────────
   const handleSaveActivity = async (type: "call" | "visit") => {
     if (!id) return;
     const text = type === "call" ? callText : visitText;
@@ -114,6 +132,19 @@ export default function ViewNewConvertPage() {
       addToast(msg, "error");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    setDeletingNoteId(noteId);
+    try {
+      await deleteNote(noteId);
+      setNotes((prev) => prev.filter((n) => n.id !== noteId));
+      addToast("Entry deleted.", "success");
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "Failed to delete.", "error");
+    } finally {
+      setDeletingNoteId(null);
     }
   };
 
@@ -168,34 +199,24 @@ export default function ViewNewConvertPage() {
           {/* Profile Card */}
           <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
             <div className="flex flex-col gap-6 md:flex-row">
-              {/* Photo placeholder */}
               <div className="relative mx-auto flex h-[160px] w-[130px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] sm:mx-0 sm:h-[220px] sm:w-[180px] md:h-[240px] md:w-[200px]">
                 <UserIcon />
               </div>
-
-              {/* Details */}
               <div className="flex-1">
                 <h2 className="mb-5 text-lg font-bold text-[#000000]">Basic Details</h2>
                 <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-3">
-                  {[
-                    { label: "First Name",       value: user?.firstName },
-                    { label: "Middle Name",      value: user?.middleName },
-                    { label: "Last Name",        value: user?.lastName },
-                    { label: "Email",            value: user?.email },
-                    { label: "Phone",            value: phone },
-                    { label: "Address",          value: address },
-                    { label: "Gender",           value: user?.sex },
-                    { label: "Believers Class",       value: user?.believerClassStage },
-                    { label: "First Service Attended", value: user?.service?.title },
-                    { label: "First Service Date",    value: fmtDate(user?.service?.date) },
-                    { label: "Last Service Attended", value: user?.serviceAttended },
-                    { label: "Date Added",            value: fmtDate(user?.createdOn) },
-                  ].map(({ label, value }) => value ? (
-                    <div key={label}>
-                      <p className="text-xs font-medium text-[#6B7280]">{label}</p>
-                      <p className="mt-1 text-sm text-[#111827]">{value}</p>
-                    </div>
-                  ) : null)}
+                  <Field label="First Name"            value={user?.firstName} />
+                  <Field label="Middle Name"           value={user?.middleName} />
+                  <Field label="Last Name"             value={user?.lastName} />
+                  <Field label="Email"                 value={user?.email} />
+                  <Field label="Phone"                 value={phone} />
+                  <Field label="Address"               value={address} />
+                  <Field label="Gender"                value={user?.sex} />
+                  <Field label="Believers Class"       value={user?.believerClassStage} />
+                  <Field label="First Service Attended" value={user?.service?.title} />
+                  <Field label="First Service Date"    value={fmtDate(user?.service?.date)} />
+                  <Field label="Last Service Attended" value={user?.serviceAttended} />
+                  <Field label="Date Added"            value={fmtDate(user?.createdOn)} />
                 </div>
               </div>
             </div>
@@ -213,6 +234,7 @@ export default function ViewNewConvertPage() {
             </div>
           </div>
 
+          {/* ── Activity Tab ─────────────────────────────────────────────── */}
           {activeTab === "activity" && (
             <div className="space-y-4">
               {saveMsg && (
@@ -294,7 +316,17 @@ export default function ViewNewConvertPage() {
                         <li key={n.id} className="rounded-lg border border-[#F3F4F6] bg-[#FAFAFA] px-4 py-3">
                           <div className="mb-1 flex items-center justify-between gap-2">
                             <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${typeBg}`}>{typeLabel}</span>
-                            <span className="text-xs text-[#9CA3AF]">{n.createdOn ? new Date(n.createdOn).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-[#9CA3AF]">{n.createdOn ? new Date(n.createdOn).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</span>
+                              <button
+                                onClick={() => handleDeleteNote(n.id)}
+                                disabled={deletingNoteId === n.id}
+                                className="rounded p-0.5 text-[#9CA3AF] hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+                                title="Delete"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                              </button>
+                            </div>
                           </div>
                           <p className="text-sm text-[#374151]">{n.content ?? "—"}</p>
                           {(n.officerName ?? n.createdBy) && (
@@ -312,6 +344,7 @@ export default function ViewNewConvertPage() {
           {/* Actions */}
           <div className="mt-6 flex items-center justify-end gap-3">
             <Button variant="danger" onClick={() => setShowDeleteModal(true)}>Delete</Button>
+            <Button variant="primary" onClick={() => router.push(`/user-management/new-converts/${id}/edit`)}>Edit</Button>
           </div>
         </>
       )}

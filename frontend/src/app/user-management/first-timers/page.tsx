@@ -18,6 +18,7 @@ import {
   getFirstTimers,
   deleteFirstTimersBulk,
   addCallReport,
+  addVisitReport,
   assignFollowUp,
   convertToSecondTimer,
   markUserAsInactive,
@@ -52,7 +53,9 @@ export default function FirstTimersPage() {
 
   // Modal states
   const [showCallReportModal, setShowCallReportModal] = useState(false);
+  const [showVisitReportModal, setShowVisitReportModal] = useState(false);
   const [callReport, setCallReport] = useState("");
+  const [visitReport, setVisitReport] = useState("");
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [showBulkAssignModal, setShowBulkAssignModal] = useState(false);
   const [showSingleAssignModal, setShowSingleAssignModal] = useState(false);
@@ -132,6 +135,23 @@ export default function FirstTimersPage() {
       fetchTimers(currentPage);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to save call report.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSaveVisitReport = async () => {
+    if (!selectedTimerId) return;
+    setActionLoading(true);
+    setActionError("");
+    try {
+      await addVisitReport(selectedTimerId, visitReport);
+      setVisitReport("");
+      setShowVisitReportModal(false);
+      setSelectedTimerId(null);
+      fetchTimers(currentPage);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to save visit report.");
     } finally {
       setActionLoading(false);
     }
@@ -438,6 +458,8 @@ export default function FirstTimersPage() {
                   actions={[
                     { label: "View", onClick: () => router.push(`/user-management/first-timers/${ft.id}`) },
                     { label: "Edit", onClick: () => router.push(`/user-management/first-timers/${ft.id}/edit`) },
+                    { label: "Add Call Report", onClick: () => { setSelectedTimerId(ft.id); setShowCallReportModal(true); } },
+                    { label: "Add Visit Report", onClick: () => { setSelectedTimerId(ft.id); setShowVisitReportModal(true); } },
                   ]}
                 />
               </div>
@@ -492,7 +514,7 @@ export default function FirstTimersPage() {
                       className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
                     />
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">{fullName(ft)}</td>
+                  <td className="px-4 py-3 text-sm text-[#374151] max-w-[200px]"><span className="block truncate">{fullName(ft)}</span></td>
                   <td className="px-4 py-3 text-sm text-[#374151]">{ft.phoneNumber}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{ft.email}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
@@ -511,6 +533,10 @@ export default function FirstTimersPage() {
                         {
                           label: "Add Call Report",
                           onClick: () => { setSelectedTimerId(ft.id); setShowCallReportModal(true); },
+                        },
+                        {
+                          label: "Add Visit Report",
+                          onClick: () => { setSelectedTimerId(ft.id); setShowVisitReportModal(true); },
                         },
                         {
                           label: "Assign Follow-up",
@@ -562,6 +588,33 @@ export default function FirstTimersPage() {
           </div>
           <button
             onClick={handleSaveCallReport}
+            disabled={actionLoading}
+            className="w-full rounded-lg bg-[#000080] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#000066] disabled:opacity-50"
+          >
+            {actionLoading ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </Modal>
+
+      {/* Add Visit Report Modal */}
+      <Modal
+        isOpen={showVisitReportModal}
+        onClose={() => { setShowVisitReportModal(false); setSelectedTimerId(null); setVisitReport(""); }}
+        title="Add Visit Report"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Report</label>
+            <textarea
+              value={visitReport}
+              onChange={(e) => setVisitReport(e.target.value)}
+              placeholder="Enter Report"
+              rows={5}
+              className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-gray-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            />
+          </div>
+          <button
+            onClick={handleSaveVisitReport}
             disabled={actionLoading}
             className="w-full rounded-lg bg-[#000080] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#000066] disabled:opacity-50"
           >

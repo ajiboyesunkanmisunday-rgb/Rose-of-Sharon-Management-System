@@ -6,8 +6,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import MultiSelect from "@/components/ui/MultiSelect";
 import { getUser, updateMember, assignMemberGroups, uploadProfilePicture, getAllGroups } from "@/lib/api";
-import { NIGERIA_STATES, COUNTRIES } from "@/lib/nigeria-states";
 import SearchableSelect from "@/components/ui/SearchableSelect";
+import CountryStateSelect from "@/components/ui/CountryStateSelect";
 
 export default function EditMemberPage() {
   const router = useRouter();
@@ -245,6 +245,7 @@ export default function EditMemberPage() {
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="Enter Phone Number"
                     className={inputStyles}
+                    maxLength={10}
                   />
                 </div>
               </div>
@@ -317,29 +318,15 @@ export default function EditMemberPage() {
                   />
                 </div>
 
-                {/* State */}
-                <div>
-                  <label className={labelStyles}>State</label>
-                  <SearchableSelect
-                    placeholder="Select State"
-                    searchPlaceholder="Search states…"
-                    options={NIGERIA_STATES}
-                    value={state}
-                    onChange={setState}
-                  />
-                </div>
-
-                {/* Country */}
-                <div>
-                  <label className={labelStyles}>Country</label>
-                  <SearchableSelect
-                    placeholder="Select Country"
-                    searchPlaceholder="Search countries…"
-                    options={COUNTRIES}
-                    value={country}
-                    onChange={setCountry}
-                  />
-                </div>
+                {/* Country / State */}
+                <CountryStateSelect
+                  country={country}
+                  state={state}
+                  onCountryChange={(c) => { setCountry(c); setState(""); }}
+                  onStateChange={setState}
+                  labelStyles={labelStyles}
+                  inputStyles={inputStyles}
+                />
 
                 {/* Marital Status */}
                 <div>

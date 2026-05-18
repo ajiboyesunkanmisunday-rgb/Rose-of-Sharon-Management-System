@@ -43,6 +43,11 @@ function fmtDate(s?: string) {
   if (!s) return "";
   return new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
+function limitWords(text: string, max: number): string {
+  const words = text.trim().split(/\s+/);
+  if (words.length <= max) return text;
+  return words.slice(0, max).join(" ") + "…";
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ColumnsState { [status: string]: RequestResponse[] }
@@ -392,28 +397,28 @@ function KanbanCard({
           <GripVertical className="h-4 w-4 shrink-0 text-[#D1D5DB] group-hover:text-[#9CA3AF]" />
         </div>
 
-        {/* Subject — wraps */}
-        <p className="text-sm font-semibold text-[#111827] leading-snug break-words">
-          {card.subject || "—"}
+        {/* Subject — 10 words max */}
+        <p className="text-sm font-semibold text-[#111827] leading-snug break-all">
+          {limitWords(card.subject || "—", 10)}
         </p>
 
-        {/* Content — wraps, 3-line clamp */}
+        {/* Content — 18 words max */}
         {card.content && (
-          <p className="mt-1 text-xs text-[#6B7280] leading-relaxed break-words line-clamp-3">
-            {card.content}
+          <p className="mt-1 text-xs text-[#6B7280] leading-relaxed break-all">
+            {limitWords(card.content, 18)}
           </p>
         )}
 
         {/* Meta */}
         <div className="mt-3 space-y-1.5">
-          <div className="flex items-start gap-1.5 text-xs text-[#374151]">
-            <User className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9CA3AF]" />
-            <span className="font-medium break-words">{fullName(card.owner)}</span>
+          <div className="flex items-center gap-1.5 text-xs text-[#374151]">
+            <User className="h-3.5 w-3.5 shrink-0 text-[#9CA3AF]" />
+            <span className="font-medium truncate">{fullName(card.owner)}</span>
           </div>
           {card.assignedTo && (
-            <div className="flex items-start gap-1.5 text-xs text-[#374151]">
-              <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9CA3AF]" />
-              <span className="break-words">Assigned: <span className="font-medium">{fullName(card.assignedTo)}</span></span>
+            <div className="flex items-center gap-1.5 text-xs text-[#374151]">
+              <MessageSquare className="h-3.5 w-3.5 shrink-0 text-[#9CA3AF]" />
+              <span className="truncate">Assigned: <span className="font-medium">{fullName(card.assignedTo)}</span></span>
             </div>
           )}
           {card.createdOn && (
@@ -474,7 +479,7 @@ function CardDetailModal({
             <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">
               {(card.requestType ?? "").replace(/_/g, " ")} REQUEST
             </p>
-            <h2 className="mt-0.5 text-base font-bold text-[#111827] break-words">{card.subject || "—"}</h2>
+            <h2 className="mt-0.5 text-base font-bold text-[#111827] break-all">{card.subject || "—"}</h2>
           </div>
           <button onClick={onClose}
             className="ml-4 rounded-lg p-1.5 text-[#9CA3AF] hover:bg-[#F3F4F6] hover:text-[#374151]">
@@ -519,7 +524,7 @@ function CardDetailModal({
           {/* Content */}
           <div>
             <p className="mb-1 text-xs font-semibold text-[#374151]">Request Content</p>
-            <div className="rounded-lg bg-[#F9FAFB] px-4 py-3 text-sm text-[#374151] leading-relaxed min-h-[80px] break-words">
+            <div className="rounded-lg bg-[#F9FAFB] px-4 py-3 text-sm text-[#374151] leading-relaxed min-h-[80px] break-all">
               {card.content || <span className="text-[#9CA3AF]">No content provided.</span>}
             </div>
           </div>
@@ -528,11 +533,11 @@ function CardDetailModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Submitted By</p>
-              <p className="mt-0.5 text-sm font-medium text-[#111827] break-words">{fullName(card.owner)}</p>
+              <p className="mt-0.5 text-sm font-medium text-[#111827] break-all">{fullName(card.owner)}</p>
             </div>
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Assigned To</p>
-              <p className="mt-0.5 text-sm font-medium text-[#111827] break-words">{card.assignedTo ? fullName(card.assignedTo) : "—"}</p>
+              <p className="mt-0.5 text-sm font-medium text-[#111827] break-all">{card.assignedTo ? fullName(card.assignedTo) : "—"}</p>
             </div>
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Date Submitted</p>

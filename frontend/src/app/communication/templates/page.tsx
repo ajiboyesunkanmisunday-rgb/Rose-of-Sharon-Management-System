@@ -10,6 +10,7 @@ import ActionDropdown from "@/components/ui/ActionDropdown";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import {
   getMessageTemplates,
+  searchMessageTemplates,
   deleteMessageTemplate,
   type MessageTemplateResponse,
 } from "@/lib/api";
@@ -47,11 +48,14 @@ export default function TemplatesPage() {
   const [deleteId,     setDeleteId]     = useState<string | null>(null);
   const [deleting,     setDeleting]     = useState(false);
 
-  const fetchTemplates = useCallback(async (page: number) => {
+  const fetchTemplates = useCallback(async (page: number, query = "") => {
     setLoading(true);
     setApiError("");
     try {
-      const res = await getMessageTemplates(page - 1, ITEMS_PER_PAGE);
+      const res = query.trim()
+        ? await searchMessageTemplates(query, page - 1, ITEMS_PER_PAGE)
+        : await getMessageTemplates(page - 1, ITEMS_PER_PAGE);
+        
       setTemplates(res.content ?? []);
       setTotalPages(res.totalPages ?? 1);
       setTotalItems(res.totalElements ?? 0);
@@ -63,20 +67,10 @@ export default function TemplatesPage() {
   }, []);
 
   useEffect(() => {
-    fetchTemplates(currentPage);
-  }, [currentPage, fetchTemplates]);
+    fetchTemplates(currentPage, search);
+  }, [currentPage, search, fetchTemplates]);
 
-  const displayed = search.trim()
-    ? templates.filter((t) => {
-        const q = search.toLowerCase();
-        return (
-          (t.name ?? "").toLowerCase().includes(q) ||
-          (t.subject ?? "").toLowerCase().includes(q) ||
-          (t.content ?? "").toLowerCase().includes(q) ||
-          (CATEGORY_LABELS[t.messageTemplateCategory] ?? "").toLowerCase().includes(q)
-        );
-      })
-    : templates;
+  const displayed = templates;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -84,7 +78,7 @@ export default function TemplatesPage() {
     try {
       await deleteMessageTemplate(deleteId);
       setDeleteId(null);
-      fetchTemplates(currentPage);
+      fetchTemplates(currentPage, search);
     } catch {
       // keep modal open on error
     } finally {
@@ -181,13 +175,13 @@ export default function TemplatesPage() {
                   className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
                   style={{ height: "56px" }}
                 >
-                  <td className="px-4 py-3 text-sm font-medium text-[#374151]">{t.name}</td>
+                  <td className="px-4 py-3 text-sm font-medium text-[#374151] max-w-[180px]"><span className="block truncate">{t.name}</span></td>
                   <td className="px-4 py-3">{getChannelBadge(t.channel)}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
                     {CATEGORY_LABELS[t.messageTemplateCategory] ?? t.messageTemplateCategory}
                   </td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
-                    {t.subject ?? <span className="text-[#9CA3AF]">—</span>}
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] max-w-[200px]">
+                    <span className="block truncate">{t.subject ?? <span className="text-[#9CA3AF]">—</span>}</span>
                   </td>
                   <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{fmtDate(t.createdOn)}</td>
                   <td className="px-4 py-3">
@@ -195,7 +189,7 @@ export default function TemplatesPage() {
                       actions={[
                         {
                           label: "Edit",
-                          onClick: () => router.push(`/communication/templates/${t.id}/edit`),
+                          onClick: () => router.push(`/communication/templates/edit?id=${t.id}`),
                         },
                         {
                           label: "Delete",

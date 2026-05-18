@@ -11,9 +11,11 @@ import {
   assignAdmin,
   assignSuperAdmin,
   removeAdmin,
+  reassignAdminRole,
   type AdminResponse,
 } from "@/lib/api";
-import { ShieldCheck, UserCog, UserCheck } from "lucide-react";
+import { ShieldCheck, UserCog, UserCheck, RefreshCw } from "lucide-react";
+import ReassignRoleModal from "@/components/user-management/ReassignRoleModal";
 
 function fmtDate(s?: string) {
   if (!s) return "—";
@@ -38,6 +40,10 @@ export default function AdminUsersPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingAdmin, setDeletingAdmin] = useState<AdminResponse | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [showReassignModal, setShowReassignModal] = useState(false);
+  const [reassigningAdmin, setReassigningAdmin] = useState<AdminResponse | null>(null);
+  const [reassigning, setReassigning] = useState(false);
 
   const fetchAdmins = useCallback(async () => {
     setLoading(true);
@@ -103,6 +109,21 @@ export default function AdminUsersPage() {
       alert(err instanceof Error ? err.message : "Failed to remove admin.");
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleReassignConfirm = async (roleId: string) => {
+    if (!reassigningAdmin) return;
+    setReassigning(true);
+    try {
+      await reassignAdminRole(reassigningAdmin.id, roleId);
+      setShowReassignModal(false);
+      setReassigningAdmin(null);
+      fetchAdmins();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to reassign role.");
+    } finally {
+      setReassigning(false);
     }
   };
 
@@ -233,6 +254,13 @@ export default function AdminUsersPage() {
                     <ActionDropdown
                       actions={[
                         {
+                          label: "Reassign Role",
+                          onClick: () => {
+                            setReassigningAdmin(admin);
+                            setShowReassignModal(true);
+                          },
+                        },
+                        {
                           label: "Remove Access",
                           onClick: () => {
                             setDeletingAdmin(admin);
@@ -265,6 +293,14 @@ export default function AdminUsersPage() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteConfirm}
         isLoading={deleting}
+      />
+
+      <ReassignRoleModal
+        isOpen={showReassignModal}
+        onClose={() => setShowReassignModal(false)}
+        admin={reassigningAdmin}
+        onConfirm={handleReassignConfirm}
+        isLoading={reassigning}
       />
     </DashboardLayout>
   );

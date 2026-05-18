@@ -6,13 +6,18 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
+import Modal from "@/components/ui/Modal";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
+import SearchBar from "@/components/ui/SearchBar";
 import {
-  getGroup,
+  getAllGroups,
   getGroupMembers,
+  getMembers,
+  updateGroupHead,
   deleteGroupsBulk,
   type GroupResponse,
-  type GroupMemberResponse,
+  type UserBasicResponse,
+  type UserResponse,
 } from "@/lib/api";
 
 const MEMBERS_PER_PAGE = 10;
@@ -20,6 +25,17 @@ const MEMBERS_PER_PAGE = 10;
 function fullName(u?: { firstName?: string; middleName?: string; lastName?: string } | null) {
   if (!u) return "—";
   return [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—";
+}
+
+function avatarBgColors(id: string) {
+  const colors = ["bg-[#B5B5F3]","bg-[#BFDBFE]","bg-[#BBF7D0]","bg-[#FDE68A]","bg-[#FECACA]","bg-[#DDD6FE]"];
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = ((hash << 5) - hash + id.charCodeAt(i)) | 0;
+  return colors[Math.abs(hash) % colors.length];
+}
+
+function initials(u: { firstName?: string; lastName?: string }) {
+  return `${u.firstName?.[0] ?? ""}${u.lastName?.[0] ?? ""}`.toUpperCase() || "?";
 }
 
 export default function GroupDetailClient() {
@@ -47,8 +63,25 @@ export default function GroupDetailClient() {
   const [group,   setGroup]   = useState<GroupResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
+
+  // Members of this group
+  const [members,       setMembers]       = useState<UserBasicResponse[]>([]);
+  const [membersLoading, setMembersLoading] = useState(true);
+  const [membersError,   setMembersError]   = useState("");
+  const [memberPage,     setMemberPage]     = useState(1);
+  const [memberSearch,   setMemberSearch]   = useState("");
+
+  // Assign head modal
+  const [showHeadModal,   setShowHeadModal]   = useState(false);
+  const [allMembers,      setAllMembers]      = useState<UserResponse[]>([]);
+  const [allMembersLoading, setAllMembersLoading] = useState(false);
+  const [headSearch,      setHeadSearch]      = useState("");
+  const [assigningId,     setAssigningId]     = useState<string | null>(null);
+  const [assignError,     setAssignError]     = useState("");
+
+  // Delete
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [deleting,        setDeleting]        = useState(false);
 
   const [members, setMembers] = useState<GroupMemberResponse[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -62,8 +95,9 @@ export default function GroupDetailClient() {
     setLoading(true);
     setError("");
     try {
-      const data = await getGroup(id);
-      setGroup(data);
+      const all = await getAllGroups();
+      const found = (Array.isArray(all) ? all : []).find((g) => g.id === id) ?? null;
+      setGroup(found);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load group.");
     } finally {
@@ -71,15 +105,24 @@ export default function GroupDetailClient() {
     }
   }, [id]);
 
+<<<<<<< HEAD
   const fetchMembers = useCallback(async (page: number) => {
+=======
+  const fetchMembers = useCallback(async () => {
+>>>>>>> 46816e2a0544c21c4d6a914a52267e53d0ab01ea
     if (!id || id.startsWith("grp-")) return;
     setMembersLoading(true);
     setMembersError("");
     try {
+<<<<<<< HEAD
       const res = await getGroupMembers(id, page - 1, MEMBERS_PER_PAGE);
       setMembers(res.content ?? []);
       setMembersTotalPages(res.totalPages || 1);
       setMembersTotal(res.totalElements || 0);
+=======
+      const res = await getGroupMembers(id, 0, 500);
+      setMembers(res.content ?? []);
+>>>>>>> 46816e2a0544c21c4d6a914a52267e53d0ab01ea
     } catch (err) {
       setMembersError(err instanceof Error ? err.message : "Failed to load members.");
     } finally {
@@ -88,7 +131,77 @@ export default function GroupDetailClient() {
   }, [id]);
 
   useEffect(() => { fetchGroup(); }, [fetchGroup]);
+<<<<<<< HEAD
   useEffect(() => { fetchMembers(membersPage); }, [fetchMembers, membersPage]);
+=======
+  useEffect(() => { fetchMembers(); }, [fetchMembers]);
+
+  // Filter + paginate the group members locally
+  const filteredMembers = memberSearch.trim()
+    ? members.filter((m) => {
+        const q = memberSearch.toLowerCase();
+        return (
+          (m.firstName ?? "").toLowerCase().includes(q) ||
+          (m.lastName ?? "").toLowerCase().includes(q) ||
+          (m.middleName ?? "").toLowerCase().includes(q) ||
+          (m.email ?? "").toLowerCase().includes(q) ||
+          (m.phoneNumber ?? "").toLowerCase().includes(q)
+        );
+      })
+    : members;
+
+  const totalMemberPages = Math.max(1, Math.ceil(filteredMembers.length / MEMBERS_PER_PAGE));
+  const safePage = Math.min(memberPage, totalMemberPages);
+  const paginatedMembers = filteredMembers.slice(
+    (safePage - 1) * MEMBERS_PER_PAGE,
+    safePage * MEMBERS_PER_PAGE
+  );
+
+  // Open assign head modal
+  const openHeadModal = async () => {
+    setShowHeadModal(true);
+    setHeadSearch("");
+    setAssignError("");
+    setAssigningId(null);
+    if (allMembers.length === 0) {
+      setAllMembersLoading(true);
+      try {
+        const res = await getMembers(0, 200);
+        setAllMembers(res.content ?? []);
+      } catch {
+        // silently — list stays empty
+      } finally {
+        setAllMembersLoading(false);
+      }
+    }
+  };
+
+  const filteredAllMembers = headSearch.trim()
+    ? allMembers.filter((m) => {
+        const q = headSearch.toLowerCase();
+        return (
+          (m.firstName ?? "").toLowerCase().includes(q) ||
+          (m.lastName ?? "").toLowerCase().includes(q) ||
+          (m.middleName ?? "").toLowerCase().includes(q) ||
+          (m.email ?? "").toLowerCase().includes(q)
+        );
+      })
+    : allMembers;
+
+  const handleAssignHead = async (member: UserResponse) => {
+    setAssigningId(member.id);
+    setAssignError("");
+    try {
+      await updateGroupHead(id, member.id);
+      setShowHeadModal(false);
+      // Refresh group so new head shows
+      await fetchGroup();
+    } catch (err) {
+      setAssignError(err instanceof Error ? err.message : "Failed to assign group head.");
+      setAssigningId(null);
+    }
+  };
+>>>>>>> 46816e2a0544c21c4d6a914a52267e53d0ab01ea
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -124,28 +237,53 @@ export default function GroupDetailClient() {
         <div className="flex h-48 items-center justify-center text-gray-400">Loading…</div>
       ) : group ? (
         <>
+          {/* Group info card */}
           <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
-            <h2 className="text-xl font-bold text-[#111827]">{group.name}</h2>
-            {group.description && (
-              <p className="mt-1 text-sm text-[#6B7280]">{group.description}</p>
-            )}
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-[#111827]">{group.name}</h2>
+                {group.description && (
+                  <p className="mt-1 text-sm text-[#6B7280]">{group.description}</p>
+                )}
+              </div>
+              <Button variant="primary" onClick={openHeadModal}>
+                Assign Group Head
+              </Button>
+            </div>
 
-            <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
               <div>
                 <p className="text-xs font-medium text-[#6B7280]">Group Head</p>
-                <p className="mt-1 text-sm font-medium text-[#111827]">{fullName(group.groupHead)}</p>
+                {group.groupHead ? (
+                  <div className="mt-1 flex items-center gap-2">
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-[#000080] ${avatarBgColors(group.groupHead.id)}`}>
+                      {initials(group.groupHead)}
+                    </div>
+                    <span className="text-sm font-medium text-[#111827]">{fullName(group.groupHead)}</span>
+                  </div>
+                ) : (
+                  <p className="mt-1 text-sm text-[#9CA3AF] italic">Not assigned</p>
+                )}
               </div>
               <div>
                 <p className="text-xs font-medium text-[#6B7280]">Total Members</p>
                 <p className="mt-1 text-sm font-medium text-[#111827]">
+<<<<<<< HEAD
                   {membersTotal || group.totalMembers || 0}
+=======
+                  {membersLoading ? "…" : filteredMembers.length}
+>>>>>>> 46816e2a0544c21c4d6a914a52267e53d0ab01ea
                 </p>
               </div>
               {group.whatsAppLink && (
                 <div>
                   <p className="text-xs font-medium text-[#6B7280]">WhatsApp Group</p>
-                  <a href={group.whatsAppLink} target="_blank" rel="noopener noreferrer"
-                    className="mt-1 block truncate text-sm font-medium text-[#000080] underline hover:text-[#000066]">
+                  <a
+                    href={group.whatsAppLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 block truncate text-sm font-medium text-[#000080] underline hover:text-[#000066]"
+                  >
                     Join Group
                   </a>
                 </div>
@@ -153,20 +291,40 @@ export default function GroupDetailClient() {
             </div>
           </div>
 
+<<<<<<< HEAD
           {/* ── Members section ── */}
           <div className="mb-2 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-[#111827]">Members</h3>
             <p className="text-sm text-[#6B7280]">
               {membersTotal} {membersTotal === 1 ? "member" : "members"}
             </p>
+=======
+          {/* Members section */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h3 className="text-base font-semibold text-[#111827]">
+              Members{!membersLoading && ` (${filteredMembers.length})`}
+            </h3>
+            <div className="w-full sm:w-64">
+              <SearchBar
+                value={memberSearch}
+                onChange={(v) => { setMemberSearch(v); setMemberPage(1); }}
+                onSearch={() => setMemberPage(1)}
+                placeholder="Search members…"
+              />
+            </div>
+>>>>>>> 46816e2a0544c21c4d6a914a52267e53d0ab01ea
           </div>
 
           {membersError && (
             <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+<<<<<<< HEAD
               {membersError} —{" "}
               <button type="button" className="font-medium underline" onClick={() => fetchMembers(membersPage)}>
                 Retry
               </button>
+=======
+              {membersError} — <button className="font-medium underline" onClick={fetchMembers}>Retry</button>
+>>>>>>> 46816e2a0544c21c4d6a914a52267e53d0ab01ea
             </div>
           )}
 
@@ -177,13 +335,19 @@ export default function GroupDetailClient() {
                   <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
                   <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Email</th>
                   <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Phone</th>
+<<<<<<< HEAD
                   <th className="hidden lg:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Sex</th>
                   <th className="hidden lg:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Location</th>
+=======
+                  <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Occupation</th>
+                  <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Sex</th>
+>>>>>>> 46816e2a0544c21c4d6a914a52267e53d0ab01ea
                 </tr>
               </thead>
               <tbody>
                 {membersLoading ? (
                   <tr>
+<<<<<<< HEAD
                     <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
                       Loading members…
                     </td>
@@ -229,6 +393,41 @@ export default function GroupDetailClient() {
                       </td>
                       <td className="hidden lg:table-cell px-4 py-3 text-sm text-[#374151]">
                         {memberLocation(m)}
+=======
+                    <td colSpan={5} className="px-4 py-8 text-center text-gray-400">Loading members…</td>
+                  </tr>
+                ) : paginatedMembers.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                      {memberSearch ? "No members match your search." : "No members in this group yet."}
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedMembers.map((m) => (
+                    <tr key={m.id} className="border-b border-[#F3F4F6] hover:bg-gray-50" style={{ height: "56px" }}>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          {m.profilePictureUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={m.profilePictureUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+                          ) : (
+                            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-[#000080] ${avatarBgColors(m.id)}`}>
+                              {initials(m)}
+                            </div>
+                          )}
+                          <span className="text-sm font-medium text-[#374151]">{fullName(m)}</span>
+                        </div>
+                      </td>
+                      <td className="hidden sm:table-cell px-4 py-3 max-w-[200px]">
+                        <span className="block truncate text-sm text-[#374151]">{m.email || "—"}</span>
+                      </td>
+                      <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">
+                        {m.phoneNumber ? `+${m.countryCode ?? ""} ${m.phoneNumber}`.trim() : "—"}
+                      </td>
+                      <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{m.occupation || "—"}</td>
+                      <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                        {m.sex ? m.sex.charAt(0) + m.sex.slice(1).toLowerCase() : "—"}
+>>>>>>> 46816e2a0544c21c4d6a914a52267e53d0ab01ea
                       </td>
                     </tr>
                   ))
@@ -239,10 +438,17 @@ export default function GroupDetailClient() {
 
           <div className="mt-4">
             <Pagination
+<<<<<<< HEAD
               currentPage={membersPage}
               totalPages={membersTotalPages}
               totalItems={membersTotal}
               onPageChange={setMembersPage}
+=======
+              currentPage={safePage}
+              totalPages={totalMemberPages}
+              totalItems={filteredMembers.length}
+              onPageChange={setMemberPage}
+>>>>>>> 46816e2a0544c21c4d6a914a52267e53d0ab01ea
             />
           </div>
 
@@ -252,7 +458,91 @@ export default function GroupDetailClient() {
             <Button variant="danger" onClick={() => setShowDeleteModal(true)} disabled={deleting}>Delete</Button>
           </div>
         </>
+      ) : !loading ? (
+        <div className="rounded-xl border border-[#E5E7EB] bg-white p-12 text-center text-sm text-gray-400">
+          Group not found.
+        </div>
       ) : null}
+
+      {/* Assign Group Head Modal */}
+      <Modal
+        isOpen={showHeadModal}
+        onClose={() => { setShowHeadModal(false); setAssignError(""); }}
+        title="Assign Group Head"
+        size="md"
+      >
+        <p className="mb-3 text-sm text-[#6B7280]">
+          Select a member from user management to set as the head of <span className="font-medium text-[#111827]">{group?.name}</span>.
+        </p>
+
+        {assignError && (
+          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {assignError}
+          </div>
+        )}
+
+        <div className="mb-3">
+          <SearchBar
+            value={headSearch}
+            onChange={setHeadSearch}
+            onSearch={() => {}}
+            placeholder="Search members…"
+          />
+        </div>
+
+        {allMembersLoading ? (
+          <div className="py-8 text-center text-sm text-gray-400">Loading members…</div>
+        ) : filteredAllMembers.length === 0 ? (
+          <div className="py-8 text-center text-sm text-gray-400">
+            {headSearch ? "No members match your search." : "No members found."}
+          </div>
+        ) : (
+          <div className="max-h-72 overflow-y-auto divide-y divide-[#F3F4F6]">
+            {filteredAllMembers.map((m) => {
+              const isCurrentHead = group?.groupHead?.id === m.id;
+              const isAssigning = assigningId === m.id;
+              return (
+                <div
+                  key={m.id}
+                  className={`flex items-center justify-between gap-3 px-1 py-3 ${isCurrentHead ? "opacity-60" : ""}`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    {m.profilePictureUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={m.profilePictureUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+                    ) : (
+                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-[#000080] ${avatarBgColors(m.id)}`}>
+                        {initials(m)}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-[#111827]">{fullName(m)}</p>
+                      {m.email && (
+                        <p className="truncate text-xs text-[#6B7280]">{m.email}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="shrink-0">
+                    {isCurrentHead ? (
+                      <span className="rounded-full bg-[#DCFCE7] px-2.5 py-1 text-xs font-medium text-[#16A34A]">
+                        Current Head
+                      </span>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        onClick={() => handleAssignHead(m)}
+                        disabled={assigningId !== null}
+                      >
+                        {isAssigning ? "Assigning…" : "Assign"}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Modal>
 
       <DeleteConfirmModal
         isOpen={showDeleteModal}

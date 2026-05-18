@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import PhoneInput from "@/components/ui/PhoneInput";
 import { createNewConvert } from "@/lib/api";
+import SearchableSelect from "@/components/ui/SearchableSelect";
+import CountryStateSelect from "@/components/ui/CountryStateSelect";
+import { useEventServices } from "@/hooks/useEventServices";
 
 export default function AddNewConvertPage() {
   const router = useRouter();
@@ -18,6 +21,7 @@ export default function AddNewConvertPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [serviceAttended, setServiceAttended] = useState("");
+  const { services: eventServices, loading: servicesLoading } = useEventServices();
   const [street, setStreet] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
@@ -42,7 +46,7 @@ export default function AddNewConvertPage() {
         city: city || undefined,
         state: state || undefined,
         country: country || undefined,
-        // serviceAttended maps to eventId on the backend - link via event later
+        eventId: serviceAttended || undefined,
       });
       router.push("/user-management/new-converts");
     } catch (err) {
@@ -159,17 +163,16 @@ export default function AddNewConvertPage() {
 
             <div>
               <label className={labelStyles}>Service Attended</label>
-              <select
+              <SearchableSelect
+                placeholder={servicesLoading ? "Loading services..." : "Select Service"}
+                searchPlaceholder="Search services..."
+                options={eventServices.map((s) => ({
+                  label: `${s.title ?? s.topic ?? "Event"}${s.date ? " — " + new Date(s.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : ""}`,
+                  value: s.id,
+                }))}
                 value={serviceAttended}
-                onChange={(e) => setServiceAttended(e.target.value)}
-                className={selectStyles}
-              >
-                <option value="">Select Service</option>
-                <option value="Sunday">Sunday</option>
-                <option value="Tuesday">Tuesday</option>
-                <option value="Thursday">Thursday</option>
-                <option value="Special Service">Special Service</option>
-              </select>
+                onChange={setServiceAttended}
+              />
             </div>
           </div>
         </div>
@@ -199,41 +202,14 @@ export default function AddNewConvertPage() {
                 className={inputStyles}
               />
             </div>
-            <div>
-              <label className={labelStyles}>State</label>
-              <select
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-                className={selectStyles}
-              >
-                <option value="">Select State</option>
-                <option value="Lagos">Lagos</option>
-                <option value="Abuja">Abuja</option>
-                <option value="Rivers">Rivers</option>
-                <option value="Oyo">Oyo</option>
-                <option value="Kano">Kano</option>
-                <option value="Enugu">Enugu</option>
-                <option value="Delta">Delta</option>
-                <option value="Ogun">Ogun</option>
-              </select>
-            </div>
-            <div>
-              <label className={labelStyles}>Country</label>
-              <select
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className={selectStyles}
-              >
-                <option value="">Select Country</option>
-                <option value="Nigeria">Nigeria</option>
-                <option value="Ghana">Ghana</option>
-                <option value="Kenya">Kenya</option>
-                <option value="South Africa">South Africa</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="United States">United States</option>
-                <option value="Canada">Canada</option>
-              </select>
-            </div>
+            <CountryStateSelect
+              country={country}
+              state={state}
+              onCountryChange={(c) => { setCountry(c); setState(""); }}
+              onStateChange={setState}
+              labelStyles={labelStyles}
+              inputStyles={inputStyles}
+            />
           </div>
         </div>
 

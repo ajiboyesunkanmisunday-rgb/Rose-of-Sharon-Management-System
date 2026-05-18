@@ -265,10 +265,10 @@ export default function MessagesPage() {
                   />
                 </td>
                 <td className="px-4 py-3">{getTypeBadge(message.type)}</td>
-                <td className="px-4 py-3 text-sm text-[#374151]">{message.recipient}</td>
-                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{message.subject || "—"}</td>
+                <td className="px-4 py-3 text-sm text-[#374151] max-w-[160px]"><span className="block truncate">{message.recipient}</span></td>
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] max-w-[200px]"><span className="block truncate">{message.subject || "—"}</span></td>
                 <td className="px-4 py-3">{getStatusBadge(message.status)}</td>
-                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{message.sentBy}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] max-w-[140px]"><span className="block truncate">{message.sentBy}</span></td>
                 <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{message.date}</td>
                 <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{message.time || "—"}</td>
                 <td className="px-4 py-3">
