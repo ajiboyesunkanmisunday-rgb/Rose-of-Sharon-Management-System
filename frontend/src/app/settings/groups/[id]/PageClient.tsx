@@ -239,8 +239,16 @@ export default function GroupDetailClient() {
       // Refresh group so new head shows
       await fetchGroup();
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      // The backend's changeGroupHead endpoint returns 404 "User Not Found"
+      // even for users that genuinely exist — this is a known backend bug.
+      const isUserNotFound =
+        msg.toLowerCase().includes("not found") ||
+        msg.toLowerCase().includes("record not found");
       setAssignError(
-        err instanceof Error ? err.message : "Failed to assign group head.",
+        isUserNotFound
+          ? `Server error: the backend could not find user "${[member.firstName, member.lastName].filter(Boolean).join(" ")}" (ID: ${member.id}) in its group-head table. Please report this to the backend team — the changeGroupHead endpoint may have a data lookup bug.`
+          : msg || "Failed to assign group head.",
       );
       setAssigningId(null);
     }
