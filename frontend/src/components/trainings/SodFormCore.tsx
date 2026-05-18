@@ -21,7 +21,7 @@ import { useState, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Printer, Send, CheckCircle, XCircle } from "lucide-react";
-import { createSchoolOfDisciple, uploadProfilePicture, type SchoolOfDisciplesResponse } from "@/lib/api";
+import { createSchoolOfDisciple, uploadProfilePicture, type SchoolOfDiscipleFullResponse } from "@/lib/api";
 
 export type SodMode = "blank" | "fill" | "view";
 
@@ -154,7 +154,7 @@ export default function SodFormCore({
   initialData,
 }: {
   mode: SodMode;
-  initialData?: SchoolOfDisciplesResponse;
+  initialData?: SchoolOfDiscipleFullResponse;
 }) {
   const ro = mode === "blank" || mode === "view";
   const router = useRouter();
@@ -209,29 +209,40 @@ export default function SodFormCore({
   );
 
   /* ── Section B — Qualifications (date + institution + qualification received) ── */
-  const [quals, setQuals] = useState([
-    { institution: "", date: "", qualificationReceived: "" },
-    { institution: "", date: "", qualificationReceived: "" },
-    { institution: "", date: "", qualificationReceived: "" },
-  ]);
+  const [quals, setQuals] = useState(() => {
+    const fromData = (initialData?.qualifications ?? []).map((q) => ({
+      institution:           q.institution           ?? "",
+      date:                  q.date                  ?? "",
+      qualificationReceived: q.qualificationReceived ?? "",
+    }));
+    while (fromData.length < 3) fromData.push({ institution: "", date: "", qualificationReceived: "" });
+    return fromData.slice(0, 3);
+  });
   const updateQual = (i: number, k: keyof typeof quals[0], v: string) =>
     setQuals((prev) => prev.map((r, idx) => idx === i ? { ...r, [k]: v } : r));
 
   /* ── Section C — worship places ── */
-  const [wp,  setWp]  = useState([
-    { name: "", address: "", date: "" },
-    { name: "", address: "", date: "" },
-    { name: "", address: "", date: "" },
-  ]);
+  const [wp,  setWp]  = useState(() => {
+    const fromData = (initialData?.pastPlaceOfWorships ?? []).map((w) => ({
+      name:    w.name    ?? "",
+      address: w.address ?? "",
+      date:    w.date    ?? "",
+    }));
+    while (fromData.length < 3) fromData.push({ name: "", address: "", date: "" });
+    return fromData.slice(0, 3);
+  });
   const updateWp = (i: number, k: keyof typeof wp[0], v: string) =>
     setWp((prev) => prev.map((r, idx) => idx === i ? { ...r, [k]: v } : r));
 
   /* ── Section C — positions held ── */
-  const [ph,  setPh]  = useState([
-    { name: "", position: "" },
-    { name: "", position: "" },
-    { name: "", position: "" },
-  ]);
+  const [ph,  setPh]  = useState(() => {
+    const fromData = (initialData?.pastPositionHeldList ?? []).map((p) => ({
+      name:     p.worshipPlace ?? "",
+      position: p.positionHeld ?? "",
+    }));
+    while (fromData.length < 3) fromData.push({ name: "", position: "" });
+    return fromData.slice(0, 3);
+  });
   const updatePh = (i: number, k: keyof typeof ph[0], v: string) =>
     setPh((prev) => prev.map((r, idx) => idx === i ? { ...r, [k]: v } : r));
 
@@ -411,10 +422,6 @@ export default function SodFormCore({
         ...(wpItems.length   ? { createPastPlaceOfWorshipRequests: wpItems } : {}),
         ...(phItems.length   ? { createPositionHeldRequests: phItems }       : {}),
       });
-
-      // Log the full backend response so we can verify the record was created.
-      // If `created.id` is present, the backend saved it. If empty, it's a backend bug.
-      console.log("[SoD submit] backend response:", JSON.stringify(created));
 
       const savedId = (created as { id?: string })?.id;
       if (!savedId) {

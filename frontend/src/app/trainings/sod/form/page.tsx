@@ -11,11 +11,11 @@
 import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import SodFormCore from "@/components/trainings/SodFormCore";
-import { getSchoolOfDisciple, type SchoolOfDisciplesResponse } from "@/lib/api";
+import { getSchoolOfDisciple, type SchoolOfDiscipleFullResponse } from "@/lib/api";
 import { RefreshCw } from "lucide-react";
 
 function SodFormViewLoader({ id }: { id: string }) {
-  const [record, setRecord] = useState<SchoolOfDisciplesResponse | null>(null);
+  const [record, setRecord] = useState<SchoolOfDiscipleFullResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 

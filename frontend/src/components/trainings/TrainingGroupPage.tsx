@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
 import Pagination from "@/components/ui/Pagination";
 import { getMembers, getEMembers, getAllGroups, type UserResponse, type GroupResponse } from "@/lib/api";
-import { GraduationCap, Phone, Mail, Users } from "lucide-react";
+import { GraduationCap, Phone, Mail, Users, RefreshCw } from "lucide-react";
 
 interface Props {
   groupKeywords: string[];
@@ -43,28 +43,28 @@ export default function TrainingGroupPage({ groupKeywords, title, description, a
   const [search,     setSearch]     = useState("");
   const [page,       setPage]       = useState(1);
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      try {
-        const [mRes, emRes, grpRes] = await Promise.allSettled([
-          getMembers(0, 500),
-          getEMembers(0, 500),
-          getAllGroups(),
-        ]);
-        const members  = mRes.status  === "fulfilled" ? (mRes.value.content  ?? []) : [];
-        const eMembers = emRes.status === "fulfilled" ? (emRes.value.content ?? []) : [];
-        const grps     = grpRes.status === "fulfilled" ? (Array.isArray(grpRes.value) ? grpRes.value : []) : [];
-        setAllMembers([...members, ...eMembers]);
-        setGroups(grps);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load members.");
-      } finally {
-        setLoading(false);
-      }
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [mRes, emRes, grpRes] = await Promise.allSettled([
+        getMembers(0, 500),
+        getEMembers(0, 500),
+        getAllGroups(),
+      ]);
+      const members  = mRes.status  === "fulfilled" ? (mRes.value.content  ?? []) : [];
+      const eMembers = emRes.status === "fulfilled" ? (emRes.value.content ?? []) : [];
+      const grps     = grpRes.status === "fulfilled" ? (Array.isArray(grpRes.value) ? grpRes.value : []) : [];
+      setAllMembers([...members, ...eMembers]);
+      setGroups(grps);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load members.");
+    } finally {
+      setLoading(false);
     }
-    load();
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   // Find group IDs matching the keywords
   const matchedGroupIds = useMemo(() => {
@@ -118,6 +118,14 @@ export default function TrainingGroupPage({ groupKeywords, title, description, a
           <h1 className="text-[28px] font-bold text-[#000000]">{title}</h1>
           <p className="text-sm text-[#6B7280]">{description}</p>
         </div>
+        <button
+          onClick={load}
+          disabled={loading}
+          className="ml-auto flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:border-[#7C3AED] hover:text-[#7C3AED] disabled:opacity-50"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+          Refresh
+        </button>
       </div>
 
       {/* Matched groups chips */}

@@ -2193,6 +2193,30 @@ export async function getAdminUsers(
 
 // ─── Workers-in-Training ─────────────────────────────────────────────────────
 
+// ─── Sub-document types (shared by WiT and SoD full responses) ────────────────
+
+export interface PastPlaceOfWorship {
+  id?: string;
+  date?: string;
+  name?: string;
+  address?: string;
+}
+
+export interface PastPositionHeld {
+  id?: string;
+  worshipPlace?: string;
+  positionHeld?: string;
+}
+
+export interface Qualification {
+  id?: string;
+  date?: string;
+  institution?: string;
+  qualificationReceived?: string;
+}
+
+// ─── Workers-in-Training ──────────────────────────────────────────────────────
+
 export interface WorkersInTrainingResponse {
   id: string;
   userId?: string;
@@ -2240,6 +2264,14 @@ export interface WorkersInTrainingResponse {
   officialRemarks?: string;
   graduationDate?: string;
   createdOn?: string;
+}
+
+/** Full single-record response — includes sub-document arrays */
+export interface WorkersInTrainingFullResponse extends WorkersInTrainingResponse {
+  baptismCertificateUrl?: string;
+  pastPlaceOfWorships?: PastPlaceOfWorship[];
+  pastPositionHeldList?: PastPositionHeld[];
+  qualifications?: Qualification[];
 }
 
 export interface CreateWorkersInTrainingRequest {
@@ -2315,8 +2347,8 @@ export async function getWorkersInTraining(
 
 export async function getWorkerInTraining(
   id: string,
-): Promise<WorkersInTrainingResponse> {
-  return apiFetch<WorkersInTrainingResponse>(
+): Promise<WorkersInTrainingFullResponse> {
+  return apiFetch<WorkersInTrainingFullResponse>(
     `/api/v1/workers-in-training/${id}`,
   );
 }
@@ -2641,6 +2673,13 @@ export interface SchoolOfDisciplesResponse {
   examAttendance?: SodAttendanceRecord[];
 }
 
+/** Full single-record response — includes sub-document arrays */
+export interface SchoolOfDiscipleFullResponse extends SchoolOfDisciplesResponse {
+  pastPlaceOfWorships?: PastPlaceOfWorship[];
+  pastPositionHeldList?: PastPositionHeld[];
+  qualifications?: Qualification[];
+}
+
 export interface CreateSchoolOfDisciplesRequest {
   // Church location identifiers (all required by backend)
   set?: string;
@@ -2717,8 +2756,8 @@ export async function getSchoolOfDisciples(
 
 export async function getSchoolOfDisciple(
   id: string,
-): Promise<SchoolOfDisciplesResponse> {
-  return apiFetch<SchoolOfDisciplesResponse>(
+): Promise<SchoolOfDiscipleFullResponse> {
+  return apiFetch<SchoolOfDiscipleFullResponse>(
     `/api/v1/school-of-disciples/${id}`,
   );
 }

@@ -11,11 +11,11 @@
 import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import WorkersFormCore from "@/components/trainings/WorkersFormCore";
-import { getWorkerInTraining, type WorkersInTrainingResponse } from "@/lib/api";
+import { getWorkerInTraining, type WorkersInTrainingFullResponse } from "@/lib/api";
 import { RefreshCw } from "lucide-react";
 
 function WorkersFormViewLoader({ id }: { id: string }) {
-  const [record, setRecord] = useState<WorkersInTrainingResponse | null>(null);
+  const [record, setRecord] = useState<WorkersInTrainingFullResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
