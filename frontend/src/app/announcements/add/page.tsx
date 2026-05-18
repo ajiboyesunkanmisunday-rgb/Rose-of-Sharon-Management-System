@@ -62,7 +62,7 @@ export default function AddAnnouncementPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <FormField
             label="Title"
-            name="title"
+            name="subject"
             value={formData.subject}
             onChange={handleChange}
             placeholder="Enter announcement title"
