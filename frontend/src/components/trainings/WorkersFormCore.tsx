@@ -17,7 +17,7 @@ import { Printer, Send, CheckCircle } from "lucide-react";
 import {
   createWorkerInTraining,
   uploadProfilePicture,
-  type WorkersInTrainingResponse,
+  type WorkersInTrainingFullResponse,
 } from "@/lib/api";
 
 export type WitMode = "blank" | "fill" | "view";
@@ -183,7 +183,7 @@ export default function WorkersFormCore({
   initialData,
 }: {
   mode: WitMode;
-  initialData?: WorkersInTrainingResponse;
+  initialData?: WorkersInTrainingFullResponse;
 }) {
   const ro = mode !== "fill";
   const router = useRouter();
@@ -225,12 +225,16 @@ export default function WorkersFormCore({
   const [email,      setEmail]      = useState(initialData?.email ?? "");
 
   /* ── C. Education ────────────────────────────────────────────────────── */
-  const [quals, setQuals] = useState([
-    { institution: "", dates: "", qualification: "" },
-    { institution: "", dates: "", qualification: "" },
-    { institution: "", dates: "", qualification: "" },
-    { institution: "", dates: "", qualification: "" },
-  ]);
+  const [quals, setQuals] = useState(() => {
+    const fromData = (initialData?.qualifications ?? []).map((q) => ({
+      institution: q.institution ?? "",
+      dates:       q.date        ?? "",
+      qualification: q.qualificationReceived ?? "",
+    }));
+    // Pad to 4 rows minimum
+    while (fromData.length < 4) fromData.push({ institution: "", dates: "", qualification: "" });
+    return fromData.slice(0, 4);
+  });
   const updateQual = (i: number, f: keyof (typeof quals)[0], v: string) =>
     setQuals((prev) => prev.map((q, idx) => (idx === i ? { ...q, [f]: v } : q)));
 
@@ -242,21 +246,26 @@ export default function WorkersFormCore({
   const [hgDate,      setHgDate]      = useState(fmtDisplayDate(initialData?.holySpiritBaptismDate));
   const [hgWhere,     setHgWhere]     = useState(initialData?.holySpiritBaptismLocation ?? "");
 
-  const [wp, setWp] = useState([
-    { name: "", address: "", dates: "" },
-    { name: "", address: "", dates: "" },
-    { name: "", address: "", dates: "" },
-    { name: "", address: "", dates: "" },
-  ]);
+  const [wp, setWp] = useState(() => {
+    const fromData = (initialData?.pastPlaceOfWorships ?? []).map((w) => ({
+      name:    w.name    ?? "",
+      address: w.address ?? "",
+      dates:   w.date    ?? "",
+    }));
+    while (fromData.length < 4) fromData.push({ name: "", address: "", dates: "" });
+    return fromData.slice(0, 4);
+  });
   const updateWp = (i: number, f: keyof (typeof wp)[0], v: string) =>
     setWp((prev) => prev.map((r, idx) => (idx === i ? { ...r, [f]: v } : r)));
 
-  const [positions, setPositions] = useState([
-    { worshipPlace: "", positionHeld: "" },
-    { worshipPlace: "", positionHeld: "" },
-    { worshipPlace: "", positionHeld: "" },
-    { worshipPlace: "", positionHeld: "" },
-  ]);
+  const [positions, setPositions] = useState(() => {
+    const fromData = (initialData?.pastPositionHeldList ?? []).map((p) => ({
+      worshipPlace: p.worshipPlace ?? "",
+      positionHeld: p.positionHeld ?? "",
+    }));
+    while (fromData.length < 4) fromData.push({ worshipPlace: "", positionHeld: "" });
+    return fromData.slice(0, 4);
+  });
   const updatePos = (i: number, f: "worshipPlace" | "positionHeld", v: string) =>
     setPositions((prev) => prev.map((p, idx) => (idx === i ? { ...p, [f]: v } : p)));
 
@@ -374,8 +383,6 @@ export default function WorkersFormCore({
         ...(wpItems.length   ? { createPastPlaceOfWorshipRequests: wpItems } : {}),
         ...(phItems.length   ? { createPositionHeldRequests: phItems } : {}),
       });
-
-      console.log("[WiT submit] backend response:", JSON.stringify(created));
 
       const savedId = (created as { id?: string })?.id;
       if (!savedId) {
@@ -621,6 +628,14 @@ export default function WorkersFormCore({
               <tr>
                 <td style={TDL}>Home Address:</td>
                 <td style={TD} colSpan={5}><CI value={homeAddr} onChange={setHomeAddr} readOnly={ro} /></td>
+              </tr>
+              <tr>
+                <td style={TDL}>City:</td>
+                <td style={TD}><CI value={homeCity} onChange={setHomeCity} readOnly={ro} /></td>
+                <td style={TDL}>State:</td>
+                <td style={TD}><CI value={homeState} onChange={setHomeState} readOnly={ro} /></td>
+                <td style={TDL}>Country:</td>
+                <td style={TD}><CI value={homeCountry} onChange={setHomeCountry} readOnly={ro} /></td>
               </tr>
               <tr>
                 <td style={TDL}>Phone:</td>
