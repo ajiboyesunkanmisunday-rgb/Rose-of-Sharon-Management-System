@@ -12,12 +12,10 @@ import SearchBar from "@/components/ui/SearchBar";
 import {
   getAllGroups,
   getGroupMembers,
-  getMembers,
   updateGroupHead,
   deleteGroupsBulk,
   type GroupResponse,
   type UserBasicResponse,
-  type UserResponse,
 } from "@/lib/api";
 
 const MEMBERS_PER_PAGE = 10;
@@ -85,9 +83,9 @@ export default function GroupDetailClient() {
   const [memberPage, setMemberPage] = useState(1);
   const [memberSearch, setMemberSearch] = useState("");
 
-  // Assign head modal
+  // Assign head modal — candidates are loaded from the group's own members
   const [showHeadModal, setShowHeadModal] = useState(false);
-  const [allMembers, setAllMembers] = useState<UserResponse[]>([]);
+  const [allMembers, setAllMembers] = useState<UserBasicResponse[]>([]);
   const [allMembersLoading, setAllMembersLoading] = useState(false);
   const [headSearch, setHeadSearch] = useState("");
   const [assigningId, setAssigningId] = useState<string | null>(null);
@@ -167,22 +165,21 @@ export default function GroupDetailClient() {
     safePage * MEMBERS_PER_PAGE,
   );
 
-  // Open assign head modal
+  // Open assign head modal — load from the group's own members so the IDs
+  // are exactly what the backend's group-head endpoint expects.
   const openHeadModal = async () => {
     setShowHeadModal(true);
     setHeadSearch("");
     setAssignError("");
     setAssigningId(null);
-    if (allMembers.length === 0) {
-      setAllMembersLoading(true);
-      try {
-        const res = await getMembers(0, 200);
-        setAllMembers(res.content ?? []);
-      } catch {
-        // silently — list stays empty
-      } finally {
-        setAllMembersLoading(false);
-      }
+    setAllMembersLoading(true);
+    try {
+      const res = await getGroupMembers(id, 0, 500);
+      setAllMembers(res.content ?? []);
+    } catch {
+      setAllMembers([]);
+    } finally {
+      setAllMembersLoading(false);
     }
   };
 
@@ -198,7 +195,7 @@ export default function GroupDetailClient() {
       })
     : allMembers;
 
-  const handleAssignHead = async (member: UserResponse) => {
+  const handleAssignHead = async (member: UserBasicResponse) => {
     setAssigningId(member.id);
     setAssignError("");
     try {
