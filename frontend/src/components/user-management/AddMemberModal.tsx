@@ -77,6 +77,7 @@ export default function AddMemberModal({
             onChange={(e) => setPhone(e.target.value)}
             placeholder="Enter phone number"
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            maxLength={10}
           />
         </div>
         <div>

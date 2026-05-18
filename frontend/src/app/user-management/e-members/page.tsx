@@ -354,8 +354,8 @@ export default function EMembersPage() {
                       </svg>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">{member.firstName}</td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">{member.lastName}</td>
+                  <td className="px-4 py-3 text-sm text-[#374151] max-w-[140px]"><span className="block truncate">{member.firstName}</span></td>
+                  <td className="px-4 py-3 text-sm text-[#374151] max-w-[140px]"><span className="block truncate">{member.lastName}</span></td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{member.country || "—"}</td>
                   <td className="px-4 py-3 text-sm text-[#374151]">{member.phoneNumber}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{member.email}</td>

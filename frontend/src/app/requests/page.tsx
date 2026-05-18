@@ -262,9 +262,9 @@ export default function RequestsPage() {
                       {(r.requestType ?? "—").replace(/_/g, " ")}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">{r.subject}</td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
-                    {r.owner ? fullName(r.owner) : <span className="italic text-gray-400">Anonymous</span>}
+                  <td className="px-4 py-3 text-sm text-[#374151] max-w-[200px]"><span className="block truncate">{r.subject}</span></td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] max-w-[160px]">
+                    <span className="block truncate">{r.owner ? fullName(r.owner) : <span className="italic text-gray-400">Anonymous</span>}</span>
                   </td>
                   <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{fmtDate(r.createdOn)}</td>
                   <td className="px-4 py-3">
@@ -272,7 +272,7 @@ export default function RequestsPage() {
                       {(r.requestStatus ?? "—").replace(/_/g, " ")}
                     </span>
                   </td>
-                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{fullName(r.assignedTo)}</td>
+                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] max-w-[160px]"><span className="block truncate">{fullName(r.assignedTo)}</span></td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <ActionDropdown
                       actions={[

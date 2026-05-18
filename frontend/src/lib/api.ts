@@ -97,7 +97,7 @@ function isTokenExpired(token: string): boolean {
 
 async function apiFetchRaw<T>(
   path: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<ApiFetchResult<T>> {
   const token = getToken();
   const method = (options.method ?? "GET").toUpperCase();
@@ -135,16 +135,15 @@ async function apiFetchRaw<T>(
   // call the function directly.
   let fetchUrl = `${BASE_URL}${path}`;
   let fetchMethod = method;
-  const needsProxy =
-    typeof window !== "undefined" &&
-    path.startsWith("/api/") &&
-    !BASE_URL;
+  // Backend now accepts the Netlify origin header directly.
+  // All /api/* requests route through the [[redirects]] rule in netlify.toml.
+  const needsProxy = false;
   if (needsProxy) {
     // Separate the path from any query string the caller already attached
     const [basePath, existingQs] = path.split("?");
     let proxyUrl = `/.netlify/functions/api-proxy?_path=${encodeURIComponent(basePath)}&_method=${method}`;
     if (existingQs) proxyUrl += `&_qs=${encodeURIComponent(existingQs)}`;
-    fetchUrl   = proxyUrl;
+    fetchUrl = proxyUrl;
     fetchMethod = "POST"; // transport method to the function; actual method sent via _method param
   }
 
@@ -164,20 +163,40 @@ async function apiFetchRaw<T>(
 
   if (!response.ok) {
     const status = response.status;
-    let errorMessage = "";          // empty = no specific message yet
-    let backendMessage = "";        // what the backend actually said
+    let errorMessage = ""; // empty = no specific message yet
+    let backendMessage = ""; // what the backend actually said
 
     try {
       const errBody = await response.json();
-      backendMessage = errBody?.message ?? errBody?.error ?? errBody?.detail ?? "";
+      backendMessage =
+        errBody?.message ?? errBody?.error ?? errBody?.detail ?? "";
     } catch {
       // non-JSON error body — ignore
     }
 
     // Log the raw backend message to the browser console for debugging.
-    console.error(`[api] ${status} on ${path} — backend said:`, backendMessage || "(no message)");
+    console.error(
+      `[api] ${status} on ${path} — backend said:`,
+      backendMessage || "(no message)",
+    );
 
     const raw = backendMessage.toLowerCase();
+
+    // Backend sometimes returns session-expiry messages with a non-401 status.
+    // Treat any such message as an auth failure: clear the token and send the
+    // user to the login page immediately.
+    const isSessionExpired =
+      (raw.includes("session") &&
+        (raw.includes("expired") || raw.includes("login again"))) ||
+      raw.includes("please login") ||
+      raw.includes("please log in");
+    if (isSessionExpired) {
+      removeToken();
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+      throw new Error("Session expired. Please log in again.");
+    }
 
     // Always keep a meaningful backend message when the server provides one.
     // Only fall back to generic text when the backend gives us nothing useful,
@@ -196,11 +215,19 @@ async function apiFetchRaw<T>(
       // Backend gave a real message — use it as-is
       errorMessage = backendMessage;
     } else if (status === 405 || raw.includes("method not allowed")) {
-      errorMessage = "This action is not yet supported by the server. Please contact the backend team.";
-    } else if (status === 502 || status === 503 || raw.includes("bad gateway") || raw.includes("service unavailable")) {
-      errorMessage = "Server is temporarily unavailable. Please try again in a moment.";
+      errorMessage =
+        "This action is not yet supported by the server. Please contact the backend team.";
+    } else if (
+      status === 502 ||
+      status === 503 ||
+      raw.includes("bad gateway") ||
+      raw.includes("service unavailable")
+    ) {
+      errorMessage =
+        "Server is temporarily unavailable. Please try again in a moment.";
     } else if (status === 404 || raw.includes("not found")) {
-      errorMessage = "Record not found. It may have been deleted or the ID is incorrect.";
+      errorMessage =
+        "Record not found. It may have been deleted or the ID is incorrect.";
     } else if (status === 500 || raw.includes("internal server error")) {
       errorMessage = "Server error. Please try again or contact support.";
     } else if (status === 400 || raw.includes("bad request")) {
@@ -240,7 +267,7 @@ async function apiFetchRaw<T>(
 
 async function apiFetch<T>(
   path: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<T> {
   const { data } = await apiFetchRaw<T>(path, options);
   return data;
@@ -318,7 +345,14 @@ export interface OperationalResponse {
 export interface EventFormField {
   id: string;
   label: string;
-  type: "TEXTFIELD" | "TEXTAREA" | "SINGLE_SELECT" | "MULTI_SELECT" | "RADIO" | "FILE" | "EMAIL";
+  type:
+    | "TEXTFIELD"
+    | "TEXTAREA"
+    | "SINGLE_SELECT"
+    | "MULTI_SELECT"
+    | "RADIO"
+    | "FILE"
+    | "EMAIL";
   required?: boolean;
   options?: string[];
 }
@@ -423,15 +457,15 @@ export interface CreateMemberRequest {
 
 export async function getMembers(
   pageNo = 0,
-  pageSize = 10
+  pageSize = 10,
 ): Promise<CustomPageResponse<UserResponse>> {
   return apiFetch<CustomPageResponse<UserResponse>>(
-    `/api/v1/users/member?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/users/member?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
 export async function createMember(
-  body: CreateMemberRequest
+  body: CreateMemberRequest,
 ): Promise<UserResponse> {
   return apiFetch<UserResponse>("/api/v1/users/member", {
     method: "POST",
@@ -441,7 +475,7 @@ export async function createMember(
 
 export async function updateMember(
   id: string,
-  body: Partial<CreateMemberRequest>
+  body: Partial<CreateMemberRequest>,
 ): Promise<UserResponse> {
   return apiFetch<UserResponse>(`/api/v1/users/member/${id}`, {
     method: "PUT",
@@ -457,7 +491,7 @@ export async function updateMember(
  */
 export async function assignMemberGroups(
   id: string,
-  groupIds: string[]
+  groupIds: string[],
 ): Promise<void> {
   await apiFetch<UserResponse>(`/api/v1/users/member/${id}`, {
     method: "PUT",
@@ -465,7 +499,9 @@ export async function assignMemberGroups(
   });
 }
 
-export async function deleteMembersBulk(ids: string[]): Promise<OperationalResponse> {
+export async function deleteMembersBulk(
+  ids: string[],
+): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/users/member", {
     method: "DELETE",
     body: JSON.stringify({ ids }),
@@ -506,15 +542,15 @@ export interface CreateEMemberRequest {
 
 export async function getEMembers(
   pageNo = 0,
-  pageSize = 10
+  pageSize = 10,
 ): Promise<CustomPageResponse<UserResponse>> {
   return apiFetch<CustomPageResponse<UserResponse>>(
-    `/api/v1/users/e-member?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/users/e-member?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
 export async function createEMember(
-  body: CreateEMemberRequest
+  body: CreateEMemberRequest,
 ): Promise<UserResponse> {
   return apiFetch<UserResponse>("/api/v1/users/e-member", {
     method: "POST",
@@ -524,7 +560,7 @@ export async function createEMember(
 
 export async function updateEMember(
   id: string,
-  body: Partial<CreateEMemberRequest>
+  body: Partial<CreateEMemberRequest>,
 ): Promise<UserResponse> {
   return apiFetch<UserResponse>(`/api/v1/users/e-member/${id}`, {
     method: "PUT",
@@ -532,7 +568,9 @@ export async function updateEMember(
   });
 }
 
-export async function deleteEMembersBulk(ids: string[]): Promise<OperationalResponse> {
+export async function deleteEMembersBulk(
+  ids: string[],
+): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/users/e-member", {
     method: "DELETE",
     body: JSON.stringify({ ids }),
@@ -563,25 +601,25 @@ export interface CreateFirstTimerRequest {
   eventId?: string;
   // Visitor-specific fields
   isVisiting?: boolean;
-  mediumOfInvitation?: string;   // how they heard about the church
-  serviceRating?: number;        // 1–5 numeric rating of the service
+  mediumOfInvitation?: string; // how they heard about the church
+  serviceRating?: number; // 1–5 numeric rating of the service
   favouritePartOfService?: string;
-  fromOnline?: boolean;          // worshipped online before
-  whatsappNumber?: string;       // WhatsApp contact number
-  howWasService?: string;        // service quality feedback ("Excellent", "Good", etc.)
+  fromOnline?: boolean; // worshipped online before
+  whatsappNumber?: string; // WhatsApp contact number
+  howWasService?: string; // service quality feedback ("Excellent", "Good", etc.)
 }
 
 export async function getFirstTimers(
   pageNo = 0,
-  pageSize = 10
+  pageSize = 10,
 ): Promise<CustomPageResponse<UserResponse>> {
   return apiFetch<CustomPageResponse<UserResponse>>(
-    `/api/v1/users/first-timer?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/users/first-timer?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
 export async function createFirstTimer(
-  body: CreateFirstTimerRequest
+  body: CreateFirstTimerRequest,
 ): Promise<UserResponse> {
   return apiFetch<UserResponse>("/api/v1/users/first-timer", {
     method: "POST",
@@ -591,7 +629,7 @@ export async function createFirstTimer(
 
 export async function updateFirstTimer(
   id: string,
-  body: Partial<CreateFirstTimerRequest>
+  body: Partial<CreateFirstTimerRequest>,
 ): Promise<UserResponse> {
   return apiFetch<UserResponse>(`/api/v1/users/first-timer/${id}`, {
     method: "PUT",
@@ -599,7 +637,9 @@ export async function updateFirstTimer(
   });
 }
 
-export async function deleteFirstTimersBulk(ids: string[]): Promise<OperationalResponse> {
+export async function deleteFirstTimersBulk(
+  ids: string[],
+): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/users/first-timer", {
     method: "DELETE",
     body: JSON.stringify({ ids }),
@@ -613,15 +653,15 @@ export type CreateSecondTimerRequest = CreateFirstTimerRequest;
 
 export async function getSecondTimers(
   pageNo = 0,
-  pageSize = 10
+  pageSize = 10,
 ): Promise<CustomPageResponse<UserResponse>> {
   return apiFetch<CustomPageResponse<UserResponse>>(
-    `/api/v1/users/second-timer?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/users/second-timer?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
 export async function createSecondTimer(
-  body: CreateSecondTimerRequest
+  body: CreateSecondTimerRequest,
 ): Promise<UserResponse> {
   return apiFetch<UserResponse>("/api/v1/users/second-timer", {
     method: "POST",
@@ -631,7 +671,7 @@ export async function createSecondTimer(
 
 export async function updateSecondTimer(
   id: string,
-  body: Partial<CreateSecondTimerRequest>
+  body: Partial<CreateSecondTimerRequest>,
 ): Promise<UserResponse> {
   return apiFetch<UserResponse>(`/api/v1/users/second-timer/${id}`, {
     method: "PUT",
@@ -639,7 +679,9 @@ export async function updateSecondTimer(
   });
 }
 
-export async function deleteSecondTimersBulk(ids: string[]): Promise<OperationalResponse> {
+export async function deleteSecondTimersBulk(
+  ids: string[],
+): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/users/second-timer", {
     method: "DELETE",
     body: JSON.stringify({ ids }),
@@ -686,10 +728,10 @@ export interface NewConvertResponse {
 
 export async function getNewConverts(
   pageNo = 0,
-  pageSize = 10
+  pageSize = 10,
 ): Promise<CustomPageResponse<NewConvertResponse>> {
   return apiFetch<CustomPageResponse<NewConvertResponse>>(
-    `/api/v1/new-converts?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/new-converts?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
@@ -706,7 +748,7 @@ export async function getNewConvert(id: string): Promise<NewConvertResponse> {
 }
 
 export async function createNewConvert(
-  body: CreateNewConvertRequest
+  body: CreateNewConvertRequest,
 ): Promise<NewConvertResponse> {
   return apiFetch<NewConvertResponse>("/api/v1/new-converts", {
     method: "POST",
@@ -714,18 +756,25 @@ export async function createNewConvert(
   });
 }
 
-export async function deleteNewConvertsBulk(ids: string[]): Promise<OperationalResponse> {
+export async function deleteNewConvertsBulk(
+  ids: string[],
+): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/new-converts", {
     method: "DELETE",
     body: JSON.stringify({ ids }),
   });
 }
 
-export async function markNewConvertsAsAttended(ids: string[]): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>("/api/v1/new-converts/mark-as-attended", {
-    method: "POST",
-    body: JSON.stringify({ ids }),
-  });
+export async function markNewConvertsAsAttended(
+  ids: string[],
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    "/api/v1/new-converts/mark-as-attended",
+    {
+      method: "POST",
+      body: JSON.stringify({ ids }),
+    },
+  );
 }
 
 // ─── Notes / Activity Log ────────────────────────────────────────────────────────
@@ -748,11 +797,11 @@ export interface NoteResponse {
 export async function getNotes(
   userId: string,
   pageNo = 0,
-  pageSize = 50
+  pageSize = 50,
 ): Promise<NoteResponse[]> {
   // GET /api/v1/notes?userId={id}&pageNo={n}&pageSize={s}
   const res = await apiFetch<NoteResponse[] | { content?: NoteResponse[] }>(
-    `/api/v1/notes?userId=${encodeURIComponent(userId)}&pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/notes?userId=${encodeURIComponent(userId)}&pageNo=${pageNo}&pageSize=${pageSize}`,
   );
   if (Array.isArray(res)) return res;
   return res.content ?? [];
@@ -762,7 +811,7 @@ export async function getNotes(
 
 export async function addNote(
   userId: string,
-  note: string
+  note: string,
 ): Promise<OperationalResponse> {
   // POST /api/v1/notes  { userId, content }
   // noteCategory omitted — "OTHERS" triggers backend 500; backend should default
@@ -774,9 +823,8 @@ export async function addNote(
 
 export async function addCallReport(
   userId: string,
-  report: string
+  report: string,
 ): Promise<OperationalResponse> {
-  // Swagger: POST /api/v1/notes/call  { userId, content }
   return apiFetch<OperationalResponse>(`/api/v1/notes/call`, {
     method: "POST",
     body: JSON.stringify({ userId, content: report }),
@@ -785,39 +833,47 @@ export async function addCallReport(
 
 export async function addVisitReport(
   userId: string,
-  report: string
+  report: string,
 ): Promise<OperationalResponse> {
-  // Swagger: POST /api/v1/notes/visit  { userId, content }
   return apiFetch<OperationalResponse>(`/api/v1/notes/visit`, {
     method: "POST",
     body: JSON.stringify({ userId, content: report }),
   });
 }
 
-export async function assignFollowUp(
-  userId: string,
-  officerId: string,
-  note?: string
-): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/assign-follow-up`, {
-    method: "POST",
-    body: JSON.stringify({ officerId, note }),
+export async function deleteNote(noteId: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/notes/${noteId}`, {
+    method: "DELETE",
   });
 }
 
-export async function convertToSecondTimer(
-  userId: string
+export async function assignFollowUp(
+  userId: string,
+  officerId: string,
+  note?: string,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
-    `/api/v1/users/${userId}/convert-to-second-timer`
+    `/api/v1/users/${userId}/assign-follow-up`,
+    {
+      method: "POST",
+      body: JSON.stringify({ officerId, note }),
+    },
+  );
+}
+
+export async function convertToSecondTimer(
+  userId: string,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/users/${userId}/convert-to-second-timer`,
   );
 }
 
 export async function convertToFullMember(
-  userId: string
+  userId: string,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
-    `/api/v1/users/${userId}/convert-to-full-member`
+    `/api/v1/users/${userId}/convert-to-full-member`,
   );
 }
 
@@ -826,19 +882,25 @@ export const convertToMember = convertToFullMember;
 
 export async function linkSpouse(
   userId: string,
-  spouseId: string
+  spouseId: string,
 ): Promise<UserResponse> {
   return apiFetch<UserResponse>(
     `/api/v1/users/${userId}/link-spouse/${spouseId}`,
-    { method: "PUT" }
+    { method: "PUT" },
   );
 }
 
-export async function resetPassword(userId: string): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/reset-password`);
+export async function resetPassword(
+  userId: string,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/users/${userId}/reset-password`,
+  );
 }
 
-export async function removeAdmin(userId: string): Promise<OperationalResponse> {
+export async function removeAdmin(
+  userId: string,
+): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/remove-admin`, {
     method: "DELETE",
   });
@@ -846,23 +908,26 @@ export async function removeAdmin(userId: string): Promise<OperationalResponse> 
 
 export async function markEventAttendance(
   eventId: string,
-  userId: string
+  userId: string,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
     `/api/v1/events/${eventId}/attendance/${userId}`,
-    { method: "PATCH" }
+    { method: "PATCH" },
   );
 }
 
 export async function markUserAsInactive(
   userId: string,
-  reason: string
+  reason: string,
 ): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/users/${userId}/mark-as-inactive`, {
-    method: "PATCH",
-    // Send multiple field names to match whatever the backend expects
-    body: JSON.stringify({ text: reason, reason, note: reason }),
-  });
+  return apiFetch<OperationalResponse>(
+    `/api/v1/users/${userId}/mark-as-inactive`,
+    {
+      method: "PATCH",
+      // Send multiple field names to match whatever the backend expects
+      body: JSON.stringify({ text: reason, reason, note: reason }),
+    },
+  );
 }
 
 export interface GuestInformationResponse {
@@ -876,10 +941,10 @@ export interface GuestInformationResponse {
 }
 
 export async function getGuestInformation(
-  userId: string
+  userId: string,
 ): Promise<GuestInformationResponse> {
   return apiFetch<GuestInformationResponse>(
-    `/api/v1/users/${userId}/guest-information`
+    `/api/v1/users/${userId}/guest-information`,
   );
 }
 
@@ -887,27 +952,27 @@ export async function getGuestInformation(
 // { ids: string[] } — works for one or many converts at once.
 export async function updateBelieversClass(
   userId: string,
-  believersClass: string
+  believersClass: string,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
     `/api/v1/new-converts/mark-as-attended?believerClassStage=${encodeURIComponent(believersClass)}`,
     {
       method: "POST",
       body: JSON.stringify({ ids: [userId] }),
-    }
+    },
   );
 }
 
 export async function updateBelieversClassBulk(
   userIds: string[],
-  believersClass: string
+  believersClass: string,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
     `/api/v1/new-converts/mark-as-attended?believerClassStage=${encodeURIComponent(believersClass)}`,
     {
       method: "POST",
       body: JSON.stringify({ ids: userIds }),
-    }
+    },
   );
 }
 
@@ -919,9 +984,9 @@ export function toBelieverClassStage(label: string): string {
     "Class 3": "CLASS_3",
     "Class 4": "CLASS_4",
     "Class 5": "COMPLETED",
-    "Completed": "COMPLETED",
+    Completed: "COMPLETED",
     "Not started": "",
-    "None": "",
+    None: "",
   };
   return map[label] ?? label; // if already in backend format, pass through
 }
@@ -935,7 +1000,7 @@ export interface ChangePasswordRequest {
 }
 
 export async function changePassword(
-  body: ChangePasswordRequest
+  body: ChangePasswordRequest,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/users/change-password", {
     method: "POST",
@@ -950,12 +1015,22 @@ export interface AssignSuperAdminRequest {
 }
 
 export async function assignSuperAdmin(
-  body: AssignSuperAdminRequest
+  body: AssignSuperAdminRequest,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/users/assign-super-admin", {
     method: "POST",
     body: JSON.stringify(body),
   });
+}
+
+export async function reassignAdminRole(
+  userId: string,
+  roleId: string,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/users/${userId}/reassign-admin/${roleId}`,
+    { method: "PUT" },
+  );
 }
 
 // ─── Events ─────────────────────────────────────────────────────────────────────
@@ -974,7 +1049,7 @@ export interface CreateEventRequest {
   city?: string;
   state?: string;
   country?: string;
-  additionalInformation?: string;  // backend DTO field name (EventResponse uses additionalInstructions)
+  additionalInformation?: string; // backend DTO field name (EventResponse uses additionalInstructions)
   eFlyer?: string;
   requiresRegistration?: boolean;
 }
@@ -1000,35 +1075,35 @@ export interface UploadCalendarRequest {
 
 export async function getEvents(
   pageNo = 0,
-  pageSize = 10
+  pageSize = 10,
 ): Promise<CustomPageResponse<EventResponse>> {
   return apiFetch<CustomPageResponse<EventResponse>>(
-    `/api/v1/events?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/events?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
 // GET /api/v1/events/calendar?startDay=...&endDay=... (YYYY-MM-DD)
 export async function getCalendarEvents(
   startDay: string,
-  endDay: string
+  endDay: string,
 ): Promise<EventResponse[]> {
   return apiFetch<EventResponse[]>(
-    `/api/v1/events/calendar?startDay=${encodeURIComponent(startDay)}&endDay=${encodeURIComponent(endDay)}`
+    `/api/v1/events/calendar?startDay=${encodeURIComponent(startDay)}&endDay=${encodeURIComponent(endDay)}`,
   );
 }
 
 // GET /api/v1/events/calendar/upcoming?startDay=...&endDay=... (date format YYYY-MM-DD)
 export async function getUpcomingEvents(
   startDay: string,
-  endDay: string
+  endDay: string,
 ): Promise<EventResponse[]> {
   return apiFetch<EventResponse[]>(
-    `/api/v1/events/calendar/upcoming?startDay=${encodeURIComponent(startDay)}&endDay=${encodeURIComponent(endDay)}`
+    `/api/v1/events/calendar/upcoming?startDay=${encodeURIComponent(startDay)}&endDay=${encodeURIComponent(endDay)}`,
   );
 }
 
 export async function uploadCalendar(
-  entries: UploadCalendarRequest[]
+  entries: UploadCalendarRequest[],
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/events/calendar", {
     method: "POST",
@@ -1038,15 +1113,15 @@ export async function uploadCalendar(
 
 export async function getCalendar(
   startDay: string,
-  endDay: string
+  endDay: string,
 ): Promise<EventResponse[]> {
   return apiFetch<EventResponse[]>(
-    `/api/v1/events/calendar?startDay=${encodeURIComponent(startDay)}&endDay=${encodeURIComponent(endDay)}`
+    `/api/v1/events/calendar?startDay=${encodeURIComponent(startDay)}&endDay=${encodeURIComponent(endDay)}`,
   );
 }
 
 export async function createEvent(
-  body: CreateEventRequest
+  body: CreateEventRequest,
 ): Promise<EventResponse> {
   return apiFetch<EventResponse>("/api/v1/events", {
     method: "POST",
@@ -1083,11 +1158,11 @@ function is404(err: unknown): boolean {
 export async function getEventFirstTimers(
   eventId: string,
   pageNo = 0,
-  pageSize = 20
+  pageSize = 20,
 ): Promise<CustomPageResponse<UserResponse>> {
   try {
     return await apiFetch<CustomPageResponse<UserResponse>>(
-      `/api/v1/events/${eventId}/first-timers?pageNo=${pageNo}&pageSize=${pageSize}`
+      `/api/v1/events/${eventId}/first-timers?pageNo=${pageNo}&pageSize=${pageSize}`,
     );
   } catch (err) {
     if (is404(err)) return EMPTY_PAGE<UserResponse>();
@@ -1098,11 +1173,11 @@ export async function getEventFirstTimers(
 export async function getEventEMembers(
   eventId: string,
   pageNo = 0,
-  pageSize = 20
+  pageSize = 20,
 ): Promise<CustomPageResponse<UserResponse>> {
   try {
     return await apiFetch<CustomPageResponse<UserResponse>>(
-      `/api/v1/events/${eventId}/e-members?pageNo=${pageNo}&pageSize=${pageSize}`
+      `/api/v1/events/${eventId}/e-members?pageNo=${pageNo}&pageSize=${pageSize}`,
     );
   } catch (err) {
     if (is404(err)) return EMPTY_PAGE<UserResponse>();
@@ -1113,11 +1188,11 @@ export async function getEventEMembers(
 export async function getEventNewConverts(
   eventId: string,
   pageNo = 0,
-  pageSize = 20
+  pageSize = 20,
 ): Promise<CustomPageResponse<NewConvertResponse>> {
   try {
     return await apiFetch<CustomPageResponse<NewConvertResponse>>(
-      `/api/v1/events/${eventId}/new-converts?pageNo=${pageNo}&pageSize=${pageSize}`
+      `/api/v1/events/${eventId}/new-converts?pageNo=${pageNo}&pageSize=${pageSize}`,
     );
   } catch (err) {
     if (is404(err)) return EMPTY_PAGE<NewConvertResponse>();
@@ -1130,17 +1205,17 @@ export async function getEventNewConverts(
 // endpoint that works for first-timers and new-converts.
 export async function markEMemberEventAttendance(
   eventId: string,
-  eMemberId: string
+  eMemberId: string,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
     `/api/v1/events/${eventId}/attendance/${eMemberId}`,
-    { method: "PATCH" }
+    { method: "PATCH" },
   );
 }
 
 export async function updateEvent(
   id: string,
-  body: Partial<CreateEventRequest>
+  body: Partial<CreateEventRequest>,
 ): Promise<EventResponse> {
   return apiFetch<EventResponse>(`/api/v1/events/${id}`, {
     method: "PUT",
@@ -1151,11 +1226,11 @@ export async function updateEvent(
 export async function searchEvents(
   text: string,
   pageNo = 0,
-  pageSize = 10
+  pageSize = 10,
 ): Promise<CustomPageResponse<EventResponse>> {
   return apiFetch<CustomPageResponse<EventResponse>>(
     `/api/v1/events/search?pageNo=${pageNo}&pageSize=${pageSize}`,
-    { method: "POST", body: JSON.stringify({ text }) }
+    { method: "POST", body: JSON.stringify({ text }) },
   );
 }
 
@@ -1168,30 +1243,35 @@ export async function cancelEvent(id: string): Promise<OperationalResponse> {
 // ─── Search helpers ──────────────────────────────────────────────────────────
 
 export async function searchMembers(
-  text: string, pageNo = 0, pageSize = 10
+  text: string,
+  pageNo = 0,
+  pageSize = 10,
 ): Promise<CustomPageResponse<UserResponse>> {
   return apiFetch<CustomPageResponse<UserResponse>>(
     `/api/v1/users/member/search?pageNo=${pageNo}&pageSize=${pageSize}`,
-    { method: "POST", body: JSON.stringify({ text }) }
+    { method: "POST", body: JSON.stringify({ text }) },
   );
 }
 
 export async function searchAllMembers(
-  text: string, pageNo = 0, pageSize = 10
+  text: string,
+  pageNo = 0,
+  pageSize = 10,
 ): Promise<CustomPageResponse<UserResponse>> {
   return apiFetch<CustomPageResponse<UserResponse>>(
     `/api/v1/users/users/search?pageNo=${pageNo}&pageSize=${pageSize}`,
-    { method: "POST", body: JSON.stringify({ text }) }
+    { method: "POST", body: JSON.stringify({ text }) },
   );
 }
 
-
 export async function searchEMembers(
-  text: string, pageNo = 0, pageSize = 10
+  text: string,
+  pageNo = 0,
+  pageSize = 10,
 ): Promise<CustomPageResponse<UserResponse>> {
   return apiFetch<CustomPageResponse<UserResponse>>(
     `/api/v1/users/e-member/search?pageNo=${pageNo}&pageSize=${pageSize}`,
-    { method: "POST", body: JSON.stringify({ text }) }
+    { method: "POST", body: JSON.stringify({ text }) },
   );
 }
 
@@ -1201,7 +1281,12 @@ export interface GroupResponse {
   id: string;
   name: string;
   description?: string;
-  groupHead?: { id: string; firstName?: string; middleName?: string; lastName?: string };
+  groupHead?: {
+    id: string;
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+  };
   totalMembers?: number;
   whatsAppLink?: string;
   whatsAppQRCode?: string;
@@ -1217,10 +1302,11 @@ export interface CreateGroupRequest {
 }
 
 export async function getGroups(
-  pageNo = 0, pageSize = 10
+  pageNo = 0,
+  pageSize = 10,
 ): Promise<CustomPageResponse<GroupResponse>> {
   return apiFetch<CustomPageResponse<GroupResponse>>(
-    `/api/v1/groups?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/groups?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
@@ -1262,14 +1348,18 @@ export interface GroupMemberResponse {
 }
 
 export async function getGroupMembers(
-  groupId: string, pageNo = 0, pageSize = 500
-): Promise<CustomPageResponse<GroupMemberResponse>> {
-  return apiFetch<CustomPageResponse<GroupMemberResponse>>(
-    `/api/v1/groups/${groupId}?pageNo=${pageNo}&pageSize=${pageSize}`
+  groupId: string,
+  pageNo = 0,
+  pageSize = 500,
+): Promise<CustomPageResponse<UserBasicResponse>> {
+  return apiFetch<CustomPageResponse<UserBasicResponse>>(
+    `/api/v1/groups/${groupId}?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
-export async function createGroup(body: CreateGroupRequest): Promise<GroupResponse> {
+export async function createGroup(
+  body: CreateGroupRequest,
+): Promise<GroupResponse> {
   return apiFetch<GroupResponse>("/api/v1/groups", {
     method: "POST",
     body: JSON.stringify(body),
@@ -1277,7 +1367,8 @@ export async function createGroup(body: CreateGroupRequest): Promise<GroupRespon
 }
 
 export async function updateGroup(
-  id: string, body: Partial<CreateGroupRequest>
+  id: string,
+  body: Partial<CreateGroupRequest>,
 ): Promise<GroupResponse> {
   return apiFetch<GroupResponse>(`/api/v1/groups/${id}`, {
     method: "PUT",
@@ -1286,14 +1377,17 @@ export async function updateGroup(
 }
 
 export async function updateGroupHead(
-  groupId: string, groupHeadId: string
+  groupId: string,
+  groupHeadId: string,
 ): Promise<GroupResponse> {
   return apiFetch<GroupResponse>(`/api/v1/groups/${groupId}/${groupHeadId}`, {
     method: "PUT",
   });
 }
 
-export async function deleteGroupsBulk(ids: string[]): Promise<OperationalResponse> {
+export async function deleteGroupsBulk(
+  ids: string[],
+): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/groups", {
     method: "DELETE",
     body: JSON.stringify({ ids }),
@@ -1301,11 +1395,13 @@ export async function deleteGroupsBulk(ids: string[]): Promise<OperationalRespon
 }
 
 export async function searchGroups(
-  text: string, pageNo = 0, pageSize = 10
+  text: string,
+  pageNo = 0,
+  pageSize = 10,
 ): Promise<CustomPageResponse<GroupResponse>> {
   return apiFetch<CustomPageResponse<GroupResponse>>(
     `/api/v1/groups/search?pageNo=${pageNo}&pageSize=${pageSize}`,
-    { method: "POST", body: JSON.stringify({ text }) }
+    { method: "POST", body: JSON.stringify({ text }) },
   );
 }
 
@@ -1319,14 +1415,18 @@ export interface RoleResponse {
 }
 
 export async function getRoles(
-  pageNo = 0, pageSize = 50
+  pageNo = 0,
+  pageSize = 50,
 ): Promise<CustomPageResponse<RoleResponse>> {
   return apiFetch<CustomPageResponse<RoleResponse>>(
-    `/api/v1/roles?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/roles?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
-export async function createRole(body: { name: string; description?: string }): Promise<RoleResponse> {
+export async function createRole(body: {
+  name: string;
+  description?: string;
+}): Promise<RoleResponse> {
   return apiFetch<RoleResponse>("/api/v1/roles", {
     method: "POST",
     body: JSON.stringify(body),
@@ -1338,7 +1438,8 @@ export async function getRole(id: string): Promise<RoleResponse> {
 }
 
 export async function updateRole(
-  id: string, body: { name: string; description?: string }
+  id: string,
+  body: { name: string; description?: string },
 ): Promise<RoleResponse> {
   return apiFetch<RoleResponse>(`/api/v1/roles/${id}`, {
     method: "PUT",
@@ -1351,7 +1452,6 @@ export async function deleteRole(id: string): Promise<OperationalResponse> {
     method: "DELETE",
   });
 }
-
 
 // ─── Permissions ─────────────────────────────────────────────────────────────
 
@@ -1367,7 +1467,7 @@ export async function getPermissions(): Promise<PermissionResponse[]> {
 
 /** Get all permissions tied to a specific role. */
 export async function getRolePermissions(
-  roleId: string
+  roleId: string,
 ): Promise<PermissionResponse[]> {
   return apiFetch<PermissionResponse[]>(`/api/v1/roles/${roleId}/permissions`);
 }
@@ -1379,7 +1479,7 @@ export async function getRolePermissions(
  */
 export async function assignPermissionsToRole(
   roleId: string,
-  permissionIds: string[]
+  permissionIds: string[],
 ): Promise<RoleResponse> {
   return apiFetch<RoleResponse>(`/api/v1/roles/${roleId}/assign-permission`, {
     method: "PUT",
@@ -1394,12 +1494,15 @@ export async function assignPermissionsToRole(
  */
 export async function removePermissionsFromRole(
   roleId: string,
-  permissionIds: string[]
+  permissionIds: string[],
 ): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/roles/${roleId}/remove-permission`, {
-    method: "DELETE",
-    body: JSON.stringify({ ids: permissionIds }),
-  });
+  return apiFetch<OperationalResponse>(
+    `/api/v1/roles/${roleId}/remove-permission`,
+    {
+      method: "DELETE",
+      body: JSON.stringify({ ids: permissionIds }),
+    },
+  );
 }
 
 // ─── Search — First Timers & Second Timers ────────────────────────────────────
@@ -1411,10 +1514,10 @@ export async function removePermissionsFromRole(
 export async function searchFirstTimers(
   query: string,
   pageNo = 0,
-  pageSize = 10
+  pageSize = 10,
 ): Promise<CustomPageResponse<UserResponse>> {
   return apiFetch<CustomPageResponse<UserResponse>>(
-    `/api/v1/users/first-timer/search?query=${encodeURIComponent(query)}&pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/users/first-timer/search?query=${encodeURIComponent(query)}&pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
@@ -1425,10 +1528,10 @@ export async function searchFirstTimers(
 export async function searchSecondTimers(
   query: string,
   pageNo = 0,
-  pageSize = 10
+  pageSize = 10,
 ): Promise<CustomPageResponse<UserResponse>> {
   return apiFetch<CustomPageResponse<UserResponse>>(
-    `/api/v1/users/second-timer/search?query=${encodeURIComponent(query)}&pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/users/second-timer/search?query=${encodeURIComponent(query)}&pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
@@ -1438,7 +1541,12 @@ export interface TestimonyResponse {
   id: string;
   subject: string;
   content: string;
-  owner?: { id: string; firstName?: string; middleName?: string; lastName?: string };
+  owner?: {
+    id: string;
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+  };
   isFeatured?: boolean;
   featureDate?: string;
   state?: string;
@@ -1448,10 +1556,11 @@ export interface TestimonyResponse {
 }
 
 export async function getTestimonies(
-  pageNo = 0, pageSize = 10
+  pageNo = 0,
+  pageSize = 10,
 ): Promise<CustomPageResponse<TestimonyResponse>> {
   return apiFetch<CustomPageResponse<TestimonyResponse>>(
-    `/api/v1/testimonies?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/testimonies?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
@@ -1460,7 +1569,11 @@ export async function getFeaturedTestimonies(): Promise<TestimonyResponse[]> {
 }
 
 export async function createTestimony(body: {
-  subject: string; content: string; userId: string; state?: string; country?: string;
+  subject: string;
+  content: string;
+  userId: string;
+  state?: string;
+  country?: string;
 }): Promise<TestimonyResponse> {
   return apiFetch<TestimonyResponse>("/api/v1/testimonies", {
     method: "POST",
@@ -1468,21 +1581,30 @@ export async function createTestimony(body: {
   });
 }
 
-export async function markTestimonyAsFeatured(ids: string[]): Promise<OperationalResponse> {
+export async function markTestimonyAsFeatured(
+  ids: string[],
+): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/testimonies/mark-as-featured", {
     method: "POST",
     body: JSON.stringify({ ids }),
   });
 }
 
-export async function markTestimonyAsNotFeatured(ids: string[]): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>("/api/v1/testimonies/mark-as-not-featured", {
-    method: "POST",
-    body: JSON.stringify({ ids }),
-  });
+export async function markTestimonyAsNotFeatured(
+  ids: string[],
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    "/api/v1/testimonies/mark-as-not-featured",
+    {
+      method: "POST",
+      body: JSON.stringify({ ids }),
+    },
+  );
 }
 
-export async function markTestimonyAsRead(ids: string[]): Promise<OperationalResponse> {
+export async function markTestimonyAsRead(
+  ids: string[],
+): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/testimonies/mark-as-read", {
     method: "POST",
     body: JSON.stringify({ ids }),
@@ -1495,8 +1617,18 @@ export interface RequestResponse {
   id: string;
   subject: string;
   content: string;
-  assignedTo?: { id: string; firstName?: string; middleName?: string; lastName?: string };
-  owner?: { id: string; firstName?: string; middleName?: string; lastName?: string };
+  assignedTo?: {
+    id: string;
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+  };
+  owner?: {
+    id: string;
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+  };
   requestType?: string;
   requestStatus?: string;
   createdBy?: { id: string; firstName?: string; lastName?: string };
@@ -1511,52 +1643,62 @@ export interface CreateRequestBody {
 }
 
 export async function getAllRequests(
-  pageNo = 0, pageSize = 10
+  pageNo = 0,
+  pageSize = 10,
 ): Promise<CustomPageResponse<RequestResponse>> {
   return apiFetch<CustomPageResponse<RequestResponse>>(
-    `/api/v1/requests?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/requests?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
 export async function getCounselingRequests(
-  pageNo = 0, pageSize = 10
+  pageNo = 0,
+  pageSize = 10,
 ): Promise<CustomPageResponse<RequestResponse>> {
   return apiFetch<CustomPageResponse<RequestResponse>>(
-    `/api/v1/requests/counseling?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/requests/counseling?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
 export async function getPrayerRequests(
-  pageNo = 0, pageSize = 10
+  pageNo = 0,
+  pageSize = 10,
 ): Promise<CustomPageResponse<RequestResponse>> {
   return apiFetch<CustomPageResponse<RequestResponse>>(
-    `/api/v1/requests/prayer?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/requests/prayer?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
 export async function getSuggestions(
-  pageNo = 0, pageSize = 10
+  pageNo = 0,
+  pageSize = 10,
 ): Promise<CustomPageResponse<RequestResponse>> {
   return apiFetch<CustomPageResponse<RequestResponse>>(
-    `/api/v1/requests/suggestion?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/requests/suggestion?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
-export async function createCounselingRequest(body: CreateRequestBody): Promise<RequestResponse> {
+export async function createCounselingRequest(
+  body: CreateRequestBody,
+): Promise<RequestResponse> {
   return apiFetch<RequestResponse>("/api/v1/requests/counseling", {
     method: "POST",
     body: JSON.stringify(body),
   });
 }
 
-export async function createPrayerRequest(body: CreateRequestBody): Promise<RequestResponse> {
+export async function createPrayerRequest(
+  body: CreateRequestBody,
+): Promise<RequestResponse> {
   return apiFetch<RequestResponse>("/api/v1/requests/prayer", {
     method: "POST",
     body: JSON.stringify(body),
   });
 }
 
-export async function createSuggestion(body: CreateRequestBody): Promise<RequestResponse> {
+export async function createSuggestion(
+  body: CreateRequestBody,
+): Promise<RequestResponse> {
   return apiFetch<RequestResponse>("/api/v1/requests/suggestion", {
     method: "POST",
     body: JSON.stringify(body),
@@ -1564,11 +1706,12 @@ export async function createSuggestion(body: CreateRequestBody): Promise<Request
 }
 
 export async function changeRequestStatus(
-  id: string, status: string
+  id: string,
+  status: string,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
     `/api/v1/requests/${id}/change-status?status=${encodeURIComponent(status)}`,
-    { method: "PATCH" }
+    { method: "PATCH" },
   );
 }
 
@@ -1592,22 +1735,53 @@ export async function getCounselingWorkflow(): Promise<BoardResponse> {
   return apiFetch<BoardResponse>("/api/v1/requests/counseling/workflow");
 }
 
-export async function getGuestWorkflow(): Promise<BoardResponse> {
-  return apiFetch<BoardResponse>("/api/v1/requests/guest/workflow");
+// Guest workflow uses /api/v1/users/guest/workflow and returns users (not requests)
+export interface UserBasicResponse {
+  id: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  email?: string;
+  profilePictureUrl?: string;
+  phoneNumber?: string;
+  countryCode?: string;
+  sex?: string;
+  occupation?: string;
+  assignedFollowUp?: string;
+  noOfCalls?: number;
+  noOfVisits?: number;
+}
+
+export interface GuestBoardColumn {
+  status: string;
+  totalCount: number;
+  users: UserBasicResponse[];
+}
+
+export interface GuestBoardResponse {
+  columns: GuestBoardColumn[];
+}
+
+export async function getGuestWorkflow(): Promise<GuestBoardResponse> {
+  return apiFetch<GuestBoardResponse>("/api/v1/users/guest/workflow");
 }
 
 export async function getRequest(id: string): Promise<RequestResponse> {
   // Backend has no GET /api/v1/requests/{id} endpoint.
   // Fetch the full list and find by ID across all request types.
-  const [allReqs, prayerReqs, counselingReqs, suggestionReqs] = await Promise.allSettled([
-    getAllRequests(0, 200),
-    getPrayerRequests(0, 200),
-    getCounselingRequests(0, 200),
-    getSuggestions(0, 200),
-  ]);
+  const [allReqs, prayerReqs, counselingReqs, suggestionReqs] =
+    await Promise.allSettled([
+      getAllRequests(0, 200),
+      getPrayerRequests(0, 200),
+      getCounselingRequests(0, 200),
+      getSuggestions(0, 200),
+    ]);
 
   const lists = [allReqs, prayerReqs, counselingReqs, suggestionReqs]
-    .filter((r): r is PromiseFulfilledResult<CustomPageResponse<RequestResponse>> => r.status === "fulfilled")
+    .filter(
+      (r): r is PromiseFulfilledResult<CustomPageResponse<RequestResponse>> =>
+        r.status === "fulfilled",
+    )
     .flatMap((r) => r.value.content ?? []);
 
   const found = lists.find((r) => r.id === id);
@@ -1616,10 +1790,12 @@ export async function getRequest(id: string): Promise<RequestResponse> {
 }
 
 export async function getUserRequests(
-  userId: string, pageNo = 0, pageSize = 10
+  userId: string,
+  pageNo = 0,
+  pageSize = 10,
 ): Promise<CustomPageResponse<RequestResponse>> {
   return apiFetch<CustomPageResponse<RequestResponse>>(
-    `/api/v1/requests/${userId}/user?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/requests/${userId}/user?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
@@ -1627,7 +1803,12 @@ export async function getUserRequests(
 
 export interface CelebrationResponse {
   id: string;
-  requester?: { id: string; firstName?: string; middleName?: string; lastName?: string };
+  requester?: {
+    id: string;
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+  };
   celebrationType?: string;
   celebrationStatus?: string;
   date?: string;
@@ -1636,15 +1817,19 @@ export interface CelebrationResponse {
 }
 
 export async function getCelebrations(
-  pageNo = 0, pageSize = 10
+  pageNo = 0,
+  pageSize = 10,
 ): Promise<CustomPageResponse<CelebrationResponse>> {
   return apiFetch<CustomPageResponse<CelebrationResponse>>(
-    `/api/v1/celebrations?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/celebrations?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
 export async function createCelebration(body: {
-  userId: string; type: string; date: string; notes?: string;
+  userId: string;
+  type: string;
+  date: string;
+  notes?: string;
 }): Promise<CelebrationResponse> {
   return apiFetch<CelebrationResponse>("/api/v1/celebrations", {
     method: "POST",
@@ -1652,7 +1837,9 @@ export async function createCelebration(body: {
   });
 }
 
-export async function markCelebrationsAsTreated(ids: string[]): Promise<OperationalResponse> {
+export async function markCelebrationsAsTreated(
+  ids: string[],
+): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/celebrations/mark-as-treated", {
     method: "POST",
     body: JSON.stringify({ ids }),
@@ -1664,7 +1851,8 @@ export async function getCelebration(id: string): Promise<CelebrationResponse> {
 }
 
 export async function updateCelebration(
-  id: string, body: { type?: string; date?: string; notes?: string }
+  id: string,
+  body: { type?: string; date?: string; notes?: string },
 ): Promise<CelebrationResponse> {
   return apiFetch<CelebrationResponse>(`/api/v1/celebrations/${id}`, {
     method: "PUT",
@@ -1675,24 +1863,36 @@ export async function updateCelebration(
 // ─── Birthdays & Weddings ─────────────────────────────────────────────────────
 
 export async function getBirthdays(
-  startDay: number, startMonth: number,
-  endDay: number, endMonth: number,
-  pageNo = 0, pageSize = 50
+  startDay: number,
+  startMonth: number,
+  endDay: number,
+  endMonth: number,
+  pageNo = 0,
+  pageSize = 50,
 ): Promise<CustomPageResponse<UserResponse>> {
   return apiFetch<CustomPageResponse<UserResponse>>(
     `/api/v1/users/birthdays?pageNo=${pageNo}&pageSize=${pageSize}`,
-    { method: "POST", body: JSON.stringify({ startDay, startMonth, endDay, endMonth }) }
+    {
+      method: "POST",
+      body: JSON.stringify({ startDay, startMonth, endDay, endMonth }),
+    },
   );
 }
 
 export async function getWeddingAnniversaries(
-  startDay: number, startMonth: number,
-  endDay: number, endMonth: number,
-  pageNo = 0, pageSize = 50
+  startDay: number,
+  startMonth: number,
+  endDay: number,
+  endMonth: number,
+  pageNo = 0,
+  pageSize = 50,
 ): Promise<CustomPageResponse<UserResponse>> {
   return apiFetch<CustomPageResponse<UserResponse>>(
     `/api/v1/users/weddings?pageNo=${pageNo}&pageSize=${pageSize}`,
-    { method: "POST", body: JSON.stringify({ startDay, startMonth, endDay, endMonth }) }
+    {
+      method: "POST",
+      body: JSON.stringify({ startDay, startMonth, endDay, endMonth }),
+    },
   );
 }
 
@@ -1702,10 +1902,10 @@ export interface MediaResponse {
   id: string;
   name?: string;
   displayName?: string;
-  type?: string;           // media type enum: SERMON, PODCAST, VIDEOS, IMAGES, THUMBNAIL
+  type?: string; // media type enum: SERMON, PODCAST, VIDEOS, IMAGES, THUMBNAIL
   size?: number;
-  displayUrl?: string;     // URL to access the uploaded media
-  url?: string;            // alias — some callers use .url
+  displayUrl?: string; // URL to access the uploaded media
+  url?: string; // alias — some callers use .url
   title?: string;
   duration?: number;
   speaker?: string;
@@ -1722,10 +1922,11 @@ export interface MediaResponse {
 }
 
 export async function getMedia(
-  pageNo = 0, pageSize = 10
+  pageNo = 0,
+  pageSize = 10,
 ): Promise<CustomPageResponse<MediaResponse>> {
   return apiFetch<CustomPageResponse<MediaResponse>>(
-    `/api/v1/media?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/media?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
@@ -1737,7 +1938,9 @@ export async function getMediaItem(id: string): Promise<MediaResponse> {
   return apiFetch<MediaResponse>(`/api/v1/media/${id}`);
 }
 
-export async function deleteMediaBulk(ids: string[]): Promise<OperationalResponse> {
+export async function deleteMediaBulk(
+  ids: string[],
+): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/media", {
     method: "DELETE",
     body: JSON.stringify({ ids }),
@@ -1765,7 +1968,7 @@ export async function uploadMedia(fields: {
   form.append("title", fields.title);
   if (fields.description) form.append("description", fields.description);
   // UploadMediaRequest DTO has both "type" and "category" fields — send both.
-  form.append("type",     fields.category);
+  form.append("type", fields.category);
   form.append("category", fields.category);
   // "size" is an int64 in the DTO — send file size in bytes.
   form.append("size", String(fields.file ? fields.file.size : 0));
@@ -1789,7 +1992,7 @@ export async function uploadMedia(fields: {
   } catch {
     // TypeError — network failure
     throw new Error(
-      "Media upload failed — please check your connection and try again."
+      "Media upload failed — please check your connection and try again.",
     );
   }
 
@@ -1806,14 +2009,30 @@ export async function uploadMedia(fields: {
       if (raw) {
         try {
           const errBody = JSON.parse(raw);
-          if (errBody?.message) errorMessage = errBody.message;
-          else if (errBody?.error) errorMessage = errBody.error;
+          const msg: string = errBody?.message ?? errBody?.error ?? "";
+          const msgLow = msg.toLowerCase();
+          const isExpired =
+            (msgLow.includes("session") &&
+              (msgLow.includes("expired") || msgLow.includes("login again"))) ||
+            msgLow.includes("please login") ||
+            msgLow.includes("please log in");
+          if (isExpired) {
+            removeToken();
+            if (typeof window !== "undefined") window.location.href = "/login";
+            throw new Error("Session expired. Please log in again.");
+          }
+          if (msg) errorMessage = msg;
           else errorMessage = raw;
-        } catch {
-          errorMessage = raw; // plain-text error from backend
+        } catch (e) {
+          if ((e as Error).message === "Session expired. Please log in again.")
+            throw e;
+          errorMessage = raw;
         }
       }
-    } catch { /* ignore */ }
+    } catch (e) {
+      if ((e as Error).message === "Session expired. Please log in again.")
+        throw e;
+    }
     throw new Error(errorMessage);
   }
 
@@ -1857,6 +2076,7 @@ export interface CreateMessageTemplateRequest {
 export interface UpdateMessageTemplateRequest {
   category?: string;
   channel?: string;
+  name?: string;
   subject?: string;
   content?: string;
 }
@@ -1889,10 +2109,10 @@ export async function updateMessageTemplate(
   id: string,
   body: UpdateMessageTemplateRequest,
 ): Promise<MessageTemplateResponse> {
-  return apiFetch<MessageTemplateResponse>(
-    `/api/v1/message-templates/${id}`,
-    { method: "PUT", body: JSON.stringify(body) },
-  );
+  return apiFetch<MessageTemplateResponse>(`/api/v1/message-templates/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
 }
 
 export async function deleteMessageTemplate(
@@ -1901,6 +2121,20 @@ export async function deleteMessageTemplate(
   return apiFetch<OperationalResponse>(`/api/v1/message-templates/${id}`, {
     method: "DELETE",
   });
+}
+
+export async function searchMessageTemplates(
+  text: string,
+  pageNo = 0,
+  pageSize = 10,
+): Promise<CustomPageResponse<MessageTemplateResponse>> {
+  return apiFetch<CustomPageResponse<MessageTemplateResponse>>(
+    `/api/v1/message-templates/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    },
+  );
 }
 
 // ─── Admin Users ──────────────────────────────────────────────────────────────
@@ -2040,40 +2274,57 @@ export interface CreateWorkersInTrainingRequest {
   giftsManifesting?: string[];
   reasonForApplying?: string;
   consent?: boolean;
+  baptismCertificateUrl?: string;
+  createPastPlaceOfWorshipRequests?: {
+    date?: string;
+    name?: string;
+    address?: string;
+  }[];
+  createPositionHeldRequests?: {
+    worshipPlace?: string;
+    positionHeld?: string;
+  }[];
+  qualificationRequests?: {
+    date?: string;
+    institution?: string;
+    qualificationReceived?: string;
+  }[];
 }
 
 export async function getWorkersInTraining(
   pageNo = 0,
   pageSize = 20,
-  set?: string
+  set?: string,
 ): Promise<CustomPageResponse<WorkersInTrainingResponse>> {
   const qs = set ? `&set=${encodeURIComponent(set)}` : "";
   return apiFetch<CustomPageResponse<WorkersInTrainingResponse>>(
-    `/api/v1/workers-in-training?pageNo=${pageNo}&pageSize=${pageSize}${qs}`
+    `/api/v1/workers-in-training?pageNo=${pageNo}&pageSize=${pageSize}${qs}`,
   );
 }
 
 export async function getWorkerInTraining(
-  id: string
+  id: string,
 ): Promise<WorkersInTrainingResponse> {
-  return apiFetch<WorkersInTrainingResponse>(`/api/v1/workers-in-training/${id}`);
+  return apiFetch<WorkersInTrainingResponse>(
+    `/api/v1/workers-in-training/${id}`,
+  );
 }
 
 export async function searchWorkersInTraining(
   text: string,
   pageNo = 0,
   pageSize = 20,
-  set?: string
+  set?: string,
 ): Promise<CustomPageResponse<WorkersInTrainingResponse>> {
   const qs = set ? `&set=${encodeURIComponent(set)}` : "";
   return apiFetch<CustomPageResponse<WorkersInTrainingResponse>>(
     `/api/v1/workers-in-training/search?pageNo=${pageNo}&pageSize=${pageSize}${qs}`,
-    { method: "POST", body: JSON.stringify({ text }) }
+    { method: "POST", body: JSON.stringify({ text }) },
   );
 }
 
 export async function createWorkerInTraining(
-  body: CreateWorkersInTrainingRequest
+  body: CreateWorkersInTrainingRequest,
 ): Promise<WorkersInTrainingResponse> {
   return apiFetch<WorkersInTrainingResponse>("/api/v1/workers-in-training", {
     method: "POST",
@@ -2082,33 +2333,35 @@ export async function createWorkerInTraining(
 }
 
 export async function markWorkersAsGraduated(
-  ids: string[]
+  ids: string[],
 ): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>("/api/v1/workers-in-training/mark-as-graduated", {
-    method: "POST",
-    body: JSON.stringify({ ids }),
-  });
+  return apiFetch<OperationalResponse>(
+    "/api/v1/workers-in-training/mark-as-graduated",
+    {
+      method: "POST",
+      body: JSON.stringify({ ids }),
+    },
+  );
 }
 
 export async function giveOfficialRemark(
   id: string,
-  text: string
+  text: string,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
     `/api/v1/workers-in-training/${id}/give-official-remark`,
-    { method: "PATCH", body: JSON.stringify({ text }) }
+    { method: "PATCH", body: JSON.stringify({ text }) },
   );
 }
 
 export async function deleteWorkersInTrainingBulk(
-  ids: string[]
+  ids: string[],
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/workers-in-training", {
     method: "DELETE",
     body: JSON.stringify({ ids }),
   });
 }
-
 
 // ─── Audit Logs ────────────────────────────────────────────────────────────────
 
@@ -2154,24 +2407,24 @@ export interface AuditLogResponse {
 
 export async function getAuditLogs(
   pageNo = 0,
-  pageSize = 10
+  pageSize = 10,
 ): Promise<CustomPageResponse<AuditLogResponse>> {
   return apiFetch<CustomPageResponse<AuditLogResponse>>(
-    `/api/v1/audit-logs?pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/audit-logs?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
 export async function searchAuditLogs(
   text: string,
   pageNo = 0,
-  pageSize = 10
+  pageSize = 10,
 ): Promise<CustomPageResponse<AuditLogResponse>> {
   return apiFetch<CustomPageResponse<AuditLogResponse>>(
     `/api/v1/audit-logs/search?pageNo=${pageNo}&pageSize=${pageSize}`,
     {
       method: "POST",
       body: JSON.stringify({ text }),
-    }
+    },
   );
 }
 
@@ -2179,10 +2432,10 @@ export async function getAuditLogsInTimeframe(
   startTime: string,
   endTime: string,
   pageNo = 0,
-  pageSize = 10
+  pageSize = 10,
 ): Promise<CustomPageResponse<AuditLogResponse>> {
   return apiFetch<CustomPageResponse<AuditLogResponse>>(
-    `/api/v1/audit-logs/timeframe?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}&pageNo=${pageNo}&pageSize=${pageSize}`
+    `/api/v1/audit-logs/timeframe?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}&pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
@@ -2191,14 +2444,14 @@ export async function searchAuditLogsInTimeframe(
   startTime: string,
   endTime: string,
   pageNo = 0,
-  pageSize = 10
+  pageSize = 10,
 ): Promise<CustomPageResponse<AuditLogResponse>> {
   return apiFetch<CustomPageResponse<AuditLogResponse>>(
     `/api/v1/audit-logs/timeframe/search?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}&pageNo=${pageNo}&pageSize=${pageSize}`,
     {
       method: "POST",
       body: JSON.stringify({ text }),
-    }
+    },
   );
 }
 
@@ -2213,7 +2466,10 @@ export async function uploadProfilePicture(file: File): Promise<string> {
     file,
   });
   const photoUrl = result.displayUrl ?? result.url;
-  if (!photoUrl) throw new Error("Photo uploaded but no URL was returned. Please try again.");
+  if (!photoUrl)
+    throw new Error(
+      "Photo uploaded but no URL was returned. Please try again.",
+    );
   return photoUrl;
 }
 
@@ -2231,7 +2487,12 @@ export interface AnnouncementResponse {
   id: string;
   subject: string;
   content: string;
-  submittedBy?: { id: string; firstName?: string; lastName?: string; email?: string };
+  submittedBy?: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  };
   announcementStatus: "RECEIVED" | "APPROVED" | "DECLINED";
   reasonForDecline?: string;
   startDate?: string;
@@ -2249,7 +2510,9 @@ export async function getSystemSettings(): Promise<SystemSettings> {
   return apiFetch<SystemSettings>("/api/v1/settings");
 }
 
-export async function updateSystemSettings(data: SystemSettings): Promise<OperationalResponse> {
+export async function updateSystemSettings(
+  data: SystemSettings,
+): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/settings", {
     method: "POST",
     body: JSON.stringify(data),
@@ -2259,16 +2522,16 @@ export async function updateSystemSettings(data: SystemSettings): Promise<Operat
 export async function getAnnouncements(
   pageNo = 0,
   pageSize = 20,
-  status?: string
+  status?: string,
 ): Promise<CustomPageResponse<AnnouncementResponse>> {
   const qs = status ? `&status=${encodeURIComponent(status)}` : "";
   return apiFetch<CustomPageResponse<AnnouncementResponse>>(
-    `/api/v1/announcements?pageNo=${pageNo}&pageSize=${pageSize}${qs}`
+    `/api/v1/announcements?pageNo=${pageNo}&pageSize=${pageSize}${qs}`,
   );
 }
 
 export async function createAnnouncement(
-  data: CreateAnnouncementRequest
+  data: CreateAnnouncementRequest,
 ): Promise<AnnouncementResponse> {
   return apiFetch<AnnouncementResponse>("/api/v1/announcements", {
     method: "POST",
@@ -2276,14 +2539,19 @@ export async function createAnnouncement(
   });
 }
 
-export async function approveAnnouncements(ids: string[]): Promise<OperationalResponse> {
+export async function approveAnnouncements(
+  ids: string[],
+): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/announcements/approve", {
     method: "POST",
     body: JSON.stringify({ ids }),
   });
 }
 
-export async function declineAnnouncement(id: string, text: string): Promise<OperationalResponse> {
+export async function declineAnnouncement(
+  id: string,
+  text: string,
+): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(`/api/v1/announcements/${id}/decline`, {
     method: "PUT",
     body: JSON.stringify({ text }),
@@ -2354,79 +2622,100 @@ export interface SchoolOfDisciplesResponse {
 }
 
 export interface CreateSchoolOfDisciplesRequest {
-  userId?: string;
+  // Church location identifiers (all required by backend)
   set?: string;
+  region?: string;
+  province?: string;
+  centre?: string;
+  // Personal
   firstName: string;
   middleName?: string;
   lastName: string;
-  maidenName?: string;
   countryCode: string;
   phoneNumber: string;
   email?: string;
   sex?: string;
+  profilePictureUrl?: string;
+  dateOfBirth?: string;
+  maritalStatus?: string;
+  spouseName?: string;
+  spousePhoneNumber?: string;
+  spouseOccupation?: string;
+  noOfChildren?: number;
+  nationality?: string;
+  homeTown?: string;
+  stateOfOrigin?: string;
+  // Address
   street?: string;
   city?: string;
   state?: string;
   country?: string;
-  otherPhoneNumber?: string;
-  dateOfBirth?: string;
-  maritalStatus?: string;
-  spouseName?: string;
-  noOfChildren?: number;
-  nextOfKinName?: string;
-  nextOfKinRelationship?: string;
-  nextOfKinPhoneNumber?: string;
-  nextOfKinFullAddress?: string;
+  // Work
   occupation?: string;
-  employer?: string;
   officeFullAddress?: string;
-  officePhoneNumber?: string;
-  officeEmail?: string;
+  // Faith history
   salvationDate?: string;
   salvationLocation?: string;
   waterBaptismDate?: string;
   waterBaptismLocation?: string;
   holySpiritBaptismDate?: string;
   holySpiritBaptismLocation?: string;
-  reasonForLeavingPastChurch?: string;
-  lifeCenterAttended?: string;
-  nonRCCGChristianGroups?: string[];
-  yourMinistry?: string;
-  giftsManifesting?: string[];
-  reasonForApplying?: string;
+  // Current parish
+  currentParishPastorName?: string;
+  currentParishPastorPhoneNumber?: string;
+  activityInCurrentParish?: string;
+  createPastPlaceOfWorshipRequests?: {
+    date?: string;
+    name?: string;
+    address?: string;
+  }[];
+  createPositionHeldRequests?: {
+    worshipPlace?: string;
+    positionHeld?: string;
+  }[];
+  qualificationRequests?: {
+    date?: string;
+    institution?: string;
+    qualificationReceived?: string;
+  }[];
+  // Misc
+  hasAnotherSimultaneousProgram?: boolean;
+  otherInformation?: string;
   consent?: boolean;
 }
 
 export async function getSchoolOfDisciples(
   pageNo = 0,
   pageSize = 20,
-  set?: string
+  set?: string,
 ): Promise<CustomPageResponse<SchoolOfDisciplesResponse>> {
   const qs = set ? `&set=${encodeURIComponent(set)}` : "";
   return apiFetch<CustomPageResponse<SchoolOfDisciplesResponse>>(
-    `/api/v1/school-of-disciples?pageNo=${pageNo}&pageSize=${pageSize}${qs}`
+    `/api/v1/school-of-disciples?pageNo=${pageNo}&pageSize=${pageSize}${qs}`,
   );
 }
 
 export async function getSchoolOfDisciple(
-  id: string
+  id: string,
 ): Promise<SchoolOfDisciplesResponse> {
-  return apiFetch<SchoolOfDisciplesResponse>(`/api/v1/school-of-disciples/${id}`);
+  return apiFetch<SchoolOfDisciplesResponse>(
+    `/api/v1/school-of-disciples/${id}`,
+  );
 }
 
 export async function searchSchoolOfDisciples(
   text: string,
   pageNo = 0,
-  pageSize = 20
+  pageSize = 20,
 ): Promise<CustomPageResponse<SchoolOfDisciplesResponse>> {
   return apiFetch<CustomPageResponse<SchoolOfDisciplesResponse>>(
     `/api/v1/school-of-disciples/search?pageNo=${pageNo}&pageSize=${pageSize}`,
-    { method: "POST", body: JSON.stringify({ text }) }
+    { method: "POST", body: JSON.stringify({ text }) },
   );
 }
 
 export async function createSchoolOfDisciple(
-  body: CreateSchoolOfDisciplesRequest
+  body: CreateSchoolOfDisciplesRequest,
 ): Promise<SchoolOfDisciplesResponse> {
   return apiFetch<SchoolOfDisciplesResponse>("/api/v1/school-of-disciples", {
     method: "POST",
@@ -2435,26 +2724,29 @@ export async function createSchoolOfDisciple(
 }
 
 export async function markSodAsGraduated(
-  ids: string[]
+  ids: string[],
 ): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>("/api/v1/school-of-disciples/mark-as-graduated", {
-    method: "POST",
-    body: JSON.stringify({ ids }),
-  });
+  return apiFetch<OperationalResponse>(
+    "/api/v1/school-of-disciples/mark-as-graduated",
+    {
+      method: "POST",
+      body: JSON.stringify({ ids }),
+    },
+  );
 }
 
 export async function giveSodOfficialRemark(
   id: string,
-  text: string
+  text: string,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
     `/api/v1/school-of-disciples/${id}/give-official-remark`,
-    { method: "PATCH", body: JSON.stringify({ text }) }
+    { method: "PATCH", body: JSON.stringify({ text }) },
   );
 }
 
 export async function deleteSodBulk(
-  ids: string[]
+  ids: string[],
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>("/api/v1/school-of-disciples", {
     method: "DELETE",
@@ -2464,20 +2756,478 @@ export async function deleteSodBulk(
 
 export async function markSodClassAttendance(
   id: string,
-  classNumber: number
+  classNumber: number,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
     `/api/v1/school-of-disciples/${id}/mark-class-attendance`,
-    { method: "POST", body: JSON.stringify({ classNumber }) }
+    { method: "POST", body: JSON.stringify({ classNumber }) },
   );
 }
 
 export async function markSodExamAttendance(
   id: string,
-  classNumber: number
+  classNumber: number,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
     `/api/v1/school-of-disciples/${id}/mark-exam-attendance`,
-    { method: "POST", body: JSON.stringify({ classNumber }) }
+    { method: "POST", body: JSON.stringify({ classNumber }) },
+  );
+}
+
+// ─── Report / Statistics Endpoints ──────────────────────────────────────────
+
+export interface FeatureColumn {
+  feature: string;
+  totalCount: number;
+}
+export interface FeatureStatResponse {
+  columns: FeatureColumn[];
+}
+export interface CountStatisticsResponse {
+  totalCount: number;
+}
+
+export async function getTotalMembers(): Promise<CountStatisticsResponse> {
+  return apiFetch<CountStatisticsResponse>("/api/v1/users/total-members");
+}
+
+export async function getTotalMembersInPeriod(
+  startTime: string,
+  endTime: string,
+): Promise<CountStatisticsResponse> {
+  return apiFetch<CountStatisticsResponse>(
+    `/api/v1/users/total-created-members?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`,
+  );
+}
+
+export async function getTotalFirstTimersInPeriod(
+  startTime: string,
+  endTime: string,
+): Promise<CountStatisticsResponse> {
+  return apiFetch<CountStatisticsResponse>(
+    `/api/v1/users/total-first-timers?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`,
+  );
+}
+
+export async function getTotalSecondTimersInPeriod(
+  startTime: string,
+  endTime: string,
+): Promise<CountStatisticsResponse> {
+  return apiFetch<CountStatisticsResponse>(
+    `/api/v1/users/total-second-timers?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`,
+  );
+}
+
+export async function getTotalNewConvertsInPeriod(
+  startTime: string,
+  endTime: string,
+): Promise<CountStatisticsResponse> {
+  return apiFetch<CountStatisticsResponse>(
+    `/api/v1/new-converts/total-new-converts?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`,
+  );
+}
+
+export async function getUrgentFollowup(
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<UserBasicResponse>> {
+  return apiFetch<CustomPageResponse<UserBasicResponse>>(
+    `/api/v1/users/urgent-followup?pageNo=${pageNo}&pageSize=${pageSize}`,
+  );
+}
+
+export async function getVisitingVsNotVisiting(
+  startTime: string,
+  endTime: string,
+): Promise<FeatureStatResponse> {
+  return apiFetch<FeatureStatResponse>(
+    `/api/v1/users/visiting-vs-not-visiting?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`,
+  );
+}
+
+export async function getServiceSectionsStats(
+  startTime: string,
+  endTime: string,
+): Promise<FeatureStatResponse> {
+  return apiFetch<FeatureStatResponse>(
+    `/api/v1/users/service-sections-statistics-count?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`,
+  );
+}
+
+export async function getMediumOfInvitationStats(
+  startTime: string,
+  endTime: string,
+): Promise<FeatureStatResponse> {
+  return apiFetch<FeatureStatResponse>(
+    `/api/v1/users/medium-of-invitation-statistics-count?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`,
+  );
+}
+
+// ─── Training Events ──────────────────────────────────────────────────────────
+
+export interface TrainingEventResponse {
+  id: string;
+  trainingCategory?:
+    | "BAPTISM"
+    | "WORKERS_IN_TRAINING"
+    | "SCHOOL_OF_DISCIPLES"
+    | "SCHOOL_OF_MINISTRY";
+  name?: string;
+  date?: string;
+  teacher?: string;
+  location?: string;
+  isExam?: boolean;
+  set?: string;
+  createdOn?: string;
+}
+
+export interface CreateTrainingEventRequest {
+  trainingCategory: string;
+  name: string;
+  teacher?: string;
+  date: string;
+  location?: string;
+  isExam?: boolean;
+  set?: string;
+}
+
+export async function getTrainingEvents(
+  category?: string,
+  set?: string,
+): Promise<TrainingEventResponse[]> {
+  const params = new URLSearchParams();
+  if (category) params.set("category", category);
+  if (set) params.set("set", set);
+  return apiFetch<TrainingEventResponse[]>(`/api/v1/training-events?${params}`);
+}
+
+export async function getTrainingEvent(
+  id: string,
+): Promise<TrainingEventResponse> {
+  return apiFetch<TrainingEventResponse>(`/api/v1/training-events/${id}`);
+}
+
+export async function createTrainingEvent(
+  body: CreateTrainingEventRequest,
+): Promise<TrainingEventResponse> {
+  return apiFetch<TrainingEventResponse>("/api/v1/training-events", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateTrainingEvent(
+  id: string,
+  body: CreateTrainingEventRequest,
+): Promise<TrainingEventResponse> {
+  return apiFetch<TrainingEventResponse>(`/api/v1/training-events/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteTrainingEvent(
+  id: string,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/training-events/${id}`, {
+    method: "DELETE",
+  });
+}
+
+// ─── Attendance Sheets ────────────────────────────────────────────────────────
+
+export interface StudentAttendance {
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  admissionNo?: string;
+  profilePictureUrl?: string;
+  attendances?: { date?: string; present?: boolean }[];
+}
+
+export interface AttendanceSheetResponse {
+  set?: string;
+  studentAttendances?: StudentAttendance[];
+}
+
+export async function getAttendanceSheet(
+  category: string,
+  set: string,
+): Promise<AttendanceSheetResponse> {
+  return apiFetch<AttendanceSheetResponse>(
+    `/api/v1/attendance-sheets/attendance-sheet?category=${encodeURIComponent(category)}&set=${encodeURIComponent(set)}`,
+  );
+}
+
+export async function createAttendanceRecord(body: {
+  trainingEventId: string;
+  admissionNumber: string;
+  category: string;
+}): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/attendance-sheets", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteAttendanceSheet(
+  id: string,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/attendance-sheets/${id}`, {
+    method: "DELETE",
+  });
+}
+
+// ─── Score Sheets ─────────────────────────────────────────────────────────────
+
+export interface CreateScoreRequest {
+  trainingEventName: string;
+  set: string;
+  admissionNumber: string;
+  score: number;
+}
+
+export interface ScoreSheetResponse {
+  id?: string;
+  category?: string;
+  set?: string;
+  admissionNumber?: string;
+  score?: number;
+  trainingEventName?: string;
+}
+
+export async function getScoreBroadsheet(
+  category: string,
+  set: string,
+): Promise<unknown> {
+  return apiFetch<unknown>(
+    `/api/v1/score-sheets/broadsheet?category=${encodeURIComponent(category)}&set=${encodeURIComponent(set)}`,
+  );
+}
+
+export async function uploadScoreSheet(body: {
+  category: string;
+  createScoreRequests: CreateScoreRequest[];
+}): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/score-sheets/upload", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateScoreSheet(
+  id: string,
+  body: Partial<CreateScoreRequest>,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/score-sheets/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteScoreSheet(
+  id: string,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/score-sheets/${id}`, {
+    method: "DELETE",
+  });
+}
+
+// ─── School of Disciples — extra endpoints ────────────────────────────────────
+
+export async function updateSodAdmissionNumber(
+  id: string,
+  admissionNumber: string,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/school-of-disciples/${id}/admission-number?admissionNumber=${encodeURIComponent(admissionNumber)}`,
+    { method: "PUT" },
+  );
+}
+
+export async function updateSodFeesPaid(
+  id: string,
+  feesPaid: number,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/school-of-disciples/${id}/fees-paid?feesPaid=${feesPaid}`,
+    { method: "PUT" },
+  );
+}
+
+export async function markSodFormAsPaid(
+  ids: string[],
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    "/api/v1/school-of-disciples/mark-form-as-paid",
+    {
+      method: "POST",
+      body: JSON.stringify({ ids }),
+    },
+  );
+}
+
+export async function getSodNewConvert(
+  id: string,
+): Promise<NewConvertResponse> {
+  return apiFetch<NewConvertResponse>(
+    `/api/v1/school-of-disciples/${id}/new-convert`,
+  );
+}
+
+export interface SetupNewConvertRequest {
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+  email?: string;
+  sex?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  eventId?: string;
+  profilePictureUrl?: string;
+}
+
+export async function updateSodNewConvert(
+  id: string,
+  body: SetupNewConvertRequest,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/school-of-disciples/${id}/new-convert`,
+    {
+      method: "PUT",
+      body: JSON.stringify(body),
+    },
+  );
+}
+
+export async function deleteSodNewConvert(
+  id: string,
+  newConvertId: string,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/school-of-disciples/${id}/new-convert/${newConvertId}`,
+    { method: "DELETE" },
+  );
+}
+
+// ─── New Converts — extra endpoints ──────────────────────────────────────────
+
+export async function updateNewConvert(
+  id: string,
+  body: SetupNewConvertRequest,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/new-converts/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function bulkCreateNewConverts(
+  body: SetupNewConvertRequest[],
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/new-converts/bulk-create", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function searchNewConverts(
+  text: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<NewConvertResponse>> {
+  return apiFetch<CustomPageResponse<NewConvertResponse>>(
+    `/api/v1/new-converts/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ text }) },
+  );
+}
+
+// ─── Users — extra endpoints ──────────────────────────────────────────────────
+
+export async function getUsersByIds(ids: string[]): Promise<UserResponse[]> {
+  return apiFetch<UserResponse[]>("/api/v1/users/bulk-ids", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export async function searchAllUsers(
+  text: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<UserResponse>> {
+  return apiFetch<CustomPageResponse<UserResponse>>(
+    `/api/v1/users/users/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ text }) },
+  );
+}
+
+// ─── Celebrations — extra endpoints ──────────────────────────────────────────
+
+export async function searchCelebrations(
+  text: string,
+  status?: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<CelebrationResponse>> {
+  const params = new URLSearchParams({
+    pageNo: String(pageNo),
+    pageSize: String(pageSize),
+  });
+  if (status) params.set("status", status);
+  return apiFetch<CustomPageResponse<CelebrationResponse>>(
+    `/api/v1/celebrations/search?${params}`,
+    { method: "POST", body: JSON.stringify({ text }) },
+  );
+}
+
+// ─── Requests — search ────────────────────────────────────────────────────────
+
+export async function searchRequests(
+  text: string,
+  status?: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<RequestResponse>> {
+  const params = new URLSearchParams({
+    pageNo: String(pageNo),
+    pageSize: String(pageSize),
+  });
+  if (status) params.set("status", status);
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests/search?${params}`,
+    { method: "POST", body: JSON.stringify({ text }) },
+  );
+}
+
+// ─── Groups — bulk create ─────────────────────────────────────────────────────
+
+export async function bulkCreateGroups(
+  body: CreateGroupRequest[],
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/groups/bulk-create", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+// ─── Announcements — read ─────────────────────────────────────────────────────
+
+export async function getReadAnnouncements(): Promise<AnnouncementResponse[]> {
+  return apiFetch<AnnouncementResponse[]>("/api/v1/announcements/read");
+}
+
+export async function searchAnnouncements(
+  text: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<AnnouncementResponse>> {
+  return apiFetch<CustomPageResponse<AnnouncementResponse>>(
+    `/api/v1/announcements/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ text }) },
   );
 }

@@ -9,8 +9,8 @@ import MultiSelect from "@/components/ui/MultiSelect";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
 import { createMember, uploadProfilePicture, getAllGroups, type GroupResponse } from "@/lib/api";
-import { NIGERIA_STATES, COUNTRIES } from "@/lib/nigeria-states";
 import SearchableSelect from "@/components/ui/SearchableSelect";
+import CountryStateSelect from "@/components/ui/CountryStateSelect";
 
 export default function AddMemberPage() {
   const router = useRouter();
@@ -369,29 +369,15 @@ export default function AddMemberPage() {
                   />
                 </div>
 
-                {/* State */}
-                <div>
-                  <label className={labelStyles}>State</label>
-                  <SearchableSelect
-                    placeholder="Select State"
-                    searchPlaceholder="Search states…"
-                    options={NIGERIA_STATES}
-                    value={state}
-                    onChange={setState}
-                  />
-                </div>
-
-                {/* Country */}
-                <div>
-                  <label className={labelStyles}>Country</label>
-                  <SearchableSelect
-                    placeholder="Select Country"
-                    searchPlaceholder="Search countries…"
-                    options={COUNTRIES}
-                    value={country}
-                    onChange={setCountry}
-                  />
-                </div>
+                {/* Country / State */}
+                <CountryStateSelect
+                  country={country}
+                  state={state}
+                  onCountryChange={(c) => { setCountry(c); setState(""); }}
+                  onStateChange={setState}
+                  labelStyles={labelStyles}
+                  inputStyles={inputStyles}
+                />
 
                 {/* Marital Status */}
                 <div>

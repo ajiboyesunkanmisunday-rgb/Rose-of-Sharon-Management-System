@@ -36,3 +36,88 @@ export const COUNTRIES = [
   "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Venezuela",
   "Vietnam", "Yemen", "Zambia", "Zimbabwe",
 ];
+
+export const US_STATES = [
+  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
+  "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
+  "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
+  "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+  "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma",
+  "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee",
+  "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming",
+];
+
+const COUNTRY_STATE_MAP: Record<string, string[]> = {
+  Nigeria: NIGERIA_STATES,
+  "United States": US_STATES,
+  "United States of America": US_STATES,
+  USA: US_STATES,
+};
+
+export function getStatesForCountry(country: string): string[] {
+  return COUNTRY_STATES[country] ?? COUNTRY_STATE_MAP[country] ?? [];
+}
+
+export const COUNTRY_STATES: Record<string, string[]> = {
+  Nigeria: [
+    "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue",
+    "Borno", "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu",
+    "FCT - Abuja", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina",
+    "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo",
+    "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara",
+  ],
+  "United States": [
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+    "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho",
+    "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine",
+    "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
+    "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey",
+    "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
+    "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
+    "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia",
+    "Washington", "West Virginia", "Wisconsin", "Wyoming", "District of Columbia",
+  ],
+  Canada: [
+    "Alberta", "British Columbia", "Manitoba", "New Brunswick",
+    "Newfoundland and Labrador", "Northwest Territories", "Nova Scotia",
+    "Nunavut", "Ontario", "Prince Edward Island", "Quebec", "Saskatchewan", "Yukon",
+  ],
+  "United Kingdom": ["England", "Scotland", "Wales", "Northern Ireland"],
+  Australia: [
+    "Australian Capital Territory", "New South Wales", "Northern Territory",
+    "Queensland", "South Australia", "Tasmania", "Victoria", "Western Australia",
+  ],
+  Ghana: [
+    "Ahafo", "Ashanti", "Bono", "Bono East", "Central", "Eastern",
+    "Greater Accra", "North East", "Northern", "Oti", "Savannah",
+    "Upper East", "Upper West", "Volta", "Western", "Western North",
+  ],
+  "South Africa": [
+    "Eastern Cape", "Free State", "Gauteng", "KwaZulu-Natal", "Limpopo",
+    "Mpumalanga", "Northern Cape", "North West", "Western Cape",
+  ],
+  Kenya: [
+    "Baringo", "Bomet", "Bungoma", "Busia", "Elgeyo-Marakwet", "Embu",
+    "Garissa", "Homa Bay", "Isiolo", "Kajiado", "Kakamega", "Kericho",
+    "Kiambu", "Kilifi", "Kirinyaga", "Kisii", "Kisumu", "Kitui", "Kwale",
+    "Laikipia", "Lamu", "Machakos", "Makueni", "Mandera", "Marsabit",
+    "Meru", "Migori", "Mombasa", "Murang'a", "Nairobi", "Nakuru", "Nandi",
+    "Narok", "Nyamira", "Nyandarua", "Nyeri", "Samburu", "Siaya",
+    "Taita-Taveta", "Tana River", "Tharaka-Nithi", "Trans Nzoia", "Turkana",
+    "Uasin Gishu", "Vihiga", "Wajir", "West Pokot",
+  ],
+  India: [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
+    "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya",
+    "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim",
+    "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand",
+    "West Bengal", "Delhi", "Jammu and Kashmir", "Ladakh",
+  ],
+  Germany: [
+    "Baden-Württemberg", "Bavaria", "Berlin", "Brandenburg", "Bremen",
+    "Hamburg", "Hesse", "Lower Saxony", "Mecklenburg-Vorpommern",
+    "North Rhine-Westphalia", "Rhineland-Palatinate", "Saarland", "Saxony",
+    "Saxony-Anhalt", "Schleswig-Holstein", "Thuringia",
+  ],
+};

@@ -12,7 +12,7 @@ import {
   uploadCalendar, 
   UploadCalendarRequest,
   EventResponse,
-  UserBasicResponse
+  UserResponse
 } from "@/lib/api";
 import { Search, Check, X, Calendar, User, Clock, Video } from "lucide-react";
 
@@ -24,7 +24,7 @@ export default function AddMinisterPage() {
   // Form state
   const [isNewEvent, setIsNewEvent] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventResponse | null>(null);
-  const [selectedPreacher, setSelectedPreacher] = useState<UserBasicResponse | null>(null);
+  const [selectedPreacher, setSelectedPreacher] = useState<UserResponse | null>(null);
   
   const [formData, setFormData] = useState({
     title: "",
@@ -42,7 +42,7 @@ export default function AddMinisterPage() {
   const [showEventDropdown, setShowEventDropdown] = useState(false);
   
   const [preacherQuery, setPreacherQuery] = useState("");
-  const [preacherResults, setPreacherResults] = useState<UserBasicResponse[]>([]);
+  const [preacherResults, setPreacherResults] = useState<UserResponse[]>([]);
   const [showPreacherDropdown, setShowPreacherDropdown] = useState(false);
 
   // Refs

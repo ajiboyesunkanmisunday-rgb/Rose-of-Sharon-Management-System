@@ -177,8 +177,9 @@ export default function GroupsPage() {
               displayedGroups.map((group) => (
                 <tr
                   key={group.id}
-                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50"
+                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
                   style={{ height: "56px" }}
+                  onDoubleClick={() => router.push(`/settings/groups/${group.id}`)}
                 >
                   <td className="px-4 py-3 text-sm font-medium text-[#374151]">{group.name}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">

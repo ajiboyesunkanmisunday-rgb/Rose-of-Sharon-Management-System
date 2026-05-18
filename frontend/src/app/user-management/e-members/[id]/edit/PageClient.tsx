@@ -9,6 +9,8 @@ import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
 import { getUser, updateEMember, uploadProfilePicture } from "@/lib/api";
+import SearchableSelect from "@/components/ui/SearchableSelect";
+import { useEventServices } from "@/hooks/useEventServices";
 
 export default function EditEMemberPage() {
   const router = useRouter();
@@ -38,6 +40,7 @@ export default function EditEMemberPage() {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [maritalStatus, setMaritalStatus] = useState("");
   const [serviceAttended, setServiceAttended] = useState<string>("");
+  const { services: eventServices, loading: servicesLoading } = useEventServices();
   const [photo, setPhoto] = useState<File | null>(null);
   const [spouse, setSpouse] = useState<SpouseData | null>(null);
   const [showSpouseModal, setShowSpouseModal] = useState(false);
@@ -249,17 +252,16 @@ export default function EditEMemberPage() {
             {/* Service Attended */}
             <div>
               <label className={labelStyles}>Service Attended</label>
-              <select
+              <SearchableSelect
+                placeholder={servicesLoading ? "Loading services..." : "Select Service"}
+                searchPlaceholder="Search services..."
+                options={eventServices.map((s) => ({
+                  label: `${s.title ?? s.topic ?? "Event"}${s.date ? " — " + new Date(s.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : ""}`,
+                  value: s.id,
+                }))}
                 value={serviceAttended}
-                onChange={(e) => setServiceAttended(e.target.value)}
-                className={selectStyles}
-              >
-                <option value="">Select Service</option>
-                <option value="Sunday">Sunday</option>
-                <option value="Tuesday">Tuesday</option>
-                <option value="Thursday">Thursday</option>
-                <option value="Special Service">Special Service</option>
-              </select>
+                onChange={setServiceAttended}
+              />
             </div>
           </div>
 

@@ -8,19 +8,19 @@ import { SelectField } from "@/components/ui/FormField";
 import { getMessageTemplate, updateMessageTemplate } from "@/lib/api";
 
 const CATEGORY_OPTIONS = [
-  { label: "New First Timer",     value: "NEW_FIRST_TIMER" },
-  { label: "New Second Timer",    value: "NEW_SECOND_TIMER" },
-  { label: "New Convert",         value: "NEW_CONVERT" },
+  { label: "New First Timer", value: "NEW_FIRST_TIMER" },
+  { label: "New Second Timer", value: "NEW_SECOND_TIMER" },
+  { label: "New Convert", value: "NEW_CONVERT" },
   { label: "Wedding Anniversary", value: "WEDDING_ANNIVERSARY" },
-  { label: "Birthday",            value: "BIRTHDAY" },
-  { label: "Prayer Request",      value: "PRAYER_REQUEST" },
-  { label: "New Member",          value: "NEW_MEMBER" },
-  { label: "New E-Member",        value: "NEW_E_MEMBER" },
-  { label: "Counseling Request",  value: "COUNSELING_REQUEST" },
+  { label: "Birthday", value: "BIRTHDAY" },
+  { label: "Prayer Request", value: "PRAYER_REQUEST" },
+  { label: "New Member", value: "NEW_MEMBER" },
+  { label: "New E-Member", value: "NEW_E_MEMBER" },
+  { label: "Counseling Request", value: "COUNSELING_REQUEST" },
 ];
 
 const CHANNEL_OPTIONS = [
-  { label: "SMS",   value: "SMS" },
+  { label: "SMS", value: "SMS" },
   { label: "Email", value: "EMAIL" },
 ];
 
@@ -36,20 +36,23 @@ export default function EditTemplateClient() {
       const urlId = parts[parts.length - 2] ?? "";
       if (urlId && urlId !== id) setId(urlId);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [loading,  setLoading]  = useState(true);
-  const [saving,   setSaving]   = useState(false);
-  const [error,    setError]    = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const [category, setCategory] = useState("");
-  const [channel,  setChannel]  = useState("SMS");
-  const [subject,  setSubject]  = useState("");
-  const [content,  setContent]  = useState("");
-  const [name,     setName]     = useState("");
+  const [channel, setChannel] = useState("SMS");
+  const [subject, setSubject] = useState("");
+  const [content, setContent] = useState("");
+  const [name, setName] = useState("");
 
   useEffect(() => {
-    if (!id || id.startsWith("tpl-")) { setLoading(false); return; }
+    if (!id || id.startsWith("tpl-")) {
+      setLoading(false);
+      return;
+    }
     async function load() {
       try {
         const t = await getMessageTemplate(id);
@@ -75,12 +78,15 @@ export default function EditTemplateClient() {
       await updateMessageTemplate(id, {
         category,
         channel,
+        name,
         subject: channel === "EMAIL" ? subject : undefined,
         content,
       });
       router.push("/communication/templates");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update template.");
+      setError(
+        err instanceof Error ? err.message : "Failed to update template."
+      );
     } finally {
       setSaving(false);
     }
@@ -97,8 +103,18 @@ export default function EditTemplateClient() {
           onClick={() => router.push("/communication/templates")}
           className="mb-1 flex items-center gap-1 text-sm text-[#000080] hover:underline"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6"/>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6" />
           </svg>
           Back to Templates
         </button>
@@ -107,7 +123,9 @@ export default function EditTemplateClient() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
       )}
 
       {loading ? (
@@ -133,12 +151,16 @@ export default function EditTemplateClient() {
             </div>
 
             <div>
-              <label className={labelCls}>Template Name</label>
+              <label className={labelCls}>
+                Template Name <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 value={name}
-                disabled
-                className={inputCls + " bg-gray-50 cursor-not-allowed"}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter template name"
+                className={inputCls}
+                required
               />
             </div>
 
@@ -156,7 +178,9 @@ export default function EditTemplateClient() {
             )}
 
             <div>
-              <label className={labelCls}>Content <span className="text-red-500">*</span></label>
+              <label className={labelCls}>
+                Content <span className="text-red-500">*</span>
+              </label>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
@@ -165,14 +189,20 @@ export default function EditTemplateClient() {
                 required
               />
               <p className="mt-1 text-xs text-[#6B7280]">
-                Placeholders: <code className="rounded bg-gray-100 px-1">{"{name}"}</code>{" "}
-                <code className="rounded bg-gray-100 px-1">{"{date}"}</code>{" "}
-                <code className="rounded bg-gray-100 px-1">{"{event}"}</code>
+                Placeholders:{" "}
+                <code className="rounded bg-gray-100 px-1">
+                  {"{firstName}"}
+                </code>
+                <code className="rounded bg-gray-100 px-1">{"{name}"}</code>{" "}
               </p>
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-2">
-              <Button variant="secondary" type="button" onClick={() => router.push("/communication/templates")}>
+              <Button
+                variant="secondary"
+                type="button"
+                onClick={() => router.push("/communication/templates")}
+              >
                 Cancel
               </Button>
               <Button variant="primary" type="submit" disabled={saving}>

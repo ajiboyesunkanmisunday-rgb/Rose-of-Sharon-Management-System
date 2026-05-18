@@ -184,6 +184,7 @@ export default function RegisterMemberPage() {
                 onChange={handleChange}
                 placeholder="Enter phone number"
                 className={inputStyles}
+                maxLength={10}
                 required
               />
             </div>

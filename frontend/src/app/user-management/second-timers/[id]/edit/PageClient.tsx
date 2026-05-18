@@ -9,8 +9,10 @@ import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
 import { getUser, updateSecondTimer, uploadProfilePicture } from "@/lib/api";
-import { NIGERIA_STATES, COUNTRIES } from "@/lib/nigeria-states";
 import SearchableSelect from "@/components/ui/SearchableSelect";
+import CountryStateSelect from "@/components/ui/CountryStateSelect";
+import { OCCUPATIONS } from "@/lib/occupations";
+import { useEventServices } from "@/hooks/useEventServices";
 
 export default function EditSecondTimerPage() {
   const router = useRouter();
@@ -77,6 +79,7 @@ export default function EditSecondTimerPage() {
 
   useEffect(() => { populate(); }, [populate]);
   const [serviceAttended, setServiceAttended] = useState("");
+  const { services: eventServices, loading: servicesLoading } = useEventServices();
   const [isVisiting, setIsVisiting] = useState(false);
   const [howDidYouHear, setHowDidYouHear] = useState("");
   const [howWasService, setHowWasService] = useState("");
@@ -120,6 +123,7 @@ export default function EditSecondTimerPage() {
         howWasService: howWasService || undefined,
         favouritePartOfService: favouriteParts || undefined,
         fromOnline: worshippedOnline || undefined,
+        eventId: serviceAttended || undefined,
         profilePictureUrl,
         whatsappNumber: whatsappNumber || undefined,
       });
@@ -246,26 +250,14 @@ export default function EditSecondTimerPage() {
               <label className={labelStyles}>City</label>
               <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Enter City" className={inputStyles} />
             </div>
-            <div>
-              <label className={labelStyles}>State</label>
-              <SearchableSelect
-                placeholder="Select State"
-                searchPlaceholder="Search states…"
-                options={NIGERIA_STATES}
-                value={state}
-                onChange={setState}
-              />
-            </div>
-            <div>
-              <label className={labelStyles}>Country</label>
-              <SearchableSelect
-                placeholder="Select Country"
-                searchPlaceholder="Search countries…"
-                options={COUNTRIES}
-                value={country}
-                onChange={setCountry}
-              />
-            </div>
+            <CountryStateSelect
+              country={country}
+              state={state}
+              onCountryChange={(c) => { setCountry(c); setState(""); }}
+              onStateChange={setState}
+              labelStyles={labelStyles}
+              inputStyles={inputStyles}
+            />
           </div>
         </div>
 
@@ -289,25 +281,22 @@ export default function EditSecondTimerPage() {
             </div>
             <div>
               <label className={labelStyles}>Select Service</label>
-              <select value={serviceAttended} onChange={(e) => setServiceAttended(e.target.value)} className={selectStyles}>
-                <option value="">Select Service</option>
-                <option value="Sunday Service">Sunday Service</option>
-                <option value="Tuesday Bible Study">Tuesday Bible Study</option>
-                <option value="Thursday Prayer Meeting">Thursday Prayer Meeting</option>
-                <option value="Special Service">Special Service</option>
-              </select>
+              <SearchableSelect
+                placeholder={servicesLoading ? "Loading services..." : "Select Service"}
+                searchPlaceholder="Search services..."
+                options={eventServices.map((s) => ({
+                  label: `${s.title ?? s.topic ?? "Event"}${s.date ? " — " + new Date(s.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : ""}`,
+                  value: s.id,
+                }))}
+                value={serviceAttended}
+                onChange={setServiceAttended}
+              />
             </div>
             <div>
               <label className={labelStyles}>Occupation</label>
               <select value={occupation} onChange={(e) => setOccupation(e.target.value)} className={selectStyles}>
                 <option value="">Select Occupation</option>
-                <option value="Student">Student</option>
-                <option value="Engineer">Engineer</option>
-                <option value="Doctor">Doctor</option>
-                <option value="Teacher">Teacher</option>
-                <option value="Business Owner">Business Owner</option>
-                <option value="Tech">Tech</option>
-                <option value="Other">Other</option>
+                {OCCUPATIONS.map((o) => <option key={o} value={o}>{o}</option>)}
               </select>
             </div>
             <div>
