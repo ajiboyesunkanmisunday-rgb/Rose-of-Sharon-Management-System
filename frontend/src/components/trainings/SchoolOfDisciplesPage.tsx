@@ -608,6 +608,11 @@ export default function SchoolOfDisciplesPage() {
     setError("");
     try {
       const first = await getSchoolOfDisciples(0, 200);
+      console.log("[SoD] list response:", {
+        totalElements: first.totalElements,
+        totalPages: first.totalPages,
+        contentLength: first.content?.length ?? 0,
+      });
       const rows = [...(first.content ?? [])];
       const totalPages = Math.min(first.totalPages ?? 1, 10);
       if (totalPages > 1) {
