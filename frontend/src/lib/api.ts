@@ -2582,50 +2582,59 @@ export interface SodAttendanceRecord {
 
 export interface SchoolOfDisciplesResponse {
   id: string;
-  userId?: string;
+  // SoD church identifiers
+  admissionNo?: string;
   set?: string;
-  firstName: string;
+  region?: string;
+  province?: string;
+  centre?: string;
+  // Personal
+  firstName?: string;
   middleName?: string;
-  lastName: string;
-  maidenName?: string;
+  lastName?: string;
   email?: string;
   profilePictureUrl?: string;
   sex?: string;
+  dateOfBirth?: string;
+  nationality?: string;
+  homeTown?: string;
+  stateOfOrigin?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+  // Address
   street?: string;
   city?: string;
   state?: string;
   country?: string;
-  countryCode?: string;
-  phoneNumber?: string;
-  otherPhoneNumber?: string;
-  dateOfBirth?: string;
+  // Work
+  occupation?: string;
+  officeFullAddress?: string;
+  // Marital
   maritalStatus?: string;
   spouseName?: string;
+  spousePhoneNumber?: string;
+  spouseOccupation?: string;
   noOfChildren?: number;
-  nextOfKinName?: string;
-  nextOfKinRelationship?: string;
-  nextOfKinPhoneNumber?: string;
-  nextOfKinFullAddress?: string;
-  occupation?: string;
-  employer?: string;
-  officeFullAddress?: string;
-  officePhoneNumber?: string;
-  officeEmail?: string;
+  // Faith
   salvationDate?: string;
   salvationLocation?: string;
   waterBaptismDate?: string;
   waterBaptismLocation?: string;
   holySpiritBaptismDate?: string;
   holySpiritBaptismLocation?: string;
-  reasonForLeavingPastChurch?: string;
-  lifeCenterAttended?: string;
-  nonRCCGChristianGroups?: string[];
-  yourMinistry?: string;
-  giftsManifesting?: string[];
-  reasonForApplying?: string;
+  // Parish info
+  currentParishPastorName?: string;
+  currentParishPastorPhoneNumber?: string;
+  activityInCurrentParish?: string;
+  // Programme
+  hasAnotherSimultaneousProgram?: boolean;
+  otherInformation?: string;
+  // Admin
   consent?: boolean;
   officialRemarks?: string;
   graduationDate?: string;
+  paidForForm?: boolean;
+  feesPaid?: number;
   createdOn?: string;
   // Attendance tracking
   classAttendance?: SodAttendanceRecord[];

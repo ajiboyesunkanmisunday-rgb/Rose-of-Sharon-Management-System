@@ -12,6 +12,7 @@
  */
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Printer, Send, CheckCircle } from "lucide-react";
 import {
   createWorkerInTraining,
@@ -185,7 +186,11 @@ export default function WorkersFormCore({
   initialData?: WorkersInTrainingResponse;
 }) {
   const ro = mode !== "fill";
+  const router = useRouter();
   const photoInputRef = useRef<HTMLInputElement>(null);
+
+  /* ── Set / cohort ─────────────────────────────────────────────────────── */
+  const [set, setSet] = useState(initialData?.set ?? "");
 
   /* ── A. Biographical ─────────────────────────────────────────────────── */
   const [photo,        setPhoto]        = useState<File | null>(null);
@@ -205,7 +210,10 @@ export default function WorkersFormCore({
   const [nokAddr,      setNokAddr]      = useState(initialData?.nextOfKinFullAddress  ?? "");
 
   /* ── B. Addresses ────────────────────────────────────────────────────── */
-  const [homeAddr,   setHomeAddr]   = useState(initialData?.street ?? "");
+  const [homeAddr,   setHomeAddr]   = useState(initialData?.street   ?? "");
+  const [homeCity,   setHomeCity]   = useState(initialData?.city     ?? "");
+  const [homeState,  setHomeState]  = useState(initialData?.state    ?? "");
+  const [homeCountry,setHomeCountry]= useState(initialData?.country  ?? "");
   const [homePhone,  setHomePhone]  = useState(initialData?.phoneNumber ?? "");
   const [homeFax,    setHomeFax]    = useState("");
   const [mobile,     setMobile]     = useState(initialData?.otherPhoneNumber ?? "");
@@ -243,9 +251,14 @@ export default function WorkersFormCore({
   const updateWp = (i: number, f: keyof (typeof wp)[0], v: string) =>
     setWp((prev) => prev.map((r, idx) => (idx === i ? { ...r, [f]: v } : r)));
 
-  const [positions, setPositions] = useState(["", "", "", ""]);
-  const updatePos = (i: number, v: string) =>
-    setPositions((prev) => prev.map((p, idx) => (idx === i ? v : p)));
+  const [positions, setPositions] = useState([
+    { worshipPlace: "", positionHeld: "" },
+    { worshipPlace: "", positionHeld: "" },
+    { worshipPlace: "", positionHeld: "" },
+    { worshipPlace: "", positionHeld: "" },
+  ]);
+  const updatePos = (i: number, f: "worshipPlace" | "positionHeld", v: string) =>
+    setPositions((prev) => prev.map((p, idx) => (idx === i ? { ...p, [f]: v } : p)));
 
   const [reasonLeaving, setReasonLeaving] = useState(initialData?.reasonForLeavingPastChurch ?? "");
 
@@ -308,13 +321,16 @@ export default function WorkersFormCore({
         .map((r) => ({ name: r.name, address: r.address || undefined, date: r.dates || undefined }));
 
       const phItems = positions
-        .filter((p) => p.trim())
-        .map((p) => ({ positionHeld: p }));
+        .filter((p) => p.positionHeld.trim() || p.worshipPlace.trim())
+        .map((p) => ({
+          worshipPlace: p.worshipPlace.trim() || undefined,
+          positionHeld: p.positionHeld.trim() || undefined,
+        }));
 
       const nonRccg = [group1, group2].filter(Boolean);
 
       await createWorkerInTraining({
-        set:               undefined,
+        set:               set.trim() || undefined,
         profilePictureUrl,
         firstName:         firstName.trim(),
         middleName:        otherNames.trim()  || undefined,
@@ -334,6 +350,9 @@ export default function WorkersFormCore({
         nextOfKinPhoneNumber:  nokPhone.trim()|| undefined,
         nextOfKinFullAddress:  nokAddr.trim() || undefined,
         street:            homeAddr.trim()    || undefined,
+        city:              homeCity.trim()    || undefined,
+        state:             homeState.trim()   || undefined,
+        country:           homeCountry.trim() || undefined,
         occupation:        occupation.trim()  || undefined,
         employer:          employer.trim()    || undefined,
         officeFullAddress: officeAddr.trim()  || undefined,
@@ -358,6 +377,8 @@ export default function WorkersFormCore({
 
       setSubmitSuccess(true);
       setSubmitError("");
+      // Navigate to the list so the new record is immediately visible
+      setTimeout(() => router.push("/trainings/workers"), 1500);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Failed to submit. Please try again.");
     } finally {
@@ -427,7 +448,7 @@ export default function WorkersFormCore({
           fontFamily: "Arial, sans-serif", fontSize: 14,
         }}>
           <CheckCircle size={18} color="#065F46" />
-          <span style={{ color: "#065F46", fontWeight: 600 }}>Application submitted successfully!</span>
+          <span style={{ color: "#065F46", fontWeight: 600 }}>Application submitted! Redirecting to list…</span>
         </div>
       )}
       {submitError && (
@@ -728,27 +749,25 @@ export default function WorkersFormCore({
             What positions/department did you hold/belong to in the above listed place(s)
           </div>
           <table style={{ ...TABLE, marginBottom: 10 }}>
+            <thead>
+              <tr style={{ background: "#f3f4f6" }}>
+                <td style={{ ...TD, fontWeight: 700, fontSize: 10 }}>#</td>
+                <td style={{ ...TD, fontWeight: 700, fontSize: 10 }}>Church / Place of Worship</td>
+                <td style={{ ...TD, fontWeight: 700, fontSize: 10 }}>Position Held</td>
+              </tr>
+            </thead>
             <tbody>
-              <tr>
-                <td style={TD}>
-                  <span style={{ fontWeight: 700, marginRight: 4 }}>1.</span>
-                  <CI value={positions[0]} onChange={(v) => updatePos(0, v)} readOnly={ro} />
-                </td>
-                <td style={TD}>
-                  <span style={{ fontWeight: 700, marginRight: 4 }}>2.</span>
-                  <CI value={positions[1]} onChange={(v) => updatePos(1, v)} readOnly={ro} />
-                </td>
-              </tr>
-              <tr>
-                <td style={TD}>
-                  <span style={{ fontWeight: 700, marginRight: 4 }}>3.</span>
-                  <CI value={positions[2]} onChange={(v) => updatePos(2, v)} readOnly={ro} />
-                </td>
-                <td style={TD}>
-                  <span style={{ fontWeight: 700, marginRight: 4 }}>4.</span>
-                  <CI value={positions[3]} onChange={(v) => updatePos(3, v)} readOnly={ro} />
-                </td>
-              </tr>
+              {positions.map((p, i) => (
+                <tr key={i}>
+                  <td style={{ ...TD, width: 22, fontWeight: 700 }}>{i + 1}.</td>
+                  <td style={TD}>
+                    <CI value={p.worshipPlace} onChange={(v) => updatePos(i, "worshipPlace", v)} readOnly={ro} />
+                  </td>
+                  <td style={TD}>
+                    <CI value={p.positionHeld} onChange={(v) => updatePos(i, "positionHeld", v)} readOnly={ro} />
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
 

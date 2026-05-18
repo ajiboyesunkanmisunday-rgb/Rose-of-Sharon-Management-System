@@ -19,6 +19,7 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Printer, Send, CheckCircle, XCircle } from "lucide-react";
 import { createSchoolOfDisciple, uploadProfilePicture, type SchoolOfDisciplesResponse } from "@/lib/api";
 
@@ -156,12 +157,13 @@ export default function SodFormCore({
   initialData?: SchoolOfDisciplesResponse;
 }) {
   const ro = mode === "blank" || mode === "view";
+  const router = useRouter();
 
   /* Church identifiers */
-  const [set,      setSet]      = useState(initialData?.set ?? "");
-  const [region,   setRegion]   = useState("");
-  const [province, setProvince] = useState("");
-  const [centre,   setCentre]   = useState("");
+  const [set,      setSet]      = useState(initialData?.set      ?? "");
+  const [region,   setRegion]   = useState(initialData?.region   ?? "");
+  const [province, setProvince] = useState(initialData?.province ?? "");
+  const [centre,   setCentre]   = useState(initialData?.centre   ?? "");
 
   /* ── Section A — Personal ── */
   const [surname,       setSurname]       = useState(initialData?.lastName ?? "");
@@ -182,9 +184,9 @@ export default function SodFormCore({
     if (s.toUpperCase() === "FEMALE") return "Female";
     return s;
   });
-  const [nationality,   setNationality]   = useState("");
-  const [stateOfOrigin, setStateOfOrigin] = useState("");
-  const [homeTown,      setHomeTown]      = useState("");
+  const [nationality,   setNationality]   = useState(initialData?.nationality   ?? "");
+  const [stateOfOrigin, setStateOfOrigin] = useState(initialData?.stateOfOrigin ?? "");
+  const [homeTown,      setHomeTown]      = useState(initialData?.homeTown      ?? "");
 
   /* Phone — split countryCode / phoneNumber */
   const [countryCode,   setCountryCode]   = useState(initialData?.countryCode ?? "234");
@@ -199,9 +201,9 @@ export default function SodFormCore({
     const cap = m.charAt(0).toUpperCase() + m.slice(1).toLowerCase();
     return MARITAL.includes(cap) ? cap : m;
   });
-  const [spouseName,    setSpouseName]    = useState(initialData?.spouseName ?? "");
-  const [spousePhone,   setSpousePhone]   = useState("");
-  const [spouseOcc,     setSpouseOcc]     = useState("");
+  const [spouseName,    setSpouseName]    = useState(initialData?.spouseName        ?? "");
+  const [spousePhone,   setSpousePhone]   = useState(initialData?.spousePhoneNumber ?? "");
+  const [spouseOcc,     setSpouseOcc]     = useState(initialData?.spouseOccupation  ?? "");
   const [numChildren,   setNumChildren]   = useState(
     initialData?.noOfChildren != null ? String(initialData.noOfChildren) : ""
   );
@@ -240,15 +242,18 @@ export default function SodFormCore({
   const [waterBaptismChurch, setWaterBaptismChurch] = useState(initialData?.waterBaptismLocation ?? "");
   const [holyGhostDate,      setHolyGhostDate]      = useState(initialData?.holySpiritBaptismDate ?? "");
   const [holyGhostWhere,     setHolyGhostWhere]     = useState(initialData?.holySpiritBaptismLocation ?? "");
-  const [pastorName,         setPastorName]         = useState("");
-  const [pastorPhone,        setPastorPhone]        = useState("");
-  const [activity1,          setActivity1]          = useState("");
+  const [pastorName,         setPastorName]         = useState(initialData?.currentParishPastorName        ?? "");
+  const [pastorPhone,        setPastorPhone]        = useState(initialData?.currentParishPastorPhoneNumber ?? "");
+  const [activity1,          setActivity1]          = useState(initialData?.activityInCurrentParish        ?? "");
   const [activity2,          setActivity2]          = useState("");
-  const [otherTraining,      setOtherTraining]      = useState<"yes" | "no" | "">("");
+  const [otherTraining,      setOtherTraining]      = useState<"yes" | "no" | "">(
+    initialData?.hasAnotherSimultaneousProgram === true  ? "yes" :
+    initialData?.hasAnotherSimultaneousProgram === false ? "no"  : ""
+  );
   const [pastorKnows,        setPastorKnows]        = useState("");
 
   /* ── Section D ── */
-  const [otherInfo1, setOtherInfo1] = useState("");
+  const [otherInfo1, setOtherInfo1] = useState(initialData?.otherInformation ?? "");
   const [otherInfo2, setOtherInfo2] = useState("");
 
   /* ── Section E — Declaration ── */
@@ -408,6 +413,8 @@ export default function SodFormCore({
       });
       setSubmitSuccess(true);
       setSubmitError("");
+      // Navigate to the list so the new record is immediately visible
+      setTimeout(() => router.push("/trainings/sod"), 1500);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Failed to submit. Please try again.");
     } finally {

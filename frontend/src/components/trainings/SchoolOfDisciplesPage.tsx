@@ -41,7 +41,7 @@ function avatarColor(id: string) {
 }
 
 function initials(u: SchoolOfDisciplesResponse) {
-  return `${u.firstName?.[0] ?? ""}${u.lastName?.[0] ?? ""}`.toUpperCase() || "?";
+  return `${(u.firstName ?? "")?.[0] ?? ""}${(u.lastName ?? "")?.[0] ?? ""}`.toUpperCase() || "?";
 }
 
 function fullName(u: SchoolOfDisciplesResponse) {
@@ -508,19 +508,19 @@ function StudentCard({
         <p className="mt-1 text-xs text-[#6B7280]">{student.occupation}</p>
       )}
 
-      {/* Ministry / Gifts */}
-      {(student.yourMinistry || (student.giftsManifesting?.length ?? 0) > 0) && (
+      {/* Parish / activity info */}
+      {(student.currentParishPastorName || student.activityInCurrentParish) && (
         <div className="mt-2 space-y-0.5">
-          {student.yourMinistry && (
+          {student.currentParishPastorName && (
             <p className="text-[10px] text-[#6B7280]">
-              <span className="font-medium text-[#374151]">Ministry:</span>{" "}
-              {student.yourMinistry}
+              <span className="font-medium text-[#374151]">Pastor:</span>{" "}
+              {student.currentParishPastorName}
             </p>
           )}
-          {(student.giftsManifesting?.length ?? 0) > 0 && (
+          {student.activityInCurrentParish && (
             <p className="text-[10px] text-[#6B7280]">
-              <span className="font-medium text-[#374151]">Gifts:</span>{" "}
-              {student.giftsManifesting!.join(", ")}
+              <span className="font-medium text-[#374151]">Activity:</span>{" "}
+              {student.activityInCurrentParish}
             </p>
           )}
         </div>
@@ -642,7 +642,8 @@ export default function SchoolOfDisciplesPage() {
           fullName(s).toLowerCase().includes(q) ||
           (s.email ?? "").toLowerCase().includes(q) ||
           (s.phoneNumber ?? "").toLowerCase().includes(q) ||
-          (s.yourMinistry ?? "").toLowerCase().includes(q) ||
+          (s.occupation ?? "").toLowerCase().includes(q) ||
+          (s.admissionNo ?? "").toLowerCase().includes(q) ||
           (s.set ?? "").toLowerCase().includes(q)
       );
     }
