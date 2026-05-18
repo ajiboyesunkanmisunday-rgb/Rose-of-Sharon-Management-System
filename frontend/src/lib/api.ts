@@ -332,8 +332,10 @@ export interface UserResponse {
   yearOfWedding?: number;
   // Reason for leaving / stopping attendance
   reasonForLeaving?: string;
+  // Last service attended
+  lastServiceAttendedDate?: string;
   // Spouse / couple info
-  spouse?: UserResponse;
+  spouse?: UserBasicResponse;
   couplePictureUrl?: string;
   // Record timestamps
   createdOn?: string;
@@ -1377,9 +1379,17 @@ export async function createGroup(
   });
 }
 
+/** UpdateGroupRequest — no groupHeadId (use updateGroupHead separately for that) */
+export interface UpdateGroupRequest {
+  name?: string;
+  description?: string;
+  whatsAppLink?: string;
+  whatsAppQRCode?: string;
+}
+
 export async function updateGroup(
   id: string,
-  body: Partial<CreateGroupRequest>,
+  body: UpdateGroupRequest,
 ): Promise<GroupResponse> {
   return apiFetch<GroupResponse>(`/api/v1/groups/${id}`, {
     method: "PUT",
@@ -1444,8 +1454,17 @@ export async function createRole(body: {
   });
 }
 
+/**
+ * GET /api/v1/roles/{id} does NOT exist in Swagger (only PUT and DELETE).
+ * Workaround: fetch all roles and find by ID.
+ */
 export async function getRole(id: string): Promise<RoleResponse> {
-  return apiFetch<RoleResponse>(`/api/v1/roles/${id}`);
+  const page = await apiFetch<CustomPageResponse<RoleResponse>>(
+    `/api/v1/roles?pageNo=0&pageSize=200`,
+  );
+  const found = (page.content ?? []).find((r) => r.id === id);
+  if (!found) throw new Error("Role not found.");
+  return found;
 }
 
 export async function updateRole(
@@ -1520,7 +1539,7 @@ export async function removePermissionsFromRole(
 
 /**
  * Backend search for first timers.
- * Returns a paginated list filtered server-side by the given query string.
+ * POST /api/v1/users/first-timer/search  (Swagger-verified)
  */
 export async function searchFirstTimers(
   query: string,
@@ -1528,13 +1547,14 @@ export async function searchFirstTimers(
   pageSize = 10,
 ): Promise<CustomPageResponse<UserResponse>> {
   return apiFetch<CustomPageResponse<UserResponse>>(
-    `/api/v1/users/first-timer/search?query=${encodeURIComponent(query)}&pageNo=${pageNo}&pageSize=${pageSize}`,
+    `/api/v1/users/first-timer/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ text: query }) },
   );
 }
 
 /**
  * Backend search for second timers.
- * Returns a paginated list filtered server-side by the given query string.
+ * POST /api/v1/users/second-timers/search  (Swagger-verified — plural "timers")
  */
 export async function searchSecondTimers(
   query: string,
@@ -1542,7 +1562,8 @@ export async function searchSecondTimers(
   pageSize = 10,
 ): Promise<CustomPageResponse<UserResponse>> {
   return apiFetch<CustomPageResponse<UserResponse>>(
-    `/api/v1/users/second-timer/search?query=${encodeURIComponent(query)}&pageNo=${pageNo}&pageSize=${pageSize}`,
+    `/api/v1/users/second-timers/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ text: query }) },
   );
 }
 
@@ -1857,13 +1878,26 @@ export async function markCelebrationsAsTreated(
   });
 }
 
+/**
+ * GET /api/v1/celebrations/{id} does NOT exist in Swagger.
+ * Workaround: fetch paginated list and find by ID.
+ */
 export async function getCelebration(id: string): Promise<CelebrationResponse> {
-  return apiFetch<CelebrationResponse>(`/api/v1/celebrations/${id}`);
+  const page = await apiFetch<CustomPageResponse<CelebrationResponse>>(
+    `/api/v1/celebrations?pageNo=0&pageSize=500`,
+  );
+  const found = (page.content ?? []).find((c) => c.id === id);
+  if (!found) throw new Error("Celebration not found.");
+  return found;
 }
 
+/**
+ * PUT /api/v1/celebrations/{id}
+ * UpdateCelebrationRequest only accepts { date, notes } — no "type" field.
+ */
 export async function updateCelebration(
   id: string,
-  body: { type?: string; date?: string; notes?: string },
+  body: { date?: string; notes?: string },
 ): Promise<CelebrationResponse> {
   return apiFetch<CelebrationResponse>(`/api/v1/celebrations/${id}`, {
     method: "PUT",

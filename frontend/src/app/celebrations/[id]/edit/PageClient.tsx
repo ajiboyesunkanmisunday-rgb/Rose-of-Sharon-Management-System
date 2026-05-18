@@ -5,15 +5,8 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
-import { FormField, SelectField, TextAreaField } from "@/components/ui/FormField";
+import { FormField, TextAreaField } from "@/components/ui/FormField";
 import { getCelebration, updateCelebration } from "@/lib/api";
-
-const TYPE_OPTIONS = [
-  { label: "Birthday", value: "Birthday" },
-  { label: "Wedding Anniversary", value: "Wedding Anniversary" },
-  { label: "Thanksgiving", value: "Thanksgiving" },
-  { label: "Child Dedication", value: "Child Dedication" },
-];
 
 function toInputDate(value: string): string {
   if (!value) return "";
@@ -40,11 +33,11 @@ export default function EditCelebrationClient() {
   }, []);
 
   const [formData, setFormData] = useState({
-    type: "",
     date: "",
     notes: "",
   });
 
+  const [celebrationType, setCelebrationType] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -53,17 +46,17 @@ export default function EditCelebrationClient() {
     try {
       const data = await getCelebration(id);
       setFormData({
-        type: data.celebrationType ?? "",
         date: toInputDate(data.date ?? ""),
         notes: data.notes ?? "",
       });
+      setCelebrationType(data.celebrationType ?? "");
     } catch { /* silently fall back to empty fields */ }
   }, [id]);
 
   useEffect(() => { populate(); }, [populate]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -74,8 +67,8 @@ export default function EditCelebrationClient() {
     setError("");
     setLoading(true);
     try {
+      // UpdateCelebrationRequest only accepts { date, notes } — no type field
       await updateCelebration(id, {
-        type: formData.type || undefined,
         date: formData.date || undefined,
         notes: formData.notes || undefined,
       });
@@ -100,10 +93,26 @@ export default function EditCelebrationClient() {
 
       <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
-            <SelectField label="Type" name="type" value={formData.type} onChange={handleChange} options={TYPE_OPTIONS} required />
-            <FormField label="Date" type="date" name="date" value={formData.date} onChange={handleChange} required />
-          </div>
+
+          {/* Type is read-only — backend does not allow changing it after creation */}
+          {celebrationType && (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">Type</label>
+              <div className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2.5 text-sm text-[#374151]">
+                {celebrationType}
+                <span className="ml-2 text-xs text-[#9CA3AF]">(cannot be changed)</span>
+              </div>
+            </div>
+          )}
+
+          <FormField
+            label="Date"
+            type="date"
+            name="date"
+            value={formData.date}
+            onChange={handleChange}
+            required
+          />
 
           <TextAreaField label="Notes" name="notes" value={formData.notes} onChange={handleChange} rows={3} />
 
