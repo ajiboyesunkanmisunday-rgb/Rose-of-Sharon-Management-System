@@ -7,9 +7,11 @@ import { useRouter } from "next/navigation";
 import {
   getMembers,
   getEMembers,
+  getTotalFirstTimersInPeriod,
+  getTotalSecondTimersInPeriod,
+  getTotalNewConvertsInPeriod,
   getFirstTimers,
   getSecondTimers,
-  getTotalNewConvertsInPeriod,
   getCelebrations,
   type UserResponse,
 } from "@/lib/api";
@@ -66,39 +68,31 @@ export default function DashboardPage() {
       const now = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-
-      const isThisMonth = (dateStr?: string) => {
-        if (!dateStr) return false;
-        const d = new Date(dateStr);
-        return d >= monthStart && d <= monthEnd;
-      };
-
-      const startIso = monthStart.toISOString();
-      const endIso   = monthEnd.toISOString();
+      const startIso   = monthStart.toISOString();
+      const endIso     = monthEnd.toISOString();
 
       try {
+        // Use the same API pattern as Church Directory for accurate counts:
+        // - Members + E-Members: totalElements from paginated response
+        // - First/Second timers this month: dedicated period-count endpoints
+        // - New converts this month: dedicated period-count endpoint
         const [mem, emem, ft, st, nc] = await Promise.allSettled([
           getMembers(0, 1),
           getEMembers(0, 1),
-          getFirstTimers(0, 500),
-          getSecondTimers(0, 500),
+          getTotalFirstTimersInPeriod(startIso, endIso),
+          getTotalSecondTimersInPeriod(startIso, endIso),
           getTotalNewConvertsInPeriod(startIso, endIso),
         ]);
 
         const membersTotal  = mem.status  === "fulfilled" ? (mem.value.totalElements  ?? 0) : 0;
         const eMembersTotal = emem.status === "fulfilled" ? (emem.value.totalElements ?? 0) : 0;
-
-        const ftThisMonth = ft.status === "fulfilled"
-          ? (ft.value.content ?? []).filter((u) => isThisMonth(u.createdOn)).length
-          : 0;
-        const stThisMonth = st.status === "fulfilled"
-          ? (st.value.content ?? []).filter((u) => isThisMonth(u.createdOn)).length
-          : 0;
-        const ncThisMonth = nc.status === "fulfilled" ? (nc.value.totalCount ?? 0) : 0;
+        const ftThisMonth   = ft.status   === "fulfilled" ? (ft.value.totalCount  ?? 0) : 0;
+        const stThisMonth   = st.status   === "fulfilled" ? (st.value.totalCount  ?? 0) : 0;
+        const ncThisMonth   = nc.status   === "fulfilled" ? (nc.value.totalCount  ?? 0) : 0;
 
         setStats({
-          activeMembers:    membersTotal + eMembersTotal,
-          firstTimersMonth: ftThisMonth,
+          activeMembers:     membersTotal + eMembersTotal,
+          firstTimersMonth:  ftThisMonth,
           secondTimersMonth: stThisMonth,
           newConvertsMonth:  ncThisMonth,
           loading: false,
