@@ -6,6 +6,15 @@
  * mode = "blank"  → read-only, empty, Print Blank Form button only
  * mode = "fill"   → editable, Print + Submit buttons
  * mode = "view"   → read-only, pre-filled from initialData, Print Filled Form button only
+ *
+ * Backend-confirmed field formats (2025):
+ *  - dateOfBirth: yyyy-mm-dd
+ *  - noOfChildren: integer only (e.g. 1)
+ *  - salvationDate / waterBaptismDate / holySpiritBaptismDate: any string
+ *  - Past Worship dates: any string
+ *  - Address: separate street / city / state / country fields
+ *  - countryCode: separate field (default "234")
+ *  - qualificationRequests: { date, institution, qualificationReceived }
  */
 
 import { useState, useRef } from "react";
@@ -15,17 +24,22 @@ import { createSchoolOfDisciple, uploadProfilePicture, type SchoolOfDisciplesRes
 
 export type SodMode = "blank" | "fill" | "view";
 
+/* ─── Required asterisk ───────────────────────────────────────────────────── */
+const REQ = <span style={{ color: "red", marginLeft: 2 }}>*</span>;
+
 /* ─── Primitive dotted-line input ────────────────────────────────────────── */
 function F({
   value,
   onChange,
   style,
   readOnly,
+  placeholder,
 }: {
   value: string;
   onChange?: (v: string) => void;
   style?: React.CSSProperties;
   readOnly?: boolean;
+  placeholder?: string;
 }) {
   return (
     <input
@@ -34,6 +48,7 @@ function F({
       onChange={(e) => onChange?.(e.target.value)}
       style={style}
       readOnly={readOnly}
+      placeholder={readOnly ? undefined : placeholder}
     />
   );
 }
@@ -43,15 +58,17 @@ function FullRow({
   value,
   onChange,
   readOnly,
+  required,
 }: {
   label: string;
   value: string;
   onChange?: (v: string) => void;
   readOnly?: boolean;
+  required?: boolean;
 }) {
   return (
     <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-      <span style={{ whiteSpace: "nowrap" }}>{label}</span>
+      <span style={{ whiteSpace: "nowrap" }}>{label}{required && REQ}</span>
       <F value={value} onChange={onChange} style={{ flex: 1 }} readOnly={readOnly} />
     </div>
   );
@@ -62,18 +79,18 @@ function PairedRow({
   right,
   readOnly,
 }: {
-  left:  { label: string; value: string; onChange?: (v: string) => void };
-  right: { label: string; value: string; onChange?: (v: string) => void };
+  left:  { label: string; value: string; onChange?: (v: string) => void; required?: boolean };
+  right: { label: string; value: string; onChange?: (v: string) => void; required?: boolean };
   readOnly?: boolean;
 }) {
   return (
     <div style={{ display: "flex", alignItems: "baseline", gap: 28 }}>
       <div style={{ flex: 1, display: "flex", alignItems: "baseline", gap: 4 }}>
-        <span style={{ whiteSpace: "nowrap" }}>{left.label}</span>
+        <span style={{ whiteSpace: "nowrap" }}>{left.label}{left.required && REQ}</span>
         <F value={left.value} onChange={left.onChange} style={{ flex: 1 }} readOnly={readOnly} />
       </div>
       <div style={{ flex: 1, display: "flex", alignItems: "baseline", gap: 4 }}>
-        <span style={{ whiteSpace: "nowrap" }}>{right.label}</span>
+        <span style={{ whiteSpace: "nowrap" }}>{right.label}{right.required && REQ}</span>
         <F value={right.value} onChange={right.onChange} style={{ flex: 1 }} readOnly={readOnly} />
       </div>
     </div>
@@ -130,19 +147,6 @@ const PAPER_STYLE: React.CSSProperties = {
 
 const MARITAL = ["Single", "Married", "Engaged", "Divorced", "Widowed"];
 
-/* ─── Date helper ─────────────────────────────────────────────────────────── */
-function safeDate(v: string): string | undefined {
-  const s = v.trim();
-  if (!s) return undefined;
-  let d = new Date(s);
-  if (isNaN(d.getTime())) {
-    const m = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
-    if (m) d = new Date(`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`);
-  }
-  if (isNaN(d.getTime())) return undefined;
-  return d.toISOString().split("T")[0];
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
 export default function SodFormCore({
   mode,
@@ -153,22 +157,23 @@ export default function SodFormCore({
 }) {
   const ro = mode === "blank" || mode === "view";
 
-  /* Derive street parts from initialData?.street (joined with ", ") */
-  const streetParts = (initialData?.street ?? "").split(", ");
-
-  /* Church identifiers — not in API response */
-  const [session,  setSession]  = useState("");
+  /* Church identifiers */
+  const [set,      setSet]      = useState(initialData?.set ?? "");
   const [region,   setRegion]   = useState("");
   const [province, setProvince] = useState("");
   const [centre,   setCentre]   = useState("");
 
-  /* ── Section A ── */
+  /* ── Section A — Personal ── */
   const [surname,       setSurname]       = useState(initialData?.lastName ?? "");
   const [firstName,     setFirstName]     = useState(initialData?.firstName ?? "");
   const [middleName,    setMiddleName]    = useState(initialData?.middleName ?? "");
-  const [addr1,         setAddr1]         = useState(streetParts[0] ?? "");
-  const [addr2,         setAddr2]         = useState(streetParts[1] ?? "");
-  const [addr3,         setAddr3]         = useState(streetParts[2] ?? "");
+
+  /* Address — separate fields per backend spec */
+  const [street,        setStreet]        = useState(initialData?.street ?? "");
+  const [city,          setCity]          = useState(initialData?.city ?? "");
+  const [addrState,     setAddrState]     = useState(initialData?.state ?? "");
+  const [country,       setCountry]       = useState(initialData?.country ?? "");
+
   const [dob,           setDob]           = useState(initialData?.dateOfBirth ?? "");
   const [sex,           setSex]           = useState(() => {
     const s = initialData?.sex ?? "";
@@ -177,19 +182,17 @@ export default function SodFormCore({
     if (s.toUpperCase() === "FEMALE") return "Female";
     return s;
   });
-  // nationality/stateOfOrigin/homeTown not in SchoolOfDisciplesResponse (API doesn't return them)
   const [nationality,   setNationality]   = useState("");
   const [stateOfOrigin, setStateOfOrigin] = useState("");
   const [homeTown,      setHomeTown]      = useState("");
+
+  /* Phone — split countryCode / phoneNumber */
+  const [countryCode,   setCountryCode]   = useState(initialData?.countryCode ?? "234");
   const [phone,         setPhone]         = useState(initialData?.phoneNumber ?? "");
+
   const [email,         setEmail]         = useState(initialData?.email ?? "");
   const [occupation,    setOccupation]    = useState(initialData?.occupation ?? "");
-
-  /* Office address parts */
-  const offParts = (initialData?.officeFullAddress ?? "").split(", ");
-  const [offAddr1,      setOffAddr1]      = useState(offParts[0] ?? "");
-  const [offAddr2,      setOffAddr2]      = useState(offParts[1] ?? "");
-
+  const [officeAddr,    setOfficeAddr]    = useState(initialData?.officeFullAddress ?? "");
   const [marital,       setMarital]       = useState(() => {
     const m = initialData?.maritalStatus ?? "";
     if (!m) return "";
@@ -197,17 +200,20 @@ export default function SodFormCore({
     return MARITAL.includes(cap) ? cap : m;
   });
   const [spouseName,    setSpouseName]    = useState(initialData?.spouseName ?? "");
-  // spousePhoneNumber/spouseOccupation not in SchoolOfDisciplesResponse
   const [spousePhone,   setSpousePhone]   = useState("");
   const [spouseOcc,     setSpouseOcc]     = useState("");
   const [numChildren,   setNumChildren]   = useState(
     initialData?.noOfChildren != null ? String(initialData.noOfChildren) : ""
   );
 
-  /* ── Section B ── */
-  const [inst1, setInst1] = useState("");
-  const [inst2, setInst2] = useState("");
-  const [inst3, setInst3] = useState("");
+  /* ── Section B — Qualifications (date + institution + qualification received) ── */
+  const [quals, setQuals] = useState([
+    { institution: "", date: "", qualificationReceived: "" },
+    { institution: "", date: "", qualificationReceived: "" },
+    { institution: "", date: "", qualificationReceived: "" },
+  ]);
+  const updateQual = (i: number, k: keyof typeof quals[0], v: string) =>
+    setQuals((prev) => prev.map((r, idx) => idx === i ? { ...r, [k]: v } : r));
 
   /* ── Section C — worship places ── */
   const [wp,  setWp]  = useState([
@@ -227,30 +233,28 @@ export default function SodFormCore({
   const updatePh = (i: number, k: keyof typeof ph[0], v: string) =>
     setPh((prev) => prev.map((r, idx) => idx === i ? { ...r, [k]: v } : r));
 
-  /* ── Section C — spiritual dates ── */
-  // Salvation/baptism dates are in SchoolOfDisciplesResponse
+  /* ── Spiritual dates — sent as raw strings per backend spec ── */
   const [salvationDate,      setSalvationDate]      = useState(initialData?.salvationDate ?? "");
   const [salvationWhere,     setSalvationWhere]     = useState(initialData?.salvationLocation ?? "");
   const [waterBaptismDate,   setWaterBaptismDate]   = useState(initialData?.waterBaptismDate ?? "");
   const [waterBaptismChurch, setWaterBaptismChurch] = useState(initialData?.waterBaptismLocation ?? "");
   const [holyGhostDate,      setHolyGhostDate]      = useState(initialData?.holySpiritBaptismDate ?? "");
   const [holyGhostWhere,     setHolyGhostWhere]     = useState(initialData?.holySpiritBaptismLocation ?? "");
-  // currentParishPastorName/Phone, activityInCurrentParish, hasAnotherSimultaneousProgram not in response
   const [pastorName,         setPastorName]         = useState("");
   const [pastorPhone,        setPastorPhone]        = useState("");
-  const [activity1, setActivity1] = useState("");
-  const [activity2, setActivity2] = useState("");
-  const [otherTraining, setOtherTraining] = useState<"yes" | "no" | "">("");
-  const [pastorKnows, setPastorKnows] = useState("");
+  const [activity1,          setActivity1]          = useState("");
+  const [activity2,          setActivity2]          = useState("");
+  const [otherTraining,      setOtherTraining]      = useState<"yes" | "no" | "">("");
+  const [pastorKnows,        setPastorKnows]        = useState("");
 
   /* ── Section D ── */
-  // otherInformation not in SchoolOfDisciplesResponse
   const [otherInfo1, setOtherInfo1] = useState("");
   const [otherInfo2, setOtherInfo2] = useState("");
 
-  /* ── Section E ── */
+  /* ── Section E — Declaration ── */
   const [declName, setDeclName] = useState(`${firstName} ${surname}`.trim());
   const [declOf,   setDeclOf]   = useState("");
+  const [consent,  setConsent]  = useState(false);
 
   /* ── Section F ── */
   const [remarks1, setRemarks1] = useState(initialData?.officialRemarks ?? "");
@@ -268,16 +272,47 @@ export default function SodFormCore({
     setPhotoPreview(file ? URL.createObjectURL(file) : null);
   };
 
-  /* ── Submit state ── */
+  /* ── Submit ── */
   const [submitting,    setSubmitting]    = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError,   setSubmitError]   = useState("");
 
   const handleSubmit = async () => {
-    if (!session.trim() || !firstName.trim() || !surname.trim() || !phone.trim()) {
-      setSubmitError("Session/Set, First Name, Surname, and Phone Number are required before submitting.");
+    // Validate required fields
+    const missing: string[] = [];
+    if (!set.trim())          missing.push("Set");
+    if (!region.trim())       missing.push("Region");
+    if (!province.trim())     missing.push("Province");
+    if (!centre.trim())       missing.push("Centre");
+    if (!firstName.trim())    missing.push("First Name");
+    if (!surname.trim())      missing.push("Last Name");
+    if (!countryCode.trim())  missing.push("Country Code");
+    if (!phone.trim())        missing.push("Phone Number");
+    if (!dob.trim())          missing.push("Date of Birth");
+    if (!nationality.trim())  missing.push("Nationality");
+    if (!street.trim())       missing.push("Street Address");
+    if (!city.trim())         missing.push("City");
+    if (!addrState.trim())    missing.push("State");
+    if (!country.trim())      missing.push("Country");
+    if (!occupation.trim())   missing.push("Occupation");
+    if (!officeAddr.trim())   missing.push("Office Address");
+    if (!salvationDate.trim())      missing.push("Salvation Date");
+    if (!salvationWhere.trim())     missing.push("Salvation Location");
+    if (!waterBaptismDate.trim())   missing.push("Water Baptism Date");
+    if (!waterBaptismChurch.trim()) missing.push("Water Baptism Location");
+    if (!holyGhostDate.trim())      missing.push("Holy Spirit Baptism Date");
+    if (!holyGhostWhere.trim())     missing.push("Holy Spirit Baptism Location");
+    if (!pastorName.trim())         missing.push("Current Parish Pastor Name");
+    if (!photoPreview && !photo)    missing.push("Profile Picture");
+    if (quals.filter((q) => q.institution.trim()).length === 0) missing.push("At least one Qualification");
+    if (!consent) missing.push("Consent to form declaration");
+    if (marital === "Married" && !spouseName.trim()) missing.push("Spouse Name (required if Married)");
+
+    if (missing.length > 0) {
+      setSubmitError(`Please fill in: ${missing.join(", ")}.`);
       return;
     }
+
     setSubmitError("");
     setSubmitting(true);
     setUploading(false);
@@ -297,20 +332,46 @@ export default function SodFormCore({
                     : sex.trim().toLowerCase().startsWith("m") ? "MALE"
                     : sex.trim() || undefined;
 
+      // Qualifications — all three columns
+      const qualItems = quals
+        .filter((q) => q.institution.trim())
+        .map((q) => ({
+          institution:           q.institution.trim(),
+          date:                  q.date.trim() || undefined,
+          qualificationReceived: q.qualificationReceived.trim() || undefined,
+        }));
+
+      // Worship places — date sent as raw string
+      const wpItems = wp
+        .filter((r) => r.name.trim())
+        .map((r) => ({
+          name:    r.name.trim(),
+          address: r.address.trim() || undefined,
+          date:    r.date.trim() || undefined,
+        }));
+
+      // Positions held — worshipPlace = church name, positionHeld = position
+      const phItems = ph
+        .filter((r) => r.name.trim() || r.position.trim())
+        .map((r) => ({
+          worshipPlace: r.name.trim() || undefined,
+          positionHeld: r.position.trim() || undefined,
+        }));
+
       await createSchoolOfDisciple({
-        set:               session.trim(),
+        set:               set.trim(),
+        region:            region.trim()   || undefined,
+        province:          province.trim() || undefined,
+        centre:            centre.trim()   || undefined,
         profilePictureUrl,
-        region:            region   || undefined,
-        province:          province || undefined,
-        centre:            centre   || undefined,
         firstName:         firstName.trim(),
         lastName:          surname.trim(),
         middleName:        middleName.trim() || undefined,
-        countryCode:       "234",
+        countryCode:       countryCode.trim(),
         phoneNumber:       phone.trim(),
         email:             email.trim() || undefined,
         sex:               sexNorm as string | undefined,
-        dateOfBirth:       safeDate(dob),
+        dateOfBirth:       dob.trim() || undefined,          // yyyy-mm-dd from date input
         maritalStatus:     marital ? (maritalMap[marital] ?? marital.toUpperCase()) : undefined,
         spouseName:        spouseName.trim()  || undefined,
         spousePhoneNumber: spousePhone.trim() || undefined,
@@ -319,15 +380,20 @@ export default function SodFormCore({
         nationality:       nationality.trim()   || undefined,
         homeTown:          homeTown.trim()      || undefined,
         stateOfOrigin:     stateOfOrigin.trim() || undefined,
-        street:            [addr1, addr2, addr3].filter(Boolean).join(", ") || undefined,
+        // Address — separate fields
+        street:            street.trim()     || undefined,
+        city:              city.trim()       || undefined,
+        state:             addrState.trim()  || undefined,
+        country:           country.trim()    || undefined,
         occupation:        occupation.trim()  || undefined,
-        officeFullAddress: [offAddr1, offAddr2].filter(Boolean).join(", ") || undefined,
-        salvationDate:             safeDate(salvationDate),
-        salvationLocation:         salvationWhere.trim()    || undefined,
-        waterBaptismDate:          safeDate(waterBaptismDate),
-        waterBaptismLocation:      waterBaptismChurch.trim()|| undefined,
-        holySpiritBaptismDate:     safeDate(holyGhostDate),
-        holySpiritBaptismLocation: holyGhostWhere.trim()    || undefined,
+        officeFullAddress: officeAddr.trim()  || undefined,
+        // Spiritual history — raw strings
+        salvationDate:             salvationDate.trim()      || undefined,
+        salvationLocation:         salvationWhere.trim()     || undefined,
+        waterBaptismDate:          waterBaptismDate.trim()   || undefined,
+        waterBaptismLocation:      waterBaptismChurch.trim() || undefined,
+        holySpiritBaptismDate:     holyGhostDate.trim()      || undefined,
+        holySpiritBaptismLocation: holyGhostWhere.trim()     || undefined,
         currentParishPastorName:        pastorName.trim()  || undefined,
         currentParishPastorPhoneNumber: pastorPhone.trim() || undefined,
         activityInCurrentParish: [activity1, activity2].filter(Boolean).join(" ") || undefined,
@@ -335,17 +401,10 @@ export default function SodFormCore({
                                       : otherTraining === "no"  ? false
                                       : undefined,
         otherInformation: [otherInfo1, otherInfo2].filter(Boolean).join(" ") || undefined,
-        ...(() => {
-          const quals = [inst1, inst2, inst3].filter(Boolean).map((institution) => ({ institution }));
-          const wpItems = wp.filter((r) => r.name.trim()).map((r) => ({ date: safeDate(r.date), name: r.name, address: r.address }));
-          const phItems = ph.filter((r) => r.name.trim() || r.position.trim()).map((r) => ({ worshipPlace: r.name, positionHeld: r.position }));
-          return {
-            ...(quals.length ? { qualificationRequests: quals } : {}),
-            ...(wpItems.length ? { createPastPlaceOfWorshipRequests: wpItems } : {}),
-            ...(phItems.length ? { createPositionHeldRequests: phItems } : {}),
-          };
-        })(),
         consent: true,
+        ...(qualItems.length ? { qualificationRequests: qualItems } : {}),
+        ...(wpItems.length   ? { createPastPlaceOfWorshipRequests: wpItems } : {}),
+        ...(phItems.length   ? { createPositionHeldRequests: phItems }       : {}),
       });
       setSubmitSuccess(true);
       setSubmitError("");
@@ -353,6 +412,7 @@ export default function SodFormCore({
       setSubmitError(err instanceof Error ? err.message : "Failed to submit. Please try again.");
     } finally {
       setSubmitting(false);
+      setUploading(false);
     }
   };
 
@@ -407,11 +467,9 @@ export default function SodFormCore({
             ← Back
           </button>
           <span style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>
-            {mode === "blank"
-              ? "SOD Application Form — Blank"
-              : mode === "view"
-              ? "SOD Application Form — View Record"
-              : "SOD Application Form — Fill & Print"}
+            {mode === "blank" ? "SOD Application Form — Blank"
+              : mode === "view" ? "SOD Application Form — View Record"
+              : "SOD Application Form — Fill & Submit"}
           </span>
           <div style={{ display: "flex", gap: 10 }}>
             {mode === "fill" && (
@@ -427,13 +485,10 @@ export default function SodFormCore({
                   opacity: submitting || uploading ? 0.7 : 1,
                 }}
               >
-                {submitSuccess
-                  ? <><CheckCircle size={14} /> Saved to System</>
-                  : uploading
-                    ? <><Send size={14} /> Uploading Photo…</>
-                    : submitting
-                      ? <><Send size={14} /> Submitting…</>
-                      : <><Send size={14} /> Submit to System</>}
+                {submitSuccess ? <><CheckCircle size={14} /> Saved to System</>
+                  : uploading   ? <><Send size={14} /> Uploading Photo…</>
+                  : submitting  ? <><Send size={14} /> Submitting…</>
+                  : <><Send size={14} /> Submit to System</>}
               </button>
             )}
             <button onClick={() => window.print()} style={{
@@ -506,51 +561,50 @@ export default function SodFormCore({
                 <div style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase" }}>The School of Disciples</div>
                 <div style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase" }}>Application Form</div>
                 <div style={{ fontSize: 11, marginTop: 4, display: "flex", alignItems: "baseline", justifyContent: "center", gap: 4 }}>
-                  <span>SESSION <span style={{ color: "red" }}>*</span></span>
+                  <span>SET{REQ}</span>
                   <F
-                    value={session}
-                    onChange={setSession}
+                    value={set}
+                    onChange={setSet}
                     readOnly={ro}
-                    style={{ width: 120, borderBottom: (!ro && !session.trim()) ? "1.5px solid red" : undefined }}
+                    placeholder="e.g. 2026"
+                    style={{ width: 120, borderBottom: (!ro && !set.trim()) ? "1.5px solid red" : undefined }}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Passport photo — clickable only in fill mode */}
+            {/* Passport photo */}
             {mode === "fill" ? (
               <div
                 className="sod-no-print"
                 onClick={() => photoInputRef.current?.click()}
                 style={{
-                  width: 90, height: 110, border: "2px dashed #000080", borderRadius: 6,
-                  display: "flex", flexDirection: "column", alignItems: "center",
+                  width: 90, height: 110, border: !photoPreview ? "2px dashed red" : "2px dashed #000080",
+                  borderRadius: 6, display: "flex", flexDirection: "column", alignItems: "center",
                   justifyContent: "center", flexShrink: 0, cursor: "pointer",
-                  overflow: "hidden", background: photoPreview ? "transparent" : "#f0f4ff",
+                  overflow: "hidden", background: photoPreview ? "transparent" : "#fff5f5",
                 }}
-                title="Click to upload passport photo"
+                title="Profile picture is required — click to upload"
               >
                 {photoPreview ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={photoPreview} alt="Passport" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
                   <>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000080" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                       <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                     </svg>
-                    <span style={{ fontSize: 8, textAlign: "center", color: "#000080", lineHeight: 1.4, marginTop: 4 }}>
-                      Passport<br />Photograph<br /><span style={{ color: "#666" }}>(click)</span>
+                    <span style={{ fontSize: 8, textAlign: "center", color: "#dc2626", lineHeight: 1.4, marginTop: 4 }}>
+                      Photo{REQ}<br />(click to upload)
                     </span>
                   </>
                 )}
               </div>
             ) : (
-              /* view/blank — static photo box */
               <div style={{
                 width: 90, height: 110, border: "1px solid #000", flexShrink: 0,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                overflow: "hidden",
+                display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
               }}>
                 {photoPreview ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -563,33 +617,8 @@ export default function SodFormCore({
               </div>
             )}
 
-            {/* Print-only static photo box */}
-            <div
-              className="sod-print-only"
-              style={{
-                width: 90, height: 110, border: "1px solid #000",
-                display: "none", alignItems: "center", justifyContent: "center",
-                flexShrink: 0, overflow: "hidden",
-              }}
-            >
-              {photoPreview ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={photoPreview} alt="Passport" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              ) : (
-                <span style={{ fontSize: 9, textAlign: "center", color: "#666", lineHeight: 1.6 }}>
-                  Passport<br />Photograph
-                </span>
-              )}
-            </div>
-
             {mode === "fill" && (
-              <input
-                ref={photoInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoChange}
-                style={{ display: "none" }}
-              />
+              <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoChange} style={{ display: "none" }} />
             )}
           </div>
 
@@ -598,14 +627,14 @@ export default function SodFormCore({
             <tbody>
               {(
                 [
-                  ["REGION",   region,   setRegion],
-                  ["PROVINCE", province, setProvince],
-                  ["CENTRE",   centre,   setCentre],
-                ] as [string, string, (v: string) => void][]
-              ).map(([lbl, val, setter]) => (
+                  ["REGION",   region,   setRegion,   true],
+                  ["PROVINCE", province, setProvince, true],
+                  ["CENTRE",   centre,   setCentre,   true],
+                ] as [string, string, (v: string) => void, boolean][]
+              ).map(([lbl, val, setter, req]) => (
                 <tr key={lbl}>
                   <td style={{ border: "1px solid #000", padding: "4px 10px", fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>
-                    {lbl}
+                    {lbl}{req && REQ}
                   </td>
                   <td style={{ border: "1px solid #000", padding: "2px 8px", width: 240 }}>
                     <F value={val} onChange={setter} style={{ width: "100%" }} readOnly={ro} />
@@ -626,9 +655,9 @@ export default function SodFormCore({
               <div style={{ display: "flex", gap: 14, paddingLeft: 18 }}>
                 {(
                   [
-                    ["Surname",    surname,    setSurname],
-                    ["First Name", firstName,  setFirstName],
-                    ["Middle Name",middleName, setMiddleName],
+                    ["Surname *",     surname,    setSurname],
+                    ["First Name *",  firstName,  setFirstName],
+                    ["Middle Name",   middleName, setMiddleName],
                   ] as [string, string, (v: string) => void][]
                 ).map(([lbl, val, setter]) => (
                   <div key={lbl} style={{ flex: 1 }}>
@@ -639,46 +668,60 @@ export default function SodFormCore({
               </div>
             </div>
 
-            {/* 2. Current Home Address */}
+            {/* 2. Address — Street / City / State / Country */}
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              <FullRow label="2.  Current Home Address:" value={addr1} onChange={setAddr1} readOnly={ro} />
-              <F value={addr2} onChange={setAddr2} style={{ width: "100%" }} readOnly={ro} />
-              <F value={addr3} onChange={setAddr3} style={{ width: "100%" }} readOnly={ro} />
+              <FullRow label="2.  Street Address:" value={street} onChange={setStreet} readOnly={ro} required />
+              <PairedRow
+                left={{  label: "City:",    value: city,      onChange: setCity,      required: true }}
+                right={{ label: "State:",   value: addrState, onChange: setAddrState, required: true }}
+                readOnly={ro}
+              />
+              <FullRow label="    Country:" value={country} onChange={setCountry} readOnly={ro} required />
             </div>
 
             {/* 3 & 3b */}
             <PairedRow
-              left={{ label: "3.  Date of Birth:", value: dob, onChange: setDob }}
+              left={{  label: "3.  Date of Birth (yyyy-mm-dd):", value: dob, onChange: setDob, required: true }}
               right={{ label: "3b. Sex:", value: sex, onChange: setSex }}
               readOnly={ro}
             />
 
             {/* 4 & 4b */}
             <PairedRow
-              left={{ label: "4.  Nationality:", value: nationality, onChange: setNationality }}
+              left={{  label: "4.  Nationality:", value: nationality, onChange: setNationality, required: true }}
               right={{ label: "4b. State of Origin:", value: stateOfOrigin, onChange: setStateOfOrigin }}
               readOnly={ro}
             />
 
             {/* 5 & 5b */}
             <PairedRow
-              left={{ label: "5.  Home Town:", value: homeTown, onChange: setHomeTown }}
-              right={{ label: "5b. Phone Number:", value: phone, onChange: setPhone }}
+              left={{  label: "5.  Home Town:", value: homeTown, onChange: setHomeTown }}
+              right={{ label: "5b. Phone Number:", value: phone, onChange: setPhone, required: true }}
               readOnly={ro}
             />
+
+            {/* Country code inline before phone note */}
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6, paddingLeft: 18, fontSize: 11, color: "#555" }}>
+              <span>Country Code{REQ}:</span>
+              <F
+                value={countryCode}
+                onChange={setCountryCode}
+                readOnly={ro}
+                placeholder="e.g. 234"
+                style={{ width: 70 }}
+              />
+              <span style={{ color: "#888" }}>(digits only, e.g. 234 for Nigeria)</span>
+            </div>
 
             {/* 6 & 6b */}
             <PairedRow
-              left={{ label: "6.  Email Address:", value: email, onChange: setEmail }}
-              right={{ label: "6b. Occupation:", value: occupation, onChange: setOccupation }}
+              left={{  label: "6.  Email Address:", value: email, onChange: setEmail }}
+              right={{ label: "6b. Occupation:", value: occupation, onChange: setOccupation, required: true }}
               readOnly={ro}
             />
 
-            {/* 7. Occupation Address */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              <FullRow label="7.  Occupation Address:" value={offAddr1} onChange={setOffAddr1} readOnly={ro} />
-              <F value={offAddr2} onChange={setOffAddr2} style={{ width: "100%" }} readOnly={ro} />
-            </div>
+            {/* 7. Office / Occupation Address */}
+            <FullRow label="7.  Office / Occupation Address:" value={officeAddr} onChange={setOfficeAddr} readOnly={ro} required />
 
             {/* 8. Marital Status */}
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16 }}>
@@ -690,39 +733,51 @@ export default function SodFormCore({
 
             {/* 9 & 9b */}
             <PairedRow
-              left={{ label: "9.  Spouse Name:", value: spouseName, onChange: setSpouseName }}
+              left={{  label: "9.  Spouse Name:", value: spouseName, onChange: setSpouseName,
+                       required: marital === "Married" }}
               right={{ label: "Spouse Phone Number:", value: spousePhone, onChange: setSpousePhone }}
               readOnly={ro}
             />
 
             {/* 10 & 10b */}
             <PairedRow
-              left={{ label: "10. Spouse's Occupation:", value: spouseOcc, onChange: setSpouseOcc }}
-              right={{ label: "Number of Children:", value: numChildren, onChange: setNumChildren }}
+              left={{  label: "10. Spouse's Occupation:", value: spouseOcc, onChange: setSpouseOcc }}
+              right={{ label: "Number of Children (digits only):", value: numChildren, onChange: setNumChildren }}
               readOnly={ro}
             />
           </div>
 
-          {/* ══ SECTION B ═══════════════════════════════════════════════ */}
-          <SectionHead>B.  Educational and Professional Qualifications</SectionHead>
+          {/* ══ SECTION B — Qualifications ══════════════════════════════ */}
+          <SectionHead>B.  Educational and Professional Qualifications{REQ}</SectionHead>
 
-          <div>
-            <div style={{ marginBottom: 10 }}>11. Institution:</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingLeft: 20 }}>
-              {(
-                [
-                  ["i.",   inst1, setInst1],
-                  ["ii.",  inst2, setInst2],
-                  ["iii.", inst3, setInst3],
-                ] as [string, string, (v: string) => void][]
-              ).map(([roman, val, setter]) => (
-                <div key={roman} style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                  <span style={{ minWidth: 24, flexShrink: 0 }}>{roman}</span>
-                  <F value={val} onChange={setter} style={{ flex: 1 }} readOnly={ro} />
-                </div>
+          <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 11 }}>
+            <thead>
+              <tr>
+                <th style={{ border: "1px solid #000", width: 24, padding: "3px 4px" }}></th>
+                <th style={{ border: "1px solid #000", padding: "3px 8px", textAlign: "left", fontWeight: 700 }}>Institution</th>
+                <th style={{ border: "1px solid #000", padding: "3px 8px", textAlign: "left", fontWeight: 700, width: 90 }}>Date</th>
+                <th style={{ border: "1px solid #000", padding: "3px 8px", textAlign: "left", fontWeight: 700 }}>Qualification Received</th>
+              </tr>
+            </thead>
+            <tbody>
+              {quals.map((q, i) => (
+                <tr key={i}>
+                  <td style={{ border: "1px solid #000", padding: "2px 4px", textAlign: "center", fontWeight: 700 }}>
+                    {["i.", "ii.", "iii."][i]}
+                  </td>
+                  <td className="sod-td-input">
+                    <F value={q.institution} onChange={(v) => updateQual(i, "institution", v)} style={{ width: "100%" }} readOnly={ro} placeholder="e.g. UNILAG" />
+                  </td>
+                  <td className="sod-td-input">
+                    <F value={q.date} onChange={(v) => updateQual(i, "date", v)} style={{ width: "100%" }} readOnly={ro} placeholder="e.g. 2018" />
+                  </td>
+                  <td className="sod-td-input">
+                    <F value={q.qualificationReceived} onChange={(v) => updateQual(i, "qualificationReceived", v)} style={{ width: "100%" }} readOnly={ro} placeholder="e.g. B.Sc." />
+                  </td>
+                </tr>
               ))}
-            </div>
-          </div>
+            </tbody>
+          </table>
         </div>{/* end page 1 */}
 
         {/* ════════════════════════════════════════════════════════════════
@@ -739,7 +794,7 @@ export default function SodFormCore({
           {/* 12. Places of worship */}
           <div style={{ marginBottom: 14 }}>
             <div style={{ marginBottom: 8, fontSize: 12 }}>
-              12. List your place(s) of worship for the past three years
+              12. List your place(s) of worship for the past five years
             </div>
             <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 11 }}>
               <thead>
@@ -747,7 +802,7 @@ export default function SodFormCore({
                   <th style={{ border: "1px solid #000", width: 24, padding: "3px 4px" }}></th>
                   <th style={{ border: "1px solid #000", padding: "3px 8px", textAlign: "center", fontWeight: 700 }}>Name</th>
                   <th style={{ border: "1px solid #000", padding: "3px 8px", textAlign: "center", fontWeight: 700 }}>Address</th>
-                  <th style={{ border: "1px solid #000", padding: "3px 8px", textAlign: "center", fontWeight: 700, width: 70 }}>Date</th>
+                  <th style={{ border: "1px solid #000", padding: "3px 8px", textAlign: "center", fontWeight: 700, width: 80 }}>Date</th>
                 </tr>
               </thead>
               <tbody>
@@ -763,7 +818,7 @@ export default function SodFormCore({
                       <F value={row.address} onChange={(v) => updateWp(i, "address", v)} style={{ width: "100%" }} readOnly={ro} />
                     </td>
                     <td className="sod-td-input">
-                      <F value={row.date} onChange={(v) => updateWp(i, "date", v)} style={{ width: "100%" }} readOnly={ro} />
+                      <F value={row.date} onChange={(v) => updateWp(i, "date", v)} style={{ width: "100%" }} readOnly={ro} placeholder="e.g. 2020–2023" />
                     </td>
                   </tr>
                 ))}
@@ -780,7 +835,7 @@ export default function SodFormCore({
               <thead>
                 <tr>
                   <th style={{ border: "1px solid #000", width: 24, padding: "3px 4px" }}></th>
-                  <th style={{ border: "1px solid #000", padding: "3px 8px", textAlign: "center", fontWeight: 700 }}>Name</th>
+                  <th style={{ border: "1px solid #000", padding: "3px 8px", textAlign: "center", fontWeight: 700 }}>Church Name</th>
                   <th style={{ border: "1px solid #000", padding: "3px 8px", textAlign: "center", fontWeight: 700 }}>Position Held</th>
                 </tr>
               </thead>
@@ -805,46 +860,41 @@ export default function SodFormCore({
           {/* 14 onwards */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <PairedRow
-              left={{ label: "14. Date of Salvation:", value: salvationDate, onChange: setSalvationDate }}
-              right={{ label: "13b. Where:", value: salvationWhere, onChange: setSalvationWhere }}
+              left={{  label: "14. Salvation Date:", value: salvationDate, onChange: setSalvationDate, required: true }}
+              right={{ label: "Where:", value: salvationWhere, onChange: setSalvationWhere, required: true }}
               readOnly={ro}
             />
 
             <PairedRow
-              left={{ label: "15. Date of Water Baptism by Immersion:", value: waterBaptismDate, onChange: setWaterBaptismDate }}
-              right={{ label: "14b. Church:", value: waterBaptismChurch, onChange: setWaterBaptismChurch }}
+              left={{  label: "15. Water Baptism Date (by Immersion):", value: waterBaptismDate, onChange: setWaterBaptismDate, required: true }}
+              right={{ label: "Church:", value: waterBaptismChurch, onChange: setWaterBaptismChurch, required: true }}
               readOnly={ro}
             />
 
-            <FullRow
-              label="16. Date of Baptism in the Holy Ghost with the evidence of speaking in tongues:"
-              value={holyGhostDate}
-              onChange={setHolyGhostDate}
+            <PairedRow
+              left={{  label: "16. Holy Spirit Baptism Date (with speaking in tongues):", value: holyGhostDate, onChange: setHolyGhostDate, required: true }}
+              right={{ label: "Where:", value: holyGhostWhere, onChange: setHolyGhostWhere, required: true }}
               readOnly={ro}
             />
 
-            <FullRow label="17. Where:" value={holyGhostWhere} onChange={setHolyGhostWhere} readOnly={ro} />
+            <FullRow label="17. Current Parish Pastor Name:" value={pastorName} onChange={setPastorName} readOnly={ro} required />
 
-            <FullRow label="18. Name of your current Parish Pastor:" value={pastorName} onChange={setPastorName} readOnly={ro} />
-
-            <FullRow label="19. Phone Number of your current Parish Pastor:" value={pastorPhone} onChange={setPastorPhone} readOnly={ro} />
+            <FullRow label="18. Current Parish Pastor Phone Number:" value={pastorPhone} onChange={setPastorPhone} readOnly={ro} />
 
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              <FullRow label="20. Your Activity/Department in your Current Parish:" value={activity1} onChange={setActivity1} readOnly={ro} />
+              <FullRow label="19. Your Activity / Department in your Current Parish:" value={activity1} onChange={setActivity1} readOnly={ro} />
               <F value={activity2} onChange={setActivity2} style={{ width: "100%" }} readOnly={ro} />
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <span>
-                21. Are you currently running or do you intend to run another training alongside with SOD if admitted as student?
-              </span>
+              <span>20. Are you currently running or do you intend to run another training alongside SOD?</span>
               <Chk label="Yes" checked={otherTraining === "yes"} onChange={() => setOtherTraining(otherTraining === "yes" ? "" : "yes")} readOnly={ro} />
               <Chk label="No"  checked={otherTraining === "no"}  onChange={() => setOtherTraining(otherTraining === "no"  ? "" : "no")}  readOnly={ro} />
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-              <span>22. Does your Current Parish Pastor know you:</span>
-              {["Closely", "Intimately", "just as a member"].map((opt) => (
+              <span>21. Does your Current Parish Pastor know you:</span>
+              {["Closely", "Intimately", "Just as a member"].map((opt) => (
                 <Chk key={opt} label={opt} checked={pastorKnows === opt} onChange={() => setPastorKnows(pastorKnows === opt ? "" : opt)} readOnly={ro} />
               ))}
             </div>
@@ -857,19 +907,52 @@ export default function SodFormCore({
             <F value={otherInfo2} onChange={setOtherInfo2} style={{ width: "100%" }} readOnly={ro} />
           </div>
 
-          {/* ══ SECTION E ═══════════════════════════════════════════════ */}
-          <SectionHead>E.  Decleration:</SectionHead>
+          {/* ══ SECTION E — Declaration ═════════════════════════════════ */}
+          <SectionHead>E.  Declaration:</SectionHead>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
             <span>I,</span>
             <F value={declName} onChange={setDeclName} style={{ flex: 1 }} readOnly={ro} />
             <span style={{ whiteSpace: "nowrap" }}> of</span>
             <F value={declOf} onChange={setDeclOf} style={{ flex: 1 }} readOnly={ro} />
           </div>
-          <p style={{ fontSize: 12, lineHeight: 1.7, margin: 0 }}>
-            Hereby promised that if taken as S.O.D student, will abide by the rules and regulations of the
-            School of Disciples, to obey the Authorities of the school and to pray for them. I also promised
-            not to be a stumbling block in the way of my fellow student.
+          <p style={{ fontSize: 12, lineHeight: 1.7, margin: "0 0 12px 0" }}>
+            Hereby promise that if taken as an S.O.D student, I will abide by the rules and regulations of
+            the School of Disciples, obey the Authorities of the school and pray for them. I also promise
+            not to be a stumbling block in the way of my fellow students.
           </p>
+
+          {/* Consent checkbox */}
+          {mode !== "view" && (
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: ro ? "default" : "pointer", fontSize: 12 }}>
+                <input
+                  type="checkbox"
+                  checked={mode === "blank" ? false : consent}
+                  onChange={ro ? undefined : () => setConsent((p) => !p)}
+                  readOnly={ro}
+                  style={{ width: 14, height: 14, marginTop: 2, cursor: ro ? "default" : "pointer",
+                           accentColor: "#000080" }}
+                />
+                <span>
+                  I confirm that the information provided above is true and correct, and I consent to this
+                  application being processed by the school administration.{" "}
+                  {!ro && <span style={{ color: "red" }}>*</span>}
+                </span>
+              </label>
+            </div>
+          )}
+
+          {/* Signature line */}
+          <div style={{ display: "flex", gap: 48, marginTop: 16 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ borderBottom: "1px solid #000", height: 30 }} />
+              <div style={{ fontSize: 10, textAlign: "center", marginTop: 3 }}>Signature</div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ borderBottom: "1px solid #000", height: 30 }} />
+              <div style={{ fontSize: 10, textAlign: "center", marginTop: 3 }}>Date</div>
+            </div>
+          </div>
 
           {/* ══ SECTION F ═══════════════════════════════════════════════ */}
           <SectionHead>F.  Official Remarks:</SectionHead>

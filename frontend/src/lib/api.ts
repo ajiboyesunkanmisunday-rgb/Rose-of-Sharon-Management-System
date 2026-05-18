@@ -2797,6 +2797,10 @@ export interface FeatureStatResponse {
 export interface CountStatisticsResponse {
   totalCount: number;
 }
+export interface PercentStatisticsResponse {
+  percentage: number;
+  count?: number;
+}
 
 export async function getTotalMembers(): Promise<CountStatisticsResponse> {
   return apiFetch<CountStatisticsResponse>("/api/v1/users/total-members");
@@ -2871,6 +2875,88 @@ export async function getMediumOfInvitationStats(
 ): Promise<FeatureStatResponse> {
   return apiFetch<FeatureStatResponse>(
     `/api/v1/users/medium-of-invitation-statistics-count?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`,
+  );
+}
+
+export async function getMaleVsFemale(
+  startTime: string,
+  endTime: string
+): Promise<FeatureStatResponse> {
+  return apiFetch<FeatureStatResponse>(
+    `/api/v1/users/male-vs-female?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`
+  );
+}
+
+export async function getGuestConversionStatistics(
+  startTime: string,
+  endTime: string
+): Promise<FeatureStatResponse> {
+  return apiFetch<FeatureStatResponse>(
+    `/api/v1/users/guest-conversion-statistics?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`
+  );
+}
+
+export async function getFirstTimerToSecondTimerRate(
+  startTime: string,
+  endTime: string
+): Promise<PercentStatisticsResponse> {
+  return apiFetch<PercentStatisticsResponse>(
+    `/api/v1/users/first-timer-to-second-timer-rate?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`
+  );
+}
+
+export async function getFirstTimerToMemberRate(
+  startTime: string,
+  endTime: string
+): Promise<PercentStatisticsResponse> {
+  return apiFetch<PercentStatisticsResponse>(
+    `/api/v1/users/first-timer-to-member-rate?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`
+  );
+}
+
+export async function getInactiveMemberStatistics(
+  anyTime: string
+): Promise<FeatureStatResponse> {
+  return apiFetch<FeatureStatResponse>(
+    `/api/v1/users/inactive-member-statistics?anyTime=${encodeURIComponent(anyTime)}`
+  );
+}
+
+export async function getBirthdayStatistics(): Promise<FeatureStatResponse> {
+  return apiFetch<FeatureStatResponse>("/api/v1/users/birthday-statistics");
+}
+
+export async function getWeddingStatistics(): Promise<FeatureStatResponse> {
+  return apiFetch<FeatureStatResponse>("/api/v1/users/wedding-statistics");
+}
+
+export async function getTotalFiveGroups(): Promise<FeatureStatResponse> {
+  return apiFetch<FeatureStatResponse>("/api/v1/groups/total-five-groups");
+}
+
+export async function getBelieverClassStageStatistics(
+  startTime: string,
+  endTime: string
+): Promise<FeatureStatResponse> {
+  return apiFetch<FeatureStatResponse>(
+    `/api/v1/new-converts/believer-class-stage-statistics?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`
+  );
+}
+
+export async function getCelebrationVsTestimony(
+  anyTime: string
+): Promise<unknown[]> {
+  return apiFetch<unknown[]>(
+    `/api/v1/testimonies/celebration-vs-testimony?anyTime=${encodeURIComponent(anyTime)}`
+  );
+}
+
+export async function getTotalSpecialEvents(
+  startTime: string,
+  endTime: string
+): Promise<CountStatisticsResponse> {
+  return apiFetch<CountStatisticsResponse>(
+    `/api/v1/events/total-special-events?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`
   );
 }
 
