@@ -2847,25 +2847,8 @@ export async function deleteSodBulk(
   });
 }
 
-export async function markSodClassAttendance(
-  id: string,
-  classNumber: number,
-): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(
-    `/api/v1/school-of-disciples/${id}/mark-class-attendance`,
-    { method: "POST", body: JSON.stringify({ classNumber }) },
-  );
-}
-
-export async function markSodExamAttendance(
-  id: string,
-  classNumber: number,
-): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(
-    `/api/v1/school-of-disciples/${id}/mark-exam-attendance`,
-    { method: "POST", body: JSON.stringify({ classNumber }) },
-  );
-}
+// markSodClassAttendance / markSodExamAttendance removed — those endpoints do not
+// exist in the backend.  Use createAttendanceRecord() (attendance-sheets API) instead.
 
 // ─── Report / Statistics Endpoints ──────────────────────────────────────────
 
