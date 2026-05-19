@@ -16,13 +16,9 @@ const CATEGORY_OPTIONS = [
   { label: "Thumbnail", value: "THUMBNAIL" },
 ];
 
-// Images are capped at 10 MB on the server; audio/video files can be larger.
-const IMAGE_MAX_BYTES   = 10  * 1024 * 1024; // 10 MB
+// All media types allowed up to 200 MB — no per-category restriction.
 const MEDIA_MAX_BYTES   = 200 * 1024 * 1024; // 200 MB
 const DESC_MAX_CHARS    = 500;
-
-// Categories that are typically audio/video and should allow large files
-const LARGE_MEDIA_CATS  = new Set(["SERMON", "PODCAST", "VIDEOS"]);
 
 const inputClass =
   "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
@@ -42,25 +38,18 @@ export default function UploadMediaPage() {
   const [saving,       setSaving]       = useState(false);
   const [error,        setError]        = useState("");
 
-  const maxBytes = LARGE_MEDIA_CATS.has(category) ? MEDIA_MAX_BYTES : IMAGE_MAX_BYTES;
-  const maxLabel = LARGE_MEDIA_CATS.has(category) ? "200 MB" : "10 MB";
-
   const handleCategoryChange = (val: string) => {
     setCategory(val);
     setError("");
     setMediaFile(null);
-    // Sermons/podcasts default to external link UI so users are aware of the option
-    if (LARGE_MEDIA_CATS.has(val) && !useYoutube) {
-      // don't auto-switch; let user choose
-    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    if (file && file.size > maxBytes) {
+    if (file && file.size > MEDIA_MAX_BYTES) {
       setError(
-        `"${file.name}" is ${(file.size / 1_048_576).toFixed(1)} MB — the current limit is ${maxLabel}. ` +
-        `${LARGE_MEDIA_CATS.has(category) ? "Please compress the video or use a YouTube/external link instead." : "Please compress the image before uploading."}`,
+        `"${file.name}" is ${(file.size / 1_048_576).toFixed(1)} MB — the maximum allowed size is 200 MB. ` +
+        `Please compress the file or use a YouTube/external link instead.`,
       );
       e.target.value = "";
       setMediaFile(null);
@@ -224,7 +213,7 @@ export default function UploadMediaPage() {
             <div>
               <label className={labelClass}>
                 Upload File <span className="text-red-500">*</span>
-                <span className="ml-1 text-xs font-normal text-[#6B7280]">(max {maxLabel})</span>
+                <span className="ml-1 text-xs font-normal text-[#6B7280]">(max 200 MB)</span>
               </label>
               <input
                 type="file"
@@ -238,19 +227,17 @@ export default function UploadMediaPage() {
                   Selected: {mediaFile.name} ({(mediaFile.size / 1_048_576).toFixed(1)} MB)
                 </p>
               )}
-              {LARGE_MEDIA_CATS.has(category) && (
-                <p className="mt-1.5 text-xs text-[#6B7280]">
-                  Tip: If your sermon or recording is available on YouTube, you can use the
-                  <button
-                    type="button"
-                    onClick={() => { setUseYoutube(true); setMediaFile(null); }}
-                    className="mx-1 font-medium text-[#000080] underline"
-                  >
-                    YouTube / External Link
-                  </button>
-                  option instead of uploading a large file.
-                </p>
-              )}
+              <p className="mt-1.5 text-xs text-[#6B7280]">
+                Tip: For sermons or recordings available on YouTube, use the{" "}
+                <button
+                  type="button"
+                  onClick={() => { setUseYoutube(true); setMediaFile(null); }}
+                  className="font-medium text-[#000080] underline"
+                >
+                  YouTube / External Link
+                </button>{" "}
+                option instead of uploading a large file.
+              </p>
             </div>
           )}
 
