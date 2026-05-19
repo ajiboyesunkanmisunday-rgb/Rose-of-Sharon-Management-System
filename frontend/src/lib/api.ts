@@ -1275,7 +1275,7 @@ export async function searchEvents(
 
 export async function cancelEvent(id: string): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(`/api/v1/events/${id}/cancel`, {
-    method: "PATCH",
+    method: "DELETE",
   });
 }
 
