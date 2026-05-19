@@ -245,8 +245,18 @@
   status = 200
 
 [[redirects]]
+  from   = "/trainings/workers/form/"
+  to     = "/trainings/workers/form/index.html"
+  status = 200
+
+[[redirects]]
   from   = "/trainings/sod/"
   to     = "/trainings/sod/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/sod/form/"
+  to     = "/trainings/sod/form/index.html"
   status = 200
 
 [[redirects]]
@@ -257,6 +267,11 @@
 [[redirects]]
   from   = "/trainings/rila/"
   to     = "/trainings/rila/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/settings/change-password/"
+  to     = "/settings/change-password/index.html"
   status = 200
 
 # ── Announcements ─────────────────────────────────────────────────────────────
