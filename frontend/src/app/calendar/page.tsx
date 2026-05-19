@@ -19,6 +19,10 @@ function eventColor(cat?: string) {
   return categoryColor[cat ?? ""] ?? "bg-green-600 text-white";
 }
 
+// Cancelled events get a distinct muted style regardless of category
+const CANCELLED_CLASSES =
+  "bg-gray-100 text-gray-400 border border-gray-300 line-through opacity-60";
+
 const LEGEND = [
   { label: "Service",         color: "bg-[#000080]" },
   { label: "Special Service", color: "bg-purple-600" },
@@ -26,6 +30,7 @@ const LEGEND = [
   { label: "Wedding",         color: "bg-pink-500"  },
   { label: "Funeral",         color: "bg-gray-500"  },
   { label: "Other",           color: "bg-green-600" },
+  { label: "Cancelled",       color: "bg-gray-100 border border-gray-300" },
 ];
 
 const DAYS        = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -163,8 +168,9 @@ export default function CalendarPage() {
 
   const todayISO = toISO(today.getFullYear(), today.getMonth(), today.getDate());
 
-  // Sidebar shows upcoming events from dedicated fetch (sorted, capped at 6)
+  // Sidebar shows upcoming non-cancelled events (sorted, capped at 6)
   const sidebarUpcoming = [...upcoming]
+    .filter(ev => !ev.isCanceled)
     .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""))
     .slice(0, 6);
 
@@ -257,7 +263,7 @@ export default function CalendarPage() {
             {LEGEND.map(item => (
               <div key={item.label} className="flex items-center gap-2">
                 <span className={`h-3 w-3 rounded-full ${item.color}`} />
-                <span className="text-xs text-[#374151]">{item.label}</span>
+                <span className={`text-xs ${item.label === "Cancelled" ? "text-gray-400 line-through" : "text-[#374151]"}`}>{item.label}</span>
               </div>
             ))}
           </div>
@@ -365,8 +371,8 @@ function MonthView({ currentYear, currentMonth, cells, todayISO, eventsByDate, l
                           <button
                             key={ev.id}
                             onClick={() => onEventClick(ev.id)}
-                            className={`block w-full truncate rounded px-1 py-0.5 text-left text-xs ${eventColor(ev.eventCategory)} transition-opacity hover:opacity-80`}
-                            title={ev.title}
+                            className={`block w-full truncate rounded px-1 py-0.5 text-left text-xs transition-opacity hover:opacity-80 ${ev.isCanceled ? CANCELLED_CLASSES : eventColor(ev.eventCategory)}`}
+                            title={ev.isCanceled ? `${ev.title} (Cancelled)` : ev.title}
                           >
                             {ev.startTime ? fmtEpoch(ev.startTime) + " " : ""}{ev.title}
                           </button>
@@ -468,11 +474,13 @@ function WeekView({ weekStart, eventsByDate, onPrev, onNext, onEventClick }: Wee
                 {hours.map(h => <div key={h} className="h-12 border-b border-[#F3F4F6]"/>)}
                 {dayEvents.map(ev => {
                   const hour = parseHour(ev.startTime);
+                  const colorClass = ev.isCanceled ? CANCELLED_CLASSES : eventColor(ev.eventCategory);
+                  const titleAttr = ev.isCanceled ? `${ev.title} (Cancelled)` : ev.title;
                   if (hour === null || hour < rangeStart || hour >= rangeEnd) {
                     return (
                       <button key={ev.id} onClick={() => onEventClick(ev.id)}
-                        className={`absolute left-0.5 right-0.5 top-0 truncate rounded px-1 py-0.5 text-left text-xs ${eventColor(ev.eventCategory)} hover:opacity-80`}
-                        title={ev.title}
+                        className={`absolute left-0.5 right-0.5 top-0 truncate rounded px-1 py-0.5 text-left text-xs ${colorClass} hover:opacity-80`}
+                        title={titleAttr}
                       >
                         {ev.title}
                       </button>
@@ -482,11 +490,12 @@ function WeekView({ weekStart, eventsByDate, onPrev, onNext, onEventClick }: Wee
                   return (
                     <button key={ev.id} onClick={() => onEventClick(ev.id)}
                       style={{top:`${top}px`, height:"44px"}}
-                      className={`absolute left-0.5 right-0.5 overflow-hidden rounded px-1.5 py-1 text-left text-xs ${eventColor(ev.eventCategory)} hover:opacity-80`}
-                      title={ev.title}
+                      className={`absolute left-0.5 right-0.5 overflow-hidden rounded px-1.5 py-1 text-left text-xs ${colorClass} hover:opacity-80`}
+                      title={titleAttr}
                     >
                       <div className="font-medium truncate">{ev.title}</div>
                       {ev.startTime && <div className="text-[10px] opacity-90">{fmtEpoch(ev.startTime)}</div>}
+                      {ev.isCanceled && <div className="text-[9px] font-semibold uppercase tracking-wide text-gray-400">Cancelled</div>}
                     </button>
                   );
                 })}
