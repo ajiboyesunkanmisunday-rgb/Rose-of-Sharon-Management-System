@@ -437,7 +437,8 @@ export default function SodFormCore({
       // Navigate to the list so the new record is immediately visible.
       setTimeout(() => router.push("/trainings/sod"), 1500);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Failed to submit. Please try again.");
+      const msg = err instanceof Error ? err.message : "Failed to submit. Please try again.";
+      setSubmitError(`${msg} (Check browser console → F12 → Console for the full server error.)`);
     } finally {
       setSubmitting(false);
       setUploading(false);
