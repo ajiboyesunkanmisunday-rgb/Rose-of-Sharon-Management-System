@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
@@ -38,10 +38,20 @@ export default function UploadMediaPage() {
   const [saving,       setSaving]       = useState(false);
   const [error,        setError]        = useState("");
 
+  // Ref used to programmatically reset the file input when switching to YouTube
+  // mode — without this the browser keeps showing the old filename even though
+  // mediaFile state has been cleared, causing the submit button to stay disabled.
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const clearFileInput = () => {
+    setMediaFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleCategoryChange = (val: string) => {
     setCategory(val);
     setError("");
-    setMediaFile(null);
+    clearFileInput();
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -195,7 +205,7 @@ export default function UploadMediaPage() {
               </button>
               <button
                 type="button"
-                onClick={() => { setUseYoutube(true); setMediaFile(null); setError(""); }}
+                onClick={() => { setUseYoutube(true); clearFileInput(); setError(""); }}
                 className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
                   useYoutube
                     ? "border-[#000080] bg-[#000080] text-white"
@@ -216,6 +226,7 @@ export default function UploadMediaPage() {
                 <span className="ml-1 text-xs font-normal text-[#6B7280]">(max 200 MB)</span>
               </label>
               <input
+                ref={fileInputRef}
                 type="file"
                 accept="audio/*,video/*,image/*"
                 onChange={handleFileChange}
@@ -231,7 +242,7 @@ export default function UploadMediaPage() {
                 Tip: For sermons or recordings available on YouTube, use the{" "}
                 <button
                   type="button"
-                  onClick={() => { setUseYoutube(true); setMediaFile(null); }}
+                  onClick={() => { setUseYoutube(true); clearFileInput(); }}
                   className="font-medium text-[#000080] underline"
                 >
                   YouTube / External Link
