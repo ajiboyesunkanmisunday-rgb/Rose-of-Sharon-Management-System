@@ -446,8 +446,11 @@ export default function SodFormCore({
 
       setSubmitSuccess(true);
       setSubmitError("");
-      // Navigate to the list so the new record is immediately visible.
-      setTimeout(() => router.push("/trainings/sod"), 1500);
+      // Redirect to the individual record view using the ID returned by the POST.
+      // The list endpoint (GET /api/v1/school-of-disciples) currently returns empty
+      // even after a successful submission — confirmed backend bug. Showing the
+      // individual record via GET /api/v1/school-of-disciples/{id} works correctly.
+      setTimeout(() => router.push(`/trainings/sod/form/?mode=view&id=${savedId}`), 1500);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to submit. Please try again.";
       setSubmitError(`${msg} (Check browser console → F12 → Console for the full server error.)`);
