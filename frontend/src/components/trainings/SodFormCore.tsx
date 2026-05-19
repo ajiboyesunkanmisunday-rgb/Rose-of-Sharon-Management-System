@@ -304,6 +304,12 @@ export default function SodFormCore({
     if (!surname.trim())      missing.push("Last Name");
     if (!countryCode.trim())  missing.push("Country Code");
     if (!phone.trim())        missing.push("Phone Number");
+    // Phone must contain at least one digit after stripping non-numeric characters
+    if (phone.trim() && !/\d/.test(phone)) missing.push("Phone Number (must contain digits)");
+    // Email, if provided, must be a valid format
+    const emailTrimmed = email.trim();
+    if (emailTrimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed))
+      missing.push("Email (invalid format — must be like name@example.com)");
     if (!dob.trim())          missing.push("Date of Birth");
     if (!nationality.trim())  missing.push("Nationality");
     if (!street.trim())       missing.push("Street Address");
@@ -383,9 +389,15 @@ export default function SodFormCore({
         firstName:         firstName.trim(),
         lastName:          surname.trim(),
         middleName:        middleName.trim() || undefined,
-        countryCode:       countryCode.trim(),
-        phoneNumber:       phone.trim(),
-        email:             email.trim() || undefined,
+        countryCode:       countryCode.trim().replace(/^\+/, ""), // strip any leading + from country code
+        phoneNumber:       (() => {
+          // Normalise to digits only. When a country code is present, strip the
+          // leading "0" that Nigerian (and many other) local numbers start with.
+          let n = phone.trim().replace(/\D/g, ""); // keep digits only
+          if (n.startsWith("0") && countryCode.trim()) n = n.slice(1);
+          return n;
+        })(),
+        email:             emailTrimmed || undefined,
         sex:               sexNorm as string | undefined,
         dateOfBirth:       dob.trim() || undefined,          // yyyy-mm-dd from date input
         maritalStatus:     marital ? (maritalMap[marital] ?? marital.toUpperCase()) : undefined,
