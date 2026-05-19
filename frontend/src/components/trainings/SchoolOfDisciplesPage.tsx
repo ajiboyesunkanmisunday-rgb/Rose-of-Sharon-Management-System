@@ -652,7 +652,7 @@ export default function SchoolOfDisciplesPage() {
             Download Blank Form
           </button>
           <button
-            onClick={load}
+            onClick={() => load(setFilter)}
             disabled={loading}
             className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:text-[#D97706] hover:border-[#D97706] disabled:opacity-50"
           >
