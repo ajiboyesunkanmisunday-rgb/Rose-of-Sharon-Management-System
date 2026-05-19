@@ -434,9 +434,8 @@ export default function SodFormCore({
 
       setSubmitSuccess(true);
       setSubmitError("");
-      // Backend list endpoint returns empty immediately after POST (confirmed backend bug).
-      // Redirect to the individual record view so the user can see their submission.
-      setTimeout(() => router.push(`/trainings/sod/form/?mode=view&id=${savedId}`), 1500);
+      // Navigate to the list so the new record is immediately visible.
+      setTimeout(() => router.push("/trainings/sod"), 1500);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Failed to submit. Please try again.");
     } finally {

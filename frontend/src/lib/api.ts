@@ -2791,11 +2791,10 @@ export interface CreateSchoolOfDisciplesRequest {
 export async function getSchoolOfDisciples(
   pageNo = 0,
   pageSize = 20,
-  set?: string,
 ): Promise<CustomPageResponse<SchoolOfDisciplesResponse>> {
-  const qs = set ? `&set=${encodeURIComponent(set)}` : "";
+  // NOTE: backend does not support a "set" query param — filtering by set is done client-side.
   return apiFetch<CustomPageResponse<SchoolOfDisciplesResponse>>(
-    `/api/v1/school-of-disciples?pageNo=${pageNo}&pageSize=${pageSize}${qs}`,
+    `/api/v1/school-of-disciples?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
