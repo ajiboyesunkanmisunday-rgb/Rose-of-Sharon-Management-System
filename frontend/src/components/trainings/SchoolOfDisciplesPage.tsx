@@ -485,7 +485,8 @@ export default function SchoolOfDisciplesPage() {
   const [loading,           setLoading]           = useState(true);
   const [error,             setError]             = useState("");
   const [search,            setSearch]            = useState("");
-  const [setFilter,         setSetFilter]         = useState("");
+  // Default to the current year — backend requires `set` to return data.
+  const [setFilter,         setSetFilter]         = useState(String(new Date().getFullYear()));
   const [page,              setPage]              = useState(1);
   const [selected,          setSelected]          = useState<Set<string>>(new Set());
   const [graduating,        setGraduating]        = useState(false);
@@ -493,16 +494,18 @@ export default function SchoolOfDisciplesPage() {
   const [attendanceStudent, setAttendanceStudent] = useState<SchoolOfDisciplesResponse | null>(null);
   const [successMsg,        setSuccessMsg]        = useState("");
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (activeSet: string) => {
     setLoading(true);
     setError("");
     try {
-      const first = await getSchoolOfDisciples(0, 200);
+      const first = await getSchoolOfDisciples(0, 200, activeSet || undefined);
       const rows = [...(first.content ?? [])];
       const totalPages = Math.min(first.totalPages ?? 1, 10);
       if (totalPages > 1) {
         const rest = await Promise.all(
-          Array.from({ length: totalPages - 1 }, (_, i) => getSchoolOfDisciples(i + 1, 200))
+          Array.from({ length: totalPages - 1 }, (_, i) =>
+            getSchoolOfDisciples(i + 1, 200, activeSet || undefined)
+          )
         );
         rest.forEach((r) => rows.push(...(r.content ?? [])));
       }
@@ -514,7 +517,8 @@ export default function SchoolOfDisciplesPage() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  // Reload from API whenever the set filter changes (set drives the backend query).
+  useEffect(() => { load(setFilter); }, [load, setFilter]);
 
   const availableSets = useMemo(() => {
     const sets = new Set<string>();
@@ -524,7 +528,7 @@ export default function SchoolOfDisciplesPage() {
 
   const filtered = useMemo(() => {
     let list = allStudents;
-    if (setFilter) list = list.filter((s) => s.set === setFilter);
+    // Set filtering is done by the API — only apply client-side search here.
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(
@@ -568,7 +572,7 @@ export default function SchoolOfDisciplesPage() {
       await markSodAsGraduated([...selected]);
       setSelected(new Set());
       flash(`${selected.size} student${selected.size > 1 ? "s" : ""} marked as graduated.`);
-      await load();
+      await load(setFilter);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to mark as graduated.");
     } finally {
@@ -579,7 +583,7 @@ export default function SchoolOfDisciplesPage() {
   const handleSaveRemark = async (id: string, text: string) => {
     await giveSodOfficialRemark(id, text);
     flash("Official remark saved.");
-    await load();
+    await load(setFilter);
   };
 
   const handleSaveAttendance = async (trainingEventId: string, admissionNo: string) => {
@@ -589,11 +593,11 @@ export default function SchoolOfDisciplesPage() {
       category: "SCHOOL_OF_DISCIPLES",
     });
     flash("Attendance marked successfully.");
-    await load();
+    await load(setFilter);
   };
 
   const handleSearch = async () => {
-    if (!search.trim()) { await load(); return; }
+    if (!search.trim()) { await load(setFilter); return; }
     setLoading(true);
     setError("");
     try {
@@ -705,21 +709,27 @@ export default function SchoolOfDisciplesPage() {
           />
         </div>
 
-        {availableSets.length > 0 && (
-          <div className="relative">
-            <select
-              value={setFilter}
-              onChange={(e) => { setSetFilter(e.target.value); setPage(1); }}
-              className="appearance-none rounded-lg border border-[#E5E7EB] bg-white pl-3 pr-8 py-2.5 text-sm text-[#374151] outline-none focus:border-[#D97706]"
-            >
-              <option value="">All sets</option>
-              {availableSets.map((s) => (
-                <option key={s} value={s}>Set {s}</option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
-          </div>
-        )}
+        {/* Set filter — always visible; drives the API query */}
+        <div className="relative">
+          <select
+            value={setFilter}
+            onChange={(e) => { setSetFilter(e.target.value); setPage(1); }}
+            className="appearance-none rounded-lg border border-[#E5E7EB] bg-white pl-3 pr-8 py-2.5 text-sm text-[#374151] outline-none focus:border-[#D97706]"
+          >
+            {/* Show loaded set + surrounding years so user can switch cohorts */}
+            {Array.from(
+              new Set([
+                ...availableSets,
+                String(new Date().getFullYear() - 1),
+                String(new Date().getFullYear()),
+                String(new Date().getFullYear() + 1),
+              ])
+            ).sort().map((s) => (
+              <option key={s} value={s}>Set {s}</option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
+        </div>
 
         {selected.size > 0 && (
           <button
