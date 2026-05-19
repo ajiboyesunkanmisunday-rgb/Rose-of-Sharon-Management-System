@@ -2088,7 +2088,7 @@ export async function uploadMedia(fields: {
     let errorMessage = `Upload failed (${response.status})`;
     try {
       const raw = await response.text();
-      if (raw) {
+      if (raw && raw.trim().length > 0) {
         try {
           const errBody = JSON.parse(raw);
           const msg: string = errBody?.message ?? errBody?.error ?? "";
@@ -2110,6 +2110,11 @@ export async function uploadMedia(fields: {
             throw e;
           errorMessage = raw;
         }
+      } else if (response.status === 400 || response.status === 413) {
+        // Empty body on 400/413 is the fingerprint of Spring Boot's multipart
+        // size limit being exceeded — the server rejects the body before parsing.
+        errorMessage =
+          "FILE_TOO_LARGE_FOR_SERVER";
       }
     } catch (e) {
       if ((e as Error).message === "Session expired. Please log in again.")
