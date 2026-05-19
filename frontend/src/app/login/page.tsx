@@ -25,8 +25,23 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await loginUser({ email, password });
-      router.push("/dashboard");
+      const user = await loginUser({ email, password });
+
+      // Check if this is a first-time admin login (set by the admins management page).
+      let redirectTo = "/dashboard";
+      try {
+        const pending: string[] = JSON.parse(
+          localStorage.getItem("rosms_first_login_pending") ?? "[]",
+        );
+        if (user.id && pending.includes(user.id)) {
+          // Remove from pending list then redirect to password change
+          const updated = pending.filter((uid) => uid !== user.id);
+          localStorage.setItem("rosms_first_login_pending", JSON.stringify(updated));
+          redirectTo = "/settings/change-password?firstLogin=1";
+        }
+      } catch { /* localStorage unavailable */ }
+
+      router.push(redirectTo);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Login failed. Please try again.";

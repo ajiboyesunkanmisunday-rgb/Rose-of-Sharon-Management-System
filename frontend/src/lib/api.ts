@@ -1993,14 +1993,19 @@ export async function deleteMediaBulk(
 }
 
 /**
- * Upload a media item. Uses multipart/form-data so the browser sets the
- * Content-Type header automatically (with the correct boundary).
+ * Upload a media item.
+ *
+ * Per OpenAPI spec, UploadMediaRequest metadata (title, description, type,
+ * category, size, etc.) is passed as URL query parameters.  Only the binary
+ * file part ("multipartFile") goes in the multipart form body.  This avoids
+ * 400 errors caused by field-binding mismatches in the Spring Boot controller.
  */
 export async function uploadMedia(fields: {
   title: string;
   description?: string;
   category: string;
   file: File;
+  youtubeLink?: string; // optional external link stored in description
 }): Promise<MediaResponse> {
   const token = getToken();
   if (token && isTokenExpired(token)) {
@@ -2009,33 +2014,39 @@ export async function uploadMedia(fields: {
     throw new Error("Session expired. Please log in again.");
   }
 
+  // Build description: prepend YouTube link when provided
+  let description = fields.description ?? "";
+  if (fields.youtubeLink) {
+    const linkPrefix = `[External Link]: ${fields.youtubeLink}`;
+    description = description
+      ? `${linkPrefix}\n\n${description}`
+      : linkPrefix;
+  }
+
+  // Metadata goes in query-string parameters (matches OpenAPI spec)
+  const params = new URLSearchParams({
+    title: fields.title,
+    type: fields.category,
+    category: fields.category,
+    size: String(fields.file.size),
+  });
+  if (description) params.set("description", description);
+
+  // Only the binary file goes in the FormData body
   const form = new FormData();
-  form.append("title", fields.title);
-  if (fields.description) form.append("description", fields.description);
-  // UploadMediaRequest DTO has both "type" and "category" fields — send both.
-  form.append("type", fields.category);
-  form.append("category", fields.category);
-  // "size" is an int64 in the DTO — send file size in bytes.
-  form.append("size", String(fields.file ? fields.file.size : 0));
-  // DTO field name for the file is "multipartFile" (confirmed from OpenAPI spec).
-  if (fields.file) form.append("multipartFile", fields.file);
+  form.append("multipartFile", fields.file);
 
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  // Route through the Netlify reverse-proxy (/api/* → api.rccgros.org/api/:splat)
-  // so the request stays same-origin and no CORS preflight is triggered.
-  // Do NOT set Content-Type — let the browser set it automatically with the
-  // correct multipart boundary for the FormData body.
   let response: Response;
   try {
-    response = await fetch("/api/v1/media", {
+    response = await fetch(`/api/v1/media?${params.toString()}`, {
       method: "POST",
       headers,
       body: form,
     });
   } catch {
-    // TypeError — network failure
     throw new Error(
       "Media upload failed — please check your connection and try again.",
     );

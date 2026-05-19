@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import { uploadMedia } from "@/lib/api";
+import { Link2, Upload } from "lucide-react";
 
 const CATEGORY_OPTIONS = [
   { label: "Sermon",    value: "SERMON"    },
@@ -15,8 +16,13 @@ const CATEGORY_OPTIONS = [
   { label: "Thumbnail", value: "THUMBNAIL" },
 ];
 
-// 10 MB — backend Spring Boot default multipart limit
-const MAX_FILE_BYTES = 10 * 1024 * 1024;
+// Images are capped at 10 MB on the server; audio/video files can be larger.
+const IMAGE_MAX_BYTES   = 10  * 1024 * 1024; // 10 MB
+const MEDIA_MAX_BYTES   = 200 * 1024 * 1024; // 200 MB
+const DESC_MAX_CHARS    = 500;
+
+// Categories that are typically audio/video and should allow large files
+const LARGE_MEDIA_CATS  = new Set(["SERMON", "PODCAST", "VIDEOS"]);
 
 const inputClass =
   "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
@@ -27,19 +33,34 @@ const labelClass = "mb-1 block text-sm font-medium text-[#374151]";
 export default function UploadMediaPage() {
   const router = useRouter();
 
-  const [title,       setTitle]       = useState("");
-  const [category,    setCategory]    = useState("");
-  const [description, setDescription] = useState("");
-  const [mediaFile,   setMediaFile]   = useState<File | null>(null);
-  const [saving,      setSaving]      = useState(false);
-  const [error,       setError]       = useState("");
+  const [title,        setTitle]        = useState("");
+  const [category,     setCategory]     = useState("");
+  const [description,  setDescription]  = useState("");
+  const [mediaFile,    setMediaFile]     = useState<File | null>(null);
+  const [useYoutube,   setUseYoutube]   = useState(false);
+  const [youtubeLink,  setYoutubeLink]  = useState("");
+  const [saving,       setSaving]       = useState(false);
+  const [error,        setError]        = useState("");
+
+  const maxBytes = LARGE_MEDIA_CATS.has(category) ? MEDIA_MAX_BYTES : IMAGE_MAX_BYTES;
+  const maxLabel = LARGE_MEDIA_CATS.has(category) ? "200 MB" : "10 MB";
+
+  const handleCategoryChange = (val: string) => {
+    setCategory(val);
+    setError("");
+    setMediaFile(null);
+    // Sermons/podcasts default to external link UI so users are aware of the option
+    if (LARGE_MEDIA_CATS.has(val) && !useYoutube) {
+      // don't auto-switch; let user choose
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    if (file && file.size > MAX_FILE_BYTES) {
+    if (file && file.size > maxBytes) {
       setError(
-        `"${file.name}" is ${(file.size / 1_048_576).toFixed(1)} MB — the server only accepts files up to 10 MB. ` +
-        `Please compress the file or contact the admin to increase the upload limit.`
+        `"${file.name}" is ${(file.size / 1_048_576).toFixed(1)} MB — the current limit is ${maxLabel}. ` +
+        `${LARGE_MEDIA_CATS.has(category) ? "Please compress the video or use a YouTube/external link instead." : "Please compress the image before uploading."}`,
       );
       e.target.value = "";
       setMediaFile(null);
@@ -53,10 +74,25 @@ export default function UploadMediaPage() {
     e.preventDefault();
     if (!title.trim() || !category) return;
 
-    if (!mediaFile) {
+    if (!useYoutube && !mediaFile) {
       setError("Please select a file to upload.");
       return;
     }
+    if (useYoutube && !youtubeLink.trim()) {
+      setError("Please enter a YouTube or external link.");
+      return;
+    }
+    if (description.length > DESC_MAX_CHARS) {
+      setError(`Description must be ${DESC_MAX_CHARS} characters or fewer.`);
+      return;
+    }
+
+    // When using an external link with no file, create a tiny placeholder blob
+    const fileToUpload = mediaFile ?? new File(
+      [`[External Link]: ${youtubeLink.trim()}`],
+      "external_link.txt",
+      { type: "text/plain" },
+    );
 
     setSaving(true);
     setError("");
@@ -65,14 +101,19 @@ export default function UploadMediaPage() {
         title:       title.trim(),
         description: description.trim() || undefined,
         category,
-        file:        mediaFile,
+        file:        fileToUpload,
+        youtubeLink: useYoutube ? youtubeLink.trim() : undefined,
       });
       router.push("/media");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Upload failed.";
-      if (msg.includes("413") || msg.toLowerCase().includes("too large") || msg.toLowerCase().includes("payload")) {
+      if (
+        msg.includes("413") ||
+        msg.toLowerCase().includes("too large") ||
+        msg.toLowerCase().includes("payload")
+      ) {
         setError(
-          "File too large for the server (max ~10 MB). Please compress the file before uploading."
+          `File too large for the server. Please compress the file or use a YouTube/external link instead.`,
         );
       } else {
         setError(msg);
@@ -117,7 +158,7 @@ export default function UploadMediaPage() {
               <label className={labelClass}>Media Type <span className="text-red-500">*</span></label>
               <select
                 value={category}
-                onChange={(e) => { setCategory(e.target.value); setError(""); }}
+                onChange={(e) => { handleCategoryChange(e.target.value); }}
                 className={selectClass}
                 required
               >
@@ -129,44 +170,116 @@ export default function UploadMediaPage() {
             </div>
           </div>
 
-          {/* Description */}
+          {/* Description with character counter */}
           <div>
-            <label className={labelClass}>Description</label>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="text-sm font-medium text-[#374151]">Description</label>
+              <span className={`text-xs ${description.length > DESC_MAX_CHARS ? "text-red-500 font-semibold" : "text-[#9CA3AF]"}`}>
+                {description.length}/{DESC_MAX_CHARS}
+              </span>
+            </div>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Brief description of the media content"
               rows={3}
-              className={inputClass}
+              maxLength={DESC_MAX_CHARS}
+              className={`${inputClass} ${description.length >= DESC_MAX_CHARS ? "border-red-300 focus:border-red-400 focus:ring-red-400" : ""}`}
             />
           </div>
 
-          {/* File upload */}
+          {/* Upload method toggle */}
           <div>
-            <label className={labelClass}>
-              Upload File <span className="text-red-500">*</span>
-              <span className="ml-1 text-xs font-normal text-[#6B7280]">(max 10 MB)</span>
-            </label>
-            <input
-              type="file"
-              accept="audio/*,video/*,image/*"
-              onChange={handleFileChange}
-              required
-              className="block w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] file:mr-3 file:rounded-lg file:border-0 file:bg-[#000080] file:px-3 file:py-1 file:text-xs file:font-medium file:text-white"
-            />
-            {mediaFile && (
-              <p className="mt-1 text-xs text-[#6B7280]">
-                Selected: {mediaFile.name} ({(mediaFile.size / 1_048_576).toFixed(1)} MB)
-              </p>
-            )}
+            <label className={labelClass}>Upload Method <span className="text-red-500">*</span></label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setUseYoutube(false); setError(""); }}
+                className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                  !useYoutube
+                    ? "border-[#000080] bg-[#000080] text-white"
+                    : "border-[#E5E7EB] text-[#374151] hover:border-[#000080] hover:text-[#000080]"
+                }`}
+              >
+                <Upload className="h-4 w-4" />
+                Upload File
+              </button>
+              <button
+                type="button"
+                onClick={() => { setUseYoutube(true); setMediaFile(null); setError(""); }}
+                className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                  useYoutube
+                    ? "border-[#000080] bg-[#000080] text-white"
+                    : "border-[#E5E7EB] text-[#374151] hover:border-[#000080] hover:text-[#000080]"
+                }`}
+              >
+                <Link2 className="h-4 w-4" />
+                YouTube / External Link
+              </button>
+            </div>
           </div>
+
+          {/* File upload */}
+          {!useYoutube && (
+            <div>
+              <label className={labelClass}>
+                Upload File <span className="text-red-500">*</span>
+                <span className="ml-1 text-xs font-normal text-[#6B7280]">(max {maxLabel})</span>
+              </label>
+              <input
+                type="file"
+                accept="audio/*,video/*,image/*"
+                onChange={handleFileChange}
+                required={!useYoutube}
+                className="block w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] file:mr-3 file:rounded-lg file:border-0 file:bg-[#000080] file:px-3 file:py-1 file:text-xs file:font-medium file:text-white"
+              />
+              {mediaFile && (
+                <p className="mt-1 text-xs text-[#6B7280]">
+                  Selected: {mediaFile.name} ({(mediaFile.size / 1_048_576).toFixed(1)} MB)
+                </p>
+              )}
+              {LARGE_MEDIA_CATS.has(category) && (
+                <p className="mt-1.5 text-xs text-[#6B7280]">
+                  Tip: If your sermon or recording is available on YouTube, you can use the
+                  <button
+                    type="button"
+                    onClick={() => { setUseYoutube(true); setMediaFile(null); }}
+                    className="mx-1 font-medium text-[#000080] underline"
+                  >
+                    YouTube / External Link
+                  </button>
+                  option instead of uploading a large file.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* YouTube / external link */}
+          {useYoutube && (
+            <div>
+              <label className={labelClass}>
+                YouTube / External Link <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="url"
+                value={youtubeLink}
+                onChange={(e) => { setYoutubeLink(e.target.value); setError(""); }}
+                placeholder="https://www.youtube.com/watch?v=..."
+                className={inputClass}
+                required={useYoutube}
+              />
+              <p className="mt-1 text-xs text-[#6B7280]">
+                Paste the full link to the YouTube video or any other online resource.
+              </p>
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-3 pt-2">
             <Button variant="secondary" type="button" onClick={() => router.push("/media")}>Cancel</Button>
             <Button
               variant="primary"
               type="submit"
-              disabled={saving || !title.trim() || !category || !mediaFile}
+              disabled={saving || !title.trim() || !category || (!useYoutube && !mediaFile) || (useYoutube && !youtubeLink.trim()) || description.length > DESC_MAX_CHARS}
             >
               {saving ? "Uploading…" : "Upload Media"}
             </Button>
