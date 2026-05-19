@@ -759,6 +759,7 @@ export interface NewConvertResponse {
   country?: string;
   countryCode?: string;
   phoneNumber: string;
+  profilePictureUrl?: string;
   service?: EventResponse;
   serviceAttended?: string;
   createdOn?: string;
