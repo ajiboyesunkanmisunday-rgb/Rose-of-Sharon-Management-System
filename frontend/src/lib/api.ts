@@ -179,13 +179,38 @@ async function apiFetchRaw<T>(
 
     try {
       const errBody = await response.json();
-      backendMessage =
-        errBody?.message ?? errBody?.error ?? errBody?.detail ?? "";
+      // Log the full error body so developers can see the exact backend response.
+      console.error(`[api] ${status} on ${path} — full error body:`, errBody);
+
+      // Spring Boot can return validation errors in several formats:
+      // 1. { "message": "..." }
+      // 2. { "error": "Bad Request", "message": "..." }
+      // 3. { "errors": [{ "defaultMessage": "..." }] }  ← Spring @Valid
+      // 4. { "fieldErrors": [{ "message": "..." }] }
+      const springErrors: string[] = [];
+      if (Array.isArray(errBody?.errors)) {
+        for (const e of errBody.errors) {
+          const msg = e?.defaultMessage ?? e?.message ?? JSON.stringify(e);
+          if (msg) springErrors.push(msg);
+        }
+      }
+      if (Array.isArray(errBody?.fieldErrors)) {
+        for (const e of errBody.fieldErrors) {
+          const msg = e?.message ?? e?.defaultMessage ?? JSON.stringify(e);
+          if (msg) springErrors.push(msg);
+        }
+      }
+      if (springErrors.length > 0) {
+        backendMessage = springErrors.join("; ");
+      } else {
+        backendMessage =
+          errBody?.message ?? errBody?.error ?? errBody?.detail ?? "";
+      }
     } catch {
       // non-JSON error body — ignore
     }
 
-    // Log the raw backend message to the browser console for debugging.
+    // Log the extracted message for quick scanning.
     console.error(
       `[api] ${status} on ${path} — backend said:`,
       backendMessage || "(no message)",
