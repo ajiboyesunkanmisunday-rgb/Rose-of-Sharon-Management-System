@@ -10,10 +10,11 @@ import {
   searchSchoolOfDisciples,
   markSodAsGraduated,
   giveSodOfficialRemark,
-  markSodClassAttendance,
-  markSodExamAttendance,
+  getTrainingEvents,
+  createAttendanceRecord,
   type SchoolOfDisciplesResponse,
   type SodAttendanceRecord,
+  type TrainingEventResponse,
 } from "@/lib/api";
 import {
   BookOpen, Phone, Mail, RefreshCw, Award, Users,
@@ -68,42 +69,39 @@ function AttendanceModal({
 }: {
   student: SchoolOfDisciplesResponse;
   onClose: () => void;
-  onSave: (id: string, classNum: number, markClass: boolean, markExam: boolean) => Promise<void>;
+  onSave: (trainingEventId: string, admissionNo: string) => Promise<void>;
 }) {
-  const [classNum, setClassNum]   = useState<number>(1);
-  const [markClass, setMarkClass] = useState(true);
-  const [markExam,  setMarkExam]  = useState(false);
-  const [saving,    setSaving]    = useState(false);
-  const [error,     setError]     = useState("");
+  const [events, setEvents]               = useState<TrainingEventResponse[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsError, setEventsError]     = useState("");
+  const [selectedEventId, setSelectedEventId] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error,  setError]  = useState("");
 
-  const classAttended = useMemo(() => {
-    const set = new Set<number>();
-    (student.classAttendance ?? []).forEach((r: SodAttendanceRecord) => set.add(r.classNumber));
-    return set;
-  }, [student.classAttendance]);
-
-  const examAttended = useMemo(() => {
-    const set = new Set<number>();
-    (student.examAttendance ?? []).forEach((r: SodAttendanceRecord) => set.add(r.classNumber));
-    return set;
-  }, [student.examAttendance]);
-
-  // When class changes, reset exam checkbox; disable exam for class 1
-  const handleClassChange = (n: number) => {
-    setClassNum(n);
-    setMarkExam(false);
-    setError("");
-  };
-
-  const handleSave = async () => {
-    if (!markClass && !markExam) {
-      setError("Select at least one attendance type to mark.");
+  // Load training events for the student's set on mount
+  useEffect(() => {
+    if (!student.set) {
+      setEventsError("Student has no set assigned — cannot load training events.");
       return;
     }
+    setEventsLoading(true);
+    getTrainingEvents("SCHOOL_OF_DISCIPLES", student.set)
+      .then((evts) => {
+        setEvents(evts);
+        if (evts.length > 0) setSelectedEventId(evts[0].id ?? "");
+      })
+      .catch(() => setEventsError("Failed to load training events."))
+      .finally(() => setEventsLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [student.set]);
+
+  const handleSave = async () => {
+    if (!selectedEventId) { setError("Please select a training event."); return; }
+    if (!student.admissionNo) { setError("Student has no admission number on record."); return; }
     setSaving(true);
     setError("");
     try {
-      await onSave(student.id, classNum, markClass, markExam);
+      await onSave(selectedEventId, student.admissionNo);
       onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to mark attendance.");
@@ -112,12 +110,7 @@ function AttendanceModal({
     }
   };
 
-  const alreadyClassMarked = classAttended.has(classNum);
-  const alreadyExamMarked  = examAttended.has(classNum);
-
-  // Find attendance record for selected class
-  const classRecord = (student.classAttendance ?? []).find((r) => r.classNumber === classNum);
-  const examRecord  = (student.examAttendance  ?? []).find((r) => r.classNumber === classNum);
+  const selectedEvent = events.find((ev) => ev.id === selectedEventId);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -139,178 +132,75 @@ function AttendanceModal({
 
         <div className="p-5 space-y-5">
 
-          {/* Attendance History Grid */}
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
-              Attendance History
-            </p>
-            <div className="overflow-hidden rounded-xl border border-[#E5E7EB]">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
-                    <th className="py-2 pl-4 pr-2 text-left text-xs font-semibold text-[#374151]">Class</th>
-                    <th className="py-2 px-2 text-center text-xs font-semibold text-[#374151]">
-                      <span className="flex items-center justify-center gap-1">
-                        <ClipboardList className="h-3 w-3" /> Attended
-                      </span>
-                    </th>
-                    <th className="py-2 px-2 text-center text-xs font-semibold text-[#374151]">
-                      <span className="flex items-center justify-center gap-1">
-                        <BookCheck className="h-3 w-3" /> Exam
-                      </span>
-                    </th>
-                    <th className="py-2 pl-2 pr-4 text-left text-xs font-semibold text-[#374151]">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {SOD_CLASSES.map((cn) => {
-                    const cRec = (student.classAttendance ?? []).find((r) => r.classNumber === cn);
-                    const eRec = (student.examAttendance  ?? []).find((r) => r.classNumber === cn);
-                    const cDone = classAttended.has(cn);
-                    const eDone = examAttended.has(cn);
-                    return (
-                      <tr
-                        key={cn}
-                        className={`border-b border-[#F3F4F6] last:border-0 ${cn === classNum ? "bg-amber-50" : ""}`}
-                      >
-                        <td className="py-2.5 pl-4 pr-2 text-sm font-medium text-[#111827]">
-                          Class {cn}
-                        </td>
-                        <td className="py-2.5 px-2 text-center">
-                          {cDone ? (
-                            <span className="inline-flex items-center justify-center">
-                              <CheckCircle className="h-4 w-4 text-green-500" />
-                            </span>
-                          ) : (
-                            <span className="text-[#D1D5DB] text-lg leading-none">—</span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-2 text-center">
-                          {!HAS_EXAM(cn) ? (
-                            <span className="text-[10px] text-[#9CA3AF]">N/A</span>
-                          ) : eDone ? (
-                            <span className="inline-flex items-center justify-center">
-                              <CheckCircle className="h-4 w-4 text-blue-500" />
-                            </span>
-                          ) : (
-                            <span className="text-[#D1D5DB] text-lg leading-none">—</span>
-                          )}
-                        </td>
-                        <td className="py-2.5 pl-2 pr-4 text-xs text-[#6B7280]">
-                          {fmtDateTime(cRec?.date ?? cRec?.markedOn) ??
-                           fmtDateTime(eRec?.date ?? eRec?.markedOn) ??
-                           (cDone || eDone ? "—" : "")}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+          {/* Student identifiers */}
+          <div className="flex items-center gap-4 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-4 py-3">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Admission No</p>
+              <p className="text-sm font-semibold text-[#111827]">{student.admissionNo ?? "—"}</p>
+            </div>
+            <div className="h-8 w-px bg-[#E5E7EB]" />
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Set</p>
+              <p className="text-sm font-semibold text-[#111827]">{student.set ?? "—"}</p>
             </div>
           </div>
 
-          {/* Mark New Attendance */}
+          {/* Training event selector */}
           <div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
-              Mark Attendance
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
+              Select Training Event
             </p>
 
-            {/* Class selector */}
-            <div className="mb-4">
-              <label className="mb-1.5 block text-xs font-medium text-[#374151]">Select Class</label>
+            {eventsLoading ? (
+              <div className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] px-3 py-2.5 text-sm text-[#9CA3AF]">
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                Loading events…
+              </div>
+            ) : eventsError ? (
+              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                {eventsError}
+              </p>
+            ) : events.length === 0 ? (
+              <p className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2.5 text-sm text-[#9CA3AF]">
+                No training events found for set &quot;{student.set}&quot;.
+              </p>
+            ) : (
               <div className="relative">
                 <select
-                  value={classNum}
-                  onChange={(e) => handleClassChange(Number(e.target.value))}
+                  value={selectedEventId}
+                  onChange={(e) => { setSelectedEventId(e.target.value); setError(""); }}
                   className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2.5 pr-8 text-sm text-[#111827] outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]"
                 >
-                  {SOD_CLASSES.map((cn) => (
-                    <option key={cn} value={cn}>Class {cn}</option>
+                  <option value="">— Select an event —</option>
+                  {events.map((ev) => (
+                    <option key={ev.id} value={ev.id ?? ""}>
+                      {ev.name ?? ev.id}
+                      {ev.isExam ? " (Exam)" : ""}
+                      {ev.date ? ` · ${ev.date}` : ""}
+                    </option>
                   ))}
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
               </div>
-            </div>
+            )}
 
-            {/* Checkboxes */}
-            <div className="space-y-3">
-              {/* Class Attendance */}
-              <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
-                markClass ? "border-amber-300 bg-amber-50" : "border-[#E5E7EB] hover:border-[#D97706]/40"
-              }`}>
-                <input
-                  type="checkbox"
-                  checked={markClass}
-                  onChange={(e) => setMarkClass(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 cursor-pointer"
-                  style={{ accentColor: ACCENT }}
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <ClipboardList className="h-4 w-4 text-[#D97706]" />
-                    <span className="text-sm font-semibold text-[#111827]">Class Attendance</span>
-                    {alreadyClassMarked && (
-                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700">
-                        Already marked
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-0.5 text-xs text-[#6B7280]">
-                    Student was present for Class {classNum}
-                    {classRecord?.date || classRecord?.markedOn
-                      ? ` · marked ${fmtDateTime(classRecord.date ?? classRecord.markedOn)}`
-                      : ""}
-                  </p>
-                </div>
-              </label>
-
-              {/* Exam Attendance — only for classes 2+ */}
-              {HAS_EXAM(classNum) ? (
-                <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
-                  markExam ? "border-blue-300 bg-blue-50" : "border-[#E5E7EB] hover:border-blue-300/40"
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={markExam}
-                    onChange={(e) => setMarkExam(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 cursor-pointer"
-                    style={{ accentColor: "#2563EB" }}
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <BookCheck className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-semibold text-[#111827]">Exam Attendance</span>
-                      {alreadyExamMarked && (
-                        <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700">
-                          Already marked
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-0.5 text-xs text-[#6B7280]">
-                      Student sat the exam for Class {classNum}
-                      {examRecord?.date || examRecord?.markedOn
-                        ? ` · marked ${fmtDateTime(examRecord.date ?? examRecord.markedOn)}`
-                        : ""}
-                    </p>
-                  </div>
-                </label>
-              ) : (
-                <div className="flex items-start gap-3 rounded-xl border border-[#F3F4F6] bg-[#F9FAFB] p-4">
-                  <BookCheck className="mt-0.5 h-4 w-4 text-[#D1D5DB]" />
-                  <div>
-                    <span className="text-sm font-medium text-[#9CA3AF]">Exam Attendance</span>
-                    <p className="mt-0.5 text-xs text-[#9CA3AF]">Class 1 has no exam</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {error && (
-              <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-                {error}
-              </p>
+            {/* Selected event details */}
+            {selectedEvent && (
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 rounded-lg bg-amber-50 px-3 py-2.5 text-xs text-[#92400E]">
+                {selectedEvent.teacher && <span><span className="font-semibold">Teacher:</span> {selectedEvent.teacher}</span>}
+                {selectedEvent.location && <span><span className="font-semibold">Location:</span> {selectedEvent.location}</span>}
+                {selectedEvent.isExam && (
+                  <span className="rounded-full bg-amber-200 px-2 py-0.5 font-semibold">Exam</span>
+                )}
+              </div>
             )}
           </div>
+
+          {error && (
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+              {error}
+            </p>
+          )}
         </div>
 
         {/* Footer */}
@@ -323,7 +213,7 @@ function AttendanceModal({
           </button>
           <button
             onClick={handleSave}
-            disabled={saving || (!markClass && !markExam)}
+            disabled={saving || !selectedEventId || eventsLoading}
             className="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
             style={{ backgroundColor: ACCENT }}
           >
@@ -692,20 +582,13 @@ export default function SchoolOfDisciplesPage() {
     await load();
   };
 
-  const handleSaveAttendance = async (
-    id: string,
-    classNum: number,
-    markClass: boolean,
-    markExam: boolean
-  ) => {
-    const calls: Promise<unknown>[] = [];
-    if (markClass) calls.push(markSodClassAttendance(id, classNum));
-    if (markExam)  calls.push(markSodExamAttendance(id, classNum));
-    await Promise.all(calls);
-    const parts: string[] = [];
-    if (markClass) parts.push("class");
-    if (markExam)  parts.push("exam");
-    flash(`Attendance marked — ${parts.join(" & ")} for Class ${classNum}.`);
+  const handleSaveAttendance = async (trainingEventId: string, admissionNo: string) => {
+    await createAttendanceRecord({
+      trainingEventId,
+      admissionNumber: admissionNo,
+      category: "SCHOOL_OF_DISCIPLES",
+    });
+    flash("Attendance marked successfully.");
     await load();
   };
 
