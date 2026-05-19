@@ -132,11 +132,12 @@ export default function ProfilePage() {
       if (photo) profilePictureUrl = await uploadProfilePicture(photo);
 
       const rawCode = countryCode.replace("+", "");
+      // email is intentionally excluded — it is read-only in the UI and
+      // the backend rejects email changes for admin accounts.
       const payload = {
         firstName:    firstName  || undefined,
         middleName:   middleName || undefined,
         lastName:     lastName   || undefined,
-        email:        email      || undefined,
         countryCode:  rawCode    || undefined,
         phoneNumber:  phone      || undefined,
         occupation:   occupation || undefined,

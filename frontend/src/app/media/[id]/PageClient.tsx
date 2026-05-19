@@ -98,6 +98,20 @@ export default function MediaDetailClient() {
   const isPicture = category.toUpperCase().includes("IMAGE") || category.toUpperCase() === "THUMBNAIL";
   const isPodcast = category.toUpperCase().includes("PODCAST") || category.toUpperCase().includes("AUDIO");
 
+  // Extract YouTube / external link from description (stored as "[External Link]: <url>")
+  const externalLinkMatch = item.description?.match(/\[External Link\]:\s*(https?:\/\/\S+)/);
+  const externalUrl = externalLinkMatch?.[1] ?? null;
+
+  // Convert YouTube watch URL → embed URL
+  const getYouTubeEmbedUrl = (url: string): string | null => {
+    const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return m ? `https://www.youtube.com/embed/${m[1]}?rel=0` : null;
+  };
+  const youtubeEmbedUrl = externalUrl ? getYouTubeEmbedUrl(externalUrl) : null;
+
+  // Description to display — strip the [External Link] prefix so it doesn't show raw in the UI
+  const cleanDescription = item.description?.replace(/\[External Link\]:\s*https?:\/\/\S+\n?/g, "").trim() || null;
+
   return (
     <DashboardLayout>
       <PageHeader
@@ -122,14 +136,38 @@ export default function MediaDetailClient() {
                   <source src={mediaUrl} />
                   Your browser does not support the audio tag.
                 </audio>
-              ) : (
-                <div className="text-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="#9CA3AF" stroke="#9CA3AF" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="5 3 19 12 5 21 5 3" />
+              ) : youtubeEmbedUrl ? (
+                <iframe
+                  src={youtubeEmbedUrl}
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title={item.title ?? "Video"}
+                />
+              ) : externalUrl ? (
+                // Non-YouTube external link — show a clickable button
+                <div className="flex flex-col items-center justify-center gap-4 p-8 text-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
                   </svg>
-                  <p className="mt-3 text-sm text-[#6B7280]">
-                    Preview not available
-                  </p>
+                  <p className="text-sm text-[#6B7280]">This media is hosted externally.</p>
+                  <a
+                    href={externalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-lg bg-[#000080] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#000066]"
+                  >
+                    Open External Link ↗
+                  </a>
+                </div>
+              ) : mediaUrl ? (
+                <video controls className="h-full w-full">
+                  <source src={mediaUrl} />
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <div className="text-center p-8">
+                  <p className="text-sm text-[#6B7280]">Preview not available.</p>
                 </div>
               )}
             </div>
@@ -152,8 +190,18 @@ export default function MediaDetailClient() {
                   {new Date(item.createdOn).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
                 </p>
               )}
-              {item.description && (
-                <p className="mt-4 text-sm text-[#374151]">{item.description}</p>
+              {cleanDescription && (
+                <p className="mt-4 text-sm text-[#374151]">{cleanDescription}</p>
+              )}
+              {externalUrl && (
+                <a
+                  href={externalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-[#000080] hover:underline"
+                >
+                  Open external link ↗
+                </a>
               )}
             </div>
           </div>
