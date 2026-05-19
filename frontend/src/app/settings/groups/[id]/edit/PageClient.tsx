@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import { FormField, TextAreaField } from "@/components/ui/FormField";
-import { getGroup, updateGroup } from "@/lib/api";
+import { getAllGroups, updateGroup } from "@/lib/api";
 
 export default function EditGroupClient() {
   const router = useRouter();
@@ -36,12 +36,17 @@ export default function EditGroupClient() {
   const populate = useCallback(async () => {
     if (!id || id.startsWith("grp-")) return;
     try {
-      const g = await getGroup(id);
-      setFormData({
-        name: g.name ?? "",
-        description: g.description ?? "",
-        whatsAppLink: g.whatsAppLink ?? "",
-      });
+      // GET /api/v1/groups/{id} is the group-members endpoint (not group details).
+      // Use getAllGroups() and filter by ID to get the actual group object.
+      const all = await getAllGroups();
+      const g = (Array.isArray(all) ? all : []).find((x) => x.id === id);
+      if (g) {
+        setFormData({
+          name: g.name ?? "",
+          description: g.description ?? "",
+          whatsAppLink: g.whatsAppLink ?? "",
+        });
+      }
     } catch { /* silently fall back to empty */ }
   }, [id]);
 

@@ -88,6 +88,16 @@ export default function AdminUsersPage() {
           confirmPassword: data.confirmPassword!,
         });
       }
+      // Mark this user as needing a first-login password change.
+      // The login page reads this list and redirects to /settings/change-password.
+      try {
+        const pending: string[] = JSON.parse(
+          localStorage.getItem("rosms_first_login_pending") ?? "[]",
+        );
+        if (!pending.includes(data.userId)) pending.push(data.userId);
+        localStorage.setItem("rosms_first_login_pending", JSON.stringify(pending));
+      } catch { /* localStorage unavailable */ }
+
       setShowAddModal(false);
       fetchAdmins();
     } catch (err) {

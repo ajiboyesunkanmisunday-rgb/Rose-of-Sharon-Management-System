@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { changePassword } from "@/lib/api";
-import { KeyRound } from "lucide-react";
+import { KeyRound, ShieldAlert } from "lucide-react";
 
 export default function ChangePasswordPage() {
+  const searchParams = useSearchParams();
+  const isFirstLogin = searchParams.get("firstLogin") === "1";
+
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -66,6 +70,18 @@ export default function ChangePasswordPage() {
           }`}
         >
           {toast.msg}
+        </div>
+      )}
+
+      {isFirstLogin && (
+        <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 max-w-[560px]">
+          <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+          <div>
+            <p className="text-sm font-semibold text-amber-800">Action required — please change your password</p>
+            <p className="mt-0.5 text-xs text-amber-700">
+              Your account was set up with a temporary password. For security, please create a new personal password before continuing.
+            </p>
+          </div>
         </div>
       )}
 
