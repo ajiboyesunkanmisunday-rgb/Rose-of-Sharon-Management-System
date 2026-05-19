@@ -26,6 +26,7 @@ import {
 } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
 import { UserPlus } from "lucide-react";
+import UserAvatar from "@/components/ui/UserAvatar";
 import { SkeletonRow } from "@/components/ui/Skeleton";
 
 const ITEMS_PER_PAGE = 10;
@@ -443,11 +444,12 @@ export default function FirstTimersPage() {
               onClick={() => router.push(`/user-management/first-timers/${ft.id}`)}
               className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 cursor-pointer hover:bg-gray-50 transition-colors"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EEF2FF]">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-                </svg>
-              </div>
+              <UserAvatar
+                id={ft.id}
+                firstName={ft.firstName}
+                lastName={ft.lastName}
+                profilePictureUrl={ft.profilePictureUrl}
+              />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-[#111827] truncate">{fullName(ft)}</p>
                 <p className="text-xs text-[#6B7280]">{ft.phoneNumber}</p>

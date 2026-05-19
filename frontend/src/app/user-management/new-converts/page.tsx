@@ -27,6 +27,7 @@ import {
 } from "@/lib/api";
 import { toCSV, downloadCSV } from "@/lib/csv";
 import { Sparkles } from "lucide-react";
+import UserAvatar from "@/components/ui/UserAvatar";
 import { SkeletonRow } from "@/components/ui/Skeleton";
 
 const ITEMS_PER_PAGE = 10;
@@ -409,9 +410,12 @@ export default function NewConvertsPage() {
               onClick={() => router.push(`/user-management/new-converts/${nc.id}`)}
               className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 cursor-pointer hover:bg-gray-50 transition-colors"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700">
-                {nc.firstName?.[0]}{nc.lastName?.[0]}
-              </div>
+              <UserAvatar
+                id={nc.id}
+                firstName={nc.firstName}
+                lastName={nc.lastName}
+                profilePictureUrl={nc.profilePictureUrl}
+              />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-[#111827] truncate">{fullName(nc)}</p>
                 <p className="text-xs text-[#6B7280] truncate">{nc.phoneNumber}</p>
