@@ -107,12 +107,15 @@ export default function UploadMediaPage() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Upload failed.";
       if (
+        msg === "FILE_TOO_LARGE_FOR_SERVER" ||
         msg.includes("413") ||
         msg.toLowerCase().includes("too large") ||
         msg.toLowerCase().includes("payload")
       ) {
+        const fileMB = mediaFile ? (mediaFile.size / 1_048_576).toFixed(1) : null;
         setError(
-          `File too large for the server. Please compress the file or use a YouTube/external link instead.`,
+          `The server rejected the file${fileMB ? ` (${fileMB} MB)` : ""} — it exceeds the server's upload size limit. ` +
+          `Please compress the file to under 10 MB, or upload it via the YouTube / External Link option instead.`,
         );
       } else {
         setError(msg);
