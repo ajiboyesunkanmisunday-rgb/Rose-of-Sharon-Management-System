@@ -19,11 +19,12 @@ const ThemeContext = createContext<ThemeContextValue>({
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light");
 
-  // Read preference on mount (localStorage → system preference)
+  // Read stored preference on mount. Default is always light — the OS
+  // system preference is intentionally ignored so the app never opens in
+  // dark mode unless the user has explicitly toggled it themselves.
   useEffect(() => {
     const stored = localStorage.getItem("rosms-theme") as Theme | null;
-    const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initial: Theme = stored ?? (systemDark ? "dark" : "light");
+    const initial: Theme = stored ?? "light";
     setTheme(initial);
     document.documentElement.classList.toggle("dark", initial === "dark");
   }, []);
