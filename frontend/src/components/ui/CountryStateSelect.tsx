@@ -43,19 +43,21 @@ export default function CountryStateSelect({
         <label className={labelStyles}>State / Province</label>
         {stateOptions.length > 0 ? (
           <SearchableSelect
-            placeholder="Select State"
+            placeholder={country ? "Select State" : "Select a country first"}
             searchPlaceholder="Search states..."
             options={stateOptions}
             value={state}
             onChange={onStateChange}
+            disabled={!country}
           />
         ) : (
           <input
             type="text"
             value={state}
             onChange={(e) => onStateChange(e.target.value)}
-            placeholder="Enter State / Province"
-            className={inputStyles}
+            placeholder={country ? "Enter state / province" : "Select a country first"}
+            disabled={!country}
+            className={`${inputStyles} disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed dark:disabled:bg-slate-700/50`}
           />
         )}
       </div>

@@ -42,6 +42,7 @@ export default function TestimoniesPage() {
   const [apiError,     setApiError]     = useState("");
   const [currentPage,  setCurrentPage]  = useState(1);
   const [search,       setSearch]       = useState("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "READ" | "UNREAD">("ALL");
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [viewing,      setViewing]      = useState<TestimonyResponse | null>(null);
   const [saving,       setSaving]       = useState(false);
@@ -65,19 +66,25 @@ export default function TestimoniesPage() {
     fetchTestimonies(currentPage);
   }, [currentPage, fetchTestimonies]);
 
-  // Client-side search filter
-  const displayed = search.trim()
-    ? list.filter((t) => {
-        const q = search.toLowerCase();
-        return (
-          t.subject.toLowerCase().includes(q) ||
-          t.content.toLowerCase().includes(q) ||
-          fullName(t.owner).toLowerCase().includes(q) ||
-          (t.state ?? "").toLowerCase().includes(q) ||
-          (t.country ?? "").toLowerCase().includes(q)
-        );
-      })
-    : list;
+  // Client-side filter (status + search)
+  const displayed = list.filter((t) => {
+    if (statusFilter !== "ALL") {
+      const s = t.testimonyStatus ?? "NOT_READ";
+      if (statusFilter === "READ"   && s !== "READ")  return false;
+      if (statusFilter === "UNREAD" && s === "READ")  return false;
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      return (
+        t.subject.toLowerCase().includes(q) ||
+        t.content.toLowerCase().includes(q) ||
+        fullName(t.owner).toLowerCase().includes(q) ||
+        (t.state ?? "").toLowerCase().includes(q) ||
+        (t.country ?? "").toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
 
   const handleSelectAll = (checked: boolean) => {
     const next = new Set(selectedRows);
@@ -174,6 +181,22 @@ export default function TestimoniesPage() {
         </div>
       </div>
 
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        {(["ALL", "READ", "UNREAD"] as const).map((f) => (
+          <button
+            key={f}
+            onClick={() => { setStatusFilter(f); setCurrentPage(1); }}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              statusFilter === f
+                ? "bg-[#000080] text-white"
+                : "border border-[#E5E7EB] text-[#6B7280] hover:border-[#000080]"
+            }`}
+          >
+            {f === "ALL" ? "All" : f === "READ" ? "Read" : "Unread"}
+          </button>
+        ))}
+      </div>
+
       <BulkActionsBar
         count={selectedRows.size}
         onClear={() => setSelectedRows(new Set())}
@@ -203,6 +226,7 @@ export default function TestimoniesPage() {
               <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Name</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Subject</th>
               <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Featured</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">ROSTV</th>
               <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Location</th>
               <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Date</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Status</th>
@@ -211,9 +235,9 @@ export default function TestimoniesPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">Loading…</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">Loading…</td></tr>
             ) : displayed.length === 0 ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">No testimonies found.</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">No testimonies found.</td></tr>
             ) : (
               displayed.map((t) => (
                 <tr key={t.id} className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50" style={{ height: "56px" }}>
@@ -236,6 +260,11 @@ export default function TestimoniesPage() {
                     ) : (
                       <span className="text-gray-400 dark:text-slate-500">No</span>
                     )}
+                  </td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm">
+                    {(t.wantsToBeShot || t.isRosTv)
+                      ? <span className="font-medium text-[#000080] dark:text-indigo-400">Yes</span>
+                      : <span className="text-gray-400 dark:text-slate-500">No</span>}
                   </td>
                   <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {[t.state, t.country].filter(Boolean).join(", ") || <span className="text-gray-400 dark:text-slate-500">—</span>}
@@ -312,6 +341,12 @@ export default function TestimoniesPage() {
                   <div className="text-sm text-[#374151] dark:text-slate-300">{fmtDate(viewing.featureDate)}</div>
                 </div>
               )}
+              <div>
+                <div className="text-xs font-medium text-gray-500 dark:text-slate-400">ROSTV Request</div>
+                <div className="text-sm text-[#374151] dark:text-slate-300">
+                  {(viewing.wantsToBeShot || viewing.isRosTv) ? "Yes – wants story filmed" : "No"}
+                </div>
+              </div>
             </div>
 
             <div>

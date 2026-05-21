@@ -16,6 +16,7 @@ import QRCodeModal from "@/components/user-management/QRCodeModal";
 import Modal from "@/components/ui/Modal";
 import {
   getSecondTimers,
+  searchSecondTimers,
   deleteSecondTimersBulk,
   addCallReport,
   addVisitReport,
@@ -47,6 +48,7 @@ export default function SecondTimersPage() {
 
   // UI
   const [search, setSearch] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState(false);
@@ -70,11 +72,13 @@ export default function SecondTimersPage() {
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
 
-  const fetchTimers = useCallback(async (page: number) => {
+  const fetchTimers = useCallback(async (page: number, q = "") => {
     setLoading(true);
     setApiError("");
     try {
-      const res = await getSecondTimers(page - 1, ITEMS_PER_PAGE);
+      const res = q.trim()
+        ? await searchSecondTimers(q.trim(), page - 1, ITEMS_PER_PAGE)
+        : await getSecondTimers(page - 1, ITEMS_PER_PAGE);
       setTimers(res.content ?? []);
       setTotalPages(res.totalPages || 1);
       setTotalItems(res.totalElements || 0);
@@ -87,8 +91,8 @@ export default function SecondTimersPage() {
   }, []);
 
   useEffect(() => {
-    fetchTimers(currentPage);
-  }, [currentPage, fetchTimers]);
+    fetchTimers(currentPage, activeSearch);
+  }, [currentPage, activeSearch, fetchTimers]);
 
   const displayedTimers = timers.filter((st) => {
     if (filterService && st.serviceAttended !== filterService) return false;
@@ -96,14 +100,6 @@ export default function SecondTimersPage() {
       const d = st.secondTimeService?.date ?? st.createdOn ?? "";
       if (filterDateFrom && d < filterDateFrom) return false;
       if (filterDateTo && d > filterDateTo) return false;
-    }
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      return (
-        fullName(st).toLowerCase().includes(q) ||
-        (st.email ?? "").toLowerCase().includes(q) ||
-        (st.phoneNumber ?? "").includes(q)
-      );
     }
     return true;
   });
@@ -293,8 +289,11 @@ export default function SecondTimersPage() {
         <div className="w-full sm:w-72">
           <SearchBar
             value={search}
-            onChange={(val) => { setSearch(val); setCurrentPage(1); }}
-            onSearch={() => setCurrentPage(1)}
+            onChange={(val) => {
+              setSearch(val);
+              if (!val.trim()) { setActiveSearch(""); setCurrentPage(1); }
+            }}
+            onSearch={() => { setActiveSearch(search); setCurrentPage(1); }}
             placeholder="Search..."
           />
         </div>
@@ -404,7 +403,7 @@ export default function SecondTimersPage() {
       {apiError && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} —{" "}
-          <button className="font-medium underline" onClick={() => fetchTimers(currentPage)}>Retry</button>
+          <button className="font-medium underline" onClick={() => fetchTimers(currentPage, activeSearch)}>Retry</button>
         </div>
       )}
 

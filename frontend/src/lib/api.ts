@@ -1613,6 +1613,8 @@ export interface TestimonyResponse {
   country?: string;
   testimonyStatus?: string;
   createdOn?: string;
+  wantsToBeShot?: boolean;
+  isRosTv?: boolean;
 }
 
 export async function getTestimonies(
