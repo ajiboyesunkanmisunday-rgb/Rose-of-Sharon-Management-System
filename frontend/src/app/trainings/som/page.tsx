@@ -1,12 +1,10 @@
-import TrainingGroupPage from "@/components/trainings/TrainingGroupPage";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import SchoolOfMinistryPage from "@/components/trainings/SchoolOfMinistryPage";
 
-export default function SchoolOfMinistryPage() {
+export default function SOMPage() {
   return (
-    <TrainingGroupPage
-      groupKeywords={["School of Ministry", "SOM"]}
-      title="School of Ministry"
-      description="Members enrolled in the School of Ministry (SOM) programme"
-      accentColor="#059669"
-    />
+    <DashboardLayout>
+      <SchoolOfMinistryPage />
+    </DashboardLayout>
   );
 }

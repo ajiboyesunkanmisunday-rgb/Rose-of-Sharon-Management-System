@@ -3437,3 +3437,122 @@ export async function searchAnnouncements(
     { method: "POST", body: JSON.stringify({ text }) },
   );
 }
+
+// ─── School of Ministry ──────────────────────────────────────────────────────
+
+export interface SchoolOfMinistryResponse {
+  id: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  sex?: string;
+  dateOfBirth?: string;
+  maritalStatus?: string;
+  noOfChildren?: number;
+  spouseName?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+  homeAddress?: string;
+  occupation?: string;
+  placeOfWork?: string;
+  workPhoneNumber?: string;
+  officeAddress?: string;
+  profilePictureUrl?: string;
+  salvationDate?: string;
+  salvationLocation?: string;
+  waterBaptismDate?: string;
+  waterBaptismChurch?: string;
+  holySpiritBaptismDate?: string;
+  holySpiritBaptismChurch?: string;
+  hasGoneThroughNewConvertsClass?: boolean;
+  hasGoneThroughWaterBaptismalClass?: boolean;
+  otherInformation?: string;
+  officialRemarks?: string;
+  createdOn?: string;
+}
+
+export interface SchoolOfMinistryFullResponse extends SchoolOfMinistryResponse {
+  qualifications?: { schoolAttended?: string; dates?: string; qualificationReceived?: string }[];
+  recentWorshipPlaces?: { name?: string }[];
+  churchDepartments?: { name?: string; date?: string }[];
+  reasonsForAttending?: string[];
+}
+
+export interface CreateSchoolOfMinistryRequest {
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  sex?: string;
+  dateOfBirth?: string;
+  maritalStatus?: string;
+  noOfChildren?: number;
+  spouseName?: string;
+  countryCode: string;
+  phoneNumber: string;
+  homeAddress?: string;
+  occupation?: string;
+  placeOfWork?: string;
+  workPhoneNumber?: string;
+  officeAddress?: string;
+  profilePictureUrl?: string;
+  salvationDate?: string;
+  salvationLocation?: string;
+  waterBaptismDate?: string;
+  waterBaptismChurch?: string;
+  holySpiritBaptismDate?: string;
+  holySpiritBaptismChurch?: string;
+  hasGoneThroughNewConvertsClass?: boolean;
+  hasGoneThroughWaterBaptismalClass?: boolean;
+  otherInformation?: string;
+  qualificationRequests?: { schoolAttended?: string; dates?: string; qualificationReceived?: string }[];
+  recentWorshipPlaces?: { name?: string }[];
+  churchDepartments?: { name?: string; date?: string }[];
+  reasonsForAttending?: string[];
+}
+
+export async function getSchoolOfMinistries(
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<SchoolOfMinistryResponse>> {
+  return apiFetch<CustomPageResponse<SchoolOfMinistryResponse>>(
+    `/api/v1/school-of-ministry?pageNo=${pageNo}&pageSize=${pageSize}`,
+  );
+}
+
+export async function getSchoolOfMinistry(
+  id: string,
+): Promise<SchoolOfMinistryFullResponse> {
+  return apiFetch<SchoolOfMinistryFullResponse>(
+    `/api/v1/school-of-ministry/${id}`,
+  );
+}
+
+export async function searchSchoolOfMinistries(
+  text: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<SchoolOfMinistryResponse>> {
+  return apiFetch<CustomPageResponse<SchoolOfMinistryResponse>>(
+    `/api/v1/school-of-ministry/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ text }) },
+  );
+}
+
+export async function createSchoolOfMinistry(
+  body: CreateSchoolOfMinistryRequest,
+): Promise<SchoolOfMinistryResponse> {
+  return apiFetch<SchoolOfMinistryResponse>("/api/v1/school-of-ministry", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function giveSomOfficialRemark(
+  id: string,
+  text: string,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/school-of-ministry/${id}/official-remark`,
+    { method: "PATCH", body: JSON.stringify({ text }) },
+  );
+}
