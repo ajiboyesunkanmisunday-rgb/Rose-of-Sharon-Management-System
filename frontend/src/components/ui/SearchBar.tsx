@@ -25,11 +25,11 @@ export default function SearchBar({
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className="w-full rounded-full border border-[#E5E7EB] bg-white px-4 py-3 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+        className="w-full rounded-full border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-sm text-gray-700 dark:text-slate-100 outline-none placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500"
       />
       <button
         onClick={onSearch}
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#000080] transition-colors hover:bg-[#000066]"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#000080] dark:bg-indigo-600 transition-colors hover:bg-[#000066] dark:hover:bg-indigo-700"
         aria-label="Search"
       >
         <svg

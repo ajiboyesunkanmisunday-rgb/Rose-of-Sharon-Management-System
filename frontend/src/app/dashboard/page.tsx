@@ -206,8 +206,8 @@ export default function DashboardPage() {
     <DashboardLayout>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Dashboard</h1>
-          <p className="text-sm text-[#6B7280]">
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Dashboard</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">
             {stats.loading ? "Loading congregation data…" : `${stats.activeMembers.toLocaleString()} active members · ${monthLabel} snapshot`}
           </p>
         </div>
@@ -223,15 +223,15 @@ export default function DashboardPage() {
                 <button
                   key={card.label}
                   onClick={() => router.push(card.href)}
-                  className="flex items-center gap-4 rounded-xl bg-white p-5 shadow-sm border border-[#E5E7EB] text-left transition-shadow hover:shadow-md"
+                  className="flex items-center gap-4 rounded-xl bg-white dark:bg-slate-800 p-5 shadow-sm dark:shadow-slate-900 border border-[#E5E7EB] dark:border-slate-700 text-left transition-all hover:shadow-md dark:hover:shadow-slate-900 hover:border-[#000080]/20 dark:hover:border-indigo-700"
                 >
                   <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${card.iconBg}`}>
                     <Icon className={`h-6 w-6 ${card.iconColor}`} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-2xl font-bold text-[#111827]">{card.value}</p>
-                    <p className="text-xs font-semibold text-[#374151] leading-tight mt-0.5">{card.label}</p>
-                    <p className="text-[11px] text-[#9CA3AF] leading-tight mt-0.5">{card.sublabel}</p>
+                    <p className="text-2xl font-bold text-[#111827] dark:text-slate-100">{card.value}</p>
+                    <p className="text-xs font-semibold text-[#374151] dark:text-slate-300 leading-tight mt-0.5">{card.label}</p>
+                    <p className="text-[11px] text-[#9CA3AF] dark:text-slate-500 leading-tight mt-0.5">{card.sublabel}</p>
                   </div>
                 </button>
               );
@@ -240,15 +240,15 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Urgent Follow-up */}
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm dark:shadow-slate-900">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <PhoneCall className="h-5 w-5 text-[#000080]" />
-              <h2 className="text-base font-semibold text-[#111827]">Urgent Follow-up</h2>
+              <PhoneCall className="h-5 w-5 text-[#000080] dark:text-indigo-400" />
+              <h2 className="text-base font-semibold text-[#111827] dark:text-slate-100">Urgent Follow-up</h2>
             </div>
             <button
               onClick={() => router.push("/dashboard/urgent-follow-up")}
-              className="text-sm font-medium text-[#000080] hover:underline"
+              className="text-sm font-medium text-[#000080] dark:text-indigo-400 hover:underline"
             >
               View More
             </button>
@@ -257,7 +257,7 @@ export default function DashboardPage() {
             {followUpsLoading ? (
               <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="rounded-lg border border-[#E5E7EB] p-3 space-y-2">
+                  <div key={i} className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 p-3 space-y-2">
                     <div className="skeleton h-4 w-32" />
                     <div className="skeleton h-3 w-24" />
                     <div className="skeleton h-3 w-40" />
@@ -265,22 +265,22 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : topFollowUps.length === 0 ? (
-              <p className="text-sm text-[#6B7280] text-center py-4">No urgent follow-ups.</p>
+              <p className="text-sm text-[#6B7280] dark:text-slate-400 text-center py-4">No urgent follow-ups.</p>
             ) : (
               topFollowUps.map((f) => (
-                <div key={f.id} className="flex items-start justify-between gap-3 rounded-lg border border-[#E5E7EB] p-3">
+                <div key={f.id} className="flex items-start justify-between gap-3 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800/60 p-3">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[#111827]">{f.name}</p>
-                    <p className="text-xs text-[#6B7280]">{f.phone}</p>
-                    <p className="mt-1 text-xs text-[#6B7280]">
-                      Assigned: <span className="text-[#374151]">{f.assignedOfficer}</span>
+                    <p className="text-sm font-semibold text-[#111827] dark:text-slate-100">{f.name}</p>
+                    <p className="text-xs text-[#6B7280] dark:text-slate-400">{f.phone}</p>
+                    <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">
+                      Assigned: <span className="text-[#374151] dark:text-slate-300">{f.assignedOfficer}</span>
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-1.5">
-                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-yellow-100 text-yellow-800">
+                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400">
                       Not called
                     </span>
-                    <span className="rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[11px] font-medium text-[#374151]">
+                    <span className="rounded-full bg-[#F3F4F6] dark:bg-slate-700 px-2 py-0.5 text-[11px] font-medium text-[#374151] dark:text-slate-300">
                       {f.category}
                     </span>
                   </div>
@@ -291,9 +291,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Attendance Overview */}
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm dark:shadow-slate-900">
           <div className="mb-4 flex items-start justify-between gap-2">
-            <h2 className="text-base font-semibold text-[#111827]">Last 6 Sundays Attendance</h2>
+            <h2 className="text-base font-semibold text-[#111827] dark:text-slate-100">Last 6 Sundays Attendance</h2>
             <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-medium text-amber-700">
               Sample data
             </span>
@@ -301,12 +301,12 @@ export default function DashboardPage() {
           <div className="flex h-56 items-end justify-between gap-2 px-1">
             {attendanceData.map((item) => (
               <div key={item.day} className="flex flex-1 flex-col items-center gap-1.5">
-                <span className="text-[11px] font-medium text-[#374151]">{item.value}</span>
+                <span className="text-[11px] font-medium text-[#374151] dark:text-slate-300">{item.value}</span>
                 <div
-                  className="w-full rounded-t-md bg-[#000080] transition-all"
+                  className="w-full rounded-t-md bg-[#000080] dark:bg-indigo-600 transition-all"
                   style={{ height: `${(item.value / maxAttendance) * 180}px` }}
                 />
-                <span className="text-[10px] text-[#6B7280] text-center">{item.day}</span>
+                <span className="text-[10px] text-[#6B7280] dark:text-slate-500 text-center">{item.day}</span>
               </div>
             ))}
           </div>
@@ -314,32 +314,32 @@ export default function DashboardPage() {
       </div>
 
       {/* Birthdays & Anniversaries Widget */}
-      <div className="mt-6 rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
+      <div className="mt-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm dark:shadow-slate-900">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-[#111827]">Upcoming Birthdays &amp; Anniversaries</h2>
-          <span className="text-xs font-medium text-[#6B7280]">This week</span>
+          <h2 className="text-base font-semibold text-[#111827] dark:text-slate-100">Upcoming Birthdays &amp; Anniversaries</h2>
+          <span className="text-xs font-medium text-[#6B7280] dark:text-slate-400">This week</span>
         </div>
         <div className="space-y-3">
           {celebrationsLoading ? (
-            <p className="text-sm text-[#6B7280] text-center py-4">Loading…</p>
+            <p className="text-sm text-[#6B7280] dark:text-slate-400 text-center py-4">Loading…</p>
           ) : upcomingCelebrations.length === 0 ? (
-            <p className="text-sm text-[#6B7280] text-center py-4">No celebrations found.</p>
+            <p className="text-sm text-[#6B7280] dark:text-slate-400 text-center py-4">No celebrations found.</p>
           ) : (
             upcomingCelebrations.map((item) => (
-              <div key={item.id} className="flex items-center justify-between gap-3 rounded-lg border border-[#E5E7EB] p-3">
+              <div key={item.id} className="flex items-center justify-between gap-3 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800/60 p-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pink-100">
-                    <Cake className="h-5 w-5 text-pink-600" />
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pink-100 dark:bg-pink-900/30">
+                    <Cake className="h-5 w-5 text-pink-600 dark:text-pink-400" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-[#111827]">{item.name}</p>
+                    <p className="text-sm font-semibold text-[#111827] dark:text-slate-100">{item.name}</p>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium bg-pink-100 text-pink-700">
+                  <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400">
                     {item.type}
                   </span>
-                  <span className="text-[11px] font-medium text-[#6B7280]">{item.date}</span>
+                  <span className="text-[11px] font-medium text-[#6B7280] dark:text-slate-400">{item.date}</span>
                 </div>
               </div>
             ))

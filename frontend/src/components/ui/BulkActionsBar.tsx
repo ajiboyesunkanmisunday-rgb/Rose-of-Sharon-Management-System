@@ -27,8 +27,8 @@ export default function BulkActionsBar({
   const label = count === 1 ? labelSingular : labelPlural;
 
   return (
-    <div className="mb-3 flex items-center justify-between rounded-lg border border-[#B5B5F3] bg-[#F5F5FC] px-4 py-2.5 text-sm">
-      <span className="font-medium text-[#000080]">
+    <div className="mb-3 flex items-center justify-between rounded-lg border border-[#B5B5F3] dark:border-indigo-800 bg-[#F5F5FC] dark:bg-indigo-950/40 px-4 py-2.5 text-sm">
+      <span className="font-medium text-[#000080] dark:text-indigo-300">
         {count} {label} selected
       </span>
       <div className="flex items-center gap-3">
@@ -38,8 +38,8 @@ export default function BulkActionsBar({
             onClick={a.onClick}
             className={`font-medium transition-colors ${
               a.variant === "danger"
-                ? "text-red-600 hover:text-red-700"
-                : "text-[#000080] hover:text-[#000066]"
+                ? "text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                : "text-[#000080] dark:text-indigo-400 hover:text-[#000066] dark:hover:text-indigo-300"
             }`}
           >
             {a.label}
@@ -47,7 +47,7 @@ export default function BulkActionsBar({
         ))}
         <button
           onClick={onClear}
-          className="ml-2 text-xs text-[#6B7280] underline transition-colors hover:text-[#374151]"
+          className="ml-2 text-xs text-[#6B7280] dark:text-slate-500 underline transition-colors hover:text-[#374151] dark:hover:text-slate-300"
         >
           Clear
         </button>
