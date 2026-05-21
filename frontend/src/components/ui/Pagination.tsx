@@ -47,9 +47,9 @@ export default function Pagination({
 
   return (
     <div className="flex items-center justify-between">
-      <span className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-[#000080]">
+      <span className="rounded-lg bg-gray-100 dark:bg-slate-700 px-3 py-1.5 text-sm font-medium text-[#000080] dark:text-indigo-400">
         {totalItems !== undefined
-          ? `Showing page ${currentPage} of ${Math.max(totalPages, 1)} \u00B7 ${totalItems} total`
+          ? `Showing page ${currentPage} of ${Math.max(totalPages, 1)} · ${totalItems} total`
           : `${currentPage} of ${totalPages}`}
       </span>
 
@@ -58,7 +58,7 @@ export default function Pagination({
           page === "..." ? (
             <span
               key={`ellipsis-${index}`}
-              className="flex h-9 w-9 items-center justify-center text-sm text-gray-400"
+              className="flex h-9 w-9 items-center justify-center text-sm text-gray-400 dark:text-slate-500"
             >
               ...
             </span>
@@ -68,8 +68,8 @@ export default function Pagination({
               onClick={() => onPageChange(page)}
               className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition-colors ${
                 page === currentPage
-                  ? "border-2 border-[#000080] bg-white text-[#000080]"
-                  : "bg-[#F3F4F6] text-[#000080] hover:bg-gray-200"
+                  ? "border-2 border-[#000080] dark:border-indigo-500 bg-white dark:bg-slate-800 text-[#000080] dark:text-indigo-400"
+                  : "bg-[#F3F4F6] dark:bg-slate-700 text-[#000080] dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600"
               }`}
             >
               {page}

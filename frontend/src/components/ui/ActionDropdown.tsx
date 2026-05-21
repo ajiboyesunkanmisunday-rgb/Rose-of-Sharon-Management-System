@@ -16,9 +16,7 @@ const MENU_WIDTH = 200;
 
 export default function ActionDropdown({ actions }: ActionDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [coords, setCoords] = useState<{ top: number; left: number } | null>(
-    null,
-  );
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -28,17 +26,10 @@ export default function ActionDropdown({ actions }: ActionDropdownProps) {
 
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
-      if (
-        buttonRef.current?.contains(target) ||
-        menuRef.current?.contains(target)
-      ) {
-        return;
-      }
+      if (buttonRef.current?.contains(target) || menuRef.current?.contains(target)) return;
       setIsOpen(false);
     };
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
-    };
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") setIsOpen(false); };
     const handleScroll = () => setIsOpen(false);
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -54,7 +45,7 @@ export default function ActionDropdown({ actions }: ActionDropdownProps) {
     };
   }, [isOpen]);
 
-  // Position the menu relative to the button, flipping up if near bottom.
+  // Position the menu relative to the button, flipping up if near bottom
   useLayoutEffect(() => {
     if (!isOpen || !buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
@@ -64,12 +55,9 @@ export default function ActionDropdown({ actions }: ActionDropdownProps) {
     const openUp = spaceBelow < menuHeight + 8 && rect.top > menuHeight + 8;
 
     const top = openUp ? rect.top - menuHeight - 4 : rect.bottom + 4;
-    // Right-align menu with the button.
     let left = rect.right - MENU_WIDTH;
     if (left < 8) left = 8;
-    if (left + MENU_WIDTH > window.innerWidth - 8) {
-      left = window.innerWidth - MENU_WIDTH - 8;
-    }
+    if (left + MENU_WIDTH > window.innerWidth - 8) left = window.innerWidth - MENU_WIDTH - 8;
 
     setCoords({ top, left });
   }, [isOpen, actions.length]);
@@ -79,17 +67,11 @@ export default function ActionDropdown({ actions }: ActionDropdownProps) {
       <button
         ref={buttonRef}
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex h-8 w-8 items-center justify-center rounded text-[#6B7280] transition-colors hover:bg-gray-100"
+        className="flex h-8 w-8 items-center justify-center rounded text-[#6B7280] dark:text-slate-400 transition-colors hover:bg-gray-100 dark:hover:bg-slate-700"
         aria-label="Actions"
         aria-expanded={isOpen}
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
           <circle cx="5" cy="12" r="2" />
           <circle cx="12" cy="12" r="2" />
           <circle cx="19" cy="12" r="2" />
@@ -99,22 +81,17 @@ export default function ActionDropdown({ actions }: ActionDropdownProps) {
       {isOpen && coords && (
         <div
           ref={menuRef}
-          className="fixed z-50 rounded-lg border border-[#E5E7EB] bg-white py-1 shadow-lg"
-          style={{
-            top: coords.top,
-            left: coords.left,
-            width: MENU_WIDTH,
-          }}
+          className="fixed z-50 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 py-1 shadow-lg dark:shadow-slate-900"
+          style={{ top: coords.top, left: coords.left, width: MENU_WIDTH }}
         >
           {actions.map((action, index) => (
             <button
               key={index}
-              onClick={() => {
-                action.onClick();
-                setIsOpen(false);
-              }}
-              className={`block w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 ${
-                action.danger ? "text-red-600 font-medium" : "text-gray-700"
+              onClick={() => { action.onClick(); setIsOpen(false); }}
+              className={`block w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-slate-700 ${
+                action.danger
+                  ? "text-red-600 dark:text-red-400 font-medium"
+                  : "text-gray-700 dark:text-slate-200"
               }`}
             >
               {action.label}

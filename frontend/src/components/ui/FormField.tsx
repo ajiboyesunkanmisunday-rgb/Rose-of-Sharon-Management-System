@@ -2,11 +2,11 @@
 
 import React from "react";
 
-const labelBase = "mb-1 block text-sm font-medium text-[#374151]";
+const labelBase = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
 const inputBase =
-  "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-100 outline-none placeholder:text-[#9CA3AF] dark:placeholder:text-slate-500 focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500";
 const selectBase =
-  "w-full rounded-lg border border-[#E5E7EB] bg-white px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500";
 
 interface BaseProps {
   label: string;
@@ -36,12 +36,12 @@ export function FormField({
       </label>
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-slate-500">
             {icon}
           </div>
         )}
         <input
-          className={`${inputBase} ${icon ? "pl-10" : ""} ${error ? "border-red-500" : ""}`}
+          className={`${inputBase} ${icon ? "pl-10" : ""} ${error ? "border-red-500 dark:border-red-500" : ""}`}
           {...inputProps}
         />
       </div>
@@ -73,7 +73,7 @@ export function SelectField({
         {required && <span className="text-red-500"> *</span>}
       </label>
       <select
-        className={`${selectBase} ${error ? "border-red-500" : ""}`}
+        className={`${selectBase} ${error ? "border-red-500 dark:border-red-500" : ""}`}
         {...selectProps}
       >
         <option value="">{placeholder}</option>
@@ -108,7 +108,7 @@ export function TextAreaField({
       </label>
       <textarea
         rows={rows}
-        className={`${inputBase} ${error ? "border-red-500" : ""}`}
+        className={`${inputBase} ${error ? "border-red-500 dark:border-red-500" : ""}`}
         {...textareaProps}
       />
       {error && <p className="mt-1 text-xs text-red-500">{error}</p>}

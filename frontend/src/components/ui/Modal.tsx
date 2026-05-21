@@ -47,12 +47,12 @@ export default function Modal({ isOpen, onClose, title, children, size = "sm" }:
       onClick={handleOverlayClick}
       className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4"
     >
-      <div className={`relative my-auto w-full ${sizeStyles[size]} rounded-2xl bg-white p-4 shadow-xl sm:p-6`}>
+      <div className={`relative my-auto w-full ${sizeStyles[size]} rounded-2xl bg-white dark:bg-slate-800 p-4 shadow-xl dark:shadow-slate-900 sm:p-6`}>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-[#000080]">{title}</h2>
+          <h2 className="text-xl font-bold text-[#000080] dark:text-indigo-400">{title}</h2>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 dark:text-slate-500 transition-colors hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-600 dark:hover:text-slate-300"
             aria-label="Close modal"
           >
             <svg

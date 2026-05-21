@@ -25,13 +25,13 @@ export default function StatusFilterTabs<T extends string>({
             onClick={() => onChange(opt.value)}
             className={`rounded-full border px-4 py-1.5 text-xs font-medium transition-colors ${
               isActive
-                ? "border-[#000080] bg-[#000080] text-white"
-                : "border-[#E5E7EB] bg-white text-[#6B7280] hover:border-[#000080] hover:text-[#000080]"
+                ? "border-[#000080] dark:border-indigo-500 bg-[#000080] dark:bg-indigo-600 text-white"
+                : "border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 text-[#6B7280] dark:text-slate-400 hover:border-[#000080] dark:hover:border-indigo-500 hover:text-[#000080] dark:hover:text-indigo-400"
             }`}
           >
             {opt.label}
             {opt.count !== undefined && (
-              <span className={`ml-2 ${isActive ? "text-white/80" : "text-[#9CA3AF]"}`}>
+              <span className={`ml-2 ${isActive ? "text-white/80" : "text-[#9CA3AF] dark:text-slate-500"}`}>
                 {opt.count}
               </span>
             )}
