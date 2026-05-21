@@ -11,18 +11,18 @@ import { Film } from "lucide-react";
 
 const ITEMS_PER_PAGE = 12;
 
-// Normalise category to tab key
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function toTab(cat?: string): string {
   if (!cat) return "OTHER";
   const c = cat.toUpperCase();
-  if (c.includes("SERMON")) return "SERMONS";
-  if (c.includes("PODCAST")) return "PODCASTS";
-  if (c.includes("VIDEO")) return "VIDEOS";
+  if (c.includes("SERMON"))                                      return "SERMONS";
+  if (c.includes("PODCAST"))                                     return "PODCASTS";
+  if (c.includes("VIDEO"))                                       return "VIDEOS";
   if (c.includes("PICTURE") || c.includes("IMAGE") || c.includes("PHOTO")) return "PICTURES";
   return "OTHER";
 }
 
-// Human-readable label for the badge
 const tabLabels: Record<string, string> = {
   SERMONS:  "Sermon",
   PODCASTS: "Podcast",
@@ -34,41 +34,54 @@ const tabLabels: Record<string, string> = {
 function fileSizeFmt(bytes?: number) {
   if (!bytes) return null;
   if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(1)} MB`;
-  if (bytes >= 1_000) return `${(bytes / 1_000).toFixed(0)} KB`;
+  if (bytes >= 1_000)     return `${(bytes / 1_000).toFixed(0)} KB`;
   return `${bytes} B`;
 }
 
-/** Extract the raw YouTube/external URL stored in the description field. */
+function fmtDate(s?: string) {
+  if (!s) return "—";
+  return new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+/**
+ * Extract the external URL embedded in the description field.
+ * Stored as: "[External Link]: https://..."
+ * Searches anywhere in the description (not just at the start).
+ */
 function extractExternalLink(description?: string | null): string | null {
   if (!description) return null;
-  const match = description.match(/^\[External Link\]:\s*(\S+)/);
+  const match = description.match(/\[External Link\]:\s*(https?:\/\/[^\s]+)/i);
   return match ? match[1] : null;
 }
 
-/** Given any YouTube URL variant, return the hqdefault thumbnail URL. */
+/**
+ * Return the YouTube hqdefault thumbnail URL for any recognised YouTube URL format.
+ * Uses i.ytimg.com (the CDN YouTube's own APIs reference).
+ */
 function getYoutubeThumbnail(url?: string | null): string | null {
   if (!url) return null;
   try {
     const u = new URL(url);
     let id: string | null = null;
     if (u.hostname === "youtu.be") {
-      id = u.pathname.slice(1).split(/[/?]/)[0] || null;
+      id = u.pathname.slice(1).split(/[/?#]/)[0] || null;
     } else if (u.hostname.includes("youtube.com")) {
       id =
         u.searchParams.get("v") ??
-        u.pathname.split("/embed/")[1]?.split(/[/?]/)[0] ??
-        u.pathname.split("/shorts/")[1]?.split(/[/?]/)[0] ??
+        u.pathname.split("/embed/")[1]?.split(/[/?#]/)[0] ??
+        u.pathname.split("/shorts/")[1]?.split(/[/?#]/)[0] ??
         null;
     }
-    return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
+    return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
   } catch {
     return null;
   }
 }
 
-function fmtDate(s?: string) {
-  if (!s) return "—";
-  return new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+/** Remove the "[External Link]: URL" line from description for display. */
+function cleanDescription(description?: string | null): string | null {
+  if (!description) return null;
+  return description.replace(/\[External Link\]:\s*https?:\/\/[^\s]+\n?/gi, "").trim() || null;
 }
 
 const categoryColors: Record<string, string> = {
@@ -86,6 +99,170 @@ const tabs: { key: string; label: string }[] = [
   { key: "VIDEOS",   label: "Videos"   },
   { key: "PICTURES", label: "Pictures" },
 ];
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
+function PlayIcon({ size = 48, color = "#9CA3AF" }: { size?: number; color?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={color} stroke={color} strokeWidth="1">
+      <polygon points="5 3 19 12 5 21 5 3" />
+    </svg>
+  );
+}
+
+function MicIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+      <line x1="12" y1="19" x2="12" y2="22" />
+    </svg>
+  );
+}
+
+// ─── MediaCard ────────────────────────────────────────────────────────────────
+
+type ThumbState = "loading" | "loaded" | "error";
+
+function MediaCard({ item, onNavigate }: { item: MediaResponse; onNavigate: () => void }) {
+  const cat    = item.mediaCategory ?? item.type ?? item.category;
+  const tabKey = toTab(cat);
+  const isImage = tabKey === "PICTURES";
+  const mediaUrl  = item.displayUrl ?? item.url ?? "";
+  const mediaSize = item.size ?? item.fileSize;
+
+  // Resolve thumbnail source
+  const externalLink = extractExternalLink(item.description);
+  const isExternalUpload = !!externalLink;
+  const ytThumbnail = !isImage
+    ? (item.thumbnailUrl || getYoutubeThumbnail(externalLink) || getYoutubeThumbnail(mediaUrl))
+    : null;
+
+  const [thumbState, setThumbState] = useState<ThumbState>("loading");
+
+  // Reset thumb state when the item changes
+  useEffect(() => { setThumbState("loading"); }, [item.id]);
+
+  const desc = cleanDescription(item.description);
+
+  // ── Preview area ──────────────────────────────────────────────────────────
+  const renderPreview = () => {
+    // PICTURES — show the image directly
+    if (isImage && mediaUrl) {
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={mediaUrl}
+          alt={item.title ?? ""}
+          className="h-full w-full object-cover"
+          onError={(e) => { e.currentTarget.style.display = "none"; }}
+        />
+      );
+    }
+
+    // YouTube / external URL — show thumbnail + play overlay
+    if (ytThumbnail) {
+      return (
+        <>
+          {/* Skeleton shown while loading */}
+          {thumbState === "loading" && (
+            <div className="absolute inset-0 animate-pulse bg-slate-200 dark:bg-slate-700" />
+          )}
+
+          {/* Fallback icon shown on error */}
+          {thumbState === "error" && <PlayIcon />}
+
+          {/* Thumbnail image */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={ytThumbnail}
+            alt={item.title ?? ""}
+            className={`h-full w-full object-cover transition-opacity duration-300 ${
+              thumbState === "loaded" ? "opacity-100" : "opacity-0 absolute"
+            }`}
+            onLoad={() => setThumbState("loaded")}
+            onError={() => setThumbState("error")}
+          />
+
+          {/* Play overlay — only visible when thumbnail has loaded */}
+          {thumbState === "loaded" && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/60 shadow-lg">
+                <PlayIcon size={22} color="white" />
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    // Local video / sermon — use <video preload="metadata"> for first-frame preview
+    if (!isExternalUpload && mediaUrl && (tabKey === "SERMONS" || tabKey === "VIDEOS")) {
+      return (
+        <>
+          <video
+            src={mediaUrl}
+            preload="metadata"
+            className="h-full w-full object-cover"
+            muted
+            playsInline
+            onLoadedMetadata={(e) => { (e.currentTarget as HTMLVideoElement).currentTime = 1; }}
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/60 shadow-lg">
+              <PlayIcon size={22} color="white" />
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    // Podcast / audio — microphone icon
+    if (tabKey === "PODCASTS") return <MicIcon />;
+
+    // Generic fallback
+    return <PlayIcon />;
+  };
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 transition-shadow hover:shadow-md">
+      {/* Preview */}
+      <div className="relative flex h-[160px] items-center justify-center overflow-hidden bg-[#F3F4F6] dark:bg-slate-700/30">
+        {renderPreview()}
+      </div>
+
+      {/* Card body */}
+      <div className="p-4">
+        <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${categoryColors[tabKey] ?? categoryColors.OTHER}`}>
+          {tabLabels[tabKey] ?? "Media"}
+        </span>
+        <h3 className="mt-3 text-sm font-semibold text-[#111827] dark:text-slate-100 line-clamp-2 break-all">
+          {item.title ?? item.displayName ?? "Untitled"}
+        </h3>
+        {desc && (
+          <p className="mt-1 line-clamp-2 text-xs text-[#6B7280] dark:text-slate-400">{desc}</p>
+        )}
+        {/* Show a clean external link label instead of the raw URL */}
+        {isExternalUpload && !desc && (
+          <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400 italic">External link</p>
+        )}
+        <div className="mt-1 flex items-center gap-2 text-xs text-[#9CA3AF] dark:text-slate-400">
+          <span>{fmtDate(item.createdOn)}</span>
+          {fileSizeFmt(mediaSize) && <span>· {fileSizeFmt(mediaSize)}</span>}
+        </div>
+        <Button
+          variant="secondary"
+          onClick={onNavigate}
+          className="mt-3 w-full"
+        >
+          {isImage ? "View" : "Watch"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MediaPage() {
   const router = useRouter();
@@ -113,13 +290,9 @@ export default function MediaPage() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchMedia(currentPage);
-  }, [currentPage, fetchMedia]);
+  useEffect(() => { fetchMedia(currentPage); }, [currentPage, fetchMedia]);
 
-  // Client-side tab + search filter
   const displayed = items.filter((item) => {
-    // Backend sends "type" or "mediaCategory"; support both for compatibility
     const cat = item.mediaCategory ?? item.type ?? item.category;
     if (activeTab !== "ALL" && toTab(cat) !== activeTab) return false;
     if (search.trim()) {
@@ -200,94 +373,13 @@ export default function MediaPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {displayed.map((item) => {
-            const cat = item.mediaCategory ?? item.type ?? item.category;
-            const tabKey = toTab(cat);
-            const isImage = tabKey === "PICTURES";
-            const mediaUrl = item.displayUrl ?? item.url;
-            const mediaSize = item.size ?? item.fileSize;
-            // For non-image media, try to resolve a thumbnail:
-            //   1. Backend-supplied thumbnailUrl
-            //   2. YouTube link embedded in description as "[External Link]: <url>"
-            //   3. displayUrl / url (in case the field itself is a YouTube link)
-            const thumbnail = !isImage
-              ? (item.thumbnailUrl ||
-                  getYoutubeThumbnail(extractExternalLink(item.description)) ||
-                  getYoutubeThumbnail(item.displayUrl ?? item.url))
-              : null;
-            return (
-              <div
-                key={item.id}
-                className="overflow-hidden rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 transition-shadow hover:shadow-md"
-              >
-                <div className="relative flex h-[160px] items-center justify-center overflow-hidden bg-[#F3F4F6] dark:bg-slate-700/30">
-                  {isImage && mediaUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={mediaUrl}
-                      alt={item.title ?? ""}
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        const t = e.currentTarget;
-                        t.onerror = null;
-                        t.style.display = "none";
-                        t.parentElement?.classList.add("broken-img");
-                      }}
-                    />
-                  ) : thumbnail ? (
-                    <>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={thumbnail}
-                        alt={item.title ?? ""}
-                        className="h-full w-full object-cover"
-                        onError={(e) => {
-                          const t = e.currentTarget;
-                          t.onerror = null;
-                          t.style.display = "none";
-                          // show sibling play icon when thumbnail fails
-                          const overlay = t.nextElementSibling as HTMLElement | null;
-                          if (overlay) overlay.style.display = "flex";
-                        }}
-                      />
-                      {/* Play-button overlay on top of thumbnail */}
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/60">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="1">
-                            <polygon points="5 3 19 12 5 21 5 3" />
-                          </svg>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#9CA3AF" stroke="#9CA3AF" strokeWidth="1">
-                      <polygon points="5 3 19 12 5 21 5 3" />
-                    </svg>
-                  )}
-                </div>
-                <div className="p-4">
-                  <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${categoryColors[tabKey] ?? categoryColors.OTHER}`}>
-                    {tabLabels[tabKey] ?? "Media"}
-                  </span>
-                  <h3 className="mt-3 text-sm font-semibold text-[#111827] dark:text-slate-100 line-clamp-2 break-all">{item.title ?? item.displayName ?? "Untitled"}</h3>
-                  {item.description && (
-                    <p className="mt-1 line-clamp-2 text-xs text-[#6B7280] dark:text-slate-400">{item.description}</p>
-                  )}
-                  <div className="mt-1 flex items-center gap-2 text-xs text-[#9CA3AF] dark:text-slate-400">
-                    <span>{fmtDate(item.createdOn)}</span>
-                    {fileSizeFmt(mediaSize) && <span>· {fileSizeFmt(mediaSize)}</span>}
-                  </div>
-                  <Button
-                    variant="secondary"
-                    onClick={() => router.push(`/media/${item.id}`)}
-                    className="mt-3 w-full"
-                  >
-                    {isImage ? "View" : "Watch"}
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
+          {displayed.map((item) => (
+            <MediaCard
+              key={item.id}
+              item={item}
+              onNavigate={() => router.push(`/media/${item.id}`)}
+            />
+          ))}
         </div>
       )}
 
