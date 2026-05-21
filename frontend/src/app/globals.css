@@ -33,6 +33,15 @@ html.theme-transitioning *::after {
     box-shadow 0.25s ease !important;
 }
 
+/* ── Page transition fade-in ───────────────────────────────────────────────── */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.page-enter {
+  animation: page-enter 0.22s ease forwards;
+}
+
 /* ── Toast animations ───────────────────────────────────────────────────── */
 @keyframes slide-in {
   from { opacity: 0; transform: translateX(24px); }
@@ -59,4 +68,44 @@ html.theme-transitioning *::after {
 .dark .skeleton {
   background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
   background-size: 800px 100%;
+}
+
+/* ── Print styles — hide navigation, show only content ────────────────────── */
+@media print {
+  /* Hide sidebar, topnav, action buttons */
+  aside,
+  header,
+  [data-print-hide],
+  .no-print {
+    display: none !important;
+  }
+
+  /* Full-width content, no margin offset */
+  main {
+    margin-left: 0 !important;
+    margin-top: 0 !important;
+    padding: 0 !important;
+    min-height: unset !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11pt;
+  }
+
+  /* Ensure white background for cards in print */
+  .rounded-xl,
+  .rounded-lg,
+  [class*="bg-white"],
+  [class*="dark:bg-slate"] {
+    background: #fff !important;
+    box-shadow: none !important;
+    border-color: #ccc !important;
+  }
+
+  /* Page breaks */
+  .print-break-before { page-break-before: always; }
+  .print-break-after  { page-break-after:  always; }
+  .print-no-break     { page-break-inside: avoid; }
 }
