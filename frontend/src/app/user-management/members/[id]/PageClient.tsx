@@ -157,17 +157,17 @@ export default function ViewMemberProfilePage() {
   return (
     <DashboardLayout>
       <div className="mb-4">
-        <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">User Management</h1>
         <Breadcrumbs items={[
           { label: "User Management" },
           { label: "Members", href: "/user-management/members" },
           { label: user ? fullName(user) : "Profile" },
         ]} />
         <div className="flex items-center gap-2 mt-1">
-          <button onClick={() => router.push("/user-management/members")} className="flex items-center text-[#000080] transition-colors hover:text-[#000066]">
+          <button onClick={() => router.push("/user-management/members")} className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066] dark:hover:text-indigo-300">
             <BackArrow />
           </button>
-          <h2 className="text-[22px] font-bold text-[#000080]">Member Profile</h2>
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">Member Profile</h2>
         </div>
       </div>
 
@@ -182,10 +182,10 @@ export default function ViewMemberProfilePage() {
       ) : (
         <>
           {/* Profile Card */}
-          <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
+          <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
             <div className="flex flex-col gap-6 md:flex-row">
               {/* Photo — shrink-0 so it never squeezes the detail columns */}
-              <div className="relative mx-auto flex h-[160px] w-[130px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] sm:mx-0 sm:h-[220px] sm:w-[180px] md:h-[240px] md:w-[200px]">
+              <div className="relative mx-auto flex h-[160px] w-[130px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] dark:bg-slate-700 sm:mx-0 sm:h-[220px] sm:w-[180px] md:h-[240px] md:w-[200px]">
                 {user?.profilePictureUrl && !photoError ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -201,7 +201,7 @@ export default function ViewMemberProfilePage() {
 
               {/* Details */}
               <div className="flex-1">
-                <h2 className="mb-5 text-lg font-bold text-[#000000]">Basic Details</h2>
+                <h2 className="mb-5 text-lg font-bold text-[#000000] dark:text-slate-100">Basic Details</h2>
                 <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-3">
                   {[
                     { label: "First Name",     value: user?.firstName },
@@ -221,15 +221,15 @@ export default function ViewMemberProfilePage() {
                     { label: "Date Joined",             value: fmtDate(user?.createdOn) },
                   ].map(({ label, value }) => value ? (
                     <div key={label}>
-                      <p className="text-xs font-medium text-[#6B7280]">{label}</p>
-                      <p className="mt-1 text-sm text-[#111827]">{value}</p>
+                      <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">{label}</p>
+                      <p className="mt-1 text-sm text-[#111827] dark:text-slate-200">{value}</p>
                     </div>
                   ) : null)}
 
                   {/* Spouse — only relevant for married members */}
                   {(isMarried || hasSpouse) && (
                     <div>
-                      <p className="text-xs font-medium text-[#6B7280]">Spouse</p>
+                      <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Spouse</p>
                       {spouseLinkedIncorrectly && (
                         <p className="mb-0.5 text-[10px] font-semibold text-amber-600">
                           ⚠ Marital status is {user?.maritalStatus} but a spouse is linked
@@ -238,12 +238,12 @@ export default function ViewMemberProfilePage() {
                       {user?.spouse ? (
                         <button
                           onClick={() => router.push(`/user-management/members/${user.spouse!.id}`)}
-                          className="mt-1 text-sm font-medium text-[#000080] underline hover:text-[#000066]"
+                          className="mt-1 text-sm font-medium text-[#000080] dark:text-indigo-400 underline hover:text-[#000066] dark:hover:text-indigo-300"
                         >
                           {fullName(user.spouse)}
                         </button>
                       ) : (
-                        <p className="mt-1 text-sm text-[#9CA3AF]">Not linked</p>
+                        <p className="mt-1 text-sm text-[#9CA3AF] dark:text-slate-500">Not linked</p>
                       )}
                     </div>
                   )}
@@ -253,11 +253,11 @@ export default function ViewMemberProfilePage() {
           </div>
 
           {/* Tabs */}
-          <div className="mb-4 border-b border-[#E5E7EB]">
+          <div className="mb-4 border-b border-[#E5E7EB] dark:border-slate-700">
             <div className="flex gap-8">
               {tabs.map((tab) => (
                 <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                  className={`pb-3 text-sm font-medium transition-colors ${activeTab === tab.key ? "border-b-2 border-[#000080] text-[#000080]" : "text-[#6B7280] hover:text-[#374151]"}`}>
+                  className={`pb-3 text-sm font-medium transition-colors ${activeTab === tab.key ? "border-b-2 border-[#000080] dark:border-indigo-400 text-[#000080] dark:text-indigo-400" : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:hover:text-slate-200"}`}>
                   {tab.label}
                 </button>
               ))}
@@ -269,15 +269,15 @@ export default function ViewMemberProfilePage() {
               {reqLoading ? (
                 <div className="py-8 text-center text-gray-400">Loading requests…</div>
               ) : requests.length === 0 ? (
-                <div className="rounded-xl border border-[#E5E7EB] bg-white p-8 text-center text-sm text-gray-400">No requests found.</div>
+                <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-8 text-center text-sm text-gray-400 dark:text-slate-500">No requests found.</div>
               ) : (
                 <div className="space-y-4">
                   {requests.map((req) => (
-                    <div key={req.id} className="rounded-xl border border-[#E5E7EB] bg-white p-5">
+                    <div key={req.id} className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <h3 className="text-sm font-bold text-[#111827]">{req.subject}</h3>
-                          <p className="mt-1 text-sm text-[#374151]">{req.content}</p>
+                          <h3 className="text-sm font-bold text-[#111827] dark:text-slate-100">{req.subject}</h3>
+                          <p className="mt-1 text-sm text-[#374151] dark:text-slate-300">{req.content}</p>
                           <div className="mt-3 flex items-center gap-2">
                             <span className="rounded-full bg-[#000080] px-3 py-1 text-xs font-medium text-white">
                               {(req.requestType ?? "").replace(/_/g, " ")}
@@ -287,7 +287,7 @@ export default function ViewMemberProfilePage() {
                             </span>
                           </div>
                         </div>
-                        <span className="shrink-0 text-xs text-[#6B7280]">{fmtDate(req.createdOn)}</span>
+                        <span className="shrink-0 text-xs text-[#6B7280] dark:text-slate-400">{fmtDate(req.createdOn)}</span>
                       </div>
                     </div>
                   ))}
@@ -297,9 +297,9 @@ export default function ViewMemberProfilePage() {
           )}
 
           {activeTab === "details" && user && (
-            <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 text-sm text-gray-400 text-center">
+            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 text-sm text-gray-400 dark:text-slate-500 text-center">
               Assigned Follow-Up:{" "}
-              <span className="font-medium text-[#374151]">{fullName(user.assignedFollowUp) || "Not assigned"}</span>
+              <span className="font-medium text-[#374151] dark:text-slate-300">{fullName(user.assignedFollowUp) || "Not assigned"}</span>
             </div>
           )}
 

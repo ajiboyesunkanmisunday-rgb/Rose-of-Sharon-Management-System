@@ -282,12 +282,12 @@ export default function FirstTimersPage() {
     <DashboardLayout>
       {/* Page Header */}
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FFF7ED]">
-          <UserPlus className="h-6 w-6 text-[#EA580C]" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FFF7ED] dark:bg-orange-900/30">
+          <UserPlus className="h-6 w-6 text-[#EA580C] dark:text-orange-400" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">First Timers</h1>
-          <p className="text-sm text-[#6B7280]">Track and follow up with first-time visitors</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">First Timers</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Track and follow up with first-time visitors</p>
         </div>
       </div>
 
@@ -372,13 +372,13 @@ export default function FirstTimersPage() {
 
       {/* Filter panel */}
       {showFilter && (
-        <div className="mb-4 flex flex-wrap items-end gap-4 rounded-xl border border-[#E5E7EB] bg-white p-4">
+        <div className="mb-4 flex flex-wrap items-end gap-4 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
           <div className="flex flex-col">
-            <label className="mb-1 block text-xs font-medium text-[#374151]">Service Attended</label>
+            <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">Service Attended</label>
             <select
               value={filterService}
               onChange={(e) => { setFilterService(e.target.value); setCurrentPage(1); }}
-              className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500"
             >
               <option value="">All Services</option>
               <option value="Sunday Service">Sunday Service</option>
@@ -387,16 +387,16 @@ export default function FirstTimersPage() {
             </select>
           </div>
           <div className="flex flex-col">
-            <label className="mb-1 block text-xs font-medium text-[#374151]">From</label>
-            <input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]" />
+            <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">From</label>
+            <input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500" />
           </div>
           <div className="flex flex-col">
-            <label className="mb-1 block text-xs font-medium text-[#374151]">To</label>
-            <input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]" />
+            <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">To</label>
+            <input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500" />
           </div>
           <button
             onClick={() => { setFilterService(""); setFilterDateFrom(""); setFilterDateTo(""); setCurrentPage(1); }}
-            className="h-[42px] rounded-lg border border-[#E5E7EB] px-4 text-sm text-[#374151] hover:bg-gray-50"
+            className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-600 px-4 text-sm text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700"
           >
             Clear
           </button>
@@ -431,7 +431,7 @@ export default function FirstTimersPage() {
       <div className="sm:hidden space-y-3 mb-4">
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-2">
+            <div key={i} className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 space-y-2">
               <div className="skeleton h-4 w-32" /><div className="skeleton h-3 w-24" />
             </div>
           ))
@@ -442,7 +442,7 @@ export default function FirstTimersPage() {
             <div
               key={ft.id}
               onClick={() => router.push(`/user-management/first-timers/${ft.id}`)}
-              className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
             >
               <UserAvatar
                 id={ft.id}
@@ -451,9 +451,9 @@ export default function FirstTimersPage() {
                 profilePictureUrl={ft.profilePictureUrl}
               />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-[#111827] truncate">{fullName(ft)}</p>
-                <p className="text-xs text-[#6B7280]">{ft.phoneNumber}</p>
-                <p className="text-xs text-[#9CA3AF]">Calls: {ft.noOfCalls ?? 0} · Visits: {ft.noOfVisits ?? 0}</p>
+                <p className="text-sm font-semibold text-[#111827] dark:text-slate-100 truncate">{fullName(ft)}</p>
+                <p className="text-xs text-[#6B7280] dark:text-slate-400">{ft.phoneNumber}</p>
+                <p className="text-xs text-[#9CA3AF] dark:text-slate-500">Calls: {ft.noOfCalls ?? 0} · Visits: {ft.noOfVisits ?? 0}</p>
               </div>
               <div onClick={(e) => e.stopPropagation()}>
                 <ActionDropdown
@@ -471,10 +471,10 @@ export default function FirstTimersPage() {
       </div>
 
       {/* Table — hidden on mobile */}
-      <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
               <th className="px-4 py-4">
                 <input
                   type="checkbox"
@@ -483,8 +483,8 @@ export default function FirstTimersPage() {
                   className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
                 />
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Phone</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Name</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Phone</th>
               <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Email</th>
               <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Service Attended</th>
               <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Assigned Follow-up</th>
@@ -504,7 +504,7 @@ export default function FirstTimersPage() {
               displayedTimers.map((ft) => (
                 <tr
                   key={ft.id}
-                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
+                  className="border-b border-[#F3F4F6] dark:border-slate-700 transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer"
                   style={{ height: "56px" }}
                   onClick={() => router.push(`/user-management/first-timers/${ft.id}`)}
                 >
@@ -517,13 +517,13 @@ export default function FirstTimersPage() {
                     />
                   </td>
                   <td className="px-4 py-3 text-sm text-[#374151] max-w-[200px]"><span className="block truncate">{fullName(ft)}</span></td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">{ft.phoneNumber}</td>
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{ft.phoneNumber}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{ft.email}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
-                    {ft.serviceAttended || <span className="text-[#9CA3AF]">—</span>}
+                    {ft.serviceAttended || <span className="text-[#9CA3AF] dark:text-slate-500">—</span>}
                   </td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
-                    {ft.assignedFollowUp ? fullName(ft.assignedFollowUp) : <span className="text-[#9CA3AF]">—</span>}
+                    {ft.assignedFollowUp ? fullName(ft.assignedFollowUp) : <span className="text-[#9CA3AF] dark:text-slate-500">—</span>}
                   </td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{ft.noOfCalls ?? 0}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{ft.noOfVisits ?? 0}</td>
