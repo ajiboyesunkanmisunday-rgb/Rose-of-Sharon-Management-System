@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutUser } from "@/lib/api";
 import { useTheme } from "@/context/ThemeContext";
-import { useSidebar } from "@/context/SidebarContext";
 import {
   ClipboardList,
   CircleUser,
@@ -27,8 +26,6 @@ import {
   ChevronRight,
   ChevronDown,
   Megaphone,
-  PanelLeftClose,
-  PanelLeftOpen,
 } from "lucide-react";
 
 interface SubItem {
@@ -91,8 +88,8 @@ const navItems: NavItem[] = [
   {
     label: "Calendar", icon: CalendarDays,
     children: [
-      { label: "Events Calendar",  href: "/calendar" },
-      { label: "Ministers on Duty",href: "/calendar/ministers" },
+      { label: "Events Calendar",   href: "/calendar" },
+      { label: "Ministers on Duty", href: "/calendar/ministers" },
     ],
   },
   { label: "Directory",            icon: GitFork,       href: "/directory" },
@@ -106,13 +103,13 @@ const navItems: NavItem[] = [
   {
     label: "Settings", icon: Settings,
     children: [
-      { label: "My Settings",       href: "/settings" },
-      { label: "General",           href: "/settings/general" },
-      { label: "Admin Users",       href: "/settings/admins" },
+      { label: "My Settings",         href: "/settings" },
+      { label: "General",             href: "/settings/general" },
+      { label: "Admin Users",         href: "/settings/admins" },
       { label: "Roles & Permissions", href: "/settings/roles" },
-      { label: "Groups",            href: "/settings/groups" },
-      { label: "Change Password",   href: "/settings/change-password" },
-      { label: "Activity Logs",     href: "/settings/activity-logs" },
+      { label: "Groups",              href: "/settings/groups" },
+      { label: "Change Password",     href: "/settings/change-password" },
+      { label: "Activity Logs",       href: "/settings/activity-logs" },
     ],
   },
 ];
@@ -125,9 +122,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { isDark } = useTheme();
-  const { collapsed, toggleCollapsed } = useSidebar();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   // Auto-expand parent of active child
   useEffect(() => {
@@ -137,13 +132,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     setExpandedItems((prev) => Array.from(new Set([...prev, ...activeParents])));
   }, [pathname]);
 
-  // When sidebar collapses, close all expandedItems
-  useEffect(() => {
-    if (collapsed) setExpandedItems([]);
-  }, [collapsed]);
-
   const toggleExpand = (label: string) => {
-    if (collapsed) return; // no submenus in collapsed mode
     setExpandedItems((prev) =>
       prev.includes(label) ? prev.filter((i) => i !== label) : [...prev, label]
     );
@@ -166,7 +155,6 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     navText:         isDark ? "#cbd5e1" : "#000080",
     navTextActive:   "#ffffff",
     navBgActive:     "#000080",
-    navHoverBorder:  isDark ? "#818cf8" : "#000080",
     subText:         isDark ? "#94a3b8" : "#333333",
     subTextActive:   isDark ? "#a5b4fc" : "#000080",
     subBorderActive: isDark ? "#818cf8" : "#000080",
@@ -174,142 +162,90 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     subHoverBg:      isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
     logoutText:      isDark ? "#f87171" : "#000080",
     hoverBg:         isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
-    collapseBtn:     isDark ? "#94a3b8" : "#6B7280",
   };
-
-  const sidebarWidth = collapsed ? 64 : 272;
-
-  // Helper: is this nav item hovered (and not active)?
-  const isHovered = (key: string, active: boolean) =>
-    !active && hoveredItem === key;
 
   return (
     <aside
       className={[
-        "fixed left-0 top-0 z-40 flex h-screen flex-col overflow-hidden",
+        "fixed left-0 top-0 z-40 flex h-screen w-[272px] flex-col overflow-hidden",
         "lg:translate-x-0",
         isOpen ? "translate-x-0" : "-translate-x-full",
-        "transition-all duration-300 ease-in-out",
+        "transition-transform duration-300 ease-in-out",
       ].join(" ")}
       style={{
-        width: `${sidebarWidth}px`,
         backgroundColor: C.sidebarBg,
         boxShadow: C.sidebarShadow,
       }}
     >
-      {/* ── Logo / Collapse area ──────────────────────────────────────── */}
-      <div
-        className="flex items-center justify-between px-3 py-5 shrink-0"
-        style={{ minHeight: 80 }}
-      >
-        {!collapsed && (
-          <div className="flex items-center gap-2.5 min-w-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/rccg-icon-small.png"
-              alt="RCCG Rose of Sharon"
-              className="h-[50px] w-[50px] shrink-0 rounded-full object-cover"
-            />
-            <div className="leading-tight min-w-0">
-              <p className="text-[13px] font-bold truncate" style={{ color: C.logoText }}>Rose of Sharon</p>
-              <p className="text-[11px] font-semibold text-[#DA251D] tracking-wide">RCCG</p>
-            </div>
-          </div>
-        )}
-
-        {collapsed && (
-          /* Just the logo icon when collapsed */
-          // eslint-disable-next-line @next/next/no-img-element
+      {/* ── Logo ──────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-5 py-5 shrink-0">
+        <div className="flex items-center gap-2.5 min-w-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/rccg-icon-small.png"
-            alt="RCCG"
-            className="h-10 w-10 rounded-full object-cover mx-auto"
+            alt="RCCG Rose of Sharon"
+            className="h-[50px] w-[50px] shrink-0 rounded-full object-cover"
           />
-        )}
-
-        {/* Mobile close / Desktop collapse toggle */}
-        <div className="flex items-center gap-1 shrink-0">
-          {/* Mobile close */}
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-full lg:hidden"
-              style={{ color: C.logoutText }}
-              aria-label="Close menu"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          )}
-          {/* Desktop collapse toggle */}
-          <button
-            onClick={toggleCollapsed}
-            className="hidden lg:flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
-            style={{ color: C.collapseBtn }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = C.hoverBg; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {collapsed
-              ? <PanelLeftOpen size={18} strokeWidth={1.8} />
-              : <PanelLeftClose size={18} strokeWidth={1.8} />
-            }
-          </button>
+          <div className="leading-tight min-w-0">
+            <p className="text-[13px] font-bold truncate" style={{ color: C.logoText }}>Rose of Sharon</p>
+            <p className="text-[11px] font-semibold text-[#DA251D] tracking-wide">RCCG</p>
+          </div>
         </div>
+
+        {/* Mobile close */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full lg:hidden"
+            style={{ color: C.logoutText }}
+            aria-label="Close menu"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        )}
       </div>
 
-      {/* ── Navigation ───────────────────────────────────────────────── */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-2" style={{ paddingLeft: collapsed ? 6 : 20, paddingRight: collapsed ? 6 : 12 }}>
+      {/* ── Navigation ────────────────────────────────────────────────── */}
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-2 px-5 pr-3">
         <ul className="space-y-0.5">
           {navItems.map((item) => {
             const Icon = item.icon;
             const hasChildren = !!item.children;
             const isExpanded = expandedItems.includes(item.label);
             const parentActive = isParentActive(item);
-            const hovered = isHovered(item.label, parentActive);
 
             return (
               <li key={item.label}>
                 {hasChildren ? (
                   <>
                     <button
-                      onClick={() => {
-                        if (collapsed) return;
-                        toggleExpand(item.label);
-                      }}
-                      onMouseEnter={() => setHoveredItem(item.label)}
-                      onMouseLeave={() => setHoveredItem(null)}
-                      title={collapsed ? item.label : undefined}
-                      className="flex w-full items-center gap-3 rounded-lg transition-all"
+                      onClick={() => toggleExpand(item.label)}
+                      className="flex w-full items-center gap-3 rounded-lg transition-colors"
                       style={{
                         paddingTop: "14px",
                         paddingBottom: "14px",
-                        paddingLeft: collapsed ? 10 : 12,
-                        paddingRight: collapsed ? 10 : 12,
+                        paddingLeft: 12,
+                        paddingRight: 12,
                         backgroundColor: parentActive ? C.navBgActive : "transparent",
                         color: parentActive ? C.navTextActive : C.navText,
                         borderRadius: "8px",
-                        borderLeft: hovered ? `2px solid ${C.navHoverBorder}` : "2px solid transparent",
                       }}
+                      onMouseEnter={(e) => { if (!parentActive) (e.currentTarget as HTMLElement).style.backgroundColor = C.hoverBg; }}
+                      onMouseLeave={(e) => { if (!parentActive) (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
                     >
-                      <Icon className="flex-shrink-0" style={{ width: 24, height: 24, color: parentActive ? C.navTextActive : C.navText }} strokeWidth={1.5} />
-                      {!collapsed && (
-                        <>
-                          <span className="flex-1 text-left" style={{ fontSize: 16, fontWeight: parentActive ? 500 : 400 }}>
-                            {item.label}
-                          </span>
-                          {parentActive || isExpanded
-                            ? <ChevronDown className="flex-shrink-0" style={{ width: 20, height: 20, color: parentActive ? C.navTextActive : C.navText }} strokeWidth={1.5} />
-                            : <ChevronRight className="flex-shrink-0" style={{ width: 20, height: 20, color: C.navText }} strokeWidth={1.5} />
-                          }
-                        </>
-                      )}
+                      <Icon className="flex-shrink-0" style={{ width: 24, height: 24 }} strokeWidth={1.5} />
+                      <span className="flex-1 text-left" style={{ fontSize: 16, fontWeight: parentActive ? 500 : 400 }}>
+                        {item.label}
+                      </span>
+                      {parentActive || isExpanded
+                        ? <ChevronDown className="flex-shrink-0" style={{ width: 20, height: 20 }} strokeWidth={1.5} />
+                        : <ChevronRight className="flex-shrink-0" style={{ width: 20, height: 20 }} strokeWidth={1.5} />
+                      }
                     </button>
 
-                    {/* Submenu — hidden when collapsed */}
-                    {!collapsed && isExpanded && (
+                    {isExpanded && (
                       <>
                         {parentActive && <div style={{ height: 2, backgroundColor: C.navBgActive, margin: "2px 0" }} />}
                         <ul className="py-1">
@@ -320,24 +256,22 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                                 <Link
                                   href={child.href}
                                   onClick={onClose}
-                                  onMouseEnter={() => setHoveredItem(child.href)}
-                                  onMouseLeave={() => setHoveredItem(null)}
-                                  className="block transition-all relative"
+                                  className="block transition-colors relative"
                                   style={{
                                     paddingLeft: childActive ? 36 : 40,
                                     paddingTop: 10,
                                     paddingBottom: 10,
                                     fontSize: 15,
                                     fontWeight: childActive ? 600 : 400,
-                                    color: childActive ? C.subTextActive : hoveredItem === child.href ? C.subTextActive : C.subText,
+                                    color: childActive ? C.subTextActive : C.subText,
                                     borderLeft: childActive
                                       ? `4px solid ${C.subBorderActive}`
-                                      : hoveredItem === child.href
-                                        ? `4px solid ${C.navHoverBorder}`
-                                        : "4px solid transparent",
+                                      : "4px solid transparent",
                                     borderRadius: "0 6px 6px 0",
-                                    backgroundColor: childActive ? C.subBgActive : hoveredItem === child.href ? C.subHoverBg : "transparent",
+                                    backgroundColor: childActive ? C.subBgActive : "transparent",
                                   }}
+                                  onMouseEnter={(e) => { if (!childActive) (e.currentTarget as HTMLElement).style.backgroundColor = C.subHoverBg; }}
+                                  onMouseLeave={(e) => { if (!childActive) (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
                                 >
                                   {child.label}
                                 </Link>
@@ -352,31 +286,23 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                   <Link
                     href={item.href!}
                     onClick={onClose}
-                    onMouseEnter={() => setHoveredItem(item.label)}
-                    onMouseLeave={() => setHoveredItem(null)}
-                    title={collapsed ? item.label : undefined}
-                    className="flex items-center gap-3 rounded-lg transition-all"
+                    className="flex items-center gap-3 rounded-lg transition-colors"
                     style={{
                       paddingTop: 14,
                       paddingBottom: 14,
-                      paddingLeft: collapsed ? 10 : 12,
-                      paddingRight: collapsed ? 10 : 12,
+                      paddingLeft: 12,
+                      paddingRight: 12,
                       backgroundColor: isParentActive(item) ? C.navBgActive : "transparent",
                       color: isParentActive(item) ? C.navTextActive : C.navText,
                       borderRadius: "8px",
-                      borderLeft: isParentActive(item)
-                        ? "2px solid transparent"
-                        : hovered
-                          ? `2px solid ${C.navHoverBorder}`
-                          : "2px solid transparent",
                     }}
+                    onMouseEnter={(e) => { if (!isParentActive(item)) (e.currentTarget as HTMLElement).style.backgroundColor = C.hoverBg; }}
+                    onMouseLeave={(e) => { if (!isParentActive(item)) (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
                   >
-                    <Icon className="flex-shrink-0" style={{ width: 24, height: 24, color: isParentActive(item) ? C.navTextActive : C.navText }} strokeWidth={1.5} />
-                    {!collapsed && (
-                      <span style={{ fontSize: 16, fontWeight: isParentActive(item) ? 500 : 400 }}>
-                        {item.label}
-                      </span>
-                    )}
+                    <Icon className="flex-shrink-0" style={{ width: 24, height: 24 }} strokeWidth={1.5} />
+                    <span style={{ fontSize: 16, fontWeight: isParentActive(item) ? 500 : 400 }}>
+                      {item.label}
+                    </span>
                   </Link>
                 )}
               </li>
@@ -385,18 +311,17 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         </ul>
       </nav>
 
-      {/* ── Log Out ──────────────────────────────────────────────────── */}
-      <div className="shrink-0 py-4" style={{ borderTop: `1px solid ${C.divider}`, paddingLeft: collapsed ? 6 : 20, paddingRight: collapsed ? 6 : 20 }}>
+      {/* ── Log Out ───────────────────────────────────────────────────── */}
+      <div className="shrink-0 py-4 px-5" style={{ borderTop: `1px solid ${C.divider}` }}>
         <button
           onClick={() => logoutUser()}
-          title={collapsed ? "Log Out" : undefined}
-          className="flex w-full items-center gap-3 rounded-lg transition-all"
-          style={{ paddingTop: 14, paddingBottom: 14, paddingLeft: collapsed ? 10 : 12, paddingRight: collapsed ? 10 : 12, color: C.logoutText }}
+          className="flex w-full items-center gap-3 rounded-lg transition-colors"
+          style={{ paddingTop: 14, paddingBottom: 14, paddingLeft: 12, paddingRight: 12, color: C.logoutText }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.hoverBg; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
         >
           <LogOut className="flex-shrink-0" style={{ width: 24, height: 24, color: C.logoutText }} strokeWidth={1.5} />
-          {!collapsed && <span style={{ fontSize: 16, fontWeight: 400 }}>Log Out</span>}
+          <span style={{ fontSize: 16, fontWeight: 400 }}>Log Out</span>
         </button>
       </div>
     </aside>
