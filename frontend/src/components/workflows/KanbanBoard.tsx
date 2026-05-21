@@ -14,24 +14,24 @@ export interface ColumnConfig {
 }
 
 export const PRAYER_COLUMNS: ColumnConfig[] = [
-  { status: "RECEIVED",    label: "Received",    headerBg: "bg-blue-50",   headerText: "text-blue-800",  dotColor: "bg-blue-400"  },
+  { status: "RECEIVED",    label: "Received",    headerBg: "bg-blue-50 dark:bg-blue-900/20",   headerText: "text-blue-800",  dotColor: "bg-blue-400"  },
   { status: "ASSIGNED",    label: "Assigned",    headerBg: "bg-yellow-50", headerText: "text-yellow-800",dotColor: "bg-yellow-400"},
   { status: "IN_PROGRESS", label: "In Progress", headerBg: "bg-purple-50", headerText: "text-purple-800",dotColor: "bg-purple-400"},
-  { status: "RESOLVED",    label: "Resolved",    headerBg: "bg-green-50",  headerText: "text-green-800", dotColor: "bg-green-400" },
+  { status: "RESOLVED",    label: "Resolved",    headerBg: "bg-green-50 dark:bg-green-900/20",  headerText: "text-green-800", dotColor: "bg-green-400" },
 ];
 
 export const COUNSELING_COLUMNS: ColumnConfig[] = [
-  { status: "RECEIVED",    label: "Received",   headerBg: "bg-blue-50",   headerText: "text-blue-800",  dotColor: "bg-blue-400"  },
+  { status: "RECEIVED",    label: "Received",   headerBg: "bg-blue-50 dark:bg-blue-900/20",   headerText: "text-blue-800",  dotColor: "bg-blue-400"  },
   { status: "ASSIGNED",    label: "Scheduled",  headerBg: "bg-yellow-50", headerText: "text-yellow-800",dotColor: "bg-yellow-400"},
   { status: "IN_PROGRESS", label: "In Session", headerBg: "bg-purple-50", headerText: "text-purple-800",dotColor: "bg-purple-400"},
-  { status: "RESOLVED",    label: "Resolved",   headerBg: "bg-green-50",  headerText: "text-green-800", dotColor: "bg-green-400" },
+  { status: "RESOLVED",    label: "Resolved",   headerBg: "bg-green-50 dark:bg-green-900/20",  headerText: "text-green-800", dotColor: "bg-green-400" },
 ];
 
 export const GUEST_COLUMNS: ColumnConfig[] = [
-  { status: "RECEIVED",    label: "First Timers",     headerBg: "bg-blue-50",   headerText: "text-blue-800",  dotColor: "bg-blue-400"   },
+  { status: "RECEIVED",    label: "First Timers",     headerBg: "bg-blue-50 dark:bg-blue-900/20",   headerText: "text-blue-800",  dotColor: "bg-blue-400"   },
   { status: "ASSIGNED",    label: "Follow-up Call",   headerBg: "bg-yellow-50", headerText: "text-yellow-800",dotColor: "bg-yellow-400" },
   { status: "IN_PROGRESS", label: "Follow-up Visit",  headerBg: "bg-purple-50", headerText: "text-purple-800",dotColor: "bg-purple-400" },
-  { status: "RESOLVED",    label: "Second Timers",    headerBg: "bg-green-50",  headerText: "text-green-800", dotColor: "bg-green-400"  },
+  { status: "RESOLVED",    label: "Second Timers",    headerBg: "bg-green-50 dark:bg-green-900/20",  headerText: "text-green-800", dotColor: "bg-green-400"  },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -249,7 +249,7 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
   return (
     <div className="relative">
       {toast && (
-        <div className="pointer-events-none fixed bottom-6 right-6 z-50 rounded-xl border border-[#E5E7EB] bg-white px-5 py-3 text-sm font-medium text-[#111827] shadow-xl">
+        <div className="pointer-events-none fixed bottom-6 right-6 z-50 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-3 text-sm font-medium text-[#111827] dark:text-slate-100 shadow-xl">
           {toast}
         </div>
       )}
@@ -267,7 +267,7 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
       {onRefresh && (
         <div className="mb-4 flex justify-end">
           <button onClick={onRefresh} disabled={loading}
-            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#374151] transition hover:border-[#000080] hover:text-[#000080] disabled:opacity-50">
+            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 transition hover:border-[#000080] hover:text-[#000080] dark:text-indigo-400 disabled:opacity-50">
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </button>
@@ -294,7 +294,7 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
               className={`flex min-w-[280px] flex-1 flex-col rounded-xl border-2 transition-all ${
                 isColOver
                   ? "border-[#000080] bg-[#E8EAF0] shadow-md"
-                  : "border-[#E5E7EB] bg-[#F3F4F6]"
+                  : "border-[#E5E7EB] dark:border-slate-700 bg-[#F3F4F6] dark:bg-slate-700/30"
               }`}
             >
               {/* Column header */}
@@ -303,14 +303,14 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
                   <span className={`h-2.5 w-2.5 rounded-full ${col.dotColor}`} />
                   <h3 className={`text-sm font-bold ${col.headerText}`}>{col.label}</h3>
                 </div>
-                <span className="rounded-full bg-white/80 px-2.5 py-0.5 text-xs font-bold text-[#374151]">
+                <span className="rounded-full bg-white dark:bg-slate-800/80 px-2.5 py-0.5 text-xs font-bold text-[#374151] dark:text-slate-300">
                   {colCards.length}
                 </span>
               </div>
 
               {/* Drop hint (empty column while dragging over) */}
               {isColOver && colCards.length === 0 && (
-                <div className="mx-3 mt-2 rounded-lg border-2 border-dashed border-[#000080]/40 bg-[#E8EAF0] py-3 text-center text-xs font-medium text-[#000080]">
+                <div className="mx-3 mt-2 rounded-lg border-2 border-dashed border-[#000080]/40 bg-[#E8EAF0] py-3 text-center text-xs font-medium text-[#000080] dark:text-indigo-400">
                   Drop here
                 </div>
               )}
@@ -364,9 +364,9 @@ function KanbanCard({
   onDoubleClick: () => void;
 }) {
   const typeBadge: Record<string, string> = {
-    PRAYER:      "bg-[#EDE9FE] text-[#7C3AED]",
-    COUNSELING:  "bg-[#DBEAFE] text-[#1D4ED8]",
-    SUGGESTIONS: "bg-[#DCFCE7] text-[#16A34A]",
+    PRAYER:      "bg-[#EDE9FE] dark:bg-purple-900/30 text-[#7C3AED] dark:text-purple-400",
+    COUNSELING:  "bg-[#DBEAFE] dark:bg-blue-900/30 text-[#1D4ED8] dark:text-blue-300",
+    SUGGESTIONS: "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
   };
 
   return (
@@ -383,46 +383,46 @@ function KanbanCard({
         onDrop={(e) => onCardDrop(e, card.id, fromStatus)}
         onDoubleClick={onDoubleClick}
         title="Double-click to view / edit"
-        className={`group rounded-xl border bg-white p-3.5 shadow-sm transition-all cursor-grab active:cursor-grabbing select-none ${
+        className={`group rounded-xl border bg-white dark:bg-slate-800 p-3.5 shadow-sm transition-all cursor-grab active:cursor-grabbing select-none ${
           isMoving
             ? "opacity-50 scale-95"
-            : "border-[#E5E7EB] hover:border-[#000080] hover:shadow-md"
+            : "border-[#E5E7EB] dark:border-slate-700 hover:border-[#000080] hover:shadow-md"
         }`}
       >
         {/* Type badge + grip */}
         <div className="mb-2 flex items-start justify-between gap-2">
-          <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${typeBadge[card.requestType ?? ""] ?? "bg-gray-100 text-gray-600"}`}>
+          <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap ${typeBadge[card.requestType ?? ""] ?? "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400"}`}>
             {(card.requestType ?? "").replace(/_/g, " ")}
           </span>
-          <GripVertical className="h-4 w-4 shrink-0 text-[#D1D5DB] group-hover:text-[#9CA3AF]" />
+          <GripVertical className="h-4 w-4 shrink-0 text-[#D1D5DB] group-hover:text-[#9CA3AF] dark:text-slate-400" />
         </div>
 
         {/* Subject — 10 words max */}
-        <p className="text-sm font-semibold text-[#111827] leading-snug break-all">
+        <p className="text-sm font-semibold text-[#111827] dark:text-slate-100 leading-snug break-all">
           {limitWords(card.subject || "—", 10)}
         </p>
 
         {/* Content — 18 words max */}
         {card.content && (
-          <p className="mt-1 text-xs text-[#6B7280] leading-relaxed break-all">
+          <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400 leading-relaxed break-all">
             {limitWords(card.content, 18)}
           </p>
         )}
 
         {/* Meta */}
         <div className="mt-3 space-y-1.5">
-          <div className="flex items-center gap-1.5 text-xs text-[#374151]">
-            <User className="h-3.5 w-3.5 shrink-0 text-[#9CA3AF]" />
+          <div className="flex items-center gap-1.5 text-xs text-[#374151] dark:text-slate-300">
+            <User className="h-3.5 w-3.5 shrink-0 text-[#9CA3AF] dark:text-slate-400" />
             <span className="font-medium truncate">{fullName(card.owner)}</span>
           </div>
           {card.assignedTo && (
-            <div className="flex items-center gap-1.5 text-xs text-[#374151]">
-              <MessageSquare className="h-3.5 w-3.5 shrink-0 text-[#9CA3AF]" />
+            <div className="flex items-center gap-1.5 text-xs text-[#374151] dark:text-slate-300">
+              <MessageSquare className="h-3.5 w-3.5 shrink-0 text-[#9CA3AF] dark:text-slate-400" />
               <span className="truncate">Assigned: <span className="font-medium">{fullName(card.assignedTo)}</span></span>
             </div>
           )}
           {card.createdOn && (
-            <div className="flex items-center gap-1.5 text-xs text-[#9CA3AF]">
+            <div className="flex items-center gap-1.5 text-xs text-[#9CA3AF] dark:text-slate-400">
               <Calendar className="h-3.5 w-3.5 shrink-0" />
               <span>{fmtDate(card.createdOn)}</span>
             </div>
@@ -472,17 +472,17 @@ function CardDetailModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
+      <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-800 shadow-2xl">
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-[#E5E7EB] px-6 py-4">
+        <div className="flex items-start justify-between border-b border-[#E5E7EB] dark:border-slate-700 px-6 py-4">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] dark:text-slate-400">
               {(card.requestType ?? "").replace(/_/g, " ")} REQUEST
             </p>
-            <h2 className="mt-0.5 text-base font-bold text-[#111827] break-all">{card.subject || "—"}</h2>
+            <h2 className="mt-0.5 text-base font-bold text-[#111827] dark:text-slate-100 break-all">{card.subject || "—"}</h2>
           </div>
           <button onClick={onClose}
-            className="ml-4 rounded-lg p-1.5 text-[#9CA3AF] hover:bg-[#F3F4F6] hover:text-[#374151]">
+            className="ml-4 rounded-lg p-1.5 text-[#9CA3AF] dark:text-slate-400 hover:bg-[#F3F4F6] dark:bg-slate-700/30 hover:text-[#374151] dark:text-slate-300">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -491,25 +491,25 @@ function CardDetailModal({
         <div className="space-y-4 px-6 py-5">
           {/* Status */}
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-[#374151]">Status</label>
+            <label className="mb-1.5 block text-xs font-semibold text-[#374151] dark:text-slate-300">Status</label>
             <div className="relative">
               <button
                 onClick={() => setStatusOpen((o) => !o)}
                 disabled={saving}
-                className="flex w-full items-center justify-between rounded-lg border border-[#D1D5DB] bg-white px-3 py-2.5 text-sm text-[#111827] hover:border-[#000080] disabled:opacity-50"
+                className="flex w-full items-center justify-between rounded-lg border border-[#D1D5DB] bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-[#111827] dark:text-slate-100 hover:border-[#000080] disabled:opacity-50"
               >
                 <span className="flex items-center gap-2">
                   <span className={`h-2 w-2 rounded-full ${columns.find((c) => c.status === selectedStatus)?.dotColor ?? "bg-gray-400"}`} />
                   {currentLabel}
                 </span>
-                <ChevronDown className={`h-4 w-4 text-[#9CA3AF] transition-transform ${statusOpen ? "rotate-180" : ""}`} />
+                <ChevronDown className={`h-4 w-4 text-[#9CA3AF] dark:text-slate-400 transition-transform ${statusOpen ? "rotate-180" : ""}`} />
               </button>
               {statusOpen && (
-                <div className="absolute left-0 top-full z-10 mt-1 w-full rounded-lg border border-[#E5E7EB] bg-white shadow-lg">
+                <div className="absolute left-0 top-full z-10 mt-1 w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg">
                   {columns.map((col) => (
                     <button key={col.status} onClick={() => applyStatus(col.status)}
                       className={`flex w-full items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-[#F9FAFB] ${
-                        col.status === selectedStatus ? "font-semibold text-[#000080]" : "text-[#374151]"
+                        col.status === selectedStatus ? "font-semibold text-[#000080] dark:text-indigo-400" : "text-[#374151] dark:text-slate-300"
                       }`}>
                       <span className={`h-2 w-2 rounded-full ${col.dotColor}`} />
                       {col.label}
@@ -518,40 +518,40 @@ function CardDetailModal({
                 </div>
               )}
             </div>
-            {saving && <p className="mt-1 text-[10px] text-[#9CA3AF]">Saving…</p>}
+            {saving && <p className="mt-1 text-[10px] text-[#9CA3AF] dark:text-slate-400">Saving…</p>}
           </div>
 
           {/* Content */}
           <div>
-            <p className="mb-1 text-xs font-semibold text-[#374151]">Request Content</p>
-            <div className="rounded-lg bg-[#F9FAFB] px-4 py-3 text-sm text-[#374151] leading-relaxed min-h-[80px] break-all">
-              {card.content || <span className="text-[#9CA3AF]">No content provided.</span>}
+            <p className="mb-1 text-xs font-semibold text-[#374151] dark:text-slate-300">Request Content</p>
+            <div className="rounded-lg bg-[#F9FAFB] px-4 py-3 text-sm text-[#374151] dark:text-slate-300 leading-relaxed min-h-[80px] break-all">
+              {card.content || <span className="text-[#9CA3AF] dark:text-slate-400">No content provided.</span>}
             </div>
           </div>
 
           {/* Meta grid */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Submitted By</p>
-              <p className="mt-0.5 text-sm font-medium text-[#111827] break-all">{fullName(card.owner)}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] dark:text-slate-400">Submitted By</p>
+              <p className="mt-0.5 text-sm font-medium text-[#111827] dark:text-slate-100 break-all">{fullName(card.owner)}</p>
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Assigned To</p>
-              <p className="mt-0.5 text-sm font-medium text-[#111827] break-all">{card.assignedTo ? fullName(card.assignedTo) : "—"}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] dark:text-slate-400">Assigned To</p>
+              <p className="mt-0.5 text-sm font-medium text-[#111827] dark:text-slate-100 break-all">{card.assignedTo ? fullName(card.assignedTo) : "—"}</p>
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Date Submitted</p>
-              <p className="mt-0.5 text-sm font-medium text-[#111827]">{fmtDate(card.createdOn)}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] dark:text-slate-400">Date Submitted</p>
+              <p className="mt-0.5 text-sm font-medium text-[#111827] dark:text-slate-100">{fmtDate(card.createdOn)}</p>
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Request Type</p>
-              <p className="mt-0.5 text-sm font-medium text-[#111827]">{(card.requestType ?? "—").replace(/_/g, " ")}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] dark:text-slate-400">Request Type</p>
+              <p className="mt-0.5 text-sm font-medium text-[#111827] dark:text-slate-100">{(card.requestType ?? "—").replace(/_/g, " ")}</p>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end border-t border-[#E5E7EB] px-6 py-4">
+        <div className="flex justify-end border-t border-[#E5E7EB] dark:border-slate-700 px-6 py-4">
           <button onClick={onClose}
             className="rounded-lg bg-[#000080] px-5 py-2 text-sm font-medium text-white hover:bg-[#000066]">
             Close

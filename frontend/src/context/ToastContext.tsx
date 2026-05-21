@@ -28,9 +28,9 @@ const icons: Record<ToastType, React.ReactNode> = {
 };
 
 const barColors: Record<ToastType, string> = {
-  success: "bg-green-500",
-  error:   "bg-red-500",
-  info:    "bg-blue-500",
+  success: "bg-green-50 dark:bg-green-900/200",
+  error:   "bg-red-50 dark:bg-red-900/200",
+  info:    "bg-blue-50 dark:bg-blue-900/200",
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
@@ -58,13 +58,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className="pointer-events-auto flex items-start gap-3 rounded-xl bg-white shadow-lg border border-gray-100 px-4 py-3 animate-slide-in"
+            className="pointer-events-auto flex items-start gap-3 rounded-xl bg-white dark:bg-slate-800 shadow-lg border border-gray-100 px-4 py-3 animate-slide-in"
           >
             {icons[toast.type]}
-            <p className="flex-1 text-sm font-medium text-[#111827] leading-snug">{toast.message}</p>
+            <p className="flex-1 text-sm font-medium text-[#111827] dark:text-slate-100 leading-snug">{toast.message}</p>
             <button
               onClick={() => removeToast(toast.id)}
-              className="mt-0.5 text-gray-400 hover:text-gray-600 transition-colors"
+              className="mt-0.5 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:text-slate-400 transition-colors"
               aria-label="Dismiss"
             >
               <X className="h-4 w-4" />

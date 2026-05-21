@@ -36,8 +36,8 @@ function Field({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null;
   return (
     <div>
-      <p className="text-xs font-medium text-[#6B7280]">{label}</p>
-      <p className="mt-1 text-sm text-[#111827]">{value}</p>
+      <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">{label}</p>
+      <p className="mt-1 text-sm text-[#111827] dark:text-slate-100">{value}</p>
     </div>
   );
 }
@@ -177,17 +177,17 @@ export default function ViewNewConvertPage() {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">User Management</h1>
         <div className="flex items-center gap-2">
-          <button onClick={() => router.push("/user-management/new-converts")} className="flex items-center text-[#000080] transition-colors hover:text-[#000066]">
+          <button onClick={() => router.push("/user-management/new-converts")} className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]">
             <BackArrow />
           </button>
-          <h2 className="text-[22px] font-bold text-[#000080]">View New Convert</h2>
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">View New Convert</h2>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error} — <button className="font-medium underline" onClick={fetchUser}>Retry</button>
         </div>
       )}
@@ -197,13 +197,13 @@ export default function ViewNewConvertPage() {
       ) : (
         <>
           {/* Profile Card */}
-          <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
+          <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
             <div className="flex flex-col gap-6 md:flex-row">
-              <div className="relative mx-auto flex h-[160px] w-[130px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] sm:mx-0 sm:h-[220px] sm:w-[180px] md:h-[240px] md:w-[200px]">
+              <div className="relative mx-auto flex h-[160px] w-[130px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] dark:bg-slate-700 sm:mx-0 sm:h-[220px] sm:w-[180px] md:h-[240px] md:w-[200px]">
                 <UserIcon />
               </div>
               <div className="flex-1">
-                <h2 className="mb-5 text-lg font-bold text-[#000000]">Basic Details</h2>
+                <h2 className="mb-5 text-lg font-bold text-[#000000] dark:text-slate-100">Basic Details</h2>
                 <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-3">
                   <Field label="First Name"            value={user?.firstName} />
                   <Field label="Middle Name"           value={user?.middleName} />
@@ -223,11 +223,11 @@ export default function ViewNewConvertPage() {
           </div>
 
           {/* Tabs */}
-          <div className="mb-4 border-b border-[#E5E7EB]">
+          <div className="mb-4 border-b border-[#E5E7EB] dark:border-slate-700">
             <div className="flex gap-8">
               {(["details", "activity"] as Tab[]).map((key) => (
                 <button key={key} onClick={() => setActiveTab(key)}
-                  className={`pb-3 text-sm font-medium capitalize transition-colors ${activeTab === key ? "border-b-2 border-[#000080] text-[#000080]" : "text-[#6B7280] hover:text-[#374151]"}`}>
+                  className={`pb-3 text-sm font-medium capitalize transition-colors ${activeTab === key ? "border-b-2 border-[#000080] text-[#000080] dark:text-indigo-400" : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"}`}>
                   {key}
                 </button>
               ))}
@@ -238,19 +238,19 @@ export default function ViewNewConvertPage() {
           {activeTab === "activity" && (
             <div className="space-y-4">
               {saveMsg && (
-                <div className={`rounded-lg px-4 py-3 text-sm border ${saveFailed ? "bg-red-50 text-red-700 border-red-200" : "bg-green-50 text-green-700 border-green-200"}`}>
+                <div className={`rounded-lg px-4 py-3 text-sm border ${saveFailed ? "bg-red-50 dark:bg-red-900/20 text-red-700 border-red-200" : "bg-green-50 dark:bg-green-900/20 text-green-700 border-green-200"}`}>
                   {saveMsg}
                 </div>
               )}
 
               {/* Believers Class */}
-              <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
-                <h3 className="mb-3 text-sm font-bold text-[#111827]">Believers Class Stage</h3>
+              <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+                <h3 className="mb-3 text-sm font-bold text-[#111827] dark:text-slate-100">Believers Class Stage</h3>
                 <div className="flex gap-3">
                   <select
                     value={classStage}
                     onChange={(e) => setClassStage(e.target.value)}
-                    className="flex-1 rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+                    className="flex-1 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
                   >
                     <option value="">Select Stage</option>
                     <option value="CLASS_1">Class 1</option>
@@ -266,14 +266,14 @@ export default function ViewNewConvertPage() {
               </div>
 
               {/* Log Call */}
-              <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
-                <h3 className="mb-3 text-sm font-bold text-[#111827]">Log Call Report</h3>
+              <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+                <h3 className="mb-3 text-sm font-bold text-[#111827] dark:text-slate-100">Log Call Report</h3>
                 <textarea
                   value={callText}
                   onChange={(e) => setCallText(e.target.value)}
                   placeholder="Describe the call…"
                   rows={3}
-                  className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+                  className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
                 />
                 <div className="mt-2 flex justify-end">
                   <Button variant="primary" onClick={() => handleSaveActivity("call")} disabled={saving || !callText.trim()}>
@@ -283,14 +283,14 @@ export default function ViewNewConvertPage() {
               </div>
 
               {/* Log Visit */}
-              <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
-                <h3 className="mb-3 text-sm font-bold text-[#111827]">Log Visit Report</h3>
+              <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+                <h3 className="mb-3 text-sm font-bold text-[#111827] dark:text-slate-100">Log Visit Report</h3>
                 <textarea
                   value={visitText}
                   onChange={(e) => setVisitText(e.target.value)}
                   placeholder="Describe the visit…"
                   rows={3}
-                  className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+                  className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
                 />
                 <div className="mt-2 flex justify-end">
                   <Button variant="primary" onClick={() => handleSaveActivity("visit")} disabled={saving || !visitText.trim()}>
@@ -300,37 +300,37 @@ export default function ViewNewConvertPage() {
               </div>
 
               {/* Activity History */}
-              <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
-                <h3 className="mb-3 text-sm font-bold text-[#111827]">Activity History</h3>
+              <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+                <h3 className="mb-3 text-sm font-bold text-[#111827] dark:text-slate-100">Activity History</h3>
                 {notesLoading ? (
-                  <p className="text-center text-xs text-[#9CA3AF] py-4">Loading history…</p>
+                  <p className="text-center text-xs text-[#9CA3AF] dark:text-slate-400 py-4">Loading history…</p>
                 ) : notes.length === 0 ? (
-                  <p className="text-center text-xs text-[#9CA3AF] py-4">No activity recorded yet.</p>
+                  <p className="text-center text-xs text-[#9CA3AF] dark:text-slate-400 py-4">No activity recorded yet.</p>
                 ) : (
                   <ul className="space-y-3">
                     {notes.map((n) => {
                       const cat = (n.noteCategory ?? n.type ?? "").toUpperCase();
                       const typeLabel = cat.includes("CALL") ? "Call Log" : cat.includes("VISIT") ? "Visit Log" : "Note";
-                      const typeBg    = cat.includes("CALL") ? "bg-blue-50 text-blue-700" : cat.includes("VISIT") ? "bg-green-50 text-green-700" : "bg-[#F3F4F6] text-[#374151]";
+                      const typeBg    = cat.includes("CALL") ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700" : cat.includes("VISIT") ? "bg-green-50 dark:bg-green-900/20 text-green-700" : "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#374151] dark:text-slate-300";
                       return (
                         <li key={n.id} className="rounded-lg border border-[#F3F4F6] bg-[#FAFAFA] px-4 py-3">
                           <div className="mb-1 flex items-center justify-between gap-2">
                             <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${typeBg}`}>{typeLabel}</span>
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-[#9CA3AF]">{n.createdOn ? new Date(n.createdOn).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</span>
+                              <span className="text-xs text-[#9CA3AF] dark:text-slate-400">{n.createdOn ? new Date(n.createdOn).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</span>
                               <button
                                 onClick={() => handleDeleteNote(n.id)}
                                 disabled={deletingNoteId === n.id}
-                                className="rounded p-0.5 text-[#9CA3AF] hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+                                className="rounded p-0.5 text-[#9CA3AF] dark:text-slate-400 hover:bg-red-50 dark:bg-red-900/20 hover:text-red-500 disabled:opacity-50"
                                 title="Delete"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                               </button>
                             </div>
                           </div>
-                          <p className="text-sm text-[#374151]">{n.content ?? "—"}</p>
+                          <p className="text-sm text-[#374151] dark:text-slate-300">{n.content ?? "—"}</p>
                           {(n.officerName ?? n.createdBy) && (
-                            <p className="mt-1 text-xs text-[#9CA3AF]">By {n.officerName ?? (typeof n.createdBy === "string" ? n.createdBy : [n.createdBy?.firstName, n.createdBy?.lastName].filter(Boolean).join(" "))}</p>
+                            <p className="mt-1 text-xs text-[#9CA3AF] dark:text-slate-400">By {n.officerName ?? (typeof n.createdBy === "string" ? n.createdBy : [n.createdBy?.firstName, n.createdBy?.lastName].filter(Boolean).join(" "))}</p>
                           )}
                         </li>
                       );

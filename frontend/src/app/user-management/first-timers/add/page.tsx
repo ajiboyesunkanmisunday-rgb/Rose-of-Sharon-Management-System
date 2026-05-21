@@ -96,10 +96,10 @@ export default function AddFirstTimerPage() {
   };
 
   const inputStyles =
-    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
   const selectStyles =
-    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080] appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239CA3AF%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:20px] bg-[right_12px_center] bg-no-repeat pr-10";
-  const labelStyles = "mb-1 block text-sm font-medium text-[#374151]";
+    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080] appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239CA3AF%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:20px] bg-[right_12px_center] bg-no-repeat pr-10";
+  const labelStyles = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
 
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
   const months = [
@@ -123,11 +123,11 @@ export default function AddFirstTimerPage() {
     <DashboardLayout>
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">User Management</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-[#000080] transition-colors hover:text-[#000066]"
+            className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -144,25 +144,25 @@ export default function AddFirstTimerPage() {
               <polyline points="12 19 5 12 12 5" />
             </svg>
           </button>
-          <h2 className="text-[22px] font-bold text-[#000080]">Add First Timer</h2>
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">Add First Timer</h2>
         </div>
       </div>
 
       <form onSubmit={handleSubmit}>
         {/* Enter Details Section */}
-        <div className="mb-8 rounded-xl border border-[#E5E7EB] bg-white p-6">
-          <h2 className="mb-6 text-[18px] font-bold text-[#000000]">
+        <div className="mb-8 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+          <h2 className="mb-6 text-[18px] font-bold text-[#000000] dark:text-slate-100">
             Enter Details
           </h2>
 
           {/* Is visiting checkbox */}
           <div className="mb-4">
-            <label className="flex items-center gap-2 text-sm text-[#374151]">
+            <label className="flex items-center gap-2 text-sm text-[#374151] dark:text-slate-300">
               <input
                 type="checkbox"
                 checked={isVisiting}
                 onChange={(e) => setIsVisiting(e.target.checked)}
-                className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
+                className="h-4 w-4 rounded border-[#E5E7EB] dark:border-slate-700 text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
               />
               Is visiting?
             </label>
@@ -305,8 +305,8 @@ export default function AddFirstTimerPage() {
         </div>
 
         {/* Address Section */}
-        <div className="mb-8 rounded-xl border border-[#E5E7EB] bg-white p-6">
-          <h2 className="mb-6 text-[18px] font-bold text-[#000000]">Address</h2>
+        <div className="mb-8 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+          <h2 className="mb-6 text-[18px] font-bold text-[#000000] dark:text-slate-100">Address</h2>
 
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
             <div>
@@ -341,7 +341,7 @@ export default function AddFirstTimerPage() {
         </div>
 
         {/* More Details Section */}
-        <div className="mb-8 rounded-xl border border-[#E5E7EB] bg-white p-6">
+        <div className="mb-8 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
             {/* Marital Status */}
             <div>
@@ -361,7 +361,7 @@ export default function AddFirstTimerPage() {
                 <button
                   type="button"
                   onClick={() => setShowSpouseModal(true)}
-                  className="mt-2 text-xs font-medium text-[#000080] underline hover:text-[#000066]"
+                  className="mt-2 text-xs font-medium text-[#000080] dark:text-indigo-400 underline hover:text-[#000066]"
                 >
                   {spouse ? `Spouse: ${spouse.name} (change)` : "+ Link Spouse"}
                 </button>
@@ -454,12 +454,12 @@ export default function AddFirstTimerPage() {
 
           {/* Worshipped online checkbox */}
           <div className="mt-4">
-            <label className="flex items-center gap-2 text-sm text-[#374151]">
+            <label className="flex items-center gap-2 text-sm text-[#374151] dark:text-slate-300">
               <input
                 type="checkbox"
                 checked={worshippedOnline}
                 onChange={(e) => setWorshippedOnline(e.target.checked)}
-                className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
+                className="h-4 w-4 rounded border-[#E5E7EB] dark:border-slate-700 text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
               />
               Have you worshipped with us online before?
             </label>
@@ -468,7 +468,7 @@ export default function AddFirstTimerPage() {
 
         {/* Error */}
         {error && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
         )}

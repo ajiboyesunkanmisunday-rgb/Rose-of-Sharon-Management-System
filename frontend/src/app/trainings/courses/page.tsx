@@ -10,9 +10,9 @@ import { CourseStatus } from "@/lib/types";
 import { GraduationCap } from "lucide-react";
 
 const statusBadgeColors: Record<CourseStatus, string> = {
-  Active: "bg-[#DCFCE7] text-[#16A34A]",
-  Completed: "bg-[#F3F4F6] text-[#6B7280]",
-  Upcoming: "bg-[#DBEAFE] text-[#2563EB]",
+  Active: "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
+  Completed: "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#6B7280] dark:text-slate-400",
+  Upcoming: "bg-[#DBEAFE] dark:bg-blue-900/30 text-[#2563EB]",
 };
 
 export default function CoursesPage() {
@@ -33,12 +33,12 @@ export default function CoursesPage() {
   return (
     <DashboardLayout>
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF]">
-          <GraduationCap className="h-6 w-6 text-[#000080]" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF] dark:bg-indigo-900/30">
+          <GraduationCap className="h-6 w-6 text-[#000080] dark:text-indigo-400" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Training Courses</h1>
-          <p className="text-sm text-[#6B7280]">Manage church training programs and courses</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Training Courses</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Manage church training programs and courses</p>
         </div>
       </div>
 
@@ -70,19 +70,19 @@ export default function CoursesPage() {
         {filteredCourses.map((course) => (
           <div
             key={course.id}
-            className="rounded-xl border border-[#E5E7EB] bg-white p-5"
+            className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5"
           >
-            <h3 className="mb-2 text-base font-bold text-[#000080]">
+            <h3 className="mb-2 text-base font-bold text-[#000080] dark:text-indigo-400">
               {course.name}
             </h3>
-            <p className="mb-3 text-sm text-gray-500 line-clamp-2">
+            <p className="mb-3 text-sm text-gray-500 dark:text-slate-400 line-clamp-2">
               {course.description}
             </p>
-            <p className="mb-4 text-xs text-[#6B7280]">
-              Instructor: <strong className="text-[#374151]">{course.instructor}</strong>
+            <p className="mb-4 text-xs text-[#6B7280] dark:text-slate-400">
+              Instructor: <strong className="text-[#374151] dark:text-slate-300">{course.instructor}</strong>
             </p>
 
-            <div className="mb-4 flex items-center gap-4 text-xs text-[#374151]">
+            <div className="mb-4 flex items-center gap-4 text-xs text-[#374151] dark:text-slate-300">
               <span>
                 <span className="font-semibold">{course.applications}</span> Applications
               </span>
@@ -97,7 +97,7 @@ export default function CoursesPage() {
             <div className="flex items-center justify-between">
               <span
                 className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
-                  statusBadgeColors[course.status] || "bg-gray-200 text-gray-700"
+                  statusBadgeColors[course.status] || "bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-slate-300"
                 }`}
               >
                 {course.status}
@@ -105,7 +105,7 @@ export default function CoursesPage() {
 
               <button
                 onClick={() => router.push(`/trainings/courses/${course.id}`)}
-                className="text-sm font-medium text-[#000080] transition-colors hover:text-[#000066] hover:underline"
+                className="text-sm font-medium text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066] hover:underline"
               >
                 View Details
               </button>
@@ -113,7 +113,7 @@ export default function CoursesPage() {
           </div>
         ))}
         {filteredCourses.length === 0 && (
-          <div className="col-span-3 rounded-xl border border-[#E5E7EB] bg-white p-12 text-center text-sm text-gray-400">
+          <div className="col-span-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-12 text-center text-sm text-gray-400 dark:text-slate-500">
             No courses found.
           </div>
         )}

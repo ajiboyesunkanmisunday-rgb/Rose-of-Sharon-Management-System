@@ -88,19 +88,19 @@ export default function EditCelebrationClient() {
       />
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
 
           {/* Type is read-only — backend does not allow changing it after creation */}
           {celebrationType && (
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">Type</label>
-              <div className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2.5 text-sm text-[#374151]">
+              <label className="mb-1.5 block text-sm font-medium text-[#374151] dark:text-slate-300">Type</label>
+              <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] px-3 py-2.5 text-sm text-[#374151] dark:text-slate-300">
                 {celebrationType}
-                <span className="ml-2 text-xs text-[#9CA3AF]">(cannot be changed)</span>
+                <span className="ml-2 text-xs text-[#9CA3AF] dark:text-slate-400">(cannot be changed)</span>
               </div>
             </div>
           )}

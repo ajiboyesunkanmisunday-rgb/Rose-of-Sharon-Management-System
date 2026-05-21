@@ -414,19 +414,19 @@ function ExportMenu({ onExport, disabled }: { onExport: (fmt: ExportFormat) => v
       <button
         onClick={() => setOpen((o) => !o)}
         disabled={disabled}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] bg-white px-3 py-2 text-sm font-medium text-[#000080] hover:bg-[#000080]/5 disabled:opacity-40"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] bg-white dark:bg-slate-800 px-3 py-2 text-sm font-medium text-[#000080] dark:text-indigo-400 hover:bg-[#000080]/5 disabled:opacity-40"
       >
         <Download className="h-4 w-4" />
         Export
         <ChevronDown className="h-3.5 w-3.5" />
       </button>
       {open && (
-        <div className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-[#E5E7EB] bg-white py-1 shadow-lg">
+        <div className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 py-1 shadow-lg">
           {formats.map((f) => (
             <button
               key={f.key}
               onClick={() => { onExport(f.key); setOpen(false); }}
-              className="block w-full px-4 py-2 text-left text-sm text-[#374151] hover:bg-gray-50"
+              className="block w-full px-4 py-2 text-left text-sm text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50"
             >
               {f.label}
             </button>
@@ -452,7 +452,7 @@ function BirthdayCard({ u, onSMS, onEmail }: {
     : null;
 
   return (
-    <div className="flex flex-col rounded-xl border border-[#E5E7EB] bg-white p-5 transition-shadow hover:shadow-md">
+    <div className="flex flex-col rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5 transition-shadow hover:shadow-md">
       {/* Avatar + badge */}
       <div className="mb-3 flex items-start justify-between">
         {u.profilePictureUrl ? (
@@ -463,7 +463,7 @@ function BirthdayCard({ u, onSMS, onEmail }: {
           />
         ) : (
           <div
-            className={`flex h-14 w-14 items-center justify-center rounded-full ${bg} text-lg font-bold text-[#000080]`}
+            className={`flex h-14 w-14 items-center justify-center rounded-full ${bg} text-lg font-bold text-[#000080] dark:text-indigo-400`}
           >
             {initials(u)}
           </div>
@@ -474,24 +474,24 @@ function BirthdayCard({ u, onSMS, onEmail }: {
       </div>
 
       {/* Info */}
-      <h3 className="text-sm font-bold text-[#111827]">{name}</h3>
-      <p className="mt-0.5 text-xs font-medium text-[#6B7280]">🗓 {date}</p>
-      {phone && <p className="mt-1 text-xs text-[#374151]">📞 {phone}</p>}
+      <h3 className="text-sm font-bold text-[#111827] dark:text-slate-100">{name}</h3>
+      <p className="mt-0.5 text-xs font-medium text-[#6B7280] dark:text-slate-400">🗓 {date}</p>
+      {phone && <p className="mt-1 text-xs text-[#374151] dark:text-slate-300">📞 {phone}</p>}
       {u.email && (
-        <p className="mt-0.5 truncate text-xs text-[#000080]">{u.email}</p>
+        <p className="mt-0.5 truncate text-xs text-[#000080] dark:text-indigo-400">{u.email}</p>
       )}
 
       {/* Actions */}
       <div className="mt-auto flex items-center gap-2 pt-4">
         <button
           onClick={onSMS}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080]/5"
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] dark:text-indigo-400 hover:bg-[#000080]/5"
         >
           <MessageIcon /> SMS
         </button>
         <button
           onClick={onEmail}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080]/5"
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] dark:text-indigo-400 hover:bg-[#000080]/5"
         >
           <MailIcon /> Email
         </button>
@@ -515,7 +515,7 @@ function AnniversaryCard({ u, onSMS, onEmail }: {
     : null;
 
   return (
-    <div className="flex flex-col rounded-xl border border-[#E5E7EB] bg-white p-5 transition-shadow hover:shadow-md">
+    <div className="flex flex-col rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5 transition-shadow hover:shadow-md">
       {/* Avatar + badge */}
       <div className="mb-3 flex items-start justify-between">
         {u.couplePictureUrl || u.profilePictureUrl ? (
@@ -526,7 +526,7 @@ function AnniversaryCard({ u, onSMS, onEmail }: {
           />
         ) : (
           <div
-            className={`flex h-14 w-14 items-center justify-center rounded-full ${bg} text-lg font-bold text-[#000080]`}
+            className={`flex h-14 w-14 items-center justify-center rounded-full ${bg} text-lg font-bold text-[#000080] dark:text-indigo-400`}
           >
             {initials(u)}
           </div>
@@ -537,24 +537,24 @@ function AnniversaryCard({ u, onSMS, onEmail }: {
       </div>
 
       {/* Info */}
-      <h3 className="text-sm font-bold text-[#111827] leading-snug">{coupleName}</h3>
-      <p className="mt-0.5 text-xs font-medium text-[#6B7280]">🗓 {date}</p>
-      {phone && <p className="mt-1 text-xs text-[#374151]">📞 {phone}</p>}
+      <h3 className="text-sm font-bold text-[#111827] dark:text-slate-100 leading-snug">{coupleName}</h3>
+      <p className="mt-0.5 text-xs font-medium text-[#6B7280] dark:text-slate-400">🗓 {date}</p>
+      {phone && <p className="mt-1 text-xs text-[#374151] dark:text-slate-300">📞 {phone}</p>}
       {u.email && (
-        <p className="mt-0.5 truncate text-xs text-[#000080]">{u.email}</p>
+        <p className="mt-0.5 truncate text-xs text-[#000080] dark:text-indigo-400">{u.email}</p>
       )}
 
       {/* Actions */}
       <div className="mt-auto flex items-center gap-2 pt-4">
         <button
           onClick={onSMS}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080]/5"
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] dark:text-indigo-400 hover:bg-[#000080]/5"
         >
           <MessageIcon /> SMS
         </button>
         <button
           onClick={onEmail}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] hover:bg-[#000080]/5"
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] dark:text-indigo-400 hover:bg-[#000080]/5"
         >
           <MailIcon /> Email
         </button>
@@ -730,8 +730,8 @@ export default function CelebrationsPage() {
               <PartyPopper className="h-6 w-6 text-[#D97706]" />
             </div>
             <div>
-              <h1 className="text-[28px] font-bold text-[#000000]">Celebrations</h1>
-              <p className="text-sm text-[#6B7280]">Birthdays, anniversaries, and thanksgiving celebrations</p>
+              <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Celebrations</h1>
+              <p className="text-sm text-[#6B7280] dark:text-slate-400">Birthdays, anniversaries, and thanksgiving celebrations</p>
             </div>
           </div>
           {activeTab === "thanksgiving" && (
@@ -751,15 +751,15 @@ export default function CelebrationsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 flex gap-6 border-b border-[#E5E7EB]">
+      <div className="mb-6 flex gap-6 border-b border-[#E5E7EB] dark:border-slate-700">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => { setActiveTab(tab.key); setSearch(""); }}
             className={`pb-3 text-sm font-medium transition-colors ${
               activeTab === tab.key
-                ? "border-b-2 border-[#000080] text-[#000080]"
-                : "text-[#6B7280] hover:text-[#374151]"
+                ? "border-b-2 border-[#000080] text-[#000080] dark:text-indigo-400"
+                : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"
             }`}
           >
             {tab.label}
@@ -783,20 +783,20 @@ export default function CelebrationsPage() {
 
           {/* Stats */}
           {!bdLoading && filteredBirthdays.length > 0 && (
-            <div className="mb-4 flex items-center gap-2 text-sm text-[#6B7280]">
-              <span className="font-medium text-[#000080]">{filteredBirthdays.length}</span>
+            <div className="mb-4 flex items-center gap-2 text-sm text-[#6B7280] dark:text-slate-400">
+              <span className="font-medium text-[#000080] dark:text-indigo-400">{filteredBirthdays.length}</span>
               {filteredBirthdays.length === 1 ? " birthday" : " birthdays"} in this period
             </div>
           )}
 
           {bdError && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
               {bdError} — <button className="font-medium underline" onClick={() => fetchBirthdays(bFrom, bTo)}>Retry</button>
             </div>
           )}
 
           {bdLoading ? (
-            <div className="flex h-48 items-center justify-center gap-2 text-gray-400">
+            <div className="flex h-48 items-center justify-center gap-2 text-gray-400 dark:text-slate-500">
               <svg className="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -804,7 +804,7 @@ export default function CelebrationsPage() {
               Loading…
             </div>
           ) : filteredBirthdays.length === 0 ? (
-            <div className="rounded-xl border border-[#E5E7EB] bg-white p-12 text-center text-sm text-gray-400">
+            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-12 text-center text-sm text-gray-400 dark:text-slate-500">
               No birthdays found for this period.
             </div>
           ) : (
@@ -848,20 +848,20 @@ export default function CelebrationsPage() {
 
           {/* Stats */}
           {!annLoading && filteredAnniversaries.length > 0 && (
-            <div className="mb-4 flex items-center gap-2 text-sm text-[#6B7280]">
-              <span className="font-medium text-[#000080]">{filteredAnniversaries.length}</span>
+            <div className="mb-4 flex items-center gap-2 text-sm text-[#6B7280] dark:text-slate-400">
+              <span className="font-medium text-[#000080] dark:text-indigo-400">{filteredAnniversaries.length}</span>
               {filteredAnniversaries.length === 1 ? " anniversary" : " anniversaries"} in this period
             </div>
           )}
 
           {annError && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
               {annError} — <button className="font-medium underline" onClick={() => fetchAnniversaries(aFrom, aTo)}>Retry</button>
             </div>
           )}
 
           {annLoading ? (
-            <div className="flex h-48 items-center justify-center gap-2 text-gray-400">
+            <div className="flex h-48 items-center justify-center gap-2 text-gray-400 dark:text-slate-500">
               <svg className="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -869,7 +869,7 @@ export default function CelebrationsPage() {
               Loading…
             </div>
           ) : filteredAnniversaries.length === 0 ? (
-            <div className="rounded-xl border border-[#E5E7EB] bg-white p-12 text-center text-sm text-gray-400">
+            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-12 text-center text-sm text-gray-400 dark:text-slate-500">
               No anniversaries found for this period.
             </div>
           ) : (
@@ -919,42 +919,42 @@ export default function CelebrationsPage() {
           </div>
 
           {celebError && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
               {celebError} — <button className="font-medium underline" onClick={() => fetchCelebrations(celebPage)}>Retry</button>
             </div>
           )}
 
-          <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+          <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="bg-[#F3F4F6]">
-                  <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
-                  <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Type</th>
-                  <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Submitted</th>
-                  <th className="px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
-                  <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
+                <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
+                  <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Name</th>
+                  <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Type</th>
+                  <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Submitted</th>
+                  <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Date</th>
+                  <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Status</th>
                   <th className="px-4 py-4" />
                 </tr>
               </thead>
               <tbody>
                 {celebLoading ? (
-                  <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Loading…</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">Loading…</td></tr>
                 ) : filteredCelebrations.length === 0 ? (
-                  <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">No thanksgiving entries found.</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">No thanksgiving entries found.</td></tr>
                 ) : (
                   filteredCelebrations.map((row) => (
                     <tr
                       key={row.id}
-                      className="border-b border-[#F3F4F6] hover:bg-gray-50 cursor-pointer"
+                      className="border-b border-[#F3F4F6] hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 cursor-pointer"
                       style={{ height: "56px" }}
                       onClick={() => router.push(`/celebrations/${row.id}`)}
                     >
-                      <td className="px-4 py-3 text-sm text-[#374151]">{fullName(row.requester)}</td>
-                      <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                      <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{fullName(row.requester)}</td>
+                      <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                         {(row.celebrationType ?? "—").replace(/_/g, " ")}
                       </td>
-                      <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{fmtDate(row.createdOn)}</td>
-                      <td className="px-4 py-3 text-sm text-[#374151]">{fmtDate(row.date)}</td>
+                      <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{fmtDate(row.createdOn)}</td>
+                      <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{fmtDate(row.date)}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                           row.celebrationStatus === "TREATED"

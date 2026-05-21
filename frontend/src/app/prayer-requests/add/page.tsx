@@ -97,38 +97,38 @@ export default function AddPrayerRequestPage() {
   };
 
   const inputClass =
-    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
 
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Prayer Requests</h1>
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Prayer Requests</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.push("/prayer-requests")}
-            className="flex items-center text-[#000080] transition-colors hover:text-[#000066]"
+            className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
             </svg>
           </button>
-          <h2 className="text-[22px] font-bold text-[#000080]">Add Prayer Request</h2>
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">Add Prayer Request</h2>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit}>
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             {/* Member search */}
             <div className="relative sm:col-span-2">
-                <label className="mb-1.5 block text-sm font-medium text-[#374151]">
+                <label className="mb-1.5 block text-sm font-medium text-[#374151] dark:text-slate-300">
                   Submitted By <span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center gap-2">
@@ -147,7 +147,7 @@ export default function AddPrayerRequestPage() {
                     <button
                       type="button"
                       onClick={handleClearMember}
-                      className="flex-shrink-0 rounded-lg border border-[#E5E7EB] px-3 py-3 text-sm text-gray-500 hover:bg-gray-100"
+                      className="flex-shrink-0 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-3 text-sm text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:bg-slate-700"
                     >
                       Clear
                     </button>
@@ -156,17 +156,17 @@ export default function AddPrayerRequestPage() {
 
                 {/* Dropdown results */}
                 {memberResults.length > 0 && (
-                  <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-[#E5E7EB] bg-white shadow-md">
+                  <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-md">
                     {memberResults.map((m) => (
                       <li key={m.id}>
                         <button
                           type="button"
                           onClick={() => handleSelectMember(m)}
-                          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-[#000080]/5"
+                          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-slate-300 hover:bg-[#000080]/5"
                         >
                           {`${m.firstName ?? ""} ${m.lastName ?? ""}`.trim()}
                           {m.email && (
-                            <span className="ml-2 text-xs text-gray-400">{m.email}</span>
+                            <span className="ml-2 text-xs text-gray-400 dark:text-slate-500">{m.email}</span>
                           )}
                         </button>
                       </li>
@@ -174,16 +174,16 @@ export default function AddPrayerRequestPage() {
                   </ul>
                 )}
                 {searchLoading && (
-                  <p className="mt-1 text-xs text-gray-400">Searching…</p>
+                  <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">Searching…</p>
                 )}
                 {!searchLoading && memberQuery.length > 1 && !selectedMember && memberResults.length === 0 && (
-                  <p className="mt-1 text-xs text-gray-400">No members found.</p>
+                  <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">No members found.</p>
                 )}
             </div>
 
             {/* Category */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">
+              <label className="mb-1.5 block text-sm font-medium text-[#374151] dark:text-slate-300">
                 Category <span className="text-red-500">*</span>
               </label>
               <select
@@ -202,7 +202,7 @@ export default function AddPrayerRequestPage() {
 
           {/* Prayer request text */}
           <div className="mt-5">
-            <label className="mb-1.5 block text-sm font-medium text-[#374151]">
+            <label className="mb-1.5 block text-sm font-medium text-[#374151] dark:text-slate-300">
               Prayer Request <span className="text-red-500">*</span>
             </label>
             <textarea

@@ -78,7 +78,7 @@ export default function MultiSelect({
   return (
     <div className={`relative ${className}`} ref={containerRef}>
       {label && (
-        <label className="mb-1 block text-sm font-medium text-[#374151]">
+        <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
           {label}
           {required && <span className="text-red-500"> *</span>}
         </label>
@@ -90,18 +90,18 @@ export default function MultiSelect({
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className={`flex min-h-[46px] w-full items-center justify-between rounded-lg border bg-white px-4 py-2 text-sm text-[#374151] outline-none transition-colors ${
-          open ? "border-[#000080] ring-1 ring-[#000080]" : "border-[#E5E7EB] hover:border-[#9CA3AF]"
+        className={`flex min-h-[46px] w-full items-center justify-between rounded-lg border bg-white dark:bg-slate-800 px-4 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none transition-colors ${
+          open ? "border-[#000080] ring-1 ring-[#000080]" : "border-[#E5E7EB] dark:border-slate-700 hover:border-[#9CA3AF]"
         }`}
       >
         <span className="flex flex-1 flex-wrap items-center gap-1 text-left">
           {value.length === 0 ? (
-            <span className="text-[#9CA3AF]">{placeholder}</span>
+            <span className="text-[#9CA3AF] dark:text-slate-400">{placeholder}</span>
           ) : (
             value.map((v) => (
               <span
                 key={v}
-                className="inline-flex items-center gap-1 rounded-full bg-[#B5B5F3]/30 px-2 py-0.5 text-xs font-medium text-[#000080]"
+                className="inline-flex items-center gap-1 rounded-full bg-[#B5B5F3]/30 px-2 py-0.5 text-xs font-medium text-[#000080] dark:text-indigo-400"
               >
                 {v}
                 <span
@@ -116,7 +116,7 @@ export default function MultiSelect({
                       onChange(value.filter((x) => x !== v));
                     }
                   }}
-                  className="ml-0.5 cursor-pointer text-[#000080] hover:text-[#000066]"
+                  className="ml-0.5 cursor-pointer text-[#000080] dark:text-indigo-400 hover:text-[#000066]"
                 >
                   ×
                 </span>
@@ -125,14 +125,14 @@ export default function MultiSelect({
           )}
         </span>
         <ChevronDown
-          className={`ml-2 h-4 w-4 shrink-0 text-[#9CA3AF] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`ml-2 h-4 w-4 shrink-0 text-[#9CA3AF] dark:text-slate-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
 
       {/* Dropdown panel */}
       {open && (
         <div
-          className="absolute z-50 mt-1 w-full rounded-xl border border-[#E5E7EB] bg-white shadow-xl"
+          className="absolute z-50 mt-1 w-full rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl"
           style={{ minWidth: "100%", maxWidth: "100%" }}
           // Prevent the document's mousedown listener from seeing clicks that originate
           // inside this panel. Without this, React's re-render can detach the <li> from
@@ -142,17 +142,17 @@ export default function MultiSelect({
         >
           {/* Search row */}
           <div className="flex items-center gap-2 border-b border-[#F3F4F6] px-3 py-2">
-            <Search className="h-4 w-4 shrink-0 text-[#9CA3AF]" />
+            <Search className="h-4 w-4 shrink-0 text-[#9CA3AF] dark:text-slate-400" />
             <input
               ref={searchRef}
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search groups…"
-              className="flex-1 bg-transparent text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF]"
+              className="flex-1 bg-transparent text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400"
             />
             {query && (
-              <button type="button" onClick={() => setQuery("")} className="text-[#9CA3AF] hover:text-[#374151]">
+              <button type="button" onClick={() => setQuery("")} className="text-[#9CA3AF] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300">
                 <X className="h-3.5 w-3.5" />
               </button>
             )}
@@ -161,7 +161,7 @@ export default function MultiSelect({
           {/* Options — fixed max height, scrollable */}
           <ul className="max-h-[220px] overflow-y-auto py-1" role="listbox">
             {filtered.length === 0 ? (
-              <li className="px-4 py-3 text-center text-xs text-[#9CA3AF]">
+              <li className="px-4 py-3 text-center text-xs text-[#9CA3AF] dark:text-slate-400">
                 No results for &ldquo;{query}&rdquo;
               </li>
             ) : (
@@ -174,7 +174,7 @@ export default function MultiSelect({
                     aria-selected={selected}
                     onClick={() => toggleOption(opt)}
                     className={`flex cursor-pointer items-center justify-between px-4 py-2.5 text-sm transition-colors ${
-                      selected ? "bg-[#EFF6FF] font-medium text-[#000080]" : "text-[#374151] hover:bg-[#F9FAFB]"
+                      selected ? "bg-[#EFF6FF] font-medium text-[#000080] dark:text-indigo-400" : "text-[#374151] dark:text-slate-300 hover:bg-[#F9FAFB]"
                     }`}
                   >
                     <span>{opt}</span>
@@ -190,7 +190,7 @@ export default function MultiSelect({
           </ul>
 
           {/* Footer */}
-          <div className="border-t border-[#F3F4F6] px-3 py-1.5 text-center text-[10px] text-[#9CA3AF]">
+          <div className="border-t border-[#F3F4F6] px-3 py-1.5 text-center text-[10px] text-[#9CA3AF] dark:text-slate-400">
             {value.length > 0 ? `${value.length} selected · ` : ""}{filtered.length} of {options.length} groups
           </div>
         </div>

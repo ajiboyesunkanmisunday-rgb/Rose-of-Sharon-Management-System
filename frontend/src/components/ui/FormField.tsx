@@ -4,9 +4,9 @@ import React from "react";
 
 const labelBase = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
 const inputBase =
-  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-100 outline-none placeholder:text-[#9CA3AF] dark:placeholder:text-slate-500 focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 dark:text-slate-100 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 dark:placeholder:text-slate-500 focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500";
 const selectBase =
-  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500";
 
 interface BaseProps {
   label: string;

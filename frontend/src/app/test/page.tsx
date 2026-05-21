@@ -147,27 +147,27 @@ export default function TestHubPage() {
 
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#EDE9FE]">
-          <FlaskConical className="h-6 w-6 text-[#7C3AED]" />
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#EDE9FE] dark:bg-purple-900/30">
+          <FlaskConical className="h-6 w-6 text-[#7C3AED] dark:text-purple-400" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Testing Hub</h1>
-          <p className="text-sm text-[#6B7280]">Simulate public submissions and test admin features before launch</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Testing Hub</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Simulate public submissions and test admin features before launch</p>
         </div>
       </div>
 
       {/* Public Website Simulations */}
       <div className="mb-8">
         <div className="mb-4 flex items-center gap-2">
-          <Users className="h-4 w-4 text-[#6B7280]" />
-          <h2 className="text-sm font-bold uppercase tracking-wide text-[#374151]">
+          <Users className="h-4 w-4 text-[#6B7280] dark:text-slate-400" />
+          <h2 className="text-sm font-bold uppercase tracking-wide text-[#374151] dark:text-slate-300">
             Public Website Form Simulations
           </h2>
           <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
             Hits real API
           </span>
         </div>
-        <p className="mb-4 text-xs text-[#6B7280]">
+        <p className="mb-4 text-xs text-[#6B7280] dark:text-slate-400">
           These forms replicate what church members will fill out on the public website. After
           submitting, click &ldquo;View in admin&rdquo; to confirm the record was created correctly.
         </p>
@@ -181,15 +181,15 @@ export default function TestHubPage() {
       {/* Admin Feature Tests */}
       <div>
         <div className="mb-4 flex items-center gap-2">
-          <BookOpen className="h-4 w-4 text-[#6B7280]" />
-          <h2 className="text-sm font-bold uppercase tracking-wide text-[#374151]">
+          <BookOpen className="h-4 w-4 text-[#6B7280] dark:text-slate-400" />
+          <h2 className="text-sm font-bold uppercase tracking-wide text-[#374151] dark:text-slate-300">
             Admin Feature Tests
           </h2>
-          <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+          <span className="rounded-full border border-blue-200 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
             Local data only
           </span>
         </div>
-        <p className="mb-4 text-xs text-[#6B7280]">
+        <p className="mb-4 text-xs text-[#6B7280] dark:text-slate-400">
           Test admin UI features with local mock data — no backend required. Great for verifying
           layouts, interactions, and edge cases.
         </p>
@@ -205,15 +205,15 @@ export default function TestHubPage() {
 
 function TestCard({ card, onNavigate }: { card: Card; onNavigate: (href: string) => void }) {
   return (
-    <div className="flex flex-col rounded-xl border border-[#E5E7EB] bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+    <div className="flex flex-col rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm transition-shadow hover:shadow-md">
       <div
         className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg"
         style={{ backgroundColor: card.bg, color: card.color }}
       >
         {card.icon}
       </div>
-      <h3 className="text-sm font-bold text-[#111827]">{card.title}</h3>
-      <p className="mt-1 flex-1 text-xs text-[#6B7280] leading-relaxed">{card.description}</p>
+      <h3 className="text-sm font-bold text-[#111827] dark:text-slate-100">{card.title}</h3>
+      <p className="mt-1 flex-1 text-xs text-[#6B7280] dark:text-slate-400 leading-relaxed">{card.description}</p>
 
       <div className="mt-4 flex flex-col gap-2">
         <button
@@ -225,7 +225,7 @@ function TestCard({ card, onNavigate }: { card: Card; onNavigate: (href: string)
         </button>
         <button
           onClick={() => onNavigate(card.adminHref)}
-          className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] px-4 py-2 text-xs font-medium text-[#374151] hover:bg-[#F9FAFB]"
+          className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 hover:bg-[#F9FAFB]"
         >
           <ExternalLink className="h-3 w-3" /> {card.adminLabel}
         </button>

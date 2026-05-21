@@ -115,13 +115,13 @@ export default function TrainingGroupPage({ groupKeywords, title, description, a
           <GraduationCap className="h-6 w-6" style={{ color: accentColor }} />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">{title}</h1>
-          <p className="text-sm text-[#6B7280]">{description}</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">{title}</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">{description}</p>
         </div>
         <button
           onClick={load}
           disabled={loading}
-          className="ml-auto flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:border-[#7C3AED] hover:text-[#7C3AED] disabled:opacity-50"
+          className="ml-auto flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 hover:border-[#7C3AED] hover:text-[#7C3AED] dark:text-purple-400 disabled:opacity-50"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
           Refresh
@@ -139,7 +139,7 @@ export default function TrainingGroupPage({ groupKeywords, title, description, a
             >
               <Users className="h-3 w-3" />
               {g.name}
-              <span className="rounded-full bg-white/25 px-1.5 py-0.5 text-[10px]">
+              <span className="rounded-full bg-white dark:bg-slate-800/25 px-1.5 py-0.5 text-[10px]">
                 {g.totalMembers ?? 0}
               </span>
             </span>
@@ -150,19 +150,19 @@ export default function TrainingGroupPage({ groupKeywords, title, description, a
       {/* Stats bar */}
       {!loading && (
         <div className="mb-5 flex items-center gap-6">
-          <div className="rounded-xl border border-[#E5E7EB] bg-white px-5 py-3">
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-3">
             <p className="text-2xl font-bold" style={{ color: accentColor }}>{groupMembers.length}</p>
-            <p className="text-xs text-[#6B7280]">Total enrolled</p>
+            <p className="text-xs text-[#6B7280] dark:text-slate-400">Total enrolled</p>
           </div>
-          <div className="rounded-xl border border-[#E5E7EB] bg-white px-5 py-3">
-            <p className="text-2xl font-bold text-[#16A34A]">{matchedGroups.length}</p>
-            <p className="text-xs text-[#6B7280]">Group{matchedGroups.length !== 1 ? "s" : ""} found</p>
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-3">
+            <p className="text-2xl font-bold text-[#16A34A] dark:text-green-300">{matchedGroups.length}</p>
+            <p className="text-xs text-[#6B7280] dark:text-slate-400">Group{matchedGroups.length !== 1 ? "s" : ""} found</p>
           </div>
         </div>
       )}
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
       {/* Search */}
@@ -175,26 +175,26 @@ export default function TrainingGroupPage({ groupKeywords, title, description, a
             placeholder="Search by name, email, phone…"
           />
         </div>
-        <span className="ml-auto text-sm text-[#6B7280]">
+        <span className="ml-auto text-sm text-[#6B7280] dark:text-slate-400">
           {filtered.length} {filtered.length === 1 ? "member" : "members"}
         </span>
       </div>
 
       {/* Content */}
       {loading ? (
-        <div className="flex h-48 items-center justify-center text-[#9CA3AF] text-sm">
+        <div className="flex h-48 items-center justify-center text-[#9CA3AF] dark:text-slate-400 text-sm">
           Loading members…
         </div>
       ) : groupMembers.length === 0 ? (
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-12 text-center">
+        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-12 text-center">
           <GraduationCap className="mx-auto mb-3 h-10 w-10 text-[#E5E7EB]" />
-          <p className="text-sm font-medium text-[#374151]">No members found</p>
-          <p className="mt-1 text-xs text-[#9CA3AF]">
+          <p className="text-sm font-medium text-[#374151] dark:text-slate-300">No members found</p>
+          <p className="mt-1 text-xs text-[#9CA3AF] dark:text-slate-400">
             No groups matching "{groupKeywords.join(" / ")}" were found, or no members are assigned to them.
           </p>
         </div>
       ) : paginated.length === 0 ? (
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-10 text-center text-sm text-[#9CA3AF]">
+        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-10 text-center text-sm text-[#9CA3AF] dark:text-slate-400">
           No members match your search.
         </div>
       ) : (
@@ -208,7 +208,7 @@ export default function TrainingGroupPage({ groupKeywords, title, description, a
             return (
               <div
                 key={u.id}
-                className="flex flex-col rounded-xl border border-[#E5E7EB] bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
+                className="flex flex-col rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm hover:shadow-md transition-shadow"
               >
                 {/* Avatar */}
                 <div className="mb-3">
@@ -220,16 +220,16 @@ export default function TrainingGroupPage({ groupKeywords, title, description, a
                       className="h-14 w-14 rounded-full object-cover"
                     />
                   ) : (
-                    <div className={`flex h-14 w-14 items-center justify-center rounded-full ${bg} text-lg font-bold text-[#000080]`}>
+                    <div className={`flex h-14 w-14 items-center justify-center rounded-full ${bg} text-lg font-bold text-[#000080] dark:text-indigo-400`}>
                       {initials(u)}
                     </div>
                   )}
                 </div>
 
                 {/* Info */}
-                <h3 className="text-sm font-bold text-[#111827]">{name}</h3>
+                <h3 className="text-sm font-bold text-[#111827] dark:text-slate-100">{name}</h3>
                 {u.occupation && (
-                  <p className="mt-0.5 text-xs text-[#6B7280]">{u.occupation}</p>
+                  <p className="mt-0.5 text-xs text-[#6B7280] dark:text-slate-400">{u.occupation}</p>
                 )}
 
                 {/* Training group badges */}
@@ -248,14 +248,14 @@ export default function TrainingGroupPage({ groupKeywords, title, description, a
                 {/* Contact */}
                 <div className="mt-3 space-y-1">
                   {phone && (
-                    <div className="flex items-center gap-1.5 text-xs text-[#374151]">
-                      <Phone className="h-3 w-3 shrink-0 text-[#9CA3AF]" />
+                    <div className="flex items-center gap-1.5 text-xs text-[#374151] dark:text-slate-300">
+                      <Phone className="h-3 w-3 shrink-0 text-[#9CA3AF] dark:text-slate-400" />
                       <span>{phone}</span>
                     </div>
                   )}
                   {u.email && (
-                    <div className="flex items-center gap-1.5 text-xs text-[#374151]">
-                      <Mail className="h-3 w-3 shrink-0 text-[#9CA3AF]" />
+                    <div className="flex items-center gap-1.5 text-xs text-[#374151] dark:text-slate-300">
+                      <Mail className="h-3 w-3 shrink-0 text-[#9CA3AF] dark:text-slate-400" />
                       <span className="truncate">{u.email}</span>
                     </div>
                   )}

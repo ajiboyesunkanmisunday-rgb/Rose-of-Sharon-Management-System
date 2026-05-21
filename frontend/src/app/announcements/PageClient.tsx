@@ -207,16 +207,16 @@ export default function AnnouncementsPageClient() {
       />
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
       {/* ── Deadline banner ──────────────────────────────────────────────── */}
-      <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-4">
+      <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">
               Submission Deadline
             </p>
             {systemSettings?.announcementDeadline ? (
@@ -224,7 +224,7 @@ export default function AnnouncementsPageClient() {
                 className={`mt-1 text-sm font-semibold ${
                   new Date() > new Date(systemSettings.announcementDeadline)
                     ? "text-red-600"
-                    : "text-[#111827]"
+                    : "text-[#111827] dark:text-slate-100"
                 }`}
               >
                 {fmtDateOnly(systemSettings.announcementDeadline)}{" "}
@@ -233,7 +233,7 @@ export default function AnnouncementsPageClient() {
                   : "— Open"}
               </p>
             ) : (
-              <p className="mt-1 text-sm text-[#9CA3AF]">
+              <p className="mt-1 text-sm text-[#9CA3AF] dark:text-slate-400">
                 No deadline set — submissions open indefinitely
               </p>
             )}
@@ -253,14 +253,14 @@ export default function AnnouncementsPageClient() {
         {showDeadlineEdit && (
           <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-[#F3F4F6] pt-4">
             <div>
-              <label className="mb-1 block text-xs font-medium text-[#6B7280]">
+              <label className="mb-1 block text-xs font-medium text-[#6B7280] dark:text-slate-400">
                 Deadline (Date)
               </label>
               <input
                 type="date"
                 value={deadlineInput}
                 onChange={(e) => setDeadlineInput(e.target.value)}
-                className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+                className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
               />
             </div>
             <Button
@@ -274,12 +274,12 @@ export default function AnnouncementsPageClient() {
         )}
 
         {deadlineMsg && (
-          <p className="mt-2 text-xs text-[#000080]">{deadlineMsg}</p>
+          <p className="mt-2 text-xs text-[#000080] dark:text-indigo-400">{deadlineMsg}</p>
         )}
       </div>
 
       {/* ── Tabs ──────────────────────────────────────────────────────────── */}
-      <div className="mb-4 border-b border-[#E5E7EB]">
+      <div className="mb-4 border-b border-[#E5E7EB] dark:border-slate-700">
         <div className="flex gap-8">
           {(["RECEIVED", "APPROVED", "DECLINED"] as Tab[]).map((t) => (
             <button
@@ -287,8 +287,8 @@ export default function AnnouncementsPageClient() {
               onClick={() => setTab(t)}
               className={`pb-3 text-sm font-medium capitalize transition-colors ${
                 tab === t
-                  ? "border-b-2 border-[#000080] text-[#000080]"
-                  : "text-[#6B7280] hover:text-[#374151]"
+                  ? "border-b-2 border-[#000080] text-[#000080] dark:text-indigo-400"
+                  : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"
               }`}
             >
               {t === "RECEIVED"
@@ -302,13 +302,13 @@ export default function AnnouncementsPageClient() {
       </div>
 
       {loading ? (
-        <div className="py-16 text-center text-sm text-gray-400">
+        <div className="py-16 text-center text-sm text-gray-400 dark:text-slate-500">
           Loading announcements…
         </div>
       ) : (
         <div className="space-y-4">
           {items.length === 0 ? (
-            <div className="rounded-xl border border-[#E5E7EB] bg-white py-16 text-center text-sm text-gray-400">
+            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 py-16 text-center text-sm text-gray-400 dark:text-slate-500">
               No{" "}
               {tab === "RECEIVED"
                 ? "pending"
@@ -336,7 +336,7 @@ export default function AnnouncementsPageClient() {
               ))}
 
               {totalPages > 1 && (
-                <div className="mt-6 border-t border-[#E5E7EB] pt-6">
+                <div className="mt-6 border-t border-[#E5E7EB] dark:border-slate-700 pt-6">
                   <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
@@ -353,16 +353,16 @@ export default function AnnouncementsPageClient() {
       {/* ── Decline Modal ────────────────────────────────────────────────── */}
       {declineModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <h3 className="mb-2 text-lg font-bold text-[#111827]">
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl">
+            <h3 className="mb-2 text-lg font-bold text-[#111827] dark:text-slate-100">
               Decline Announcement
             </h3>
-            <p className="mb-4 text-sm text-[#6B7280]">
+            <p className="mb-4 text-sm text-[#6B7280] dark:text-slate-400">
               Please provide a reason for declining this announcement. This will
               be recorded.
             </p>
             <textarea
-              className="mb-4 w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="mb-4 w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
               rows={4}
               placeholder="Reason for decline..."
               value={declineReason}
@@ -401,17 +401,17 @@ function AnnouncementCard({
     : "Unknown";
 
   return (
-    <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
+    <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-bold text-[#111827]">{item.subject}</h3>
-          <p className="mt-0.5 text-xs text-[#6B7280]">
+          <h3 className="text-sm font-bold text-[#111827] dark:text-slate-100">{item.subject}</h3>
+          <p className="mt-0.5 text-xs text-[#6B7280] dark:text-slate-400">
             Submitted by {submitterName}
             {item.startDate ? ` · Starts: ${fmtDate(item.startDate)}` : ""}
             {item.endDate ? ` · Ends: ${fmtDate(item.endDate)}` : ""}
             {item.createdOn ? ` · Submitted: ${fmtDate(item.createdOn)}` : ""}
           </p>
-          <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[#374151]">
+          <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[#374151] dark:text-slate-300">
             <ExpandableText text={item.content} max={250} />
           </p>
           {item.announcementStatus === "DECLINED" && item.reasonForDecline && (
@@ -434,7 +434,7 @@ function AnnouncementCard({
             <button
               onClick={onDecline}
               disabled={actioning}
-              className="rounded-lg border border-red-200 px-4 py-2 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
+              className="rounded-lg border border-red-200 px-4 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:bg-red-900/20 disabled:opacity-50 transition-colors"
             >
               {actioning ? "…" : "Decline"}
             </button>
@@ -455,7 +455,7 @@ function ExpandableText({ text, max = 200 }: { text: string; max?: number }) {
       {expanded ? text : text.slice(0, max) + "..."}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="ml-2 font-medium text-[#000080] hover:underline"
+        className="ml-2 font-medium text-[#000080] dark:text-indigo-400 hover:underline"
       >
         {expanded ? "Show less" : "Read more"}
       </button>

@@ -8,7 +8,7 @@ import Button from "@/components/ui/Button";
 import PhoneInput from "@/components/ui/PhoneInput";
 
 const inputClass =
-  "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none transition-colors focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none transition-colors focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -64,7 +64,7 @@ export default function SignupPage() {
           Already have an account?{" "}
           <Link
             href="/login"
-            className="font-medium text-[#000080] hover:underline"
+            className="font-medium text-[#000080] dark:text-indigo-400 hover:underline"
           >
             Sign in
           </Link>
@@ -74,7 +74,7 @@ export default function SignupPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-[#374151]">
+            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
               First name
             </label>
             <input
@@ -87,7 +87,7 @@ export default function SignupPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[#374151]">
+            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
               Last name
             </label>
             <input
@@ -102,7 +102,7 @@ export default function SignupPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-[#374151]">
+          <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
             Email address
           </label>
           <input
@@ -126,7 +126,7 @@ export default function SignupPage() {
         />
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-[#374151]">
+          <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
             Password
           </label>
           <div className="relative">
@@ -142,18 +142,18 @@ export default function SignupPage() {
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
-              className="absolute inset-y-0 right-3 flex items-center text-xs font-medium text-[#000080]"
+              className="absolute inset-y-0 right-3 flex items-center text-xs font-medium text-[#000080] dark:text-indigo-400"
             >
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
-          <p className="mt-1 text-xs text-[#6B7280]">
+          <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">
             Your password must contain a lowercase letter, an uppercase letter, a number, a special character and at least 8 characters.
           </p>
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-[#374151]">
+          <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
             Confirm password
           </label>
           <input
@@ -167,25 +167,25 @@ export default function SignupPage() {
           />
         </div>
 
-        <label className="flex cursor-pointer items-start gap-2 text-sm text-[#374151]">
+        <label className="flex cursor-pointer items-start gap-2 text-sm text-[#374151] dark:text-slate-300">
           <input
             type="checkbox"
             checked={form.agree}
             onChange={(e) => update("agree", e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
+            className="mt-0.5 h-4 w-4 rounded border-[#E5E7EB] dark:border-slate-700 text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
           />
           <span>
             I agree to the{" "}
             <Link
               href="/terms"
-              className="font-medium text-[#000080] hover:underline"
+              className="font-medium text-[#000080] dark:text-indigo-400 hover:underline"
             >
               Terms of Service
             </Link>{" "}
             and{" "}
             <Link
               href="/privacy"
-              className="font-medium text-[#000080] hover:underline"
+              className="font-medium text-[#000080] dark:text-indigo-400 hover:underline"
             >
               Privacy Policy
             </Link>
@@ -194,7 +194,7 @@ export default function SignupPage() {
         </label>
 
         {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-sm text-red-700">
             {error}
           </div>
         )}

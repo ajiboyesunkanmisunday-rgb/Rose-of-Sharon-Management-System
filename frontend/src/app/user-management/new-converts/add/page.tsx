@@ -56,19 +56,19 @@ export default function AddNewConvertPage() {
   };
 
   const inputStyles =
-    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
   const selectStyles = inputStyles;
-  const labelStyles = "mb-1 block text-sm font-medium text-[#374151]";
+  const labelStyles = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
 
   return (
     <DashboardLayout>
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">User Management</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-[#000080] transition-colors hover:text-[#000066]"
+            className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -85,13 +85,13 @@ export default function AddNewConvertPage() {
               <polyline points="12 19 5 12 12 5" />
             </svg>
           </button>
-          <h2 className="text-[22px] font-bold text-[#000080]">Add New Convert</h2>
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">Add New Convert</h2>
         </div>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className="mb-8 rounded-xl border border-[#E5E7EB] bg-white p-6">
-          <h2 className="mb-6 text-[18px] font-bold text-[#000000]">
+        <div className="mb-8 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+          <h2 className="mb-6 text-[18px] font-bold text-[#000000] dark:text-slate-100">
             Enter Details
           </h2>
 
@@ -178,8 +178,8 @@ export default function AddNewConvertPage() {
         </div>
 
         {/* Address Section */}
-        <div className="mb-8 rounded-xl border border-[#E5E7EB] bg-white p-6">
-          <h2 className="mb-6 text-[18px] font-bold text-[#000000]">Address</h2>
+        <div className="mb-8 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+          <h2 className="mb-6 text-[18px] font-bold text-[#000000] dark:text-slate-100">Address</h2>
 
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
             <div>
@@ -214,7 +214,7 @@ export default function AddNewConvertPage() {
         </div>
 
         {error && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
         )}

@@ -88,13 +88,13 @@ export default function SpouseLinkModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Link Spouse" size="md">
       <div className="space-y-5">
-        <div className="flex gap-2 border-b border-[#E5E7EB]">
+        <div className="flex gap-2 border-b border-[#E5E7EB] dark:border-slate-700">
           <button
             onClick={() => setMode("search")}
             className={`pb-2 text-sm font-medium transition-colors ${
               mode === "search"
-                ? "border-b-2 border-[#000080] text-[#000080]"
-                : "text-[#6B7280] hover:text-[#374151]"
+                ? "border-b-2 border-[#000080] text-[#000080] dark:text-indigo-400"
+                : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"
             }`}
           >
             Search Existing
@@ -103,8 +103,8 @@ export default function SpouseLinkModal({
             onClick={() => setMode("add")}
             className={`pb-2 text-sm font-medium transition-colors ${
               mode === "add"
-                ? "border-b-2 border-[#000080] text-[#000080]"
-                : "text-[#6B7280] hover:text-[#374151]"
+                ? "border-b-2 border-[#000080] text-[#000080] dark:text-indigo-400"
+                : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"
             }`}
           >
             Add New
@@ -120,11 +120,11 @@ export default function SpouseLinkModal({
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name, phone, or email..."
             />
-            <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-[#E5E7EB]">
+            <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-[#E5E7EB] dark:border-slate-700">
               {loadingMembers ? (
-                <p className="p-3 text-center text-sm text-[#6B7280]">Loading…</p>
+                <p className="p-3 text-center text-sm text-[#6B7280] dark:text-slate-400">Loading…</p>
               ) : filteredMembers.length === 0 ? (
-                <p className="p-3 text-center text-sm text-[#6B7280]">No matches found</p>
+                <p className="p-3 text-center text-sm text-[#6B7280] dark:text-slate-400">No matches found</p>
               ) : (
                 filteredMembers.map((m) => {
                   const full = `${m.firstName} ${m.lastName}`;
@@ -138,8 +138,8 @@ export default function SpouseLinkModal({
                       }`}
                     >
                       <div>
-                        <p className="text-sm font-medium text-[#111827]">{full}</p>
-                        <p className="text-xs text-[#6B7280]">{m.email}</p>
+                        <p className="text-sm font-medium text-[#111827] dark:text-slate-100">{full}</p>
+                        <p className="text-xs text-[#6B7280] dark:text-slate-400">{m.email}</p>
                       </div>
                       {isSelected && (
                         <span className="rounded-full bg-[#000080] px-2 py-0.5 text-[10px] font-medium text-white">

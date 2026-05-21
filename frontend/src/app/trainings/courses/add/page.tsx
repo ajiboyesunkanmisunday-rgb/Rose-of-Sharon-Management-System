@@ -55,7 +55,7 @@ export default function AddCoursePage() {
         backHref="/trainings/courses"
       />
 
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           <FormField
             label="Course Name"

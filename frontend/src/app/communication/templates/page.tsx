@@ -95,7 +95,7 @@ export default function TemplatesPage() {
       );
     }
     return (
-      <span className="inline-flex items-center rounded-full bg-[#B5B5F3] px-2.5 py-0.5 text-xs font-medium text-[#000080]">
+      <span className="inline-flex items-center rounded-full bg-[#B5B5F3] px-2.5 py-0.5 text-xs font-medium text-[#000080] dark:text-indigo-400">
         Email
       </span>
     );
@@ -105,12 +105,12 @@ export default function TemplatesPage() {
     <DashboardLayout>
       {/* Page Header */}
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF]">
-          <FileText className="h-6 w-6 text-[#000080]" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF] dark:bg-indigo-900/30">
+          <FileText className="h-6 w-6 text-[#000080] dark:text-indigo-400" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Templates</h1>
-          <p className="text-sm text-[#6B7280]">Reusable SMS and email message templates</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Templates</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Reusable SMS and email message templates</p>
         </div>
       </div>
 
@@ -138,7 +138,7 @@ export default function TemplatesPage() {
       </div>
 
       {apiError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} —{" "}
           <button className="font-medium underline" onClick={() => fetchTemplates(currentPage)}>
             Retry
@@ -147,43 +147,43 @@ export default function TemplatesPage() {
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Channel</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Category</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Subject</th>
-              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Created</th>
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Name</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Channel</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Category</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Subject</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Created</th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-400">Loading templates…</td>
+                <td colSpan={6} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">Loading templates…</td>
               </tr>
             ) : displayed.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-400">No templates found.</td>
+                <td colSpan={6} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">No templates found.</td>
               </tr>
             ) : (
               displayed.map((t) => (
                 <tr
                   key={t.id}
-                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
+                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 cursor-pointer"
                   style={{ height: "56px" }}
                 >
-                  <td className="px-4 py-3 text-sm font-medium text-[#374151] max-w-[180px]"><span className="block truncate">{t.name}</span></td>
+                  <td className="px-4 py-3 text-sm font-medium text-[#374151] dark:text-slate-300 max-w-[180px]"><span className="block truncate">{t.name}</span></td>
                   <td className="px-4 py-3">{getChannelBadge(t.channel)}</td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {CATEGORY_LABELS[t.messageTemplateCategory] ?? t.messageTemplateCategory}
                   </td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] max-w-[200px]">
-                    <span className="block truncate">{t.subject ?? <span className="text-[#9CA3AF]">—</span>}</span>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[200px]">
+                    <span className="block truncate">{t.subject ?? <span className="text-[#9CA3AF] dark:text-slate-400">—</span>}</span>
                   </td>
-                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{fmtDate(t.createdOn)}</td>
+                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{fmtDate(t.createdOn)}</td>
                   <td className="px-4 py-3">
                     <ActionDropdown
                       actions={[

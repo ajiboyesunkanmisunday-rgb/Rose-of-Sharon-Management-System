@@ -6,7 +6,7 @@ import AuthShell from "@/components/auth/AuthShell";
 import Button from "@/components/ui/Button";
 
 const inputClass =
-  "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none transition-colors focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none transition-colors focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
           Remembered your password?{" "}
           <Link
             href="/login"
-            className="font-medium text-[#000080] hover:underline"
+            className="font-medium text-[#000080] dark:text-indigo-400 hover:underline"
           >
             Back to Sign In
           </Link>
@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
     >
       {submitted ? (
         <div className="space-y-5">
-          <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-4 text-sm text-green-800">
+          <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-900/20 px-4 py-4 text-sm text-green-800">
             <p className="font-medium">Request received</p>
             <p className="mt-1 text-green-700">
               Your password reset request for{" "}
@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
             </p>
           </div>
 
-          <p className="text-sm text-[#6B7280]">
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">
             If you need immediate assistance, please contact your church
             administrator directly.
           </p>
@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
           <div>
             <label
               htmlFor="email"
-              className="mb-1 block text-sm font-medium text-[#374151]"
+              className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300"
             >
               Email address
             </label>

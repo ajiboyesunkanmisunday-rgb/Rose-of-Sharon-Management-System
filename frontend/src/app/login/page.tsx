@@ -8,7 +8,7 @@ import Button from "@/components/ui/Button";
 import { loginUser } from "@/lib/api";
 
 const inputClass =
-  "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none transition-colors focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none transition-colors focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -60,7 +60,7 @@ export default function LoginPage() {
           Don&apos;t have an account?{" "}
           <Link
             href="/signup"
-            className="font-medium text-[#000080] hover:underline"
+            className="font-medium text-[#000080] dark:text-indigo-400 hover:underline"
           >
             Create one
           </Link>
@@ -69,7 +69,7 @@ export default function LoginPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
         )}
@@ -77,7 +77,7 @@ export default function LoginPage() {
         <div>
           <label
             htmlFor="email"
-            className="mb-1 block text-sm font-medium text-[#374151]"
+            className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300"
           >
             Email address
           </label>
@@ -97,13 +97,13 @@ export default function LoginPage() {
           <div className="mb-1 flex items-center justify-between">
             <label
               htmlFor="password"
-              className="text-sm font-medium text-[#374151]"
+              className="text-sm font-medium text-[#374151] dark:text-slate-300"
             >
               Password
             </label>
             <Link
               href="/forgot-password"
-              className="text-xs font-medium text-[#000080] hover:underline"
+              className="text-xs font-medium text-[#000080] dark:text-indigo-400 hover:underline"
             >
               Forgot password?
             </Link>
@@ -122,19 +122,19 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
-              className="absolute inset-y-0 right-3 flex items-center text-xs font-medium text-[#000080]"
+              className="absolute inset-y-0 right-3 flex items-center text-xs font-medium text-[#000080] dark:text-indigo-400"
             >
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
         </div>
 
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-[#374151]">
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-[#374151] dark:text-slate-300">
           <input
             type="checkbox"
             checked={remember}
             onChange={(e) => setRemember(e.target.checked)}
-            className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
+            className="h-4 w-4 rounded border-[#E5E7EB] dark:border-slate-700 text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
           />
           Keep me signed in
         </label>

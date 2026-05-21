@@ -92,8 +92,8 @@ export default function SchoolOfMinistryPage() {
           <BookOpen className="h-6 w-6" style={{ color: ACCENT }} />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">School of Ministry</h1>
-          <p className="text-sm text-[#6B7280]">Members enrolled in the SOM programme</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">School of Ministry</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Members enrolled in the SOM programme</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <button
@@ -117,7 +117,7 @@ export default function SchoolOfMinistryPage() {
           <button
             onClick={() => load(page)}
             disabled={loading}
-            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:border-[#059669] hover:text-[#059669] disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 hover:border-[#059669] hover:text-[#059669] disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
             Refresh
@@ -127,7 +127,7 @@ export default function SchoolOfMinistryPage() {
 
       {/* Error */}
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error}{" "}
           <button onClick={() => load(page)} className="font-medium underline">Retry</button>
         </div>
@@ -143,13 +143,13 @@ export default function SchoolOfMinistryPage() {
             placeholder="Search by name, phone, occupation…"
           />
         </div>
-        <span className="ml-auto text-sm text-[#6B7280]">
+        <span className="ml-auto text-sm text-[#6B7280] dark:text-slate-400">
           {total} {total === 1 ? "record" : "records"}
         </span>
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "#F9FAFB" }}>
@@ -166,8 +166,8 @@ export default function SchoolOfMinistryPage() {
               <tr>
                 <td colSpan={4} style={{ padding: "48px 16px", textAlign: "center" }}>
                   <Users className="mx-auto mb-3 h-10 w-10 text-[#E5E7EB]" />
-                  <p className="text-sm font-medium text-[#374151]">No records found</p>
-                  <p className="mt-1 text-xs text-[#9CA3AF]">SOM applications will appear here once submitted.</p>
+                  <p className="text-sm font-medium text-[#374151] dark:text-slate-300">No records found</p>
+                  <p className="mt-1 text-xs text-[#9CA3AF] dark:text-slate-400">SOM applications will appear here once submitted.</p>
                 </td>
               </tr>
             ) : (
@@ -206,7 +206,7 @@ export default function SchoolOfMinistryPage() {
                     <td style={{ padding: "12px 16px", color: "#374151" }}>
                       {phone ? (
                         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                          <Phone className="h-3 w-3 text-[#9CA3AF]" />
+                          <Phone className="h-3 w-3 text-[#9CA3AF] dark:text-slate-400" />
                           {phone}
                         </div>
                       ) : "—"}

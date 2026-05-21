@@ -259,17 +259,17 @@ export default function DirectoryPage() {
     <DashboardLayout>
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FFF7ED]">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FFF7ED] dark:bg-orange-900/30">
           <BookUser className="h-6 w-6 text-[#D97706]" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Church Directory</h1>
-          <p className="text-sm text-[#6B7280]">Browse and search all church members and visitors</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Church Directory</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Browse and search all church members and visitors</p>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error}{" "}
           <button className="font-medium underline" onClick={fetchAll}>Retry</button>
         </div>
@@ -278,14 +278,14 @@ export default function DirectoryPage() {
       {/* Summary Stats */}
       {!loading && entries.length > 0 && (
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 text-center">
-            <p className="text-2xl font-bold text-[#000080]">{entries.length}</p>
-            <p className="mt-1 text-xs text-[#6B7280]">Total</p>
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center">
+            <p className="text-2xl font-bold text-[#000080] dark:text-indigo-400">{entries.length}</p>
+            <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">Total</p>
           </div>
           {(["member","e-member","first-timer","second-timer","new-convert"] as const).map((type) => (
-            <div key={type} className="rounded-xl border border-[#E5E7EB] bg-white p-4 text-center">
-              <p className="text-2xl font-bold text-[#000080]">{typeStats[type] ?? 0}</p>
-              <p className="mt-1 text-xs text-[#6B7280]">{TYPE_LABELS[type]}</p>
+            <div key={type} className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center">
+              <p className="text-2xl font-bold text-[#000080] dark:text-indigo-400">{typeStats[type] ?? 0}</p>
+              <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">{TYPE_LABELS[type]}</p>
             </div>
           ))}
         </div>
@@ -302,12 +302,12 @@ export default function DirectoryPage() {
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 selectedType === t.key
                   ? "bg-[#000080] text-white"
-                  : "bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB]"
+                  : "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#374151] dark:text-slate-300 hover:bg-[#E5E7EB] dark:bg-slate-700"
               }`}
             >
               {t.label}
               {t.key !== "all" && (
-                <span className={`ml-1.5 text-xs ${selectedType === t.key ? "opacity-80" : "text-[#9CA3AF]"}`}>
+                <span className={`ml-1.5 text-xs ${selectedType === t.key ? "opacity-80" : "text-[#9CA3AF] dark:text-slate-400"}`}>
                   ({typeStats[t.key] ?? 0})
                 </span>
               )}
@@ -335,7 +335,7 @@ export default function DirectoryPage() {
             />
           </div>
           {groupMembersLoading && (
-            <span className="text-xs text-[#6B7280] animate-pulse">Loading group members…</span>
+            <span className="text-xs text-[#6B7280] dark:text-slate-400 animate-pulse">Loading group members…</span>
           )}
           {groupFilterError && (
             <span className="text-xs text-amber-600">{groupFilterError}</span>
@@ -343,12 +343,12 @@ export default function DirectoryPage() {
           {(search || selectedGroupId || selectedType !== "all") && (
             <button
               onClick={() => { setSearch(""); setSelectedGroupId(""); setGroupMemberIds(null); setGroupFilterError(""); setSelectedType("all"); resetPage(); }}
-              className="text-sm font-medium text-[#000080] underline hover:text-[#000066]"
+              className="text-sm font-medium text-[#000080] dark:text-indigo-400 underline hover:text-[#000066]"
             >
               Clear filters
             </button>
           )}
-          <span className="ml-auto text-sm text-[#6B7280]">
+          <span className="ml-auto text-sm text-[#6B7280] dark:text-slate-400">
             {filtered.length} {filtered.length === 1 ? "person" : "people"} found
           </span>
         </div>
@@ -356,7 +356,7 @@ export default function DirectoryPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="flex h-48 items-center justify-center text-gray-400">
+        <div className="flex h-48 items-center justify-center text-gray-400 dark:text-slate-500">
           <svg className="mr-3 h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -364,7 +364,7 @@ export default function DirectoryPage() {
           Loading directory…
         </div>
       ) : paginated.length === 0 ? (
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-12 text-center text-sm text-gray-400">
+        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-12 text-center text-sm text-gray-400 dark:text-slate-500">
           {entries.length === 0
             ? "No members found in the database."
             : "No members match your filters."}
@@ -382,7 +382,7 @@ export default function DirectoryPage() {
             return (
               <div
                 key={`${person.userType}-${person.id}`}
-                className="flex flex-col rounded-xl border border-[#E5E7EB] bg-white p-5 transition-shadow hover:shadow-md cursor-pointer"
+                className="flex flex-col rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5 transition-shadow hover:shadow-md cursor-pointer"
                 onClick={() => {
                   // Cache full person data so the profile page can display it
                   // immediately, even if the generic getUser API returns empty.
@@ -402,22 +402,22 @@ export default function DirectoryPage() {
                     />
                   ) : (
                     <div
-                      className={`flex h-14 w-14 items-center justify-center rounded-full ${bgColor} text-lg font-bold text-[#000080]`}
+                      className={`flex h-14 w-14 items-center justify-center rounded-full ${bgColor} text-lg font-bold text-[#000080] dark:text-indigo-400`}
                     >
                       {initials(person)}
                     </div>
                   )}
                   <span
-                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${TYPE_BADGE_COLORS[person.userType] ?? "bg-gray-200 text-gray-600"}`}
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${TYPE_BADGE_COLORS[person.userType] ?? "bg-gray-200 dark:bg-slate-600 text-gray-600 dark:text-slate-400"}`}
                   >
                     {TYPE_LABELS[person.userType] ?? person.userType}
                   </span>
                 </div>
 
                 {/* Info */}
-                <h3 className="text-sm font-bold text-[#111827]">{name}</h3>
+                <h3 className="text-sm font-bold text-[#111827] dark:text-slate-100">{name}</h3>
                 {person.occupation && (
-                  <p className="mt-0.5 text-xs text-[#6B7280]">{person.occupation}</p>
+                  <p className="mt-0.5 text-xs text-[#6B7280] dark:text-slate-400">{person.occupation}</p>
                 )}
                 {groupStr && (
                   <p className="mt-1 text-xs text-[#4B5563]">
@@ -425,12 +425,12 @@ export default function DirectoryPage() {
                   </p>
                 )}
                 {phone && (
-                  <p className="mt-1 text-xs text-[#374151]">{phone}</p>
+                  <p className="mt-1 text-xs text-[#374151] dark:text-slate-300">{phone}</p>
                 )}
                 {person.email && (
                   <a
                     href={`mailto:${person.email}`}
-                    className="mt-0.5 truncate text-xs text-[#000080] hover:underline"
+                    className="mt-0.5 truncate text-xs text-[#000080] dark:text-indigo-400 hover:underline"
                   >
                     {person.email}
                   </a>
@@ -446,7 +446,7 @@ export default function DirectoryPage() {
                       }
                       router.push(`/directory/${person.id}`);
                     }}
-                    className="w-full rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] transition-colors hover:bg-[#000080] hover:text-white"
+                    className="w-full rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] dark:text-indigo-400 transition-colors hover:bg-[#000080] hover:text-white"
                   >
                     View Profile
                   </button>

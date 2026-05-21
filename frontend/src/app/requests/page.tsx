@@ -47,10 +47,10 @@ const categoryBadgeColors: Record<string, string> = {
 };
 
 const statusBadgeColors: Record<string, string> = {
-  RECEIVED:    "bg-[#F3F4F6] text-[#6B7280]",
-  ASSIGNED:    "bg-[#DBEAFE] text-[#1D4ED8]",
-  IN_PROGRESS: "bg-[#FEF9C3] text-[#CA8A04]",
-  RESOLVED:    "bg-[#DCFCE7] text-[#16A34A]",
+  RECEIVED:    "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#6B7280] dark:text-slate-400",
+  ASSIGNED:    "bg-[#DBEAFE] dark:bg-blue-900/30 text-[#1D4ED8] dark:text-blue-300",
+  IN_PROGRESS: "bg-[#FEF9C3] dark:bg-yellow-900/30 text-[#CA8A04] dark:text-yellow-300",
+  RESOLVED:    "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
 };
 
 function fullName(u?: { firstName?: string; middleName?: string; lastName?: string } | null) {
@@ -64,7 +64,7 @@ function fmtDate(s?: string) {
 }
 
 const selectStyles =
-  "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
 
 export default function RequestsPage() {
   const router = useRouter();
@@ -153,17 +153,17 @@ export default function RequestsPage() {
   return (
     <DashboardLayout>
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF]">
-          <Inbox className="h-6 w-6 text-[#000080]" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF] dark:bg-indigo-900/30">
+          <Inbox className="h-6 w-6 text-[#000080] dark:text-indigo-400" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Requests</h1>
-          <p className="text-sm text-[#6B7280]">Prayer, counseling, and suggestion requests from members</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Requests</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Prayer, counseling, and suggestion requests from members</p>
         </div>
       </div>
 
       {/* Category Tabs */}
-      <div className="mb-4 flex items-center overflow-x-auto border-b border-[#E5E7EB]">
+      <div className="mb-4 flex items-center overflow-x-auto border-b border-[#E5E7EB] dark:border-slate-700">
         <div className="flex gap-6 sm:gap-8">
           {categoryTabs.map((tab) => (
             <button
@@ -171,8 +171,8 @@ export default function RequestsPage() {
               onClick={() => { setActiveCategory(tab.key); setCurrentPage(1); }}
               className={`pb-3 text-sm font-medium transition-colors ${
                 activeCategory === tab.key
-                  ? "border-b-2 border-[#000080] text-[#000080]"
-                  : "text-[#6B7280] hover:text-[#374151]"
+                  ? "border-b-2 border-[#000080] text-[#000080] dark:text-indigo-400"
+                  : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"
               }`}
             >
               {tab.label}
@@ -223,56 +223,56 @@ export default function RequestsPage() {
       />
 
       {apiError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} — <button className="font-medium underline" onClick={() => fetchRequests(currentPage, activeCategory)}>Retry</button>
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
               <th className="px-4 py-4">
                 <input type="checkbox" checked={allPageSelected} onChange={(e) => handleSelectAll(e.target.checked)}
-                  className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]" />
+                  className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]" />
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Type</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Subject</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Submitted By</th>
-              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
-              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Assigned To</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Type</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Subject</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Submitted By</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Date</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Status</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Assigned To</th>
               <th className="px-4 py-4"/>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">Loading…</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">Loading…</td></tr>
             ) : displayed.length === 0 ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">No requests found.</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">No requests found.</td></tr>
             ) : (
               displayed.map((r) => (
-                <tr key={r.id} className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer" style={{height:"56px"}} onClick={() => router.push(`/requests/${r.id}`)}>
+                <tr key={r.id} className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 cursor-pointer" style={{height:"56px"}} onClick={() => router.push(`/requests/${r.id}`)}>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <input type="checkbox" checked={selectedRows.has(r.id)} onChange={() => handleSelectRow(r.id)}
-                      className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]" />
+                      className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]" />
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${categoryBadgeColors[r.requestType ?? ""] ?? "bg-gray-100 text-gray-600"}`}>
+                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${categoryBadgeColors[r.requestType ?? ""] ?? "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400"}`}>
                       {(r.requestType ?? "—").replace(/_/g, " ")}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151] max-w-[200px]"><span className="block truncate">{r.subject}</span></td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] max-w-[160px]">
-                    <span className="block truncate">{r.owner ? fullName(r.owner) : <span className="italic text-gray-400">Anonymous</span>}</span>
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[200px]"><span className="block truncate">{r.subject}</span></td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[160px]">
+                    <span className="block truncate">{r.owner ? fullName(r.owner) : <span className="italic text-gray-400 dark:text-slate-500">Anonymous</span>}</span>
                   </td>
-                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{fmtDate(r.createdOn)}</td>
+                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{fmtDate(r.createdOn)}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${statusBadgeColors[r.requestStatus ?? ""] ?? "bg-gray-100 text-gray-600"}`}>
+                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${statusBadgeColors[r.requestStatus ?? ""] ?? "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400"}`}>
                       {(r.requestStatus ?? "—").replace(/_/g, " ")}
                     </span>
                   </td>
-                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] max-w-[160px]"><span className="block truncate">{fullName(r.assignedTo)}</span></td>
+                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[160px]"><span className="block truncate">{fullName(r.assignedTo)}</span></td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <ActionDropdown
                       actions={[
@@ -293,7 +293,7 @@ export default function RequestsPage() {
 
       {/* Status modal */}
       <Modal isOpen={showStatusModal} onClose={() => setShowStatusModal(false)} title="Update Status">
-        <label className="mb-1 block text-sm font-medium text-[#374151]">New Status</label>
+        <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">New Status</label>
         <select value={bulkStatus} onChange={(e) => setBulkStatus(e.target.value)} className={selectStyles}>
           <option value="RECEIVED">Received</option>
           <option value="ASSIGNED">Assigned</option>

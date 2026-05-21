@@ -279,7 +279,7 @@ export default function GroupDetailClient() {
       />
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error} —{" "}
           <button
             type="button"
@@ -292,20 +292,20 @@ export default function GroupDetailClient() {
       )}
 
       {loading ? (
-        <div className="flex h-48 items-center justify-center text-gray-400">
+        <div className="flex h-48 items-center justify-center text-gray-400 dark:text-slate-500">
           Loading…
         </div>
       ) : group ? (
         <>
           {/* Group info card */}
-          <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
+          <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold text-[#111827]">
+                <h2 className="text-xl font-bold text-[#111827] dark:text-slate-100">
                   {group.name}
                 </h2>
                 {group.description && (
-                  <p className="mt-1 text-sm text-[#6B7280]">
+                  <p className="mt-1 text-sm text-[#6B7280] dark:text-slate-400">
                     {group.description}
                   </p>
                 )}
@@ -317,42 +317,42 @@ export default function GroupDetailClient() {
 
             <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
               <div>
-                <p className="text-xs font-medium text-[#6B7280]">Group Head</p>
+                <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Group Head</p>
                 {group.groupHead ? (
                   <div className="mt-1 flex items-center gap-2">
                     <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-[#000080] ${avatarBgColors(group.groupHead.id)}`}
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-[#000080] dark:text-indigo-400 ${avatarBgColors(group.groupHead.id)}`}
                     >
                       {initials(group.groupHead)}
                     </div>
-                    <span className="text-sm font-medium text-[#111827]">
+                    <span className="text-sm font-medium text-[#111827] dark:text-slate-100">
                       {fullName(group.groupHead)}
                     </span>
                   </div>
                 ) : (
-                  <p className="mt-1 text-sm text-[#9CA3AF] italic">
+                  <p className="mt-1 text-sm text-[#9CA3AF] dark:text-slate-400 italic">
                     Not assigned
                   </p>
                 )}
               </div>
               <div>
-                <p className="text-xs font-medium text-[#6B7280]">
+                <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">
                   Total Members
                 </p>
-                <p className="mt-1 text-sm font-medium text-[#111827]">
+                <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">
                   {membersLoading ? "…" : filteredMembers.length}
                 </p>
               </div>
               {group.whatsAppLink && (
                 <div>
-                  <p className="text-xs font-medium text-[#6B7280]">
+                  <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">
                     WhatsApp Group
                   </p>
                   <a
                     href={group.whatsAppLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-1 block truncate text-sm font-medium text-[#000080] underline hover:text-[#000066]"
+                    className="mt-1 block truncate text-sm font-medium text-[#000080] dark:text-indigo-400 underline hover:text-[#000066]"
                   >
                     Join Group
                   </a>
@@ -363,7 +363,7 @@ export default function GroupDetailClient() {
 
           {/* Members section */}
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h3 className="text-base font-semibold text-[#111827]">
+            <h3 className="text-base font-semibold text-[#111827] dark:text-slate-100">
               Members{!membersLoading && ` (${filteredMembers.length})`}
             </h3>
             <div className="w-full sm:w-64">
@@ -380,7 +380,7 @@ export default function GroupDetailClient() {
           </div>
 
           {membersError && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
               {membersError} —{" "}
               <button className="font-medium underline" onClick={fetchMembers}>
                 Retry
@@ -388,23 +388,23 @@ export default function GroupDetailClient() {
             </div>
           )}
 
-          <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+          <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="bg-[#F3F4F6]">
-                  <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+                <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
+                  <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                     Name
                   </th>
-                  <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
+                  <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                     Email
                   </th>
-                  <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
+                  <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                     Phone
                   </th>
-                  <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
+                  <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                     Occupation
                   </th>
-                  <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
+                  <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                     Sex
                   </th>
                 </tr>
@@ -414,7 +414,7 @@ export default function GroupDetailClient() {
                   <tr>
                     <td
                       colSpan={5}
-                      className="px-4 py-8 text-center text-gray-400"
+                      className="px-4 py-8 text-center text-gray-400 dark:text-slate-500"
                     >
                       Loading members…
                     </td>
@@ -423,7 +423,7 @@ export default function GroupDetailClient() {
                   <tr>
                     <td
                       colSpan={5}
-                      className="px-4 py-8 text-center text-gray-400"
+                      className="px-4 py-8 text-center text-gray-400 dark:text-slate-500"
                     >
                       {memberSearch
                         ? "No members match your search."
@@ -434,7 +434,7 @@ export default function GroupDetailClient() {
                   paginatedMembers.map((m) => (
                     <tr
                       key={m.id}
-                      className="border-b border-[#F3F4F6] hover:bg-gray-50"
+                      className="border-b border-[#F3F4F6] hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50"
                       style={{ height: "56px" }}
                     >
                       <td className="px-4 py-3">
@@ -448,30 +448,30 @@ export default function GroupDetailClient() {
                             />
                           ) : (
                             <div
-                              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-[#000080] ${avatarBgColors(m.id)}`}
+                              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-[#000080] dark:text-indigo-400 ${avatarBgColors(m.id)}`}
                             >
                               {initials(m)}
                             </div>
                           )}
-                          <span className="text-sm font-medium text-[#374151]">
+                          <span className="text-sm font-medium text-[#374151] dark:text-slate-300">
                             {fullName(m)}
                           </span>
                         </div>
                       </td>
                       <td className="hidden sm:table-cell px-4 py-3 max-w-[200px]">
-                        <span className="block truncate text-sm text-[#374151]">
+                        <span className="block truncate text-sm text-[#374151] dark:text-slate-300">
                           {m.email || "—"}
                         </span>
                       </td>
-                      <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">
+                      <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                         {m.phoneNumber
                           ? `+${m.countryCode ?? ""} ${m.phoneNumber}`.trim()
                           : "—"}
                       </td>
-                      <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">
+                      <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                         {m.occupation || "—"}
                       </td>
-                      <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                      <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                         {m.sex
                           ? m.sex.charAt(0) + m.sex.slice(1).toLowerCase()
                           : "—"}
@@ -519,7 +519,7 @@ export default function GroupDetailClient() {
           </div>
         </>
       ) : !loading ? (
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-12 text-center text-sm text-gray-400">
+        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-12 text-center text-sm text-gray-400 dark:text-slate-500">
           Group not found.
         </div>
       ) : null}
@@ -534,13 +534,13 @@ export default function GroupDetailClient() {
         title="Assign Group Head"
         size="md"
       >
-        <p className="mb-3 text-sm text-[#6B7280]">
+        <p className="mb-3 text-sm text-[#6B7280] dark:text-slate-400">
           Select a church member to set as the head of{" "}
-          <span className="font-medium text-[#111827]">{group?.name}</span>.
+          <span className="font-medium text-[#111827] dark:text-slate-100">{group?.name}</span>.
         </p>
 
         {assignError && (
-          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-sm text-red-700">
             {assignError}
           </div>
         )}
@@ -555,11 +555,11 @@ export default function GroupDetailClient() {
         </div>
 
         {allMembersLoading ? (
-          <div className="py-8 text-center text-sm text-gray-400">
+          <div className="py-8 text-center text-sm text-gray-400 dark:text-slate-500">
             Loading members…
           </div>
         ) : filteredAllMembers.length === 0 ? (
-          <div className="py-8 text-center text-sm text-gray-400">
+          <div className="py-8 text-center text-sm text-gray-400 dark:text-slate-500">
             {headSearch ? "No members match your search." : "No members found."}
           </div>
         ) : (
@@ -582,17 +582,17 @@ export default function GroupDetailClient() {
                       />
                     ) : (
                       <div
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-[#000080] ${avatarBgColors(m.id)}`}
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-[#000080] dark:text-indigo-400 ${avatarBgColors(m.id)}`}
                       >
                         {initials(m)}
                       </div>
                     )}
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-[#111827]">
+                      <p className="truncate text-sm font-medium text-[#111827] dark:text-slate-100">
                         {fullName(m)}
                       </p>
                       {m.email && (
-                        <p className="truncate text-xs text-[#6B7280]">
+                        <p className="truncate text-xs text-[#6B7280] dark:text-slate-400">
                           {m.email}
                         </p>
                       )}
@@ -600,7 +600,7 @@ export default function GroupDetailClient() {
                   </div>
                   <div className="shrink-0">
                     {isCurrentHead ? (
-                      <span className="rounded-full bg-[#DCFCE7] px-2.5 py-1 text-xs font-medium text-[#16A34A]">
+                      <span className="rounded-full bg-[#DCFCE7] dark:bg-green-900/30 px-2.5 py-1 text-xs font-medium text-[#16A34A] dark:text-green-300">
                         Current Head
                       </span>
                     ) : (

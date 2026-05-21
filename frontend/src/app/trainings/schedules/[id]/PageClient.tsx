@@ -16,11 +16,11 @@ const statusColor = (status: ScheduleStatus): string => {
     case "Upcoming":
       return "bg-blue-100 text-blue-800";
     case "Completed":
-      return "bg-gray-100 text-gray-600";
+      return "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400";
     case "Cancelled":
       return "bg-red-100 text-red-800";
     default:
-      return "bg-gray-100 text-gray-600";
+      return "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400";
   }
 };
 
@@ -66,9 +66,9 @@ export default function ScheduleDetailClient() {
         backHref="/trainings/schedules"
       />
 
-      <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <h2 className="text-xl font-bold text-[#111827]">{schedule.course}</h2>
+          <h2 className="text-xl font-bold text-[#111827] dark:text-slate-100">{schedule.course}</h2>
           <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColor(schedule.status)}`}>
             {schedule.status}
           </span>
@@ -77,8 +77,8 @@ export default function ScheduleDetailClient() {
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
           {details.map((d) => (
             <div key={d.label}>
-              <p className="text-xs font-medium text-[#6B7280]">{d.label}</p>
-              <p className="mt-1 text-sm font-medium text-[#111827]">{d.value}</p>
+              <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">{d.label}</p>
+              <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{d.value}</p>
             </div>
           ))}
         </div>

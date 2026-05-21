@@ -21,11 +21,11 @@ const statusColor = (status: ScheduleStatus): string => {
     case "Upcoming":
       return "bg-blue-100 text-blue-800";
     case "Completed":
-      return "bg-gray-100 text-gray-600";
+      return "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400";
     case "Cancelled":
       return "bg-red-100 text-red-800";
     default:
-      return "bg-gray-100 text-gray-600";
+      return "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400";
   }
 };
 
@@ -67,12 +67,12 @@ export default function TrainingSchedulesPage() {
   return (
     <DashboardLayout>
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EDE9FE]">
-          <CalendarClock className="h-6 w-6 text-[#7C3AED]" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EDE9FE] dark:bg-purple-900/30">
+          <CalendarClock className="h-6 w-6 text-[#7C3AED] dark:text-purple-400" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Training Schedules</h1>
-          <p className="text-sm text-[#6B7280]">Plan and track course sessions and training timetables</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Training Schedules</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Plan and track course sessions and training timetables</p>
         </div>
       </div>
 
@@ -99,17 +99,17 @@ export default function TrainingSchedulesPage() {
         </Button>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Course</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Instructor</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Start Date</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">End Date</th>
-              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Day/Time</th>
-              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Venue</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Course</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Instructor</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Start Date</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">End Date</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Day/Time</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Venue</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Status</th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
@@ -117,15 +117,15 @@ export default function TrainingSchedulesPage() {
             {paginated.map((s) => (
               <tr
                 key={s.id}
-                className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50"
+                className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50"
                 style={{ height: "56px" }}
               >
-                <td className="px-4 py-3 font-medium text-[#111827]">{s.course}</td>
-                <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{s.instructor}</td>
-                <td className="px-4 py-3 text-[#374151]">{s.startDate}</td>
-                <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{s.endDate}</td>
-                <td className="hidden md:table-cell px-4 py-3 text-[#374151]">{s.dayTime}</td>
-                <td className="hidden md:table-cell px-4 py-3 text-[#374151]">{s.venue}</td>
+                <td className="px-4 py-3 font-medium text-[#111827] dark:text-slate-100">{s.course}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-[#374151] dark:text-slate-300">{s.instructor}</td>
+                <td className="px-4 py-3 text-[#374151] dark:text-slate-300">{s.startDate}</td>
+                <td className="hidden sm:table-cell px-4 py-3 text-[#374151] dark:text-slate-300">{s.endDate}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-[#374151] dark:text-slate-300">{s.dayTime}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-[#374151] dark:text-slate-300">{s.venue}</td>
                 <td className="px-4 py-3">
                   <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColor(s.status)}`}>
                     {s.status}
@@ -144,7 +144,7 @@ export default function TrainingSchedulesPage() {
             ))}
             {paginated.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
                   No schedules found.
                 </td>
               </tr>

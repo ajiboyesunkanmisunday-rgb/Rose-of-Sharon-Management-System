@@ -63,9 +63,9 @@ export default function AssignFollowUpModal({
     <Modal isOpen={isOpen} onClose={onClose} title="Assign Follow-up" size="md">
       <div className="space-y-4">
         {memberCount > 0 && (
-          <p className="text-sm text-[#6B7280]">
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">
             Assigning follow-up to{" "}
-            <strong className="text-[#000080]">
+            <strong className="text-[#000080] dark:text-indigo-400">
               {memberCount} {memberCount === 1 ? "person" : "people"}
             </strong>
             .
@@ -73,7 +73,7 @@ export default function AssignFollowUpModal({
         )}
 
         {loadingOfficers ? (
-          <p className="text-sm text-[#6B7280]">Loading officers…</p>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Loading officers…</p>
         ) : (
           <SelectField
             label="Follow-up Officer"

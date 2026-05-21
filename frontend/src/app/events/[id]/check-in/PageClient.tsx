@@ -117,7 +117,7 @@ export default function CheckInPageClient() {
     <main className="min-h-screen bg-[#F9FAFB]">
       {/* Header */}
       <div style={{ backgroundColor: ROSE_NAVY }} className="px-6 py-8 text-center text-white">
-        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-white/10">
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-white dark:bg-slate-800/10">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
           </svg>
@@ -134,7 +134,7 @@ export default function CheckInPageClient() {
       <div className="mx-auto max-w-lg px-4 py-8">
         {/* Success banner */}
         {successMsg && (
-          <div className="mb-4 flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+          <div className="mb-4 flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 dark:bg-green-900/20 px-4 py-3 text-sm font-medium text-green-700">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
@@ -144,13 +144,13 @@ export default function CheckInPageClient() {
 
         {/* Error banner */}
         {errorMsg && (
-          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
             {errorMsg}
           </div>
         )}
 
-        <div className="rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
-          <p className="mb-4 text-sm text-[#6B7280]">
+        <div className="rounded-2xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+          <p className="mb-4 text-sm text-[#6B7280] dark:text-slate-400">
             Search for your name below, then tap it to select and confirm your attendance.
           </p>
 
@@ -158,7 +158,7 @@ export default function CheckInPageClient() {
           <div className="relative mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]"
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF] dark:text-slate-400"
               fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 111 11a6 6 0 0116 0z" />
@@ -170,13 +170,13 @@ export default function CheckInPageClient() {
               onChange={(e) => { setQuery(e.target.value); setSelected(null); setErrorMsg(""); }}
               placeholder="Type name, email or phone…"
               autoComplete="off"
-              className="w-full rounded-lg border border-[#E5E7EB] py-3 pl-10 pr-4 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 py-3 pl-10 pr-4 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
             {query && (
               <button
                 type="button"
                 onClick={() => { setQuery(""); setSelected(null); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"
               >
                 ×
               </button>
@@ -185,18 +185,18 @@ export default function CheckInPageClient() {
 
           {/* Loading members hint */}
           {!membersLoaded && (
-            <p className="text-center text-xs text-[#9CA3AF]">Loading members list…</p>
+            <p className="text-center text-xs text-[#9CA3AF] dark:text-slate-400">Loading members list…</p>
           )}
 
           {/* Results list */}
           {debouncedQuery.trim().length >= 2 && matches.length === 0 && membersLoaded && (
-            <div className="rounded-lg border border-[#F3F4F6] bg-[#F9FAFB] px-4 py-4 text-center text-sm text-[#9CA3AF]">
+            <div className="rounded-lg border border-[#F3F4F6] bg-[#F9FAFB] px-4 py-4 text-center text-sm text-[#9CA3AF] dark:text-slate-400">
               No members found for &ldquo;{debouncedQuery}&rdquo;
             </div>
           )}
 
           {matches.length > 0 && (
-            <ul className="mb-4 divide-y divide-[#F3F4F6] rounded-lg border border-[#E5E7EB] bg-white overflow-hidden">
+            <ul className="mb-4 divide-y divide-[#F3F4F6] rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
               {matches.map((m) => {
                 const isSelected = selected?.id === m.id;
                 return (
@@ -210,17 +210,17 @@ export default function CheckInPageClient() {
                     }`}
                   >
                     <div>
-                      <p className={`text-sm ${isSelected ? "text-[#000080]" : "text-[#111827]"}`}>
+                      <p className={`text-sm ${isSelected ? "text-[#000080] dark:text-indigo-400" : "text-[#111827] dark:text-slate-100"}`}>
                         {fullName(m)}
                       </p>
                       {(m.email || m.phoneNumber) && (
-                        <p className="mt-0.5 text-xs text-[#6B7280]">
+                        <p className="mt-0.5 text-xs text-[#6B7280] dark:text-slate-400">
                           {[m.email, m.phoneNumber].filter(Boolean).join(" · ")}
                         </p>
                       )}
                     </div>
                     {isSelected && (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0 text-[#000080]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0 text-[#000080] dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     )}
@@ -233,9 +233,9 @@ export default function CheckInPageClient() {
           {/* Selected summary + confirm button */}
           {selected && (
             <div className="rounded-xl border border-[#000080]/20 bg-[#EFF6FF] px-4 py-4">
-              <p className="text-sm text-[#6B7280]">Selected</p>
-              <p className="mt-0.5 text-base font-bold text-[#000080]">{fullName(selected)}</p>
-              {selected.email && <p className="text-xs text-[#6B7280]">{selected.email}</p>}
+              <p className="text-sm text-[#6B7280] dark:text-slate-400">Selected</p>
+              <p className="mt-0.5 text-base font-bold text-[#000080] dark:text-indigo-400">{fullName(selected)}</p>
+              {selected.email && <p className="text-xs text-[#6B7280] dark:text-slate-400">{selected.email}</p>}
               <button
                 onClick={handleMark}
                 disabled={marking}
@@ -248,13 +248,13 @@ export default function CheckInPageClient() {
           )}
 
           {!selected && debouncedQuery.trim().length < 2 && (
-            <div className="rounded-lg bg-[#F9FAFB] px-4 py-6 text-center text-xs text-[#9CA3AF]">
+            <div className="rounded-lg bg-[#F9FAFB] px-4 py-6 text-center text-xs text-[#9CA3AF] dark:text-slate-400">
               Type at least 2 characters to search
             </div>
           )}
         </div>
 
-        <p className="mt-6 text-center text-xs text-[#9CA3AF]">
+        <p className="mt-6 text-center text-xs text-[#9CA3AF] dark:text-slate-400">
           Rose of Sharon Church · Service Check-In
         </p>
       </div>

@@ -78,7 +78,7 @@ export default function ComposeMessagePage() {
         backHref="/communication/messages"
       />
 
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
             <SelectField label="Type" name="type" value={formData.type} onChange={handleChange} options={TYPE_OPTIONS} required />
@@ -135,9 +135,9 @@ export default function ComposeMessagePage() {
               name="sendNow"
               checked={formData.sendNow}
               onChange={handleChange}
-              className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
+              className="h-4 w-4 rounded border-[#E5E7EB] dark:border-slate-700 text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
             />
-            <label htmlFor="sendNow" className="text-sm text-[#374151]">
+            <label htmlFor="sendNow" className="text-sm text-[#374151] dark:text-slate-300">
               Send immediately
             </label>
           </div>

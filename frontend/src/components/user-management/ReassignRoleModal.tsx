@@ -19,7 +19,7 @@ interface ReassignRoleModalProps {
 }
 
 const inputClass =
-  "w-full rounded-lg border border-[#E5E7EB] px-4 py-2.5 text-sm text-[#374151] outline-none transition-colors focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-2.5 text-sm text-[#374151] dark:text-slate-300 outline-none transition-colors focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
 
 export default function ReassignRoleModal({
   isOpen,
@@ -68,26 +68,26 @@ export default function ReassignRoleModal({
     >
       <div className="space-y-4">
         {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
         )}
 
-        <div className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-3 flex items-center gap-3">
+        <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] p-3 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#000080] text-sm font-bold text-white">
             {admin.firstName[0]}
             {admin.lastName[0]}
           </div>
           <div>
-            <p className="text-sm font-bold text-[#111827]">
+            <p className="text-sm font-bold text-[#111827] dark:text-slate-100">
               {admin.firstName} {admin.lastName}
             </p>
-            <p className="text-xs text-[#6B7280]">{admin.email}</p>
+            <p className="text-xs text-[#6B7280] dark:text-slate-400">{admin.email}</p>
           </div>
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-[#374151]">
+          <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
             Select New Role <span className="text-red-500">*</span>
           </label>
           <select
@@ -103,7 +103,7 @@ export default function ReassignRoleModal({
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
             Changing the role will update the permissions for this user immediately.
           </p>
         </div>

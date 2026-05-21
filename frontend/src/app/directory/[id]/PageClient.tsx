@@ -106,20 +106,20 @@ export default function DirectoryDetailClient() {
       />
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
       {loading ? (
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-10 text-center text-sm text-gray-400">
+        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-10 text-center text-sm text-gray-400 dark:text-slate-500">
           Loading contact…
         </div>
       ) : !contact ? (
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-10 text-center text-sm text-gray-400">
+        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-10 text-center text-sm text-gray-400 dark:text-slate-500">
           Contact not found.
         </div>
       ) : (
         <>
-          <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
+          <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
             <div className="flex flex-col sm:flex-row items-start gap-6">
               {contact.profilePictureUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -129,7 +129,7 @@ export default function DirectoryDetailClient() {
                   className="h-[120px] w-[120px] rounded-xl object-cover"
                 />
               ) : (
-                <div className="flex h-[120px] w-[120px] shrink-0 items-center justify-center rounded-xl bg-[#E5E7EB]">
+                <div className="flex h-[120px] w-[120px] shrink-0 items-center justify-center rounded-xl bg-[#E5E7EB] dark:bg-slate-700">
                   <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                     <circle cx="12" cy="7" r="4" />
@@ -138,12 +138,12 @@ export default function DirectoryDetailClient() {
               )}
 
               <div className="flex-1">
-                <h2 className="text-xl font-bold text-[#111827]">{fullName(contact)}</h2>
-                <p className="mt-1 text-sm text-[#6B7280]">{contact.userType?.replace(/_/g, " ") || ""}</p>
+                <h2 className="text-xl font-bold text-[#111827] dark:text-slate-100">{fullName(contact)}</h2>
+                <p className="mt-1 text-sm text-[#6B7280] dark:text-slate-400">{contact.userType?.replace(/_/g, " ") || ""}</p>
                 {contact.groups && contact.groups.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {contact.groups.map((g) => (
-                      <span key={g.id} className="inline-block rounded-full bg-[#B5B5F3]/30 px-3 py-1 text-xs font-medium text-[#000080]">
+                      <span key={g.id} className="inline-block rounded-full bg-[#B5B5F3]/30 px-3 py-1 text-xs font-medium text-[#000080] dark:text-indigo-400">
                         {g.name}
                       </span>
                     ))}
@@ -155,8 +155,8 @@ export default function DirectoryDetailClient() {
             <div className="mt-6 grid grid-cols-1 gap-4 border-t border-[#F3F4F6] pt-6 md:grid-cols-2">
               {details.map((d) => (
                 <div key={d.label}>
-                  <p className="text-xs font-medium text-[#6B7280]">{d.label}</p>
-                  <p className="mt-1 text-sm font-medium text-[#111827]">{d.value}</p>
+                  <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">{d.label}</p>
+                  <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{d.value}</p>
                 </div>
               ))}
             </div>

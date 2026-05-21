@@ -69,7 +69,7 @@ export default function Pagination({
               className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition-colors ${
                 page === currentPage
                   ? "border-2 border-[#000080] dark:border-indigo-500 bg-white dark:bg-slate-800 text-[#000080] dark:text-indigo-400"
-                  : "bg-[#F3F4F6] dark:bg-slate-700 text-[#000080] dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600"
+                  : "bg-[#F3F4F6] dark:bg-slate-700 text-[#000080] dark:text-indigo-400 dark:text-slate-300 hover:bg-gray-200 dark:bg-slate-600 dark:hover:bg-slate-600"
               }`}
             >
               {page}

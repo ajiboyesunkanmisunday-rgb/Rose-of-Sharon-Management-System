@@ -74,7 +74,7 @@ export default function MediaDetailClient() {
     return (
       <DashboardLayout>
         <PageHeader title="Media" subtitle="Loading…" backHref="/media" />
-        <div className="py-12 text-center text-sm text-gray-400">Loading media details…</div>
+        <div className="py-12 text-center text-sm text-gray-400 dark:text-slate-500">Loading media details…</div>
       </DashboardLayout>
     );
   }
@@ -83,7 +83,7 @@ export default function MediaDetailClient() {
     return (
       <DashboardLayout>
         <PageHeader title="Media" subtitle="Error" backHref="/media" />
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error || "Media item not found."}
           <button className="ml-2 font-medium underline" onClick={loadItem}>Retry</button>
         </div>
@@ -122,8 +122,8 @@ export default function MediaDetailClient() {
 
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <div className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white">
-            <div className="flex aspect-video items-center justify-center overflow-hidden bg-[#F3F4F6]">
+          <div className="overflow-hidden rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
+            <div className="flex aspect-video items-center justify-center overflow-hidden bg-[#F3F4F6] dark:bg-slate-700/30">
               {isPicture ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -150,7 +150,7 @@ export default function MediaDetailClient() {
                   <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
                   </svg>
-                  <p className="text-sm text-[#6B7280]">This media is hosted externally.</p>
+                  <p className="text-sm text-[#6B7280] dark:text-slate-400">This media is hosted externally.</p>
                   <a
                     href={externalUrl}
                     target="_blank"
@@ -167,38 +167,38 @@ export default function MediaDetailClient() {
                 </video>
               ) : (
                 <div className="text-center p-8">
-                  <p className="text-sm text-[#6B7280]">Preview not available.</p>
+                  <p className="text-sm text-[#6B7280] dark:text-slate-400">Preview not available.</p>
                 </div>
               )}
             </div>
             <div className="p-5">
               <div className="flex items-center gap-3">
                 {category && (
-                  <span className={`rounded-full px-3 py-1 text-xs font-medium ${typeColors[category] ?? "bg-gray-200 text-gray-700"}`}>
+                  <span className={`rounded-full px-3 py-1 text-xs font-medium ${typeColors[category] ?? "bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-slate-300"}`}>
                     {category}
                   </span>
                 )}
                 {mediaSize != null && (
-                  <span className="text-xs text-[#6B7280]">
+                  <span className="text-xs text-[#6B7280] dark:text-slate-400">
                     Size: {(mediaSize / 1024).toFixed(1)} KB
                   </span>
                 )}
               </div>
-              <h2 className="mt-3 text-xl font-bold text-[#111827]">{item.title}</h2>
+              <h2 className="mt-3 text-xl font-bold text-[#111827] dark:text-slate-100">{item.title}</h2>
               {item.createdOn && (
-                <p className="mt-1 text-sm text-[#6B7280]">
+                <p className="mt-1 text-sm text-[#6B7280] dark:text-slate-400">
                   {new Date(item.createdOn).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
                 </p>
               )}
               {cleanDescription && (
-                <p className="mt-4 text-sm text-[#374151]">{cleanDescription}</p>
+                <p className="mt-4 text-sm text-[#374151] dark:text-slate-300">{cleanDescription}</p>
               )}
               {externalUrl && (
                 <a
                   href={externalUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-[#000080] hover:underline"
+                  className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-[#000080] dark:text-indigo-400 hover:underline"
                 >
                   Open external link ↗
                 </a>
@@ -208,26 +208,26 @@ export default function MediaDetailClient() {
         </div>
 
         <aside>
-          <h3 className="mb-3 text-sm font-semibold text-[#111827]">
+          <h3 className="mb-3 text-sm font-semibold text-[#111827] dark:text-slate-100">
             Details
           </h3>
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-3">
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 space-y-3">
             {category && (
               <div>
-                <p className="text-xs font-medium text-[#6B7280]">Media Type</p>
-                <p className="mt-1 text-sm text-[#111827]">{category}</p>
+                <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Media Type</p>
+                <p className="mt-1 text-sm text-[#111827] dark:text-slate-100">{category}</p>
               </div>
             )}
             {mediaSize != null && (
               <div>
-                <p className="text-xs font-medium text-[#6B7280]">File Size</p>
-                <p className="mt-1 text-sm text-[#111827]">{(mediaSize / 1_048_576).toFixed(2)} MB</p>
+                <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">File Size</p>
+                <p className="mt-1 text-sm text-[#111827] dark:text-slate-100">{(mediaSize / 1_048_576).toFixed(2)} MB</p>
               </div>
             )}
             {item.createdOn && (
               <div>
-                <p className="text-xs font-medium text-[#6B7280]">Uploaded</p>
-                <p className="mt-1 text-sm text-[#111827]">
+                <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Uploaded</p>
+                <p className="mt-1 text-sm text-[#111827] dark:text-slate-100">
                   {new Date(item.createdOn).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
                 </p>
               </div>

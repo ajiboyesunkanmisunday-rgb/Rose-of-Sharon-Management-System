@@ -29,7 +29,7 @@ function fmtDate(s?: string) {
 }
 
 const inputClass =
-  "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none transition-colors focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none transition-colors focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
 
 export default function RolesPage() {
   const [roles, setRoles] = useState<RoleResponse[]>([]);
@@ -232,14 +232,14 @@ export default function RolesPage() {
   return (
     <DashboardLayout>
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF]">
-          <ShieldCheck className="h-6 w-6 text-[#000080]" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF] dark:bg-indigo-900/30">
+          <ShieldCheck className="h-6 w-6 text-[#000080] dark:text-indigo-400" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">
             Roles &amp; Permissions
           </h1>
-          <p className="text-sm text-[#6B7280]">
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">
             Define admin roles and their access levels
           </p>
         </div>
@@ -271,7 +271,7 @@ export default function RolesPage() {
       </div>
 
       {apiError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} —{" "}
           <button className="font-medium underline" onClick={fetchRoles}>
             Retry
@@ -279,20 +279,20 @@ export default function RolesPage() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Role Name
               </th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Description
               </th>
-              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Created
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Actions
               </th>
             </tr>
@@ -300,13 +300,13 @@ export default function RolesPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={4} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
                   Loading…
                 </td>
               </tr>
             ) : roles.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={4} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
                   No roles found.
                 </td>
               </tr>
@@ -314,16 +314,16 @@ export default function RolesPage() {
               roles.map((role) => (
                 <tr
                   key={role.id}
-                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50"
+                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50"
                   style={{ height: "56px" }}
                 >
-                  <td className="px-4 py-3 text-sm font-medium text-[#374151]">
+                  <td className="px-4 py-3 text-sm font-medium text-[#374151] dark:text-slate-300">
                     {role.name}
                   </td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {role.description || "—"}
                   </td>
-                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">
+                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {fmtDate(role.createdOn)}
                   </td>
                   <td className="px-4 py-3">
@@ -360,12 +360,12 @@ export default function RolesPage() {
       >
         <div className="space-y-4">
           {saveError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
               {saveError}
             </div>
           )}
           <div>
-            <label className="mb-1 block text-sm font-medium text-[#374151]">
+            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
               Role Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -379,7 +379,7 @@ export default function RolesPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[#374151]">
+            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
               Description
             </label>
             <textarea
@@ -425,12 +425,12 @@ export default function RolesPage() {
       >
         <div className="space-y-4">
           {saveError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
               {saveError}
             </div>
           )}
           <div>
-            <label className="mb-1 block text-sm font-medium text-[#374151]">
+            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
               Role Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -444,7 +444,7 @@ export default function RolesPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[#374151]">
+            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
               Description
             </label>
             <textarea
@@ -492,17 +492,17 @@ export default function RolesPage() {
       >
         <div className="space-y-4">
           {permError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
               {permError}
             </div>
           )}
 
           {loadingPerms ? (
-            <p className="text-sm text-[#6B7280] text-center py-4">
+            <p className="text-sm text-[#6B7280] dark:text-slate-400 text-center py-4">
               Loading permissions…
             </p>
           ) : allPerms.length === 0 ? (
-            <p className="text-sm text-[#6B7280] text-center py-4">
+            <p className="text-sm text-[#6B7280] dark:text-slate-400 text-center py-4">
               No permissions available.
             </p>
           ) : (
@@ -511,13 +511,13 @@ export default function RolesPage() {
                 <button
                   type="button"
                   onClick={toggleAll}
-                  className="text-xs font-semibold text-[#000080] hover:underline"
+                  className="text-xs font-semibold text-[#000080] dark:text-indigo-400 hover:underline"
                 >
                   {selectedPerms.size === allPerms.length
                     ? "Unmark All"
                     : "Mark All"}
                 </button>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-slate-400">
                   {selectedPerms.size} selected
                 </span>
               </div>
@@ -525,7 +525,7 @@ export default function RolesPage() {
                 {allPerms.map((perm) => (
                   <label
                     key={perm.id}
-                    className="flex cursor-pointer items-start gap-3 rounded-lg border border-[#E5E7EB] p-3 transition-colors hover:bg-[#F9FAFB]"
+                    className="flex cursor-pointer items-start gap-3 rounded-lg border border-[#E5E7EB] dark:border-slate-700 p-3 transition-colors hover:bg-[#F9FAFB]"
                   >
                     <input
                       type="checkbox"
@@ -534,11 +534,11 @@ export default function RolesPage() {
                       className="mt-0.5 h-4 w-4 rounded border-[#D1D5DB] accent-[#000080]"
                     />
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-[#111827]">
+                      <p className="text-sm font-medium text-[#111827] dark:text-slate-100">
                         {perm.name}
                       </p>
                       {perm.description && (
-                        <p className="text-xs text-[#6B7280] mt-0.5">
+                        <p className="text-xs text-[#6B7280] dark:text-slate-400 mt-0.5">
                           {perm.description}
                         </p>
                       )}
@@ -582,13 +582,13 @@ export default function RolesPage() {
       >
         <div className="space-y-4">
           {saveError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
               {saveError}
             </div>
           )}
-          <p className="text-sm text-[#374151]">
+          <p className="text-sm text-[#374151] dark:text-slate-300">
             Are you sure you want to delete the role{" "}
-            <span className="font-bold text-[#111827]">
+            <span className="font-bold text-[#111827] dark:text-slate-100">
               "{deletingRole?.name}"
             </span>
             ? This action cannot be undone and may affect users assigned to this

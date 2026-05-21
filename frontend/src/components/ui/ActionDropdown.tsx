@@ -67,7 +67,7 @@ export default function ActionDropdown({ actions }: ActionDropdownProps) {
       <button
         ref={buttonRef}
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex h-8 w-8 items-center justify-center rounded text-[#6B7280] dark:text-slate-400 transition-colors hover:bg-gray-100 dark:hover:bg-slate-700"
+        className="flex h-8 w-8 items-center justify-center rounded text-[#6B7280] dark:text-slate-400 transition-colors hover:bg-gray-100 dark:bg-slate-700 dark:hover:bg-slate-700"
         aria-label="Actions"
         aria-expanded={isOpen}
       >
@@ -88,10 +88,10 @@ export default function ActionDropdown({ actions }: ActionDropdownProps) {
             <button
               key={index}
               onClick={() => { action.onClick(); setIsOpen(false); }}
-              className={`block w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-slate-700 ${
+              className={`block w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 dark:bg-slate-700/50 dark:hover:bg-slate-700 ${
                 action.danger
                   ? "text-red-600 dark:text-red-400 font-medium"
-                  : "text-gray-700 dark:text-slate-200"
+                  : "text-gray-700 dark:text-slate-300 dark:text-slate-200"
               }`}
             >
               {action.label}

@@ -96,7 +96,7 @@ export default function SearchableSelect({
   return (
     <div className={`relative ${className}`} ref={containerRef}>
       {label && (
-        <label htmlFor={id} className="mb-1 block text-sm font-medium text-[#374151]">
+        <label htmlFor={id} className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
           {label}
           {required && <span className="text-red-500"> *</span>}
         </label>
@@ -110,10 +110,10 @@ export default function SearchableSelect({
         className={`flex w-full items-center justify-between rounded-lg border px-4 py-3 text-sm outline-none transition-colors ${
           open
             ? "border-[#000080] ring-1 ring-[#000080]"
-            : "border-[#E5E7EB] hover:border-[#9CA3AF]"
-        } bg-white text-left`}
+            : "border-[#E5E7EB] dark:border-slate-700 hover:border-[#9CA3AF]"
+        } bg-white dark:bg-slate-800 text-left`}
       >
-        <span className={displayLabel ? "text-[#374151]" : "text-[#9CA3AF]"}>
+        <span className={displayLabel ? "text-[#374151] dark:text-slate-300" : "text-[#9CA3AF] dark:text-slate-400"}>
           {displayLabel || placeholder}
         </span>
         <div className="flex shrink-0 items-center gap-1">
@@ -123,13 +123,13 @@ export default function SearchableSelect({
               role="button"
               tabIndex={0}
               onKeyDown={(e) => e.key === "Enter" && handleClear(e as unknown as React.MouseEvent)}
-              className="rounded p-0.5 text-[#9CA3AF] hover:text-[#374151]"
+              className="rounded p-0.5 text-[#9CA3AF] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"
             >
               <X className="h-3.5 w-3.5" />
             </span>
           )}
           <ChevronDown
-            className={`h-4 w-4 text-[#9CA3AF] transition-transform duration-200 ${
+            className={`h-4 w-4 text-[#9CA3AF] dark:text-slate-400 transition-transform duration-200 ${
               open ? "rotate-180" : ""
             }`}
           />
@@ -138,23 +138,23 @@ export default function SearchableSelect({
 
       {/* Dropdown panel */}
       {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-[#E5E7EB] bg-white shadow-xl">
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl">
           {/* Search input */}
           <div className="flex items-center gap-2 border-b border-[#F3F4F6] px-3 py-2">
-            <Search className="h-4 w-4 shrink-0 text-[#9CA3AF]" />
+            <Search className="h-4 w-4 shrink-0 text-[#9CA3AF] dark:text-slate-400" />
             <input
               ref={searchRef}
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={searchPlaceholder}
-              className="flex-1 bg-transparent text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF]"
+              className="flex-1 bg-transparent text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400"
             />
             {query && (
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                className="text-[#9CA3AF] hover:text-[#374151]"
+                className="text-[#9CA3AF] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -167,7 +167,7 @@ export default function SearchableSelect({
             role="listbox"
           >
             {filtered.length === 0 ? (
-              <li className="px-4 py-3 text-center text-xs text-[#9CA3AF]">
+              <li className="px-4 py-3 text-center text-xs text-[#9CA3AF] dark:text-slate-400">
                 No results for &ldquo;{query}&rdquo;
               </li>
             ) : (
@@ -182,8 +182,8 @@ export default function SearchableSelect({
                     onClick={() => handleSelect(option)}
                     className={`cursor-pointer px-4 py-2.5 text-sm transition-colors ${
                       value === val
-                        ? "bg-[#EFF6FF] font-medium text-[#000080]"
-                        : "text-[#374151] hover:bg-[#F9FAFB]"
+                        ? "bg-[#EFF6FF] font-medium text-[#000080] dark:text-indigo-400"
+                        : "text-[#374151] dark:text-slate-300 hover:bg-[#F9FAFB]"
                     }`}
                   >
                     {lbl}
@@ -194,7 +194,7 @@ export default function SearchableSelect({
           </ul>
 
           {/* Footer hint */}
-          <div className="border-t border-[#F3F4F6] px-3 py-1.5 text-center text-[10px] text-[#9CA3AF]">
+          <div className="border-t border-[#F3F4F6] px-3 py-1.5 text-center text-[10px] text-[#9CA3AF] dark:text-slate-400">
             {filtered.length} of {options.length} options
           </div>
         </div>

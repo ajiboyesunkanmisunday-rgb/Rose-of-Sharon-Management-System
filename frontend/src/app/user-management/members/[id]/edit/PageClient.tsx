@@ -124,10 +124,10 @@ export default function EditMemberPage() {
   };
 
   const inputStyles =
-    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
   const selectStyles =
-    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080] appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239CA3AF%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:20px] bg-[right_12px_center] bg-no-repeat pr-10";
-  const labelStyles = "mb-1 block text-sm font-medium text-[#374151]";
+    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080] appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239CA3AF%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:20px] bg-[right_12px_center] bg-no-repeat pr-10";
+  const labelStyles = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
 
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
   const months = [
@@ -151,11 +151,11 @@ export default function EditMemberPage() {
     <DashboardLayout>
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">User Management</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-[#000080] transition-colors hover:text-[#000066]"
+            className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -172,7 +172,7 @@ export default function EditMemberPage() {
               <polyline points="12 19 5 12 12 5" />
             </svg>
           </button>
-          <h2 className="text-[22px] font-bold text-[#000080]">Edit Member</h2>
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">Edit Member</h2>
         </div>
       </div>
 
@@ -180,8 +180,8 @@ export default function EditMemberPage() {
         <div className="flex flex-col gap-6 lg:flex-row">
           {/* Left Side - Form — second on mobile, first on desktop */}
           <div className="order-2 w-full lg:order-1 lg:w-[70%]">
-            <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
-              <h2 className="mb-6 text-[18px] font-bold text-[#000000]">
+            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+              <h2 className="mb-6 text-[18px] font-bold text-[#000000] dark:text-slate-100">
                 Enter Details
               </h2>
 
@@ -217,7 +217,7 @@ export default function EditMemberPage() {
                     type="email"
                     value={email}
                     readOnly
-                    className={`${inputStyles} cursor-not-allowed bg-[#F9FAFB] text-[#9CA3AF]`}
+                    className={`${inputStyles} cursor-not-allowed bg-[#F9FAFB] text-[#9CA3AF] dark:text-slate-400`}
                     title="Email cannot be changed"
                   />
                 </div>
@@ -289,7 +289,7 @@ export default function EditMemberPage() {
               </div>
 
               {/* Address Section Header */}
-              <h3 className="mb-4 mt-6 text-[16px] font-bold text-[#000000]">
+              <h3 className="mb-4 mt-6 text-[16px] font-bold text-[#000000] dark:text-slate-100">
                 Address
               </h3>
 
@@ -365,7 +365,7 @@ export default function EditMemberPage() {
 
               {/* Update Member Button */}
               {submitError && (
-                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{submitError}</div>
+                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{submitError}</div>
               )}
               <div className="mt-6 flex justify-end">
                 <Button type="submit" variant="primary" disabled={submitting}>
@@ -377,8 +377,8 @@ export default function EditMemberPage() {
 
           {/* Right Side - Profile Photo — first on mobile, second on desktop */}
           <div className="order-1 w-full lg:order-2 lg:w-[30%]">
-            <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
-              <h2 className="mb-6 text-[18px] font-bold text-[#000000]">
+            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+              <h2 className="mb-6 text-[18px] font-bold text-[#000000] dark:text-slate-100">
                 Profile Photo
               </h2>
 
@@ -416,7 +416,7 @@ export default function EditMemberPage() {
                   onChange={handlePhotoUpload}
                   className="hidden"
                 />
-                <span className="mt-4 text-sm font-medium text-[#000080] transition-colors group-hover:text-[#000066]">
+                <span className="mt-4 text-sm font-medium text-[#000080] dark:text-indigo-400 transition-colors group-hover:text-[#000066]">
                   Upload Photo
                 </span>
               </label>

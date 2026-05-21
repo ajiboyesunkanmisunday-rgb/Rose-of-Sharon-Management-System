@@ -9,9 +9,9 @@ import { activeWorkflowCards, workflowTemplates } from "@/lib/mock-data";
 import { WorkflowCardStatus } from "@/lib/types";
 
 const statusColors: Record<WorkflowCardStatus, string> = {
-  "On Track": "bg-[#DCFCE7] text-[#16A34A]",
-  Overdue: "bg-[#FEE2E2] text-[#DC2626]",
-  Pending: "bg-[#FEF9C3] text-[#CA8A04]",
+  "On Track": "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
+  Overdue: "bg-[#FEE2E2] dark:bg-red-900/30 text-[#DC2626] dark:text-red-400",
+  Pending: "bg-[#FEF9C3] dark:bg-yellow-900/30 text-[#CA8A04] dark:text-yellow-300",
 };
 
 export default function ActiveWorkflowDetailClient() {
@@ -60,38 +60,38 @@ export default function ActiveWorkflowDetailClient() {
 
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-[#6B7280]">Workflow Info</h3>
+              <h3 className="text-sm font-semibold text-[#6B7280] dark:text-slate-400">Workflow Info</h3>
               <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColors[card.status]}`}>
                 {card.status}
               </span>
             </div>
-            <h2 className="mt-3 text-xl font-bold text-[#111827]">{card.memberName}</h2>
-            <p className="mt-1 text-sm text-[#6B7280]">{card.phone}</p>
+            <h2 className="mt-3 text-xl font-bold text-[#111827] dark:text-slate-100">{card.memberName}</h2>
+            <p className="mt-1 text-sm text-[#6B7280] dark:text-slate-400">{card.phone}</p>
 
             <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <p className="text-xs font-medium text-[#6B7280]">Template</p>
-                <p className="mt-1 text-sm font-medium text-[#111827]">{template.name}</p>
+                <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Template</p>
+                <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{template.name}</p>
               </div>
               <div>
-                <p className="text-xs font-medium text-[#6B7280]">Current Stage</p>
-                <p className="mt-1 text-sm font-medium text-[#111827]">{card.stage}</p>
+                <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Current Stage</p>
+                <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{card.stage}</p>
               </div>
               <div>
-                <p className="text-xs font-medium text-[#6B7280]">Assigned To</p>
-                <p className="mt-1 text-sm font-medium text-[#111827]">{card.assignedTo}</p>
+                <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Assigned To</p>
+                <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{card.assignedTo}</p>
               </div>
               <div>
-                <p className="text-xs font-medium text-[#6B7280]">Date Added</p>
-                <p className="mt-1 text-sm font-medium text-[#111827]">{card.dateAdded}</p>
+                <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Date Added</p>
+                <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{card.dateAdded}</p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
-            <h3 className="mb-4 text-sm font-semibold text-[#111827]">Step Progress</h3>
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+            <h3 className="mb-4 text-sm font-semibold text-[#111827] dark:text-slate-100">Step Progress</h3>
             <ol className="space-y-3">
               {template.steps.map((step, idx) => {
                 const done = idx < currentStep;
@@ -101,10 +101,10 @@ export default function ActiveWorkflowDetailClient() {
                     <span
                       className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                         done
-                          ? "bg-green-500 text-white"
+                          ? "bg-green-50 dark:bg-green-900/200 text-white"
                           : current
                           ? "bg-[#000080] text-white"
-                          : "bg-[#F3F4F6] text-[#6B7280]"
+                          : "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#6B7280] dark:text-slate-400"
                       }`}
                     >
                       {done ? (
@@ -118,10 +118,10 @@ export default function ActiveWorkflowDetailClient() {
                     <span
                       className={`text-sm ${
                         current
-                          ? "font-semibold text-[#000080]"
+                          ? "font-semibold text-[#000080] dark:text-indigo-400"
                           : done
-                          ? "text-[#6B7280] line-through"
-                          : "text-[#374151]"
+                          ? "text-[#6B7280] dark:text-slate-400 line-through"
+                          : "text-[#374151] dark:text-slate-300"
                       }`}
                     >
                       {step.label}
@@ -140,15 +140,15 @@ export default function ActiveWorkflowDetailClient() {
         </div>
 
         <aside>
-          <h3 className="mb-3 text-sm font-semibold text-[#111827]">Audit Log</h3>
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-4">
+          <h3 className="mb-3 text-sm font-semibold text-[#111827] dark:text-slate-100">Audit Log</h3>
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
             <ul className="space-y-3">
               {auditLog.map((entry, idx) => (
                 <li key={idx} className="flex items-start gap-3 border-b border-[#F3F4F6] pb-3 last:border-0 last:pb-0">
                   <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#000080]" />
                   <div>
-                    <p className="text-sm text-[#374151]">{entry.action}</p>
-                    <p className="mt-0.5 text-xs text-[#9CA3AF]">
+                    <p className="text-sm text-[#374151] dark:text-slate-300">{entry.action}</p>
+                    <p className="mt-0.5 text-xs text-[#9CA3AF] dark:text-slate-400">
                       {entry.actor} · {entry.date}
                     </p>
                   </div>

@@ -32,15 +32,15 @@ export default function PrayerWorkflowPage() {
     <DashboardLayout>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Workflows</h1>
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Workflows</h1>
         <div className="mt-1 flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#EDE9FE]">
-            <Flame className="h-5 w-5 text-[#7C3AED]" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#EDE9FE] dark:bg-purple-900/30">
+            <Flame className="h-5 w-5 text-[#7C3AED] dark:text-purple-400" />
           </div>
           <div>
-            <h2 className="text-[20px] font-bold text-[#000080]">Prayer Request Workflow</h2>
+            <h2 className="text-[20px] font-bold text-[#000080] dark:text-indigo-400">Prayer Request Workflow</h2>
             {!loading && (
-              <p className="text-xs text-[#6B7280]">
+              <p className="text-xs text-[#6B7280] dark:text-slate-400">
                 {totalCount} active prayer request{totalCount !== 1 ? "s" : ""} · Drag cards between columns to update status
               </p>
             )}
@@ -49,7 +49,7 @@ export default function PrayerWorkflowPage() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error}{" "}
           <button className="font-medium underline" onClick={fetchBoard}>Retry</button>
         </div>
@@ -57,8 +57,8 @@ export default function PrayerWorkflowPage() {
 
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <div className="flex flex-col items-center gap-3 text-[#6B7280]">
-            <Flame className="h-8 w-8 animate-pulse text-[#7C3AED]" />
+          <div className="flex flex-col items-center gap-3 text-[#6B7280] dark:text-slate-400">
+            <Flame className="h-8 w-8 animate-pulse text-[#7C3AED] dark:text-purple-400" />
             <p className="text-sm">Loading prayer requests…</p>
           </div>
         </div>

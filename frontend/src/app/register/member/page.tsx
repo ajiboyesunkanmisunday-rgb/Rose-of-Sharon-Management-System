@@ -69,13 +69,13 @@ export default function RegisterMemberPage() {
   };
 
   const inputStyles =
-    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
   const selectStyles =
-    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
-  const labelStyles = "mb-1 block text-sm font-medium text-[#374151]";
+    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  const labelStyles = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-slate-800">
       {/* Logo */}
       <div className="px-8 py-6">
         <Image
@@ -89,18 +89,18 @@ export default function RegisterMemberPage() {
       </div>
 
       {/* Divider */}
-      <div className="border-t border-[#E5E7EB]" />
+      <div className="border-t border-[#E5E7EB] dark:border-slate-700" />
 
       {/* Content */}
       <div className="mx-auto max-w-5xl px-8 py-8">
         {/* Title + Photo Upload */}
         <div className="mb-8 flex items-start justify-between">
-          <h1 className="text-[28px] font-bold text-[#000000]">Add Member</h1>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Add Member</h1>
 
           {/* Profile Photo */}
           <div className="text-center">
             <p className={labelStyles}>Profile Photo</p>
-            <label className="mt-2 flex h-[120px] w-[120px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#E5E7EB] bg-white transition-colors hover:border-[#000080]">
+            <label className="mt-2 flex h-[120px] w-[120px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 transition-colors hover:border-[#000080]">
               {photoFile ? (
                 <img
                   src={URL.createObjectURL(photoFile)}
@@ -124,7 +124,7 @@ export default function RegisterMemberPage() {
                     <polyline points="17 8 12 3 7 8" />
                     <line x1="12" y1="3" x2="12" y2="15" />
                   </svg>
-                  <span className="mt-1 text-xs text-[#9CA3AF]">
+                  <span className="mt-1 text-xs text-[#9CA3AF] dark:text-slate-400">
                     Upload Photo
                   </span>
                 </>
@@ -141,7 +141,7 @@ export default function RegisterMemberPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          <h2 className="mb-6 text-base font-medium text-[#374151]">
+          <h2 className="mb-6 text-base font-medium text-[#374151] dark:text-slate-300">
             Enter Details
           </h2>
 
@@ -205,7 +205,7 @@ export default function RegisterMemberPage() {
           </div>
 
           {/* Address Section */}
-          <h2 className="mb-4 mt-8 text-base font-medium text-[#374151]">
+          <h2 className="mb-4 mt-8 text-base font-medium text-[#374151] dark:text-slate-300">
             Address
           </h2>
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">

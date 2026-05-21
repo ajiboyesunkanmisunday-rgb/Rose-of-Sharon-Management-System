@@ -63,8 +63,8 @@ export default function EventBroadcastModal({
           options={CHANNEL_OPTIONS}
         />
 
-        <div className="rounded-lg border border-[#E5E7EB] bg-[#FAFAFA] p-4">
-          <h3 className="mb-3 text-sm font-semibold text-[#111827]">Audience Filters</h3>
+        <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#FAFAFA] p-4">
+          <h3 className="mb-3 text-sm font-semibold text-[#111827] dark:text-slate-100">Audience Filters</h3>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div>
               <SearchableSelect

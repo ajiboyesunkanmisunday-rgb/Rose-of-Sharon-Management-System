@@ -47,7 +47,7 @@ export default function BulkActionsBar({
         ))}
         <button
           onClick={onClear}
-          className="ml-2 text-xs text-[#6B7280] dark:text-slate-500 underline transition-colors hover:text-[#374151] dark:hover:text-slate-300"
+          className="ml-2 text-xs text-[#6B7280] dark:text-slate-400 dark:text-slate-500 underline transition-colors hover:text-[#374151] dark:text-slate-300 dark:hover:text-slate-300"
         >
           Clear
         </button>

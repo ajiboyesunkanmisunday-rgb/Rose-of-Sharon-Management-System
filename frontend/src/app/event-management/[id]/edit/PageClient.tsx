@@ -173,10 +173,10 @@ export default function EditEventClient() {
       />
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
             <FormField label="Event Title" name="title" value={formData.title} onChange={handleChange} placeholder="Enter event title" required />
@@ -228,9 +228,9 @@ export default function EditEventClient() {
           <div className="flex items-center gap-2 pt-1">
             <input type="checkbox" id="requiresRegistration" name="requiresRegistration"
               checked={formData.requiresRegistration} onChange={handleChange}
-              className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
+              className="h-4 w-4 rounded border-[#E5E7EB] dark:border-slate-700 text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
             />
-            <label htmlFor="requiresRegistration" className="text-sm text-[#374151]">Requires registration</label>
+            <label htmlFor="requiresRegistration" className="text-sm text-[#374151] dark:text-slate-300">Requires registration</label>
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-4">

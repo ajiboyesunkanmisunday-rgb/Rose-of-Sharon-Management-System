@@ -33,7 +33,7 @@ export default function UserAvatar({
 
   return (
     <div
-      className={`${dim} flex shrink-0 items-center justify-center rounded-full bg-gray-200`}
+      className={`${dim} flex shrink-0 items-center justify-center rounded-full bg-gray-200 dark:bg-slate-600`}
     >
       <svg
         width={size === "sm" ? 16 : 20}

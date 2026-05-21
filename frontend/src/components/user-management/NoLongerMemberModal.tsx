@@ -59,7 +59,7 @@ export default function NoLongerMemberModal({
       onClick={handleOverlayClick}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
     >
-      <div className="relative w-full max-w-[480px] overflow-hidden rounded-2xl bg-white shadow-xl">
+      <div className="relative w-full max-w-[480px] overflow-hidden rounded-2xl bg-white dark:bg-slate-800 shadow-xl">
         {/* Navy Header */}
         <div className="flex items-center justify-between bg-[#000080] px-6 py-4">
           <h2 className="text-lg font-bold text-white">
@@ -90,12 +90,12 @@ export default function NoLongerMemberModal({
         {/* Body */}
         <div className="px-6 py-6">
           {count !== undefined && count > 0 && (
-            <p className="mb-3 text-sm text-[#374151]">
+            <p className="mb-3 text-sm text-[#374151] dark:text-slate-300">
               This will mark <span className="font-semibold">{count}</span>{" "}
               {count === 1 ? "member" : "members"} as inactive.
             </p>
           )}
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">
             Reason <span className="text-red-500">*</span>
           </label>
           <textarea
@@ -106,7 +106,7 @@ export default function NoLongerMemberModal({
             }}
             rows={4}
             placeholder="Enter the reason..."
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
           />
           {error && (
             <p className="mt-1 text-xs text-red-600">{error}</p>
@@ -117,7 +117,7 @@ export default function NoLongerMemberModal({
         <div className="flex items-center justify-end gap-3 px-6 pb-6">
           <button
             onClick={onClose}
-            className="rounded-xl border-2 border-[#000080] px-6 py-2.5 text-sm font-medium text-[#000080] transition-colors hover:bg-[#000080]/5"
+            className="rounded-xl border-2 border-[#000080] px-6 py-2.5 text-sm font-medium text-[#000080] dark:text-indigo-400 transition-colors hover:bg-[#000080]/5"
           >
             Cancel
           </button>

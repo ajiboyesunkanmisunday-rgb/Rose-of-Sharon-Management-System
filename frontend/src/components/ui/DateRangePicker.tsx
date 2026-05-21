@@ -19,7 +19,7 @@ export default function DateRangePicker({
 }: DateRangePickerProps) {
   // Matches SearchBar: py-3 px-4 rounded-full border text-sm
   const inputStyles =
-    "w-full rounded-full border border-[#E5E7EB] bg-white px-4 py-3 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+    "w-full rounded-full border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-sm text-gray-700 dark:text-slate-300 outline-none placeholder:text-gray-400 dark:text-slate-500 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
@@ -29,7 +29,7 @@ export default function DateRangePicker({
         onChange={(e) => onFromChange(e.target.value)}
         className={inputStyles}
       />
-      <span className="shrink-0 text-xs text-[#9CA3AF]">—</span>
+      <span className="shrink-0 text-xs text-[#9CA3AF] dark:text-slate-400">—</span>
       <input
         type="date"
         value={to}

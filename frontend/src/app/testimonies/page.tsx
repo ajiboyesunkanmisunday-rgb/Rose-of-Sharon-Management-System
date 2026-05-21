@@ -19,9 +19,9 @@ import { Heart } from "lucide-react";
 const ITEMS_PER_PAGE = 10;
 
 const statusBadgeColors: Record<string, string> = {
-  READ:     "bg-[#DCFCE7] text-[#16A34A]",
-  NOT_READ: "bg-[#FEF9C3] text-[#CA8A04]",
-  UNREAD:   "bg-[#FEF9C3] text-[#CA8A04]", // legacy fallback
+  READ:     "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
+  NOT_READ: "bg-[#FEF9C3] dark:bg-yellow-900/30 text-[#CA8A04] dark:text-yellow-300",
+  UNREAD:   "bg-[#FEF9C3] dark:bg-yellow-900/30 text-[#CA8A04] dark:text-yellow-300", // legacy fallback
 };
 
 function fullName(u?: { firstName?: string; middleName?: string; lastName?: string } | null) {
@@ -158,8 +158,8 @@ export default function TestimoniesPage() {
           <Heart className="h-6 w-6 text-[#DB2777]" />
         </div>
         <div>
-        <h1 className="text-[28px] font-bold text-[#000000]">Testimonies</h1>
-        <p className="text-sm text-[#6B7280]">Read and manage testimonies shared by the congregation</p>
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Testimonies</h1>
+        <p className="text-sm text-[#6B7280] dark:text-slate-400">Read and manage testimonies shared by the congregation</p>
         </div>
       </div>
 
@@ -187,62 +187,62 @@ export default function TestimoniesPage() {
       />
 
       {apiError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} — <button className="font-medium underline" onClick={() => fetchTestimonies(currentPage)}>Retry</button>
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
               <th className="px-4 py-4">
                 <input type="checkbox" checked={allPageSelected} onChange={(e) => handleSelectAll(e.target.checked)}
-                  className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]" />
+                  className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]" />
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Subject</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Featured</th>
-              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Location</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Name</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Subject</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Featured</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Location</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Date</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Status</th>
               <th className="px-4 py-4" />
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">Loading…</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">Loading…</td></tr>
             ) : displayed.length === 0 ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">No testimonies found.</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">No testimonies found.</td></tr>
             ) : (
               displayed.map((t) => (
-                <tr key={t.id} className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50" style={{ height: "56px" }}>
+                <tr key={t.id} className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50" style={{ height: "56px" }}>
                   <td className="px-4 py-3">
                     <input type="checkbox" checked={selectedRows.has(t.id)} onChange={() => handleSelectRow(t.id)}
-                      className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]" />
+                      className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]" />
                   </td>
                   <td className="px-4 py-3 text-sm">
                     {fullName(t.owner)
-                      ? <span className="text-[#374151]">{fullName(t.owner)}</span>
-                      : <span className="italic text-gray-400">Anonymous</span>}
+                      ? <span className="text-[#374151] dark:text-slate-300">{fullName(t.owner)}</span>
+                      : <span className="italic text-gray-400 dark:text-slate-500">Anonymous</span>}
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151] max-w-[200px] truncate">{t.subject}</td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[200px] truncate">{t.subject}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {t.isFeatured ? (
                       <div>
-                        <div className="font-medium text-[#16A34A]">Yes</div>
-                        {t.featureDate && <div className="text-xs text-gray-500">{fmtDate(t.featureDate)}</div>}
+                        <div className="font-medium text-[#16A34A] dark:text-green-300">Yes</div>
+                        {t.featureDate && <div className="text-xs text-gray-500 dark:text-slate-400">{fmtDate(t.featureDate)}</div>}
                       </div>
                     ) : (
-                      <span className="text-gray-400">No</span>
+                      <span className="text-gray-400 dark:text-slate-500">No</span>
                     )}
                   </td>
-                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">
-                    {[t.state, t.country].filter(Boolean).join(", ") || <span className="text-gray-400">—</span>}
+                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
+                    {[t.state, t.country].filter(Boolean).join(", ") || <span className="text-gray-400 dark:text-slate-500">—</span>}
                   </td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{fmtDate(t.createdOn)}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{fmtDate(t.createdOn)}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${statusBadgeColors[t.testimonyStatus ?? ""] ?? "bg-gray-100 text-gray-600"}`}>
+                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${statusBadgeColors[t.testimonyStatus ?? ""] ?? "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400"}`}>
                       {t.testimonyStatus === "NOT_READ" ? "Unread" : (t.testimonyStatus ?? "Unread")}
                     </span>
                   </td>
@@ -271,52 +271,52 @@ export default function TestimoniesPage() {
         {viewing && (
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
-              <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${statusBadgeColors[viewing.testimonyStatus ?? ""] ?? "bg-gray-200 text-gray-700"}`}>
+              <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${statusBadgeColors[viewing.testimonyStatus ?? ""] ?? "bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-slate-300"}`}>
                 {(viewing.testimonyStatus ?? "UNREAD").replace(/_/g, " ")}
               </span>
               {viewing.isFeatured && (
-                <span className="inline-block rounded-full bg-[#B5B5F3] px-3 py-1 text-xs font-medium text-[#000080]">
+                <span className="inline-block rounded-full bg-[#B5B5F3] px-3 py-1 text-xs font-medium text-[#000080] dark:text-indigo-400">
                   Featured
                 </span>
               )}
             </div>
 
             <div>
-              <div className="text-xs font-medium text-gray-500">Name</div>
+              <div className="text-xs font-medium text-gray-500 dark:text-slate-400">Name</div>
               <div className="text-sm">
                 {fullName(viewing.owner)
-                  ? <span className="text-[#374151]">{fullName(viewing.owner)}</span>
-                  : <span className="italic text-gray-400">Anonymous</span>}
+                  ? <span className="text-[#374151] dark:text-slate-300">{fullName(viewing.owner)}</span>
+                  : <span className="italic text-gray-400 dark:text-slate-500">Anonymous</span>}
               </div>
             </div>
 
             <div>
-              <div className="text-xs font-medium text-gray-500">Subject</div>
-              <div className="text-sm font-medium text-[#374151]">{viewing.subject}</div>
+              <div className="text-xs font-medium text-gray-500 dark:text-slate-400">Subject</div>
+              <div className="text-sm font-medium text-[#374151] dark:text-slate-300">{viewing.subject}</div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <div className="text-xs font-medium text-gray-500">Date</div>
-                <div className="text-sm text-[#374151]">{fmtDate(viewing.createdOn)}</div>
+                <div className="text-xs font-medium text-gray-500 dark:text-slate-400">Date</div>
+                <div className="text-sm text-[#374151] dark:text-slate-300">{fmtDate(viewing.createdOn)}</div>
               </div>
               <div>
-                <div className="text-xs font-medium text-gray-500">Location</div>
-                <div className="text-sm text-[#374151]">
+                <div className="text-xs font-medium text-gray-500 dark:text-slate-400">Location</div>
+                <div className="text-sm text-[#374151] dark:text-slate-300">
                   {[viewing.state, viewing.country].filter(Boolean).join(", ") || "—"}
                 </div>
               </div>
               {viewing.isFeatured && viewing.featureDate && (
                 <div>
-                  <div className="text-xs font-medium text-gray-500">Featured Date</div>
-                  <div className="text-sm text-[#374151]">{fmtDate(viewing.featureDate)}</div>
+                  <div className="text-xs font-medium text-gray-500 dark:text-slate-400">Featured Date</div>
+                  <div className="text-sm text-[#374151] dark:text-slate-300">{fmtDate(viewing.featureDate)}</div>
                 </div>
               )}
             </div>
 
             <div>
-              <div className="mb-1 text-xs font-medium text-gray-500">Content</div>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#374151]">{viewing.content}</p>
+              <div className="mb-1 text-xs font-medium text-gray-500 dark:text-slate-400">Content</div>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#374151] dark:text-slate-300">{viewing.content}</p>
             </div>
           </div>
         )}

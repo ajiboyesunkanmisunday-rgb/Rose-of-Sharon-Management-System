@@ -74,12 +74,12 @@ export default function ActivityLogsPage() {
   return (
     <DashboardLayout>
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F3F4F6]">
-          <ScrollText className="h-6 w-6 text-[#374151]" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F3F4F6] dark:bg-slate-700/30">
+          <ScrollText className="h-6 w-6 text-[#374151] dark:text-slate-300" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Activity Logs</h1>
-          <p className="text-sm text-[#6B7280]">System audit trail of all admin actions</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Activity Logs</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">System audit trail of all admin actions</p>
         </div>
       </div>
 
@@ -101,7 +101,7 @@ export default function ActivityLogsPage() {
            </div>
            <button 
              onClick={() => fetchLogs(currentPage, activeSearch, fromDate, toDate)}
-             className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-gray-500 hover:bg-gray-50 transition-colors"
+             className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 transition-colors"
              title="Refresh"
            >
              <RefreshCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} />
@@ -110,27 +110,27 @@ export default function ActivityLogsPage() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex justify-between items-center animate-in fade-in slide-in-from-top-1">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700 flex justify-between items-center animate-in fade-in slide-in-from-top-1">
           <span>{error}</span>
           <button onClick={() => fetchLogs(currentPage, activeSearch, fromDate, toDate)} className="font-bold underline hover:no-underline">Retry</button>
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Action</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Performed By</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Date & Time</th>
-              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Location</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Module</th>
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Action</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Performed By</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Date & Time</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Location</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Module</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F3F4F6]">
             {loading && logs.length === 0 ? (
                 <tr>
-                    <td colSpan={5} className="px-4 py-12 text-center text-gray-400">
+                    <td colSpan={5} className="px-4 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex flex-col items-center gap-2">
                         <RefreshCw className="h-8 w-8 animate-spin text-gray-300" />
                         <span>Loading activity logs...</span>
@@ -141,23 +141,23 @@ export default function ActivityLogsPage() {
                 logs.map((log) => (
                   <tr
                     key={log.id}
-                    className="transition-colors hover:bg-gray-50"
+                    className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50"
                   >
                     <td className="px-4 py-4">
-                        <div className="text-sm font-medium text-[#374151]">{log.actionPerformed}</div>
-                        <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{log.actionPerformedSummary}</div>
+                        <div className="text-sm font-medium text-[#374151] dark:text-slate-300">{log.actionPerformed}</div>
+                        <div className="text-xs text-gray-500 dark:text-slate-400 mt-0.5 line-clamp-1">{log.actionPerformedSummary}</div>
                     </td>
-                    <td className="px-4 py-4 text-sm text-[#374151]">
+                    <td className="px-4 py-4 text-sm text-[#374151] dark:text-slate-300">
                         {log.user ? `${log.user.firstName} ${log.user.lastName}` : "System"}
-                        <div className="text-xs text-gray-400">{log.user?.email}</div>
+                        <div className="text-xs text-gray-400 dark:text-slate-500">{log.user?.email}</div>
                     </td>
-                    <td className="hidden sm:table-cell px-4 py-4 text-sm text-[#374151]">
+                    <td className="hidden sm:table-cell px-4 py-4 text-sm text-[#374151] dark:text-slate-300">
                         {log.createdOn ? new Date(log.createdOn).toLocaleString(undefined, {
                             dateStyle: 'medium',
                             timeStyle: 'short'
                         }) : "—"}
                     </td>
-                    <td className="hidden md:table-cell px-4 py-4 text-sm text-[#374151]">
+                    <td className="hidden md:table-cell px-4 py-4 text-sm text-[#374151] dark:text-slate-300">
                       {log.location || "Unknown"}
                       {log.isSuccessful === false && (
                         <div className="text-[10px] text-red-500 font-medium">Failed</div>
@@ -166,7 +166,7 @@ export default function ActivityLogsPage() {
                     <td className="hidden sm:table-cell px-4 py-4">
                       <span
                         className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          moduleBadgeColors[log.module] || "bg-gray-100 text-gray-600"
+                          moduleBadgeColors[log.module] || "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400"
                         }`}
                       >
                         {log.module}
@@ -177,7 +177,7 @@ export default function ActivityLogsPage() {
             )}
             {!loading && logs.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={5} className="px-4 py-12 text-center text-gray-400 dark:text-slate-500">
                   No activity logs found.
                 </td>
               </tr>

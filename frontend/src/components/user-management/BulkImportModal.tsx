@@ -150,9 +150,9 @@ export default function BulkImportModal({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={`Bulk Import ${module}`} size="md">
       <div className="space-y-4">
-        <div className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-4 text-sm text-[#374151]">
-          <p className="mb-2 font-medium text-[#000080]">How to use</p>
-          <ol className="list-inside list-decimal space-y-1 text-[#6B7280]">
+        <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] p-4 text-sm text-[#374151] dark:text-slate-300">
+          <p className="mb-2 font-medium text-[#000080] dark:text-indigo-400">How to use</p>
+          <ol className="list-inside list-decimal space-y-1 text-[#6B7280] dark:text-slate-400">
             <li>Download the CSV template below.</li>
             <li>Fill in one row per record, keeping the header row intact.</li>
             <li>Upload the completed CSV file to import.</li>
@@ -166,7 +166,7 @@ export default function BulkImportModal({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-[#374151]">
+          <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
             Upload CSV
           </label>
           <input
@@ -174,16 +174,16 @@ export default function BulkImportModal({
             type="file"
             accept=".csv,text/csv"
             onChange={handleFileChange}
-            className="block w-full cursor-pointer rounded-lg border border-[#E5E7EB] bg-white p-2 text-sm text-[#374151] file:mr-3 file:rounded-md file:border-0 file:bg-[#B5B5F3] file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-[#000080] hover:file:bg-[#A3A3E8]"
+            className="block w-full cursor-pointer rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-2 text-sm text-[#374151] dark:text-slate-300 file:mr-3 file:rounded-md file:border-0 file:bg-[#B5B5F3] file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-[#000080] dark:text-indigo-400 hover:file:bg-[#A3A3E8]"
           />
           {fileName && !error && parsedRows.length > 0 && (
-            <p className="mt-2 text-sm text-[#16A34A]">
+            <p className="mt-2 text-sm text-[#16A34A] dark:text-green-300">
               Ready to import <strong>{parsedRows.length}</strong> row
               {parsedRows.length === 1 ? "" : "s"} from <em>{fileName}</em>.
             </p>
           )}
           {fileName && !error && parsedRows.length === 0 && (
-            <p className="mt-2 text-sm text-[#6B7280]">
+            <p className="mt-2 text-sm text-[#6B7280] dark:text-slate-400">
               No data rows found in <em>{fileName}</em>.
             </p>
           )}

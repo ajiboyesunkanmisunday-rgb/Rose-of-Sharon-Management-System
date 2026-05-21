@@ -19,7 +19,7 @@ const statusBadgeClass: Record<string, string> = {
   "Pending": "bg-yellow-100 text-yellow-800",
   "Assigned": "bg-blue-100 text-blue-800",
   "Prayed For": "bg-green-100 text-green-800",
-  "Closed": "bg-gray-100 text-gray-600",
+  "Closed": "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400",
 };
 
 function fullName(u?: { firstName?: string; middleName?: string; lastName?: string }): string {
@@ -69,15 +69,15 @@ export default function PrayerRequestDetailClient() {
   useEffect(() => { loadRequest(); }, [loadRequest]);
 
   const inputClass =
-    "h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+    "h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
 
   if (loading) {
     return (
       <DashboardLayout>
         <div className="mb-6">
-          <h1 className="text-[28px] font-bold text-[#000000]">Prayer Requests</h1>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Prayer Requests</h1>
         </div>
-        <div className="py-12 text-center text-sm text-gray-400">Loading prayer request…</div>
+        <div className="py-12 text-center text-sm text-gray-400 dark:text-slate-500">Loading prayer request…</div>
       </DashboardLayout>
     );
   }
@@ -86,9 +86,9 @@ export default function PrayerRequestDetailClient() {
     return (
       <DashboardLayout>
         <div className="mb-6">
-          <h1 className="text-[28px] font-bold text-[#000000]">Prayer Requests</h1>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Prayer Requests</h1>
         </div>
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error || "Prayer request not found."}
           <button className="ml-2 font-medium underline" onClick={loadRequest}>Retry</button>
         </div>
@@ -105,28 +105,28 @@ export default function PrayerRequestDetailClient() {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">Prayer Requests</h1>
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Prayer Requests</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.push("/prayer-requests")}
-            className="flex items-center text-[#000080] transition-colors hover:text-[#000066]"
+            className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
             </svg>
           </button>
-          <h2 className="text-[22px] font-bold text-[#000080]">Prayer Request Details</h2>
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">Prayer Request Details</h2>
         </div>
       </div>
 
       {/* Request Details */}
-      <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <div className="mb-4 flex flex-wrap items-center gap-2">
-          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadgeClass[status] ?? "bg-gray-100 text-gray-600"}`}>
+          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadgeClass[status] ?? "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400"}`}>
             {status}
           </span>
           {category && (
-            <span className="inline-flex items-center rounded-full bg-[#B5B5F3] px-2.5 py-0.5 text-xs font-medium text-[#000080]">
+            <span className="inline-flex items-center rounded-full bg-[#B5B5F3] px-2.5 py-0.5 text-xs font-medium text-[#000080] dark:text-indigo-400">
               {category}
             </span>
           )}
@@ -135,30 +135,30 @@ export default function PrayerRequestDetailClient() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           {submittedBy && submittedBy !== "—" && (
             <div>
-              <p className="text-xs font-medium text-[#6B7280]">Submitted By</p>
-              <p className="mt-1 text-sm text-[#111827]">{submittedBy}</p>
+              <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Submitted By</p>
+              <p className="mt-1 text-sm text-[#111827] dark:text-slate-100">{submittedBy}</p>
             </div>
           )}
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">Date Submitted</p>
-            <p className="mt-1 text-sm text-[#111827]">{date}</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Date Submitted</p>
+            <p className="mt-1 text-sm text-[#111827] dark:text-slate-100">{date}</p>
           </div>
         </div>
 
         <div className="mt-4">
-          <p className="text-xs font-medium text-[#6B7280]">Prayer Request</p>
-          <p className="mt-2 rounded-lg bg-[#F9FAFB] p-4 text-sm leading-relaxed text-[#374151]">
+          <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Prayer Request</p>
+          <p className="mt-2 rounded-lg bg-[#F9FAFB] p-4 text-sm leading-relaxed text-[#374151] dark:text-slate-300">
             {request.content}
           </p>
         </div>
       </div>
 
       {/* Status & Assignment */}
-      <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
-        <h2 className="mb-4 text-lg font-bold text-[#000000]">Manage Request</h2>
+      <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+        <h2 className="mb-4 text-lg font-bold text-[#000000] dark:text-slate-100">Manage Request</h2>
         <div className="flex flex-wrap items-end gap-4">
           <div className="flex flex-col">
-            <label className="mb-1.5 text-xs font-medium text-[#374151]">Update Status</label>
+            <label className="mb-1.5 text-xs font-medium text-[#374151] dark:text-slate-300">Update Status</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
@@ -170,7 +170,7 @@ export default function PrayerRequestDetailClient() {
             </select>
           </div>
           <div className="flex flex-col">
-            <label className="mb-1.5 text-xs font-medium text-[#374151]">Assign To</label>
+            <label className="mb-1.5 text-xs font-medium text-[#374151] dark:text-slate-300">Assign To</label>
             <select
               value={assignedTo}
               onChange={(e) => setAssignedTo(e.target.value)}
@@ -188,13 +188,13 @@ export default function PrayerRequestDetailClient() {
       </div>
 
       {/* Notes */}
-      <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[#000000]">Notes</h2>
+          <h2 className="text-lg font-bold text-[#000000] dark:text-slate-100">Notes</h2>
           {!addingNote && (
             <button
               onClick={() => setAddingNote(true)}
-              className="flex items-center gap-1 text-sm font-medium text-[#000080] transition-colors hover:text-[#000066]"
+              className="flex items-center gap-1 text-sm font-medium text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
@@ -211,7 +211,7 @@ export default function PrayerRequestDetailClient() {
               onChange={(e) => setNewNote(e.target.value)}
               placeholder="Enter note..."
               rows={3}
-              className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
               autoFocus
             />
             <div className="mt-2 flex gap-2">
@@ -238,13 +238,13 @@ export default function PrayerRequestDetailClient() {
         )}
 
         {notes.length === 0 && !addingNote ? (
-          <p className="text-sm text-[#9CA3AF]">No notes yet.</p>
+          <p className="text-sm text-[#9CA3AF] dark:text-slate-400">No notes yet.</p>
         ) : (
           <div className="space-y-3">
             {notes.map((note) => (
               <div key={note.id} className="rounded-lg border border-[#F3F4F6] bg-[#F9FAFB] p-4">
                 <div className="flex items-start justify-between">
-                  <p className="flex-1 text-sm text-[#374151]">{note.content}</p>
+                  <p className="flex-1 text-sm text-[#374151] dark:text-slate-300">{note.content}</p>
                   <button
                     onClick={() => setNotes((prev) => prev.filter((n) => n.id !== note.id))}
                     className="ml-4 shrink-0 text-red-400 transition-colors hover:text-red-600"
@@ -255,7 +255,7 @@ export default function PrayerRequestDetailClient() {
                     </svg>
                   </button>
                 </div>
-                <div className="mt-2 text-xs text-[#9CA3AF]">Added by: {note.addedBy} &bull; {note.date}</div>
+                <div className="mt-2 text-xs text-[#9CA3AF] dark:text-slate-400">Added by: {note.addedBy} &bull; {note.date}</div>
               </div>
             ))}
           </div>

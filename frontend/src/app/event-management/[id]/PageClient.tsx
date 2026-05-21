@@ -48,7 +48,7 @@ const categoryColors: Record<string, string> = {
   SPECIAL_SERVICE: "bg-purple-100 text-purple-800",
   CONFERENCE:      "bg-indigo-100 text-indigo-800",
   WEDDING:         "bg-pink-100 text-pink-800",
-  FUNERAL:         "bg-gray-100 text-gray-600",
+  FUNERAL:         "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400",
 };
 
 type Tab = "first-timers" | "second-timers";
@@ -133,7 +133,7 @@ export default function EventDetailClient() {
     return (
       <DashboardLayout>
         <PageHeader title="Event Management" subtitle="Event Not Found" backHref="/event-management" />
-        <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-6 text-sm text-red-700">
+        <div className="rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 px-6 py-6 text-sm text-red-700">
           <p className="font-medium text-base mb-1">Unable to load event</p>
           <p className="text-red-600">{eventError || "This event could not be found or may have been removed."}</p>
           <div className="mt-4 flex flex-wrap gap-3">
@@ -179,7 +179,7 @@ export default function EventDetailClient() {
       ]} />
 
       {/* ── Event info card ──────────────────────────────────────────────── */}
-      <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -189,25 +189,25 @@ export default function EventDetailClient() {
                 <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">Active</span>
               )}
               {event.eventCategory && (
-                <span className={`rounded-full px-3 py-1 text-xs font-medium ${categoryColors[event.eventCategory] ?? "bg-gray-100 text-gray-600"}`}>
+                <span className={`rounded-full px-3 py-1 text-xs font-medium ${categoryColors[event.eventCategory] ?? "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400"}`}>
                   {event.eventCategory.replace(/_/g, " ")}
                 </span>
               )}
               {event.locationType && (
-                <span className="rounded-full bg-[#F3F4F6] px-3 py-1 text-xs font-medium text-[#374151]">
+                <span className="rounded-full bg-[#F3F4F6] dark:bg-slate-700/30 px-3 py-1 text-xs font-medium text-[#374151] dark:text-slate-300">
                   {event.locationType.charAt(0) + event.locationType.slice(1).toLowerCase()}
                 </span>
               )}
               {event.requiresRegistration && (
-                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-800">
+                <span className="rounded-full bg-blue-50 dark:bg-blue-900/20 px-3 py-1 text-xs font-medium text-blue-800">
                   Registration required
                 </span>
               )}
             </div>
-            <h2 className="mt-3 text-xl font-bold text-[#111827]">{event.title}</h2>
+            <h2 className="mt-3 text-xl font-bold text-[#111827] dark:text-slate-100">{event.title}</h2>
             {event.topic && (
-              <p className="mt-1 text-sm text-[#6B7280]">
-                Topic: <span className="font-medium text-[#374151]">{event.topic}</span>
+              <p className="mt-1 text-sm text-[#6B7280] dark:text-slate-400">
+                Topic: <span className="font-medium text-[#374151] dark:text-slate-300">{event.topic}</span>
               </p>
             )}
           </div>
@@ -219,79 +219,79 @@ export default function EventDetailClient() {
 
         <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">Date</p>
-            <p className="mt-1 text-sm font-medium text-[#111827]">{fmtDate(event.date)}</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Date</p>
+            <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{fmtDate(event.date)}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">Start Time</p>
-            <p className="mt-1 text-sm font-medium text-[#111827]">{fmtEpoch(event.startTime)}</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Start Time</p>
+            <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{fmtEpoch(event.startTime)}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">End Time</p>
-            <p className="mt-1 text-sm font-medium text-[#111827]">{fmtEpoch(event.endTime)}</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">End Time</p>
+            <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{fmtEpoch(event.endTime)}</p>
           </div>
           {event.preacher && (
             <div>
-              <p className="text-xs font-medium text-[#6B7280]">Preacher / Speaker</p>
-              <p className="mt-1 text-sm font-medium text-[#111827]">{event.preacher}</p>
+              <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Preacher / Speaker</p>
+              <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{event.preacher}</p>
             </div>
           )}
           {(event.city || event.state) && (
             <div>
-              <p className="text-xs font-medium text-[#6B7280]">Location</p>
-              <p className="mt-1 text-sm font-medium text-[#111827]">
+              <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Location</p>
+              <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">
                 {[event.street, event.city, event.state].filter(Boolean).join(", ")}
               </p>
             </div>
           )}
           {event.virtualMeetingLink && (
             <div>
-              <p className="text-xs font-medium text-[#6B7280]">Virtual Link</p>
+              <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Virtual Link</p>
               <a href={event.virtualMeetingLink} target="_blank" rel="noopener noreferrer"
-                className="mt-1 block text-sm font-medium text-[#000080] underline truncate">
+                className="mt-1 block text-sm font-medium text-[#000080] dark:text-indigo-400 underline truncate">
                 {event.virtualMeetingLink}
               </a>
             </div>
           )}
           {event.createdOn && (
             <div>
-              <p className="text-xs font-medium text-[#6B7280]">Created</p>
-              <p className="mt-1 text-sm font-medium text-[#111827]">{fmtDate(event.createdOn)}</p>
+              <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Created</p>
+              <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{fmtDate(event.createdOn)}</p>
             </div>
           )}
         </div>
 
         {event.additionalInstructions && (
           <div className="mt-4 border-t border-[#F3F4F6] pt-4">
-            <p className="text-xs font-medium text-[#6B7280]">Additional Information</p>
-            <p className="mt-1 text-sm text-[#374151]">{event.additionalInstructions}</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Additional Information</p>
+            <p className="mt-1 text-sm text-[#374151] dark:text-slate-300">{event.additionalInstructions}</p>
           </div>
         )}
       </div>
 
       {/* ── Attendance header ────────────────────────────────────────────── */}
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-base font-bold text-[#111827]">Attendance</h3>
-        <p className="text-xs text-[#6B7280]">
+        <h3 className="text-base font-bold text-[#111827] dark:text-slate-100">Attendance</h3>
+        <p className="text-xs text-[#6B7280] dark:text-slate-400">
           Showing visitors registered on <span className="font-medium">{fmtDate(event.date)}</span>
         </p>
       </div>
 
       {/* ── Tabs ──────────────────────────────────────────────────────────── */}
-      <div className="mb-4 flex items-center gap-6 overflow-x-auto border-b border-[#E5E7EB]">
+      <div className="mb-4 flex items-center gap-6 overflow-x-auto border-b border-[#E5E7EB] dark:border-slate-700">
         {tabs.map(tab => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`flex items-center gap-2 whitespace-nowrap pb-3 text-sm font-medium transition-colors ${
               activeTab === tab.key
-                ? "border-b-2 border-[#000080] text-[#000080]"
-                : "text-[#6B7280] hover:text-[#374151]"
+                ? "border-b-2 border-[#000080] text-[#000080] dark:text-indigo-400"
+                : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"
             }`}
           >
             {tab.label}
             <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-              activeTab === tab.key ? "bg-[#000080] text-white" : "bg-[#F3F4F6] text-[#6B7280]"
+              activeTab === tab.key ? "bg-[#000080] text-white" : "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#6B7280] dark:text-slate-400"
             }`}>
               {tab.count}
             </span>
@@ -300,17 +300,17 @@ export default function EventDetailClient() {
       </div>
 
       {/* ── Attendee table ────────────────────────────────────────────────── */}
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
-              <th className="px-4 py-3 text-sm font-bold text-[#000080]">Name</th>
-              <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Phone</th>
-              <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080]">Email</th>
-              <th className="hidden md:table-cell px-4 py-3 text-sm font-bold text-[#000080]">
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
+              <th className="px-4 py-3 text-sm font-bold text-[#000080] dark:text-indigo-400">Name</th>
+              <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080] dark:text-indigo-400">Phone</th>
+              <th className="hidden sm:table-cell px-4 py-3 text-sm font-bold text-[#000080] dark:text-indigo-400">Email</th>
+              <th className="hidden md:table-cell px-4 py-3 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 {activeTab === "first-timers" ? "First Visit" : "Second Visit"}
               </th>
-              <th className="px-4 py-3 text-sm font-bold text-[#000080]">Status</th>
+              <th className="px-4 py-3 text-sm font-bold text-[#000080] dark:text-indigo-400">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -321,7 +321,7 @@ export default function EventDetailClient() {
                     <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                     </svg>
-                    <p className="text-sm text-[#9CA3AF]">
+                    <p className="text-sm text-[#9CA3AF] dark:text-slate-400">
                       No {activeTab === "first-timers" ? "first timers" : "second timers"} recorded for this event.
                     </p>
                     <p className="text-xs text-[#C4C4C4]">
@@ -338,16 +338,16 @@ export default function EventDetailClient() {
                 return (
                   <tr
                     key={person.id}
-                    className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
+                    className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 cursor-pointer"
                     onClick={() => router.push(`/user-management/${activeTab}/${person.id}`)}
                   >
                     <td className="px-4 py-3">
-                      <p className="font-medium text-[#111827]">{fullName(person)}</p>
-                      <p className="text-xs text-[#9CA3AF] sm:hidden">{person.phoneNumber ?? "—"}</p>
+                      <p className="font-medium text-[#111827] dark:text-slate-100">{fullName(person)}</p>
+                      <p className="text-xs text-[#9CA3AF] dark:text-slate-400 sm:hidden">{person.phoneNumber ?? "—"}</p>
                     </td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{person.phoneNumber ?? "—"}</td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-[#374151]">{person.email ?? "—"}</td>
-                    <td className="hidden md:table-cell px-4 py-3 text-[#374151]">
+                    <td className="hidden sm:table-cell px-4 py-3 text-[#374151] dark:text-slate-300">{person.phoneNumber ?? "—"}</td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-[#374151] dark:text-slate-300">{person.email ?? "—"}</td>
+                    <td className="hidden md:table-cell px-4 py-3 text-[#374151] dark:text-slate-300">
                       {serviceDate ? fmtDate(serviceDate) : fmtDate(event.date)}
                     </td>
                     <td className="px-4 py-3">
@@ -365,7 +365,7 @@ export default function EventDetailClient() {
 
       {/* ── Summary strip ────────────────────────────────────────────────── */}
       {activeRows.length > 0 && (
-        <p className="mt-3 text-xs text-[#9CA3AF]">
+        <p className="mt-3 text-xs text-[#9CA3AF] dark:text-slate-400">
           {activeRows.length} {activeTab === "first-timers" ? "first timer" : "second timer"}{activeRows.length !== 1 ? "s" : ""} attended this event.
         </p>
       )}

@@ -18,10 +18,10 @@ const COLUMNS: {
   headerText: string;
   dot: string;
 }[] = [
-  { status: "FIRST_TIMER",               label: "First Timers",         headerBg: "bg-blue-50",   headerText: "text-blue-800",   dot: "bg-blue-400"   },
+  { status: "FIRST_TIMER",               label: "First Timers",         headerBg: "bg-blue-50 dark:bg-blue-900/20",   headerText: "text-blue-800",   dot: "bg-blue-400"   },
   { status: "SECOND_TIMER_WITHOUT_GROUP", label: "2nd Timer (No Group)", headerBg: "bg-yellow-50", headerText: "text-yellow-800", dot: "bg-yellow-400" },
   { status: "SECOND_TIMER_WITH_GROUP",   label: "2nd Timer (In Group)", headerBg: "bg-purple-50", headerText: "text-purple-800", dot: "bg-purple-400" },
-  { status: "FULL_MEMBER",               label: "Full Members",         headerBg: "bg-green-50",  headerText: "text-green-800",  dot: "bg-green-400"  },
+  { status: "FULL_MEMBER",               label: "Full Members",         headerBg: "bg-green-50 dark:bg-green-900/20",  headerText: "text-green-800",  dot: "bg-green-400"  },
 ];
 
 const COL_ORDER = COLUMNS.map((c) => c.status);
@@ -101,10 +101,10 @@ function GuestCard({
         onDragOver={(e) => onDragOver(e, user.id, fromStatus)}
         onDrop={(e) => onDrop(e, user.id, fromStatus)}
         title="Drag to move to next stage"
-        className={`group rounded-lg border bg-white p-3 shadow-sm transition-all cursor-grab active:cursor-grabbing select-none ${
+        className={`group rounded-lg border bg-white dark:bg-slate-800 p-3 shadow-sm transition-all cursor-grab active:cursor-grabbing select-none ${
           isMoving
             ? "scale-95 opacity-50"
-            : "border-[#E5E7EB] hover:border-[#000080] hover:shadow-md"
+            : "border-[#E5E7EB] dark:border-slate-700 hover:border-[#000080] hover:shadow-md"
         }`}
       >
         <div className="flex items-start justify-between gap-2">
@@ -117,25 +117,25 @@ function GuestCard({
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-[#111827] truncate">{limitWords(name, 5)}</p>
+              <p className="text-sm font-semibold text-[#111827] dark:text-slate-100 truncate">{limitWords(name, 5)}</p>
               {user.occupation && (
-                <p className="text-xs text-[#6B7280] truncate">{limitWords(user.occupation, 4)}</p>
+                <p className="text-xs text-[#6B7280] dark:text-slate-400 truncate">{limitWords(user.occupation, 4)}</p>
               )}
             </div>
           </div>
-          <GripVertical className="h-4 w-4 shrink-0 text-[#D1D5DB] group-hover:text-[#9CA3AF] mt-0.5" />
+          <GripVertical className="h-4 w-4 shrink-0 text-[#D1D5DB] group-hover:text-[#9CA3AF] dark:text-slate-400 mt-0.5" />
         </div>
 
-        {phone && <p className="mt-2 text-xs text-[#374151]">{phone}</p>}
+        {phone && <p className="mt-2 text-xs text-[#374151] dark:text-slate-300">{phone}</p>}
 
         {user.assignedFollowUp && (
-          <p className="mt-1 truncate text-xs text-[#6B7280]">
+          <p className="mt-1 truncate text-xs text-[#6B7280] dark:text-slate-400">
             <span className="font-medium">Assigned:</span> {user.assignedFollowUp}
           </p>
         )}
 
         {(user.noOfCalls !== undefined || user.noOfVisits !== undefined) && (
-          <div className="mt-2 flex gap-3 text-[10px] text-[#9CA3AF]">
+          <div className="mt-2 flex gap-3 text-[10px] text-[#9CA3AF] dark:text-slate-400">
             {user.noOfCalls  !== undefined && <span>Calls: {user.noOfCalls}</span>}
             {user.noOfVisits !== undefined && <span>Visits: {user.noOfVisits}</span>}
           </div>
@@ -287,7 +287,7 @@ export default function GuestWorkflowPage() {
   return (
     <DashboardLayout>
       {toast && (
-        <div className="pointer-events-none fixed bottom-6 right-6 z-50 max-w-xs rounded-xl border border-[#E5E7EB] bg-white px-5 py-3 text-sm font-medium text-[#111827] shadow-xl">
+        <div className="pointer-events-none fixed bottom-6 right-6 z-50 max-w-xs rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-3 text-sm font-medium text-[#111827] dark:text-slate-100 shadow-xl">
           {toast}
         </div>
       )}
@@ -298,10 +298,10 @@ export default function GuestWorkflowPage() {
             <GitBranch className="h-5 w-5 text-[#2563EB]" />
           </div>
           <div>
-            <h1 className="text-[28px] font-bold text-[#000000]">Workflows</h1>
-            <h2 className="text-[20px] font-bold text-[#000080]">Guest Workflow</h2>
+            <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Workflows</h1>
+            <h2 className="text-[20px] font-bold text-[#000080] dark:text-indigo-400">Guest Workflow</h2>
             {!loading && (
-              <p className="text-xs text-[#6B7280]">
+              <p className="text-xs text-[#6B7280] dark:text-slate-400">
                 {totalCount} active guest{totalCount !== 1 ? "s" : ""} · Drag cards to advance stage
               </p>
             )}
@@ -310,7 +310,7 @@ export default function GuestWorkflowPage() {
         <button
           onClick={load}
           disabled={loading}
-          className="flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium text-[#374151] hover:bg-[#F9FAFB] disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-[#374151] dark:text-slate-300 hover:bg-[#F9FAFB] disabled:opacity-50"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
           Refresh
@@ -318,7 +318,7 @@ export default function GuestWorkflowPage() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error}{" "}
           <button className="font-medium underline" onClick={load}>Retry</button>
         </div>
@@ -326,7 +326,7 @@ export default function GuestWorkflowPage() {
 
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <div className="flex flex-col items-center gap-3 text-[#6B7280]">
+          <div className="flex flex-col items-center gap-3 text-[#6B7280] dark:text-slate-400">
             <GitBranch className="h-8 w-8 animate-pulse text-[#2563EB]" />
             <p className="text-sm">Loading guest workflow…</p>
           </div>
@@ -351,7 +351,7 @@ export default function GuestWorkflowPage() {
                 className={`flex min-w-[260px] flex-1 flex-col rounded-xl border-2 transition-all ${
                   isColOver
                     ? "border-[#000080] bg-[#E8EAF0] shadow-md"
-                    : "border-[#E5E7EB] bg-[#F9FAFB]"
+                    : "border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB]"
                 }`}
               >
                 {/* Column header */}
@@ -360,14 +360,14 @@ export default function GuestWorkflowPage() {
                     <span className={`h-2 w-2 rounded-full ${col.dot}`} />
                     <span className={`text-sm font-semibold ${col.headerText}`}>{col.label}</span>
                   </div>
-                  <span className={`rounded-full bg-white/80 px-2.5 py-0.5 text-xs font-bold text-[#374151]`}>
+                  <span className={`rounded-full bg-white dark:bg-slate-800/80 px-2.5 py-0.5 text-xs font-bold text-[#374151] dark:text-slate-300`}>
                     {users.length}
                   </span>
                 </div>
 
                 {/* Drop hint when empty */}
                 {isColOver && users.length === 0 && (
-                  <div className="mx-3 mt-2 rounded-lg border-2 border-dashed border-[#000080]/40 bg-[#E8EAF0] py-3 text-center text-xs font-medium text-[#000080]">
+                  <div className="mx-3 mt-2 rounded-lg border-2 border-dashed border-[#000080]/40 bg-[#E8EAF0] py-3 text-center text-xs font-medium text-[#000080] dark:text-indigo-400">
                     Drop here
                   </div>
                 )}
@@ -377,7 +377,7 @@ export default function GuestWorkflowPage() {
                   {users.length === 0 && !isColOver ? (
                     <div className="flex flex-col items-center gap-1 py-8 text-center">
                       <User className="h-6 w-6 text-[#D1D5DB]" />
-                      <p className="text-xs text-[#9CA3AF]">No guests here</p>
+                      <p className="text-xs text-[#9CA3AF] dark:text-slate-400">No guests here</p>
                     </div>
                   ) : (
                     users.map((user) => {

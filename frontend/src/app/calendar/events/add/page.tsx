@@ -103,12 +103,12 @@ export default function AddCalendarEventPage() {
       />
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           <FormField
             label="Event Title"

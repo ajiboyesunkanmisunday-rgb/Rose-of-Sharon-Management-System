@@ -95,7 +95,7 @@ export default function MessagesPage() {
       Failed: "bg-red-100 text-red-800",
     };
     return (
-      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${styles[status] || "bg-gray-100 text-gray-700"}`}>
+      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${styles[status] || "bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300"}`}>
         {status}
       </span>
     );
@@ -105,23 +105,23 @@ export default function MessagesPage() {
     type === "SMS" ? (
       <span className="inline-flex items-center rounded-full bg-[#000080] px-2.5 py-0.5 text-xs font-medium text-white">SMS</span>
     ) : (
-      <span className="inline-flex items-center rounded-full bg-[#B5B5F3] px-2.5 py-0.5 text-xs font-medium text-[#000080]">Email</span>
+      <span className="inline-flex items-center rounded-full bg-[#B5B5F3] px-2.5 py-0.5 text-xs font-medium text-[#000080] dark:text-indigo-400">Email</span>
     );
 
   return (
     <DashboardLayout>
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF]">
-          <MessageSquare className="h-6 w-6 text-[#000080]" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF] dark:bg-indigo-900/30">
+          <MessageSquare className="h-6 w-6 text-[#000080] dark:text-indigo-400" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Messages</h1>
-          <p className="text-sm text-[#6B7280]">Send and manage SMS and email communications</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Messages</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Send and manage SMS and email communications</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="mb-4 flex gap-6 border-b border-[#E5E7EB]">
+      <div className="mb-4 flex gap-6 border-b border-[#E5E7EB] dark:border-slate-700">
         {(["Sent", "Scheduled"] as MessageTab[]).map((t) => (
           <button
             key={t}
@@ -130,7 +130,7 @@ export default function MessagesPage() {
               setCurrentPage(1);
             }}
             className={`pb-3 text-sm font-medium transition-colors ${
-              activeTab === t ? "border-b-2 border-[#000080] text-[#000080]" : "text-[#6B7280] hover:text-[#374151]"
+              activeTab === t ? "border-b-2 border-[#000080] text-[#000080] dark:text-indigo-400" : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"
             }`}
           >
             {t}
@@ -169,13 +169,13 @@ export default function MessagesPage() {
       </div>
 
       {showFilter && (
-        <div className="mb-4 flex flex-wrap items-end gap-4 rounded-xl border border-[#E5E7EB] bg-white p-4">
+        <div className="mb-4 flex flex-wrap items-end gap-4 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
           <div className="flex flex-col">
-            <label className="mb-1 block text-xs font-medium text-[#374151]">Type</label>
+            <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">Type</label>
             <select
               value={filterType}
               onChange={(e) => { setFilterType(e.target.value as any); setCurrentPage(1); }}
-              className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             >
               <option value="">All Types</option>
               <option value="SMS">SMS</option>
@@ -183,11 +183,11 @@ export default function MessagesPage() {
             </select>
           </div>
           <div className="flex flex-col">
-            <label className="mb-1 block text-xs font-medium text-[#374151]">Status</label>
+            <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">Status</label>
             <select
               value={filterStatus}
               onChange={(e) => { setFilterStatus(e.target.value as any); setCurrentPage(1); }}
-              className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             >
               <option value="">All Statuses</option>
               <option value="Sent">Sent</option>
@@ -196,81 +196,81 @@ export default function MessagesPage() {
             </select>
           </div>
           <div className="flex flex-col">
-            <label className="mb-1 block text-xs font-medium text-[#374151]">From</label>
+            <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">From</label>
             <input
               type="date"
               value={filterDateFrom}
               onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }}
-              className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
           </div>
           <div className="flex flex-col">
-            <label className="mb-1 block text-xs font-medium text-[#374151]">To</label>
+            <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">To</label>
             <input
               type="date"
               value={filterDateTo}
               onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }}
-              className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
           </div>
           <button
             onClick={() => { setFilterType(""); setFilterStatus(""); setFilterDateFrom(""); setFilterDateTo(""); setCurrentPage(1); }}
-            className="h-[42px] rounded-lg border border-[#E5E7EB] px-4 text-sm text-[#374151] hover:bg-gray-50"
+            className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 text-sm text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50"
           >
             Clear
           </button>
           {(filterType || filterStatus || filterDateFrom || filterDateTo) && (
-            <span className="self-end pb-1 text-xs font-medium text-[#000080]">Filters active</span>
+            <span className="self-end pb-1 text-xs font-medium text-[#000080] dark:text-indigo-400">Filters active</span>
           )}
         </div>
       )}
 
       {selectedRows.size > 0 && (
-        <div className="mb-2 text-sm text-gray-500">
+        <div className="mb-2 text-sm text-gray-500 dark:text-slate-400">
           {selectedRows.size} message{selectedRows.size > 1 ? "s" : ""} selected
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
               <th className="px-4 py-4">
                 <input
                   type="checkbox"
                   checked={allPageSelected}
                   onChange={(e) => handleSelectAll(e.target.checked)}
-                  className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
+                  className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
                 />
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Type</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Recipient</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Subject</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Status</th>
-              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Sent By</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Date</th>
-              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Time</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Type</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Recipient</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Subject</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Status</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Sent By</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Date</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Time</th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
           <tbody>
             {paginatedMessages.map((message) => (
-              <tr key={message.id} className="border-b border-[#F3F4F6] hover:bg-gray-50 cursor-pointer" style={{ height: "56px" }} onDoubleClick={() => setViewing(message)}>
+              <tr key={message.id} className="border-b border-[#F3F4F6] hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 cursor-pointer" style={{ height: "56px" }} onDoubleClick={() => setViewing(message)}>
                 <td className="px-4 py-3">
                   <input
                     type="checkbox"
                     checked={selectedRows.has(message.id)}
                     onChange={() => handleSelectRow(message.id)}
-                    className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
+                    className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
                   />
                 </td>
                 <td className="px-4 py-3">{getTypeBadge(message.type)}</td>
-                <td className="px-4 py-3 text-sm text-[#374151] max-w-[160px]"><span className="block truncate">{message.recipient}</span></td>
-                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] max-w-[200px]"><span className="block truncate">{message.subject || "—"}</span></td>
+                <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[160px]"><span className="block truncate">{message.recipient}</span></td>
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[200px]"><span className="block truncate">{message.subject || "—"}</span></td>
                 <td className="px-4 py-3">{getStatusBadge(message.status)}</td>
-                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] max-w-[140px]"><span className="block truncate">{message.sentBy}</span></td>
-                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{message.date}</td>
-                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{message.time || "—"}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[140px]"><span className="block truncate">{message.sentBy}</span></td>
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{message.date}</td>
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{message.time || "—"}</td>
                 <td className="px-4 py-3">
                   <ActionDropdown
                     actions={
@@ -290,7 +290,7 @@ export default function MessagesPage() {
             ))}
             {paginatedMessages.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={9} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
                   No messages found.
                 </td>
               </tr>
@@ -311,27 +311,27 @@ export default function MessagesPage() {
               {getStatusBadge(viewing.status)}
             </div>
             <div>
-              <p className="text-xs font-medium text-[#6B7280]">Recipient</p>
-              <p className="text-[#374151]">{viewing.recipient}</p>
+              <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Recipient</p>
+              <p className="text-[#374151] dark:text-slate-300">{viewing.recipient}</p>
             </div>
             {viewing.subject && (
               <div>
-                <p className="text-xs font-medium text-[#6B7280]">Subject</p>
-                <p className="text-[#374151]">{viewing.subject}</p>
+                <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Subject</p>
+                <p className="text-[#374151] dark:text-slate-300">{viewing.subject}</p>
               </div>
             )}
             <div>
-              <p className="text-xs font-medium text-[#6B7280]">Content</p>
-              <p className="whitespace-pre-wrap text-[#374151]">{viewing.content}</p>
+              <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Content</p>
+              <p className="whitespace-pre-wrap text-[#374151] dark:text-slate-300">{viewing.content}</p>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pt-2">
               <div>
-                <p className="text-xs font-medium text-[#6B7280]">Sent By</p>
-                <p className="text-[#374151]">{viewing.sentBy}</p>
+                <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Sent By</p>
+                <p className="text-[#374151] dark:text-slate-300">{viewing.sentBy}</p>
               </div>
               <div>
-                <p className="text-xs font-medium text-[#6B7280]">Date / Time</p>
-                <p className="text-[#374151]">
+                <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Date / Time</p>
+                <p className="text-[#374151] dark:text-slate-300">
                   {viewing.date}
                   {viewing.time ? ` • ${viewing.time}` : ""}
                 </p>

@@ -74,7 +74,7 @@ export default function AssignSuperAdminModal({
       onClick={handleOverlayClick}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
     >
-      <div className="relative w-full max-w-[480px] overflow-hidden rounded-2xl bg-white shadow-xl">
+      <div className="relative w-full max-w-[480px] overflow-hidden rounded-2xl bg-white dark:bg-slate-800 shadow-xl">
         <div className="flex items-center justify-between bg-[#000080] px-6 py-4">
           <h2 className="text-lg font-bold text-white">
             Assign Super Admin Role
@@ -102,14 +102,14 @@ export default function AssignSuperAdminModal({
         </div>
 
         <div className="px-6 py-6">
-          <p className="mb-3 text-sm text-[#374151]">
+          <p className="mb-3 text-sm text-[#374151] dark:text-slate-300">
             Member:{" "}
             <span className="font-semibold">
               {member ? `${member.firstName} ${member.lastName}` : "—"}
             </span>
           </p>
 
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">
             Password
           </label>
           <input
@@ -120,10 +120,10 @@ export default function AssignSuperAdminModal({
               if (error) setError("");
             }}
             placeholder="Enter password"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080] mb-3"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080] mb-3"
           />
 
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">
             Confirm Password
           </label>
           <input
@@ -134,7 +134,7 @@ export default function AssignSuperAdminModal({
               if (error) setError("");
             }}
             placeholder="Confirm password"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
           />
 
           {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
@@ -147,7 +147,7 @@ export default function AssignSuperAdminModal({
         <div className="flex items-center justify-end gap-3 px-6 pb-6">
           <button
             onClick={onClose}
-            className="rounded-xl border-2 border-[#000080] px-6 py-2.5 text-sm font-medium text-[#000080]"
+            className="rounded-xl border-2 border-[#000080] px-6 py-2.5 text-sm font-medium text-[#000080] dark:text-indigo-400"
             disabled={isLoading}
           >
             Cancel

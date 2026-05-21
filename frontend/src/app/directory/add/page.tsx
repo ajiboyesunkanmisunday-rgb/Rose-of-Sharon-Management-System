@@ -53,7 +53,7 @@ export default function AddContactPage() {
         backHref="/directory"
       />
 
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
             <FormField
