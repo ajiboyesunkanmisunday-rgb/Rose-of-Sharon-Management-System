@@ -21,6 +21,7 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import {
   getStoredUser,
+  setStoredUser,
   getUser,
   updateMember,
   updateEMember,
@@ -129,7 +130,12 @@ export default function ProfilePage() {
     setSaveMsg("");
     try {
       let profilePictureUrl: string | undefined;
-      if (photo) profilePictureUrl = await uploadProfilePicture(photo);
+      if (photo) {
+        profilePictureUrl = await uploadProfilePicture(photo);
+        // Persist the new photo URL so TopNav avatar updates immediately
+        const stored = getStoredUser();
+        if (stored) setStoredUser({ ...stored, profilePictureUrl });
+      }
 
       const rawCode = countryCode.replace("+", "");
       // email is intentionally excluded — it is read-only in the UI and

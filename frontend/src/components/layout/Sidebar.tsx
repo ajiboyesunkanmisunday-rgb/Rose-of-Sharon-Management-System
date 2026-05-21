@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { logoutUser } from "@/lib/api";
+import { useTheme } from "@/context/ThemeContext";
 import {
   ClipboardList,
   CircleUser,
@@ -163,6 +164,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { isDark } = useTheme();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   // Auto-expand parent items whose children match the current path
@@ -200,6 +202,25 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     return item.href ? pathname.startsWith(item.href) : false;
   };
 
+  // Colours that vary by theme
+  const C = {
+    sidebarBg:     isDark ? "#111827" : "#FEFEFF",
+    sidebarShadow: isDark ? "4px 0 4px 0 rgba(0,0,0,0.4)" : "4px 0px 4px 0px rgba(0, 0, 128, 0.16)",
+    logoText:      isDark ? "#818cf8" : "#000080",
+    divider:       isDark ? "#1e293b" : "#E5E5E5",
+    navText:       isDark ? "#cbd5e1" : "#000080",
+    navTextActive: "#ffffff",
+    navBgActive:   "#000080",
+    subText:       isDark ? "#94a3b8" : "#333333",
+    subTextActive: isDark ? "#a5b4fc" : "#000080",
+    subBorderActive: isDark ? "#818cf8" : "#000080",
+    subBgActive:   isDark ? "#1e293b" : "#EEF2FF",
+    logoutText:    isDark ? "#f87171" : "#000080",
+    hoverBg:       isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
+    closeBtn:      isDark ? "#818cf8" : "#000080",
+    closeBtnHover: isDark ? "rgba(255,255,255,0.08)" : "#f3f4f6",
+  };
+
   return (
     <aside
       className={[
@@ -213,8 +234,8 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       ].join(" ")}
       style={{
         width: "272px",
-        backgroundColor: "#FEFEFF",
-        boxShadow: "4px 0px 4px 0px rgba(0, 0, 128, 0.16)",
+        backgroundColor: C.sidebarBg,
+        boxShadow: C.sidebarShadow,
       }}
     >
       {/* Logo Area */}
@@ -227,7 +248,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             className="h-[50px] w-[50px] rounded-full object-cover"
           />
           <div className="leading-tight">
-            <p className="text-[13px] font-bold text-[#000080]">Rose of Sharon</p>
+            <p className="text-[13px] font-bold" style={{ color: C.logoText }}>Rose of Sharon</p>
             <p className="text-[11px] font-semibold text-[#DA251D] tracking-wide">RCCG</p>
           </div>
         </div>
@@ -235,7 +256,8 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         {onClose && (
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-[#000080] hover:bg-gray-100 lg:hidden"
+            className="flex h-8 w-8 items-center justify-center rounded-full lg:hidden"
+            style={{ color: C.closeBtn }}
             aria-label="Close menu"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -265,8 +287,8 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                       style={{
                         paddingTop: "14px",
                         paddingBottom: "14px",
-                        backgroundColor: parentActive ? "#000080" : "transparent",
-                        color: parentActive ? "#FFFFFF" : "#000080",
+                        backgroundColor: parentActive ? C.navBgActive : "transparent",
+                        color: parentActive ? C.navTextActive : C.navText,
                         borderRadius: "8px",
                       }}
                     >
@@ -275,7 +297,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                         style={{
                           width: "24px",
                           height: "24px",
-                          color: parentActive ? "#FFFFFF" : "#000080",
+                          color: parentActive ? C.navTextActive : C.navText,
                         }}
                         strokeWidth={1.5}
                       />
@@ -294,7 +316,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                           style={{
                             width: "20px",
                             height: "20px",
-                            color: parentActive ? "#FFFFFF" : "#000080",
+                            color: parentActive ? C.navTextActive : C.navText,
                           }}
                           strokeWidth={1.5}
                         />
@@ -304,7 +326,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                           style={{
                             width: "20px",
                             height: "20px",
-                            color: "#000080",
+                            color: C.navText,
                           }}
                           strokeWidth={1.5}
                         />
@@ -318,7 +340,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                           <div
                             style={{
                               height: "2px",
-                              backgroundColor: "#000080",
+                              backgroundColor: C.navBgActive,
                               margin: "2px 0",
                             }}
                           />
@@ -338,10 +360,10 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                                     paddingBottom: "10px",
                                     fontSize: "15px",
                                     fontWeight: childActive ? 600 : 400,
-                                    color: childActive ? "#000080" : "#333333",
-                                    borderLeft: childActive ? "4px solid #000080" : "4px solid transparent",
+                                    color: childActive ? C.subTextActive : C.subText,
+                                    borderLeft: childActive ? `4px solid ${C.subBorderActive}` : "4px solid transparent",
                                     borderRadius: "0 6px 6px 0",
-                                    backgroundColor: childActive ? "#EEF2FF" : "transparent",
+                                    backgroundColor: childActive ? C.subBgActive : "transparent",
                                   }}
                                 >
                                   {child.label}
@@ -361,9 +383,8 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                     style={{
                       paddingTop: "14px",
                       paddingBottom: "14px",
-                      backgroundColor:
-                        isParentActive(item) ? "#000080" : "transparent",
-                      color: isParentActive(item) ? "#FFFFFF" : "#000080",
+                      backgroundColor: isParentActive(item) ? C.navBgActive : "transparent",
+                      color: isParentActive(item) ? C.navTextActive : C.navText,
                       borderRadius: "8px",
                     }}
                   >
@@ -372,7 +393,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                       style={{
                         width: "24px",
                         height: "24px",
-                        color: isParentActive(item) ? "#FFFFFF" : "#000080",
+                        color: isParentActive(item) ? C.navTextActive : C.navText,
                       }}
                       strokeWidth={1.5}
                     />
@@ -395,20 +416,22 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       {/* Log Out */}
       <div
         className="px-5 py-4"
-        style={{ borderTop: "1px solid #E5E5E5" }}
+        style={{ borderTop: `1px solid ${C.divider}` }}
       >
         <button
           onClick={() => logoutUser()}
-          className="flex w-full items-center gap-3 rounded-lg px-3 transition-colors hover:bg-gray-100"
+          className="flex w-full items-center gap-3 rounded-lg px-3 transition-colors"
           style={{
             paddingTop: "14px",
             paddingBottom: "14px",
-            color: "#000080",
+            color: C.logoutText,
           }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.hoverBg; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
         >
           <LogOut
             className="flex-shrink-0"
-            style={{ width: "24px", height: "24px", color: "#000080" }}
+            style={{ width: "24px", height: "24px", color: C.logoutText }}
             strokeWidth={1.5}
           />
           <span style={{ fontSize: "16px", fontWeight: 400 }}>Log Out</span>

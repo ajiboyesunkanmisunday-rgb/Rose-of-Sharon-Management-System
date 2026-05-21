@@ -12,10 +12,10 @@ interface ButtonProps {
 }
 
 const variantStyles: Record<string, string> = {
-  primary: "bg-[#000080] text-white hover:bg-[#000066]",
-  secondary: "bg-[#B5B5F3] text-[#000080] hover:bg-[#A3A3E8]",
-  danger: "bg-red-600 text-white hover:bg-red-700",
-  outline: "bg-transparent border border-[#E5E7EB] text-[#374151] hover:bg-gray-50",
+  primary:   "bg-[#000080] text-white hover:bg-[#000066] dark:bg-indigo-600 dark:hover:bg-indigo-700",
+  secondary: "bg-[#B5B5F3] text-[#000080] hover:bg-[#A3A3E8] dark:bg-slate-700 dark:text-indigo-300 dark:hover:bg-slate-600",
+  danger:    "bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800",
+  outline:   "bg-transparent border border-[#E5E7EB] text-[#374151] hover:bg-gray-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700",
 };
 
 export default function Button({

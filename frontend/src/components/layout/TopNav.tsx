@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Menu, Bell, Search, X, Users, CalendarClock, UserPlus } from "lucide-react";
+import { ChevronDown, Menu, Bell, Search, X, Users, CalendarClock, UserPlus, Sun, Moon } from "lucide-react";
 import { getStoredUser, logoutUser, searchMembers, searchEvents, type StoredUser } from "@/lib/api";
+import { useTheme } from "@/context/ThemeContext";
 
 // ── Notification badge count (reads from localStorage, synced with notifications page) ──
 const MOCK_UNREAD = 5; // matches the mock unread count in notifications page
@@ -22,6 +23,7 @@ interface TopNavProps {
 
 export default function TopNav({ onMenuOpen }: TopNavProps) {
   const router = useRouter();
+  const { isDark, toggle: toggleTheme } = useTheme();
 
   // ── User state ─────────────────────────────────────────────────────────────
   const [user, setUser] = useState<StoredUser | null>(null);
@@ -31,8 +33,7 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
 
   const displayName  = user ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email || "User" : "—";
   const displayEmail = user?.email ?? "";
-  const initials     = user ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() : "?";
-  const photoUrl     = (user as (StoredUser & { profilePictureUrl?: string }) | null)?.profilePictureUrl;
+  const photoUrl     = user?.profilePictureUrl;
 
   // ── Global search state ────────────────────────────────────────────────────
   const [searchOpen,    setSearchOpen]    = useState(false);
@@ -102,16 +103,16 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
   const kindIcon = (kind: SearchResult["kind"]) => {
     if (kind === "event") return <CalendarClock className="h-4 w-4 text-purple-500 shrink-0" />;
     if (kind === "firsttimer") return <UserPlus className="h-4 w-4 text-orange-500 shrink-0" />;
-    return <Users className="h-4 w-4 text-[#000080] shrink-0" />;
+    return <Users className="h-4 w-4 text-[#000080] dark:text-indigo-400 shrink-0" />;
   };
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-30 flex h-16 items-center border-b border-[#E5E7EB] bg-white px-4 gap-3 lg:left-[272px] lg:px-6">
+    <header className="fixed left-0 right-0 top-0 z-30 flex h-16 items-center border-b border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-900 px-4 gap-3 lg:left-[272px] lg:px-6">
 
       {/* Hamburger — mobile only */}
       <button
         onClick={onMenuOpen}
-        className="flex h-9 w-9 items-center justify-center rounded-lg text-[#000080] hover:bg-gray-100 lg:hidden shrink-0"
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-[#000080] dark:text-indigo-400 hover:bg-gray-100 dark:hover:bg-slate-800 lg:hidden shrink-0"
         aria-label="Open menu"
       >
         <Menu size={22} strokeWidth={1.8} />
@@ -120,23 +121,23 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
       {/* ── Global Search ───────────────────────────────────────────────────── */}
       <div ref={searchRef} className="relative flex-1 max-w-xs sm:max-w-sm">
         {searchOpen ? (
-          <div className="flex items-center gap-2 rounded-lg border border-[#000080] bg-white px-3 py-1.5 shadow-sm">
-            <Search className="h-4 w-4 text-[#6B7280] shrink-0" />
+          <div className="flex items-center gap-2 rounded-lg border border-[#000080] dark:border-indigo-500 bg-white dark:bg-slate-800 px-3 py-1.5 shadow-sm">
+            <Search className="h-4 w-4 text-[#6B7280] dark:text-slate-400 shrink-0" />
             <input
               ref={inputRef}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search members, events…"
-              className="flex-1 text-sm text-[#111827] outline-none placeholder:text-[#9CA3AF] min-w-0"
+              className="flex-1 text-sm text-[#111827] dark:text-slate-100 outline-none placeholder:text-[#9CA3AF] dark:placeholder:text-slate-500 bg-transparent min-w-0"
             />
             <button onClick={() => { setSearchOpen(false); setSearchQuery(""); setSearchResults([]); }}>
-              <X className="h-4 w-4 text-[#9CA3AF] hover:text-[#374151]" />
+              <X className="h-4 w-4 text-[#9CA3AF] dark:text-slate-500 hover:text-[#374151] dark:hover:text-slate-300" />
             </button>
           </div>
         ) : (
           <button
             onClick={() => setSearchOpen(true)}
-            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-1.5 text-sm text-[#9CA3AF] hover:border-[#000080] hover:text-[#374151] transition-colors w-full"
+            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] dark:bg-slate-800 px-3 py-1.5 text-sm text-[#9CA3AF] dark:text-slate-500 hover:border-[#000080] dark:hover:border-indigo-500 hover:text-[#374151] dark:hover:text-slate-300 transition-colors w-full"
           >
             <Search className="h-4 w-4 shrink-0" />
             <span className="hidden sm:inline">Search…</span>
@@ -145,22 +146,22 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
 
         {/* Search results dropdown */}
         {searchOpen && (searchQuery.trim().length > 0) && (
-          <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-72 overflow-y-auto rounded-xl border border-[#E5E7EB] bg-white shadow-lg">
+          <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-72 overflow-y-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg dark:shadow-slate-900">
             {searchLoading ? (
-              <div className="px-4 py-3 text-sm text-[#9CA3AF] text-center">Searching…</div>
+              <div className="px-4 py-3 text-sm text-[#9CA3AF] dark:text-slate-500 text-center">Searching…</div>
             ) : searchResults.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-[#9CA3AF] text-center">No results for &ldquo;{searchQuery}&rdquo;</div>
+              <div className="px-4 py-3 text-sm text-[#9CA3AF] dark:text-slate-500 text-center">No results for &ldquo;{searchQuery}&rdquo;</div>
             ) : (
               searchResults.map((r) => (
                 <button
                   key={r.id}
                   onClick={() => { router.push(r.href); setSearchOpen(false); setSearchQuery(""); setSearchResults([]); }}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-[#F9FAFB] transition-colors"
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-[#F9FAFB] dark:hover:bg-slate-700 transition-colors"
                 >
                   {kindIcon(r.kind)}
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-[#111827] truncate">{r.label}</p>
-                    <p className="text-xs text-[#9CA3AF] truncate">{r.sub}</p>
+                    <p className="text-sm font-medium text-[#111827] dark:text-slate-100 truncate">{r.label}</p>
+                    <p className="text-xs text-[#9CA3AF] dark:text-slate-500 truncate">{r.sub}</p>
                   </div>
                 </button>
               ))
@@ -172,10 +173,24 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
       {/* Spacer */}
       <div className="flex-1" />
 
+      {/* ── Dark / Light Toggle ─────────────────────────────────────────────── */}
+      <button
+        onClick={toggleTheme}
+        className="relative flex h-9 w-9 items-center justify-center rounded-lg text-[#6B7280] dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+        aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+        title={isDark ? "Light mode" : "Dark mode"}
+      >
+        {isDark ? (
+          <Sun size={18} strokeWidth={1.8} className="text-amber-400" />
+        ) : (
+          <Moon size={18} strokeWidth={1.8} />
+        )}
+      </button>
+
       {/* ── Notification Bell ───────────────────────────────────────────────── */}
       <button
         onClick={() => router.push("/notifications")}
-        className="relative flex h-9 w-9 items-center justify-center rounded-lg text-[#000080] hover:bg-[#EEF2FF] transition-colors shrink-0"
+        className="relative flex h-9 w-9 items-center justify-center rounded-lg text-[#000080] dark:text-indigo-400 hover:bg-[#EEF2FF] dark:hover:bg-slate-800 transition-colors shrink-0"
         aria-label="Notifications"
       >
         <Bell size={20} strokeWidth={1.8} />
@@ -190,45 +205,51 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
       <div className="relative shrink-0">
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-50"
+          className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-50 dark:hover:bg-slate-800"
         >
           {/* Name + email — hidden on small screens */}
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-bold text-[#1F2937] leading-tight">{displayName}</p>
-            <p className="text-xs text-[#6B7280] leading-tight">{displayEmail}</p>
+            <p className="text-sm font-bold text-[#1F2937] dark:text-slate-100 leading-tight">{displayName}</p>
+            <p className="text-xs text-[#6B7280] dark:text-slate-400 leading-tight">{displayEmail}</p>
           </div>
 
-          {/* Avatar — photo if available, else initials */}
-          <div className="relative h-9 w-9 shrink-0 rounded-full overflow-hidden ring-2 ring-white bg-[#B5B5F3]">
-            {photoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={photoUrl} alt={displayName} className="h-full w-full object-cover"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-            ) : null}
-            <div className={`absolute inset-0 flex items-center justify-center text-xs font-bold text-[#000080] ${photoUrl ? "opacity-0" : "opacity-100"}`}>
-              {initials}
+          {/* Avatar — photo thumbnail if available, grey user icon otherwise */}
+          {photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={photoUrl}
+              alt={displayName}
+              className="h-9 w-9 shrink-0 rounded-full object-cover ring-2 ring-white dark:ring-slate-700"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+            />
+          ) : (
+            <div className="h-9 w-9 shrink-0 rounded-full bg-gray-200 dark:bg-slate-700 flex items-center justify-center ring-2 ring-white dark:ring-slate-600">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#94a3b8" : "#9CA3AF"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
             </div>
-          </div>
+          )}
 
-          <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`} />
+          <ChevronDown className={`h-4 w-4 text-gray-400 dark:text-slate-500 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`} />
         </button>
 
         {/* Dropdown */}
         {dropdownOpen && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
-            <div className="absolute right-0 top-full z-50 mt-1 w-48 max-w-[calc(100vw-1rem)] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+            <div className="absolute right-0 top-full z-50 mt-1 w-48 max-w-[calc(100vw-1rem)] rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-1 shadow-lg dark:shadow-slate-900">
               <button onClick={() => { setDropdownOpen(false); router.push("/profile"); }}
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
+                className="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700">
                 My Profile
               </button>
               <button onClick={() => { setDropdownOpen(false); router.push("/settings/general"); }}
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
+                className="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700">
                 Settings
               </button>
-              <hr className="my-1 border-gray-100" />
+              <hr className="my-1 border-gray-100 dark:border-slate-700" />
               <button onClick={() => { setDropdownOpen(false); logoutUser(); }}
-                className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50">
+                className="block w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-slate-700">
                 Log Out
               </button>
             </div>
