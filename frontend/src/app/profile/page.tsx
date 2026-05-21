@@ -43,9 +43,9 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const inputStyles =
-  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-700/40 px-4 py-3 text-sm text-[#374151] dark:text-slate-200 outline-none placeholder:text-[#9CA3AF] dark:placeholder:text-slate-500 focus:border-[#000080] focus:ring-1 focus:ring-[#000080] dark:focus:border-indigo-500 dark:focus:ring-indigo-500";
 const selectStyles =
-  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080] appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239CA3AF%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:20px] bg-[right_12px_center] bg-no-repeat pr-10";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-700/40 px-4 py-3 text-sm text-[#374151] dark:text-slate-200 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080] dark:focus:border-indigo-500 dark:focus:ring-indigo-500 appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239CA3AF%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:20px] bg-[right_12px_center] bg-no-repeat pr-10";
 const labelStyles = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
 
 export default function ProfilePage() {
@@ -262,14 +262,14 @@ export default function ProfilePage() {
             <h2 className="text-2xl font-bold text-[#111827] dark:text-slate-100">{displayName}</h2>
             <p className="mt-0.5 text-sm text-[#6B7280] dark:text-slate-400">{email}</p>
             <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EFF6FF] px-3 py-1 text-xs font-semibold text-[#2563EB]">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EFF6FF] dark:bg-blue-900/30 px-3 py-1 text-xs font-semibold text-[#2563EB] dark:text-blue-300">
                 <Shield className="h-3 w-3" />
                 {roleLabel}
               </span>
               {groups.map((g) => (
                 <span
                   key={g.id}
-                  className="rounded-full bg-[#F0FDF4] px-3 py-1 text-xs font-medium text-[#16A34A] dark:text-green-300"
+                  className="rounded-full bg-[#F0FDF4] dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-[#16A34A] dark:text-green-300"
                 >
                   {g.name}
                 </span>
