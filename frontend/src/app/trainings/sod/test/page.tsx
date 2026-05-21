@@ -137,14 +137,14 @@ export default function SodTestPage() {
     }
   };
 
-  const inp = "w-full rounded-lg border border-[#E5E7EB] px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]";
+  const inp = "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2.5 text-sm text-[#111827] dark:text-slate-100 outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]";
   const sel = `${inp} appearance-none pr-8`;
 
   return (
     <DashboardLayout>
       {/* Back + Title */}
       <div className="mb-6 flex items-center gap-3">
-        <button onClick={() => router.push("/test")} className="text-[#000080] hover:text-[#000066]">
+        <button onClick={() => router.push("/test")} className="text-[#000080] dark:text-indigo-400 hover:text-[#000066]">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
@@ -155,7 +155,7 @@ export default function SodTestPage() {
             SOD Enrolment{" "}
             <span className="text-sm font-semibold text-amber-600">[TEST — Real API]</span>
           </h1>
-          <p className="text-sm text-[#6B7280]">Enrolls a student in the School of Disciples using the real backend</p>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Enrolls a student in the School of Disciples using the real backend</p>
         </div>
       </div>
 
@@ -176,123 +176,123 @@ export default function SodTestPage() {
           </div>
 
           {/* Photo */}
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
-            <h2 className="mb-4 text-sm font-bold text-[#111827]">Profile Photo *</h2>
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+            <h2 className="mb-4 text-sm font-bold text-[#111827] dark:text-slate-100">Profile Photo *</h2>
             <div className="flex items-center gap-4">
               <button type="button" onClick={() => fileInputRef.current?.click()}
                 className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-[#D1D5DB] hover:border-[#D97706]">
                 {photoPreview
                   ? <img src={photoPreview} alt="Preview" className="h-full w-full object-cover" />
-                  : <Camera className="h-7 w-7 text-[#9CA3AF]" />}
+                  : <Camera className="h-7 w-7 text-[#9CA3AF] dark:text-slate-400" />}
               </button>
               <div>
                 <button type="button" onClick={() => fileInputRef.current?.click()}
-                  className="rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium hover:bg-[#F9FAFB]">
+                  className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs font-medium hover:bg-[#F9FAFB]">
                   {photoPreview ? "Change photo" : "Choose photo"}
                 </button>
-                <p className="mt-1 text-[10px] text-[#9CA3AF]">Required · JPG or PNG</p>
+                <p className="mt-1 text-[10px] text-[#9CA3AF] dark:text-slate-400">Required · JPG or PNG</p>
               </div>
             </div>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
           </div>
 
           {/* Personal */}
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
-            <h2 className="mb-4 text-sm font-bold text-[#111827]">Personal Details</h2>
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+            <h2 className="mb-4 text-sm font-bold text-[#111827] dark:text-slate-100">Personal Details</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">First Name *</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">First Name *</label>
                 <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className={inp} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">Middle Name</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">Middle Name</label>
                 <input value={middleName} onChange={(e) => setMiddleName(e.target.value)} placeholder="Middle name" className={inp} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">Last Name *</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">Last Name *</label>
                 <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" className={inp} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">Gender</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">Gender</label>
                 <div className="relative">
                   <select value={sex} onChange={(e) => setSex(e.target.value)} className={sel}>
                     <option value="">Prefer not to say</option>
                     <option value="MALE">Male</option>
                     <option value="FEMALE">Female</option>
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF] dark:text-slate-400" />
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">Date of Birth *</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">Date of Birth *</label>
                 <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className={inp} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">Marital Status *</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">Marital Status *</label>
                 <div className="relative">
                   <select value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} className={sel}>
                     <option value="">Select…</option>
                     {MARITAL_STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</option>)}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF] dark:text-slate-400" />
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">Nationality *</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">Nationality *</label>
                 <input value={nationality} onChange={(e) => setNationality(e.target.value)} placeholder="e.g. Nigerian" className={inp} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">State of Origin *</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">State of Origin *</label>
                 <input value={stateOfOrigin} onChange={(e) => setStateOfOrigin(e.target.value)} placeholder="e.g. Lagos" className={inp} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">Home Town *</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">Home Town *</label>
                 <input value={homeTown} onChange={(e) => setHomeTown(e.target.value)} placeholder="e.g. Ikeja" className={inp} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">Occupation *</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">Occupation *</label>
                 <input value={occupation} onChange={(e) => setOccupation(e.target.value)} placeholder="e.g. Teacher" className={inp} />
               </div>
             </div>
           </div>
 
           {/* Contact */}
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
-            <h2 className="mb-4 text-sm font-bold text-[#111827]">Contact</h2>
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+            <h2 className="mb-4 text-sm font-bold text-[#111827] dark:text-slate-100">Contact</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">Country Code *</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">Country Code *</label>
                 <input value={countryCode} onChange={(e) => setCountryCode(e.target.value)} placeholder="234" className={inp} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">Phone Number *</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">Phone Number *</label>
                 <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="08012345678" maxLength={10} className={inp} />
               </div>
               <div className="sm:col-span-2">
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">Email</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">Email</label>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" className={inp} />
               </div>
             </div>
           </div>
 
           {/* Church */}
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
-            <h2 className="mb-4 text-sm font-bold text-[#111827]">Church Details</h2>
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+            <h2 className="mb-4 text-sm font-bold text-[#111827] dark:text-slate-100">Church Details</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">Set / Batch</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">Set / Batch</label>
                 <input value={set} onChange={(e) => setSet(e.target.value)} placeholder="e.g. 2026" className={inp} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">Region *</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">Region *</label>
                 <input value={region} onChange={(e) => setRegion(e.target.value)} placeholder="e.g. Region 35" className={inp} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">Province *</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">Province *</label>
                 <input value={province} onChange={(e) => setProvince(e.target.value)} placeholder="e.g. Province 9" className={inp} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#374151]">Centre *</label>
+                <label className="mb-1 block text-xs font-semibold text-[#374151] dark:text-slate-300">Centre *</label>
                 <input value={centre} onChange={(e) => setCentre(e.target.value)} placeholder="e.g. Rose of Sharon" className={inp} />
               </div>
             </div>
@@ -310,9 +310,9 @@ export default function SodTestPage() {
 
         {/* Sidebar */}
         <div className="space-y-4">
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-4">
-            <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-[#374151]">What to Verify</h3>
-            <ul className="space-y-1.5 text-xs text-[#6B7280]">
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+            <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-[#374151] dark:text-slate-300">What to Verify</h3>
+            <ul className="space-y-1.5 text-xs text-[#6B7280] dark:text-slate-400">
               {[
                 "Student appears in School of Disciples list",
                 "Name, phone, and email are correct",
@@ -332,27 +332,27 @@ export default function SodTestPage() {
             </ul>
             <button
               onClick={() => router.push("/trainings/sod")}
-              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium hover:bg-[#F9FAFB]"
+              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-xs font-medium hover:bg-[#F9FAFB]"
             >
               <ExternalLink className="h-3 w-3" /> Open School of Disciples
             </button>
             <button
               onClick={() => router.push("/trainings/sod/form")}
-              className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#000080] bg-[#EFF6FF] px-3 py-2 text-xs font-semibold text-[#000080] hover:bg-[#DBEAFE]"
+              className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#000080] bg-[#EFF6FF] px-3 py-2 text-xs font-semibold text-[#000080] dark:text-indigo-400 hover:bg-[#DBEAFE] dark:bg-blue-900/30"
             >
               <ExternalLink className="h-3 w-3" /> Print Application Form
             </button>
           </div>
 
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-4">
-            <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-[#374151]">This Session</h3>
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+            <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-[#374151] dark:text-slate-300">This Session</h3>
             {history.length === 0 ? (
-              <p className="text-xs text-[#9CA3AF]">No enrolments yet.</p>
+              <p className="text-xs text-[#9CA3AF] dark:text-slate-400">No enrolments yet.</p>
             ) : (
               <ul className="space-y-2">
                 {history.map((h, i) => (
                   <li key={i} className={`rounded-lg border px-3 py-2 text-xs ${
-                    h.status === "ok" ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"
+                    h.status === "ok" ? "border-green-200 bg-green-50 dark:bg-green-900/20" : "border-red-200 bg-red-50 dark:bg-red-900/20"
                   }`}>
                     <div className="flex items-center gap-1.5">
                       {h.status === "ok"
@@ -361,7 +361,7 @@ export default function SodTestPage() {
                       <span className="font-semibold">{h.name}</span>
                     </div>
                     <p className={h.status === "ok" ? "text-green-700" : "text-red-600"}>{h.message}</p>
-                    <p className="text-[10px] text-[#9CA3AF]">{h.phone} · {h.submittedAt}</p>
+                    <p className="text-[10px] text-[#9CA3AF] dark:text-slate-400">{h.phone} · {h.submittedAt}</p>
                   </li>
                 ))}
               </ul>

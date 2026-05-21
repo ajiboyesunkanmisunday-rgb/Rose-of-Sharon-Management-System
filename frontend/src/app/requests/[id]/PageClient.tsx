@@ -19,14 +19,14 @@ const categoryBadgeColors: Record<string, string> = {
 };
 
 const statusBadgeColors: Record<string, string> = {
-  Received: "bg-[#F3F4F6] text-[#6B7280]",
-  Assigned: "bg-[#DBEAFE] text-[#1D4ED8]",
-  "In Progress": "bg-[#FEF9C3] text-[#CA8A04]",
-  Resolved: "bg-[#DCFCE7] text-[#16A34A]",
-  RECEIVED: "bg-[#F3F4F6] text-[#6B7280]",
-  ASSIGNED: "bg-[#DBEAFE] text-[#1D4ED8]",
-  IN_PROGRESS: "bg-[#FEF9C3] text-[#CA8A04]",
-  RESOLVED: "bg-[#DCFCE7] text-[#16A34A]",
+  Received: "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#6B7280] dark:text-slate-400",
+  Assigned: "bg-[#DBEAFE] dark:bg-blue-900/30 text-[#1D4ED8] dark:text-blue-300",
+  "In Progress": "bg-[#FEF9C3] dark:bg-yellow-900/30 text-[#CA8A04] dark:text-yellow-300",
+  Resolved: "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
+  RECEIVED: "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#6B7280] dark:text-slate-400",
+  ASSIGNED: "bg-[#DBEAFE] dark:bg-blue-900/30 text-[#1D4ED8] dark:text-blue-300",
+  IN_PROGRESS: "bg-[#FEF9C3] dark:bg-yellow-900/30 text-[#CA8A04] dark:text-yellow-300",
+  RESOLVED: "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
 };
 
 const statusOptions = ["Received", "Assigned", "In Progress", "Resolved"] as const;
@@ -89,7 +89,7 @@ export default function RequestDetailPage() {
     return (
       <DashboardLayout>
         <div className="flex h-64 items-center justify-center">
-          <p className="text-gray-400">Loading…</p>
+          <p className="text-gray-400 dark:text-slate-500">Loading…</p>
         </div>
       </DashboardLayout>
     );
@@ -98,7 +98,7 @@ export default function RequestDetailPage() {
   if (error || !request) {
     return (
       <DashboardLayout>
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error || "Request not found."}
           <button className="ml-2 font-medium underline" onClick={loadRequest}>Retry</button>
         </div>
@@ -145,7 +145,7 @@ export default function RequestDetailPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.push("/requests")}
-            className="flex items-center text-[#000080] transition-colors hover:text-[#000066]"
+            className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -162,40 +162,40 @@ export default function RequestDetailPage() {
               <polyline points="12 19 5 12 12 5" />
             </svg>
           </button>
-          <h2 className="text-[22px] font-bold text-[#000080]">
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">
             Request Details
           </h2>
         </div>
       </div>
 
       {/* Request Content Card */}
-      <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <div className="mb-4 flex items-center gap-3">
           <span
             className={`rounded-full px-3 py-1 text-xs font-medium ${
-              categoryBadgeColors[category] || "bg-gray-200 text-gray-700"
+              categoryBadgeColors[category] || "bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-slate-300"
             }`}
           >
             {category}
           </span>
           <span
             className={`rounded-full px-3 py-1 text-xs font-medium ${
-              statusBadgeColors[currentStatus] || "bg-gray-200 text-gray-700"
+              statusBadgeColors[currentStatus] || "bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-slate-300"
             }`}
           >
             {currentStatus}
           </span>
         </div>
 
-        <h3 className="mb-3 text-lg font-bold text-[#111827]">
+        <h3 className="mb-3 text-lg font-bold text-[#111827] dark:text-slate-100">
           {request.subject}
         </h3>
 
-        <p className="mb-4 text-sm leading-relaxed text-[#374151]">
+        <p className="mb-4 text-sm leading-relaxed text-[#374151] dark:text-slate-300">
           {request.content}
         </p>
 
-        <div className="flex flex-wrap items-center gap-4 text-xs text-[#6B7280]">
+        <div className="flex flex-wrap items-center gap-4 text-xs text-[#6B7280] dark:text-slate-400">
           <span>
             <span className="font-medium">Submitted by:</span>{" "}
             {submittedBy}
@@ -207,12 +207,12 @@ export default function RequestDetailPage() {
       </div>
 
       {/* Status Section */}
-      <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
-        <h4 className="mb-4 text-sm font-bold text-[#111827]">Status</h4>
+      <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+        <h4 className="mb-4 text-sm font-bold text-[#111827] dark:text-slate-100">Status</h4>
         <div className="flex flex-wrap items-center gap-4">
           <span
             className={`rounded-full px-3 py-1 text-xs font-medium ${
-              statusBadgeColors[currentStatus] || "bg-gray-200 text-gray-700"
+              statusBadgeColors[currentStatus] || "bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-slate-300"
             }`}
           >
             {currentStatus}
@@ -221,20 +221,20 @@ export default function RequestDetailPage() {
             <button
               onClick={() => setShowStatusDropdown(!showStatusDropdown)}
               disabled={updatingStatus}
-              className="rounded-xl border border-[#E5E7EB] px-4 py-2 text-sm text-[#374151] transition-colors hover:bg-gray-50 disabled:opacity-50"
+              className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 px-4 py-2 text-sm text-[#374151] dark:text-slate-300 transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 disabled:opacity-50"
             >
               {updatingStatus ? "Updating…" : "Update Status"}
             </button>
             {showStatusDropdown && (
-              <div className="absolute left-0 z-10 mt-1 min-w-[180px] rounded-lg border border-[#E5E7EB] bg-white py-1 shadow-lg">
+              <div className="absolute left-0 z-10 mt-1 min-w-[180px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 py-1 shadow-lg">
                 {statusOptions.map((status) => (
                   <button
                     key={status}
                     onClick={() => handleStatusChange(status)}
-                    className={`block w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 ${
+                    className={`block w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 ${
                       currentStatus === status
-                        ? "font-medium text-[#000080]"
-                        : "text-gray-700"
+                        ? "font-medium text-[#000080] dark:text-indigo-400"
+                        : "text-gray-700 dark:text-slate-300"
                     }`}
                   >
                     {status}
@@ -247,29 +247,29 @@ export default function RequestDetailPage() {
       </div>
 
       {/* Assigned To Section */}
-      <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
-        <h4 className="mb-4 text-sm font-bold text-[#111827]">Assigned To</h4>
+      <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+        <h4 className="mb-4 text-sm font-bold text-[#111827] dark:text-slate-100">Assigned To</h4>
         <div className="flex flex-wrap items-center gap-4">
-          <span className="text-sm text-[#374151]">
+          <span className="text-sm text-[#374151] dark:text-slate-300">
             {currentAssignee || "Unassigned"}
           </span>
           <div className="relative">
             <button
               onClick={() => setShowAssignDropdown(!showAssignDropdown)}
-              className="rounded-xl border border-[#E5E7EB] px-4 py-2 text-sm text-[#374151] transition-colors hover:bg-gray-50"
+              className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 px-4 py-2 text-sm text-[#374151] dark:text-slate-300 transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50"
             >
               Reassign
             </button>
             {showAssignDropdown && (
-              <div className="absolute left-0 z-10 mt-1 min-w-[200px] rounded-lg border border-[#E5E7EB] bg-white py-1 shadow-lg">
+              <div className="absolute left-0 z-10 mt-1 min-w-[200px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 py-1 shadow-lg">
                 {assignees.map((assignee) => (
                   <button
                     key={assignee}
                     onClick={() => handleAssignChange(assignee)}
-                    className={`block w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 ${
+                    className={`block w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 ${
                       currentAssignee === assignee
-                        ? "font-medium text-[#000080]"
-                        : "text-gray-700"
+                        ? "font-medium text-[#000080] dark:text-indigo-400"
+                        : "text-gray-700 dark:text-slate-300"
                     }`}
                   >
                     {assignee}

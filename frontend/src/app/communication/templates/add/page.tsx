@@ -69,34 +69,34 @@ export default function AddTemplatePage() {
   };
 
   const inputCls =
-    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
-  const labelCls = "mb-1 block text-sm font-medium text-[#374151]";
+    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  const labelCls = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
 
   return (
     <DashboardLayout>
       <div className="mb-6">
         <button
           onClick={() => router.push("/communication/templates")}
-          className="mb-1 flex items-center gap-1 text-sm text-[#000080] hover:underline"
+          className="mb-1 flex items-center gap-1 text-sm text-[#000080] dark:text-indigo-400 hover:underline"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
           Back to Templates
         </button>
-        <h1 className="text-[28px] font-bold text-[#000000]">Add Template</h1>
-        <p className="text-sm text-[#6B7280]">Create a reusable SMS or email message template</p>
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Add Template</h1>
+        <p className="text-sm text-[#6B7280] dark:text-slate-400">Create a reusable SMS or email message template</p>
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
       <form onSubmit={handleSubmit}>
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
           {/* Process selector */}
           <div className="mb-6 rounded-xl border border-[#B5B5F3] bg-[#F5F5FC] p-4">
-            <p className="mb-3 text-sm font-semibold text-[#000080]">Template Setup</p>
+            <p className="mb-3 text-sm font-semibold text-[#000080] dark:text-indigo-400">Template Setup</p>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <SelectField
                 label="Category"
@@ -150,12 +150,12 @@ export default function AddTemplatePage() {
                 className={inputCls}
                 required
               />
-              <p className="mt-1 text-xs text-[#6B7280]">
+              <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">
                Placeholders:{" "}
-                <code className="rounded bg-gray-100 px-1">
+                <code className="rounded bg-gray-100 dark:bg-slate-700 px-1">
                   {"{firstName}"}
                 </code>
-                <code className="rounded bg-gray-100 px-1">{"{name}"}</code>{" "}
+                <code className="rounded bg-gray-100 dark:bg-slate-700 px-1">{"{name}"}</code>{" "}
               </p>
             </div>
           </div>

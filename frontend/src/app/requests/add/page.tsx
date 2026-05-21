@@ -128,12 +128,12 @@ export default function AddRequestPage() {
       />
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           <FormField
             label="Subject"
@@ -155,7 +155,7 @@ export default function AddRequestPage() {
 
           {/* Member search — replaces mock memberOptions */}
           <div className="relative">
-            <label className="mb-1 block text-sm font-medium text-[#374151]">
+            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
               Submitted By <span className="text-red-500">*</span>
             </label>
             <div className="flex items-center gap-2">
@@ -167,14 +167,14 @@ export default function AddRequestPage() {
                   setMemberQuery(e.target.value);
                 }}
                 placeholder="Search member by name…"
-                className="w-full rounded-xl border border-[#E5E7EB] px-4 py-3 text-sm text-gray-700 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+                className="w-full rounded-xl border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-gray-700 dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
                 autoComplete="off"
               />
               {selectedMember && (
                 <button
                   type="button"
                   onClick={handleClearMember}
-                  className="flex-shrink-0 rounded-lg border border-[#E5E7EB] px-3 py-3 text-sm text-gray-500 hover:bg-gray-100"
+                  className="flex-shrink-0 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-3 text-sm text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:bg-slate-700"
                 >
                   Clear
                 </button>
@@ -183,17 +183,17 @@ export default function AddRequestPage() {
 
             {/* Dropdown results */}
             {memberResults.length > 0 && (
-              <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-[#E5E7EB] bg-white shadow-md">
+              <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-md">
                 {memberResults.map((m) => (
                   <li key={m.id}>
                     <button
                       type="button"
                       onClick={() => handleSelectMember(m)}
-                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-[#000080]/5"
+                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-slate-300 hover:bg-[#000080]/5"
                     >
                       {`${m.firstName ?? ""} ${m.lastName ?? ""}`.trim()}
                       {m.email && (
-                        <span className="ml-2 text-xs text-gray-400">{m.email}</span>
+                        <span className="ml-2 text-xs text-gray-400 dark:text-slate-500">{m.email}</span>
                       )}
                     </button>
                   </li>
@@ -202,10 +202,10 @@ export default function AddRequestPage() {
             )}
 
             {searchLoading && (
-              <p className="mt-1 text-xs text-gray-400">Searching…</p>
+              <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">Searching…</p>
             )}
             {!searchLoading && memberQuery.length > 1 && !selectedMember && memberResults.length === 0 && (
-              <p className="mt-1 text-xs text-gray-400">No members found.</p>
+              <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">No members found.</p>
             )}
           </div>
 

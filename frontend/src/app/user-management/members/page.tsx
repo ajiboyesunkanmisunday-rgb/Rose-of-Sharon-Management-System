@@ -335,7 +335,7 @@ export default function MembersPage() {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="rounded-lg border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500"
+              className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500"
             />
           </div>
           <div>
@@ -346,7 +346,7 @@ export default function MembersPage() {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="rounded-lg border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500"
+              className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500"
             />
           </div>
           <Button onClick={handleExport}>Export CSV</Button>
@@ -357,7 +357,7 @@ export default function MembersPage() {
                 setStartDate("");
                 setEndDate("");
               }}
-              className="text-sm font-medium text-[#000080] underline hover:text-[#000066]"
+              className="text-sm font-medium text-[#000080] dark:text-indigo-400 underline hover:text-[#000066]"
             >
               Clear
             </button>
@@ -366,14 +366,14 @@ export default function MembersPage() {
       )}
 
       {selectedRows.size > 0 && (
-        <div className="mb-2 text-sm text-gray-500">
+        <div className="mb-2 text-sm text-gray-500 dark:text-slate-400">
           {selectedRows.size} member{selectedRows.size > 1 ? "s" : ""} selected
         </div>
       )}
 
       {/* Error banner */}
       {apiError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} —{" "}
           <button
             className="font-medium underline"
@@ -398,7 +398,7 @@ export default function MembersPage() {
             </div>
           ))
         ) : displayedMembers.length === 0 ? (
-          <p className="text-center text-sm text-gray-400 py-8">
+          <p className="text-center text-sm text-gray-400 dark:text-slate-500 py-8">
             No members found.
           </p>
         ) : (
@@ -408,7 +408,7 @@ export default function MembersPage() {
               onClick={() =>
                 router.push(`/user-management/members/${member.id}`)
               }
-              className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+              className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 cursor-pointer hover:bg-gray-50 dark:bg-slate-700/50 dark:hover:bg-slate-700/50 transition-colors"
             >
               <UserAvatar
                 id={member.id}
@@ -466,7 +466,7 @@ export default function MembersPage() {
                   type="checkbox"
                   checked={allPageSelected}
                   onChange={(e) => handleSelectAll(e.target.checked)}
-                  className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
+                  className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
                 />
               </th>
               <th className="px-4 py-4"></th>
@@ -479,7 +479,7 @@ export default function MembersPage() {
               <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Phone
               </th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Email
               </th>
               <th className="px-4 py-4"></th>
@@ -492,7 +492,7 @@ export default function MembersPage() {
               ))
             ) : displayedMembers.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={7} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
                   No members found.
                 </td>
               </tr>
@@ -500,7 +500,7 @@ export default function MembersPage() {
               displayedMembers.map((member) => (
                 <tr
                   key={member.id}
-                  className="border-b border-[#F3F4F6] dark:border-slate-700 transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer"
+                  className="border-b border-[#F3F4F6] dark:border-slate-700 transition-colors hover:bg-gray-50 dark:bg-slate-700/50 dark:hover:bg-slate-700/50 cursor-pointer"
                   style={{ height: "56px" }}
                   onClick={() =>
                     router.push(`/user-management/members/${member.id}`)
@@ -514,7 +514,7 @@ export default function MembersPage() {
                       type="checkbox"
                       checked={selectedRows.has(member.id)}
                       onChange={() => handleSelectRow(member.id)}
-                      className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
+                      className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
                     />
                   </td>
                   <td className="px-4 py-3">

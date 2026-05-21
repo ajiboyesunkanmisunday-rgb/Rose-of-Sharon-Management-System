@@ -166,11 +166,11 @@ export default function EMembersPage() {
       {/* Page Header */}
       <div className="mb-6 flex items-center gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F0FDF4]">
-          <UserCheck className="h-6 w-6 text-[#16A34A]" />
+          <UserCheck className="h-6 w-6 text-[#16A34A] dark:text-green-300" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">E-Members</h1>
-          <p className="text-sm text-[#6B7280]">Manage electronic church membership records</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">E-Members</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Manage electronic church membership records</p>
         </div>
       </div>
 
@@ -249,23 +249,23 @@ export default function EMembersPage() {
 
       {/* Inline Filter Row */}
       {showFilter && (
-        <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4">
+        <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
           <div>
-            <label className="mb-1 block text-xs font-medium text-[#374151]">Start Date</label>
+            <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">Start Date</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-[#374151]">End Date</label>
+            <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">End Date</label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
           </div>
           <Button onClick={() => setShowFilter(false)}>Apply</Button>
@@ -273,7 +273,7 @@ export default function EMembersPage() {
             <button
               type="button"
               onClick={() => { setStartDate(""); setEndDate(""); }}
-              className="text-sm font-medium text-[#000080] underline hover:text-[#000066]"
+              className="text-sm font-medium text-[#000080] dark:text-indigo-400 underline hover:text-[#000066]"
             >
               Clear
             </button>
@@ -282,14 +282,14 @@ export default function EMembersPage() {
       )}
 
       {selectedRows.size > 0 && (
-        <div className="mb-2 text-sm text-gray-500">
+        <div className="mb-2 text-sm text-gray-500 dark:text-slate-400">
           {selectedRows.size} e-member{selectedRows.size > 1 ? "s" : ""} selected
         </div>
       )}
 
       {/* Error banner */}
       {apiError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} —{" "}
           <button className="font-medium underline" onClick={() => fetchEMembers(currentPage)}>
             Retry
@@ -298,37 +298,37 @@ export default function EMembersPage() {
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
               <th className="px-4 py-4">
                 <input
                   type="checkbox"
                   checked={allPageSelected}
                   onChange={(e) => handleSelectAll(e.target.checked)}
-                  className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
+                  className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
                 />
               </th>
               <th className="px-4 py-4"></th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">First Name</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Last Name</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Country</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Phone</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Email</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">First Name</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Last Name</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Country</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Phone</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Email</th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
                   Loading e-members…
                 </td>
               </tr>
             ) : displayedEMembers.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
                   No e-members found.
                 </td>
               </tr>
@@ -336,7 +336,7 @@ export default function EMembersPage() {
               displayedEMembers.map((member) => (
                 <tr
                   key={member.id}
-                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
+                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 cursor-pointer"
                   style={{ height: "56px" }}
                   onClick={() => router.push(`/user-management/e-members/${member.id}`)}
                 >
@@ -345,7 +345,7 @@ export default function EMembersPage() {
                       type="checkbox"
                       checked={selectedRows.has(member.id)}
                       onChange={() => handleSelectRow(member.id)}
-                      className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
+                      className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
                     />
                   </td>
                   <td className="px-4 py-3">
@@ -356,11 +356,11 @@ export default function EMembersPage() {
                       profilePictureUrl={member.profilePictureUrl}
                     />
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151] max-w-[140px]"><span className="block truncate">{member.firstName}</span></td>
-                  <td className="px-4 py-3 text-sm text-[#374151] max-w-[140px]"><span className="block truncate">{member.lastName}</span></td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{member.country || "—"}</td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">{member.phoneNumber}</td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{member.email}</td>
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[140px]"><span className="block truncate">{member.firstName}</span></td>
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[140px]"><span className="block truncate">{member.lastName}</span></td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{member.country || "—"}</td>
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{member.phoneNumber}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{member.email}</td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <ActionDropdown
                       actions={[

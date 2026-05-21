@@ -170,7 +170,7 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
       {/* Hamburger — mobile only */}
       <button
         onClick={onMenuOpen}
-        className="flex h-9 w-9 items-center justify-center rounded-lg text-[#000080] dark:text-indigo-400 hover:bg-gray-100 dark:hover:bg-slate-800 lg:hidden shrink-0"
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-[#000080] dark:text-indigo-400 hover:bg-gray-100 dark:bg-slate-700 dark:hover:bg-slate-800 lg:hidden shrink-0"
         aria-label="Open menu"
       >
         <Menu size={22} strokeWidth={1.8} />
@@ -186,16 +186,16 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search members, events…"
-              className="flex-1 text-sm text-[#111827] dark:text-slate-100 outline-none placeholder:text-[#9CA3AF] dark:placeholder:text-slate-500 bg-transparent min-w-0"
+              className="flex-1 text-sm text-[#111827] dark:text-slate-100 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 dark:placeholder:text-slate-500 bg-transparent min-w-0"
             />
             <button onClick={() => { if (searchQuery.trim()) saveRecent(searchQuery); setSearchOpen(false); setSearchQuery(""); setSearchResults([]); }}>
-              <X className="h-4 w-4 text-[#9CA3AF] dark:text-slate-500 hover:text-[#374151] dark:hover:text-slate-300" />
+              <X className="h-4 w-4 text-[#9CA3AF] dark:text-slate-500 hover:text-[#374151] dark:text-slate-300 dark:hover:text-slate-300" />
             </button>
           </div>
         ) : (
           <button
             onClick={() => setSearchOpen(true)}
-            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] dark:bg-slate-800 px-3 py-1.5 text-sm text-[#9CA3AF] dark:text-slate-500 hover:border-[#000080] dark:hover:border-indigo-500 hover:text-[#374151] dark:hover:text-slate-300 transition-colors w-full"
+            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] dark:bg-slate-800 px-3 py-1.5 text-sm text-[#9CA3AF] dark:text-slate-500 hover:border-[#000080] dark:hover:border-indigo-500 hover:text-[#374151] dark:text-slate-300 dark:hover:text-slate-300 transition-colors w-full"
           >
             <Search className="h-4 w-4 shrink-0" />
             <span className="hidden sm:inline">Search…</span>
@@ -254,7 +254,7 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
       {/* ── Dark / Light Toggle ─────────────────────────────────────────────── */}
       <button
         onClick={toggleTheme}
-        className="relative flex h-9 w-9 items-center justify-center rounded-lg text-[#6B7280] dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+        className="relative flex h-9 w-9 items-center justify-center rounded-lg text-[#6B7280] dark:text-slate-400 hover:bg-gray-100 dark:bg-slate-700 dark:hover:bg-slate-800 transition-colors shrink-0"
         aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
         title={isDark ? "Light mode" : "Dark mode"}
       >
@@ -268,12 +268,12 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
       {/* ── Notification Bell ───────────────────────────────────────────────── */}
       <button
         onClick={() => router.push("/notifications")}
-        className="relative flex h-9 w-9 items-center justify-center rounded-lg text-[#000080] dark:text-indigo-400 hover:bg-[#EEF2FF] dark:hover:bg-slate-800 transition-colors shrink-0"
+        className="relative flex h-9 w-9 items-center justify-center rounded-lg text-[#000080] dark:text-indigo-400 hover:bg-[#EEF2FF] dark:bg-indigo-900/30 dark:hover:bg-slate-800 transition-colors shrink-0"
         aria-label="Notifications"
       >
         <Bell size={20} strokeWidth={1.8} />
         {MOCK_UNREAD > 0 && (
-          <span className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white leading-none">
+          <span className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-50 dark:bg-red-900/200 px-1 text-[10px] font-bold text-white leading-none">
             {MOCK_UNREAD > 9 ? "9+" : MOCK_UNREAD}
           </span>
         )}
@@ -283,7 +283,7 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
       <div className="relative shrink-0">
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-50 dark:hover:bg-slate-800"
+          className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-50 dark:bg-slate-700/50 dark:hover:bg-slate-800"
         >
           {/* Name + email — hidden on small screens */}
           <div className="text-right hidden sm:block">
@@ -318,16 +318,16 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
             <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
             <div className="absolute right-0 top-full z-50 mt-1 w-48 max-w-[calc(100vw-1rem)] rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-1 shadow-lg dark:shadow-slate-900">
               <button onClick={() => { setDropdownOpen(false); router.push("/profile"); }}
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700">
+                className="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-slate-300 dark:text-slate-200 hover:bg-gray-50 dark:bg-slate-700/50 dark:hover:bg-slate-700">
                 My Profile
               </button>
               <button onClick={() => { setDropdownOpen(false); router.push("/settings/general"); }}
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700">
+                className="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-slate-300 dark:text-slate-200 hover:bg-gray-50 dark:bg-slate-700/50 dark:hover:bg-slate-700">
                 Settings
               </button>
               <hr className="my-1 border-gray-100 dark:border-slate-700" />
               <button onClick={() => { setDropdownOpen(false); logoutUser(); }}
-                className="block w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-slate-700">
+                className="block w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:bg-slate-700/50 dark:hover:bg-slate-700">
                 Log Out
               </button>
             </div>

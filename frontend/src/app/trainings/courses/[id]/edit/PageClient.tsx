@@ -80,7 +80,7 @@ export default function EditCourseClient() {
         backHref={`/trainings/courses/${id}`}
       />
 
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           <FormField label="Course Name" name="name" value={formData.name} onChange={handleChange} required />
           <TextAreaField label="Description" name="description" value={formData.description} onChange={handleChange} rows={4} required />

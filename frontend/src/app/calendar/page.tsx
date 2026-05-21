@@ -21,7 +21,7 @@ function eventColor(cat?: string) {
 
 // Cancelled events get a distinct muted style regardless of category
 const CANCELLED_CLASSES =
-  "bg-gray-100 text-gray-400 border border-gray-300 line-through opacity-60";
+  "bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-slate-500 border border-gray-300 line-through opacity-60";
 
 const LEGEND = [
   { label: "Service",         color: "bg-[#000080]" },
@@ -30,7 +30,7 @@ const LEGEND = [
   { label: "Wedding",         color: "bg-pink-500"  },
   { label: "Funeral",         color: "bg-gray-500"  },
   { label: "Other",           color: "bg-green-600" },
-  { label: "Cancelled",       color: "bg-gray-100 border border-gray-300" },
+  { label: "Cancelled",       color: "bg-gray-100 dark:bg-slate-700 border border-gray-300" },
 ];
 
 const DAYS        = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -182,21 +182,21 @@ export default function CalendarPage() {
             <CalendarDays className="h-6 w-6 text-[#2563EB]" />
           </div>
           <div>
-            <h1 className="text-[28px] font-bold text-[#000000]">Calendar</h1>
-            <p className="text-sm text-[#6B7280]">View and manage church schedule</p>
+            <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Calendar</h1>
+            <p className="text-sm text-[#6B7280] dark:text-slate-400">View and manage church schedule</p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {/* Today button */}
           <button
             onClick={goToday}
-            className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F3F4F6]"
+            className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-medium text-[#374151] dark:text-slate-300 hover:bg-[#F3F4F6] dark:bg-slate-700/30"
           >
             Today
           </button>
 
           {/* Month / Week toggle */}
-          <div className="inline-flex rounded-lg border border-[#E5E7EB] bg-white p-1">
+          <div className="inline-flex rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-1">
             {(["Month","Week"] as ViewMode[]).map(m => (
               <button
                 key={m}
@@ -204,7 +204,7 @@ export default function CalendarPage() {
                 className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
                   viewMode === m
                     ? "bg-[#000080] text-white"
-                    : "text-[#374151] hover:bg-[#F3F4F6]"
+                    : "text-[#374151] dark:text-slate-300 hover:bg-[#F3F4F6] dark:bg-slate-700/30"
                 }`}
               >
                 {m}
@@ -227,7 +227,7 @@ export default function CalendarPage() {
       </div>
 
       {apiError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} —{" "}
           <button className="font-medium underline" onClick={fetchEvents}>Retry</button>
         </div>
@@ -259,11 +259,11 @@ export default function CalendarPage() {
           )}
 
           {/* Legend */}
-          <div className="mt-4 flex flex-wrap gap-4 rounded-xl border border-[#E5E7EB] bg-white px-5 py-3">
+          <div className="mt-4 flex flex-wrap gap-4 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-3">
             {LEGEND.map(item => (
               <div key={item.label} className="flex items-center gap-2">
                 <span className={`h-3 w-3 rounded-full ${item.color}`} />
-                <span className={`text-xs ${item.label === "Cancelled" ? "text-gray-400 line-through" : "text-[#374151]"}`}>{item.label}</span>
+                <span className={`text-xs ${item.label === "Cancelled" ? "text-gray-400 dark:text-slate-500 line-through" : "text-[#374151] dark:text-slate-300"}`}>{item.label}</span>
               </div>
             ))}
           </div>
@@ -271,29 +271,29 @@ export default function CalendarPage() {
 
         {/* ── Upcoming events sidebar ─────────────────────────── */}
         <aside className="lg:w-80">
-          <h3 className="mb-3 text-sm font-semibold text-[#111827]">Upcoming Events</h3>
+          <h3 className="mb-3 text-sm font-semibold text-[#111827] dark:text-slate-100">Upcoming Events</h3>
           <div className="space-y-3">
             {loading ? (
-              <p className="rounded-xl border border-[#E5E7EB] bg-white p-6 text-sm text-[#6B7280]">Loading…</p>
+              <p className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 text-sm text-[#6B7280] dark:text-slate-400">Loading…</p>
             ) : sidebarUpcoming.length === 0 ? (
-              <p className="rounded-xl border border-[#E5E7EB] bg-white p-6 text-sm text-[#6B7280]">No upcoming events.</p>
+              <p className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 text-sm text-[#6B7280] dark:text-slate-400">No upcoming events.</p>
             ) : (
               sidebarUpcoming.map(ev => (
                 <button
                   key={ev.id}
                   onClick={() => router.push(`/event-management/${ev.id}`)}
-                  className="block w-full rounded-xl border border-[#E5E7EB] bg-white p-4 text-left transition-colors hover:border-[#000080]"
+                  className="block w-full rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-left transition-colors hover:border-[#000080]"
                 >
                   <div className="flex items-center gap-2">
                     <span className={`inline-block h-2 w-2 rounded-full ${eventColor(ev.eventCategory).split(" ")[0]}`} />
-                    <span className="text-xs font-medium text-[#6B7280]">
+                    <span className="text-xs font-medium text-[#6B7280] dark:text-slate-400">
                       {ev.date ? new Date(ev.date).toLocaleDateString("en-US",{month:"short",day:"numeric"}) : "—"}
                       {ev.startTime ? " · " + fmtEpoch(ev.startTime) : ""}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm font-semibold text-[#111827]">{ev.title}</p>
+                  <p className="mt-1 text-sm font-semibold text-[#111827] dark:text-slate-100">{ev.title}</p>
                   {ev.eventCategory && (
-                    <span className="mt-1 inline-block text-xs text-[#6B7280]">
+                    <span className="mt-1 inline-block text-xs text-[#6B7280] dark:text-slate-400">
                       {ev.eventCategory.replace(/_/g," ")}
                     </span>
                   )}
@@ -326,26 +326,26 @@ function MonthView({ currentYear, currentMonth, cells, todayISO, eventsByDate, l
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-6 py-4">
-        <button onClick={onPrev} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#000080] hover:bg-[#F3F4F6]">
+      <div className="mb-4 flex items-center justify-between rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-6 py-4">
+        <button onClick={onPrev} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#000080] dark:text-indigo-400 hover:bg-[#F3F4F6] dark:bg-slate-700/30">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <h2 className="text-lg font-bold text-[#000080]">{MONTH_NAMES[currentMonth]} {currentYear}</h2>
-        <button onClick={onNext} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#000080] hover:bg-[#F3F4F6]">
+        <h2 className="text-lg font-bold text-[#000080] dark:text-indigo-400">{MONTH_NAMES[currentMonth]} {currentYear}</h2>
+        <button onClick={onNext} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#000080] dark:text-indigo-400 hover:bg-[#F3F4F6] dark:bg-slate-700/30">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         {/* Day headers */}
-        <div className="grid grid-cols-7 min-w-[340px] bg-[#F3F4F6]">
+        <div className="grid grid-cols-7 min-w-[340px] bg-[#F3F4F6] dark:bg-slate-700/30">
           {DAYS.map(d => (
-            <div key={d} className="px-2 py-3 text-center text-sm font-bold text-[#000080]">{d}</div>
+            <div key={d} className="px-2 py-3 text-center text-sm font-bold text-[#000080] dark:text-indigo-400">{d}</div>
           ))}
         </div>
 
         {loading ? (
-          <div className="py-12 text-center text-sm text-gray-400">Loading events…</div>
+          <div className="py-12 text-center text-sm text-gray-400 dark:text-slate-500">Loading events…</div>
         ) : (
           <div className="grid grid-cols-7 min-w-[340px]">
             {cells.map((day, idx) => {
@@ -359,11 +359,11 @@ function MonthView({ currentYear, currentMonth, cells, todayISO, eventsByDate, l
               return (
                 <div
                   key={idx}
-                  className={`min-h-[110px] border-b border-r border-[#F3F4F6] p-1.5 ${day ? "bg-white" : "bg-[#FAFAFA]"}`}
+                  className={`min-h-[110px] border-b border-r border-[#F3F4F6] p-1.5 ${day ? "bg-white dark:bg-slate-800" : "bg-[#FAFAFA]"}`}
                 >
                   {day && (
                     <>
-                      <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm ${isToday ? "bg-[#000080] font-bold text-white" : "text-[#374151]"}`}>
+                      <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm ${isToday ? "bg-[#000080] font-bold text-white" : "text-[#374151] dark:text-slate-300"}`}>
                         {day}
                       </span>
                       <div className="mt-1 space-y-0.5">
@@ -380,7 +380,7 @@ function MonthView({ currentYear, currentMonth, cells, todayISO, eventsByDate, l
                         {!isExpanded && overflow > 0 && (
                           <button
                             onClick={() => setExpandedDay(dateStr)}
-                            className="block w-full text-left pl-1 text-xs font-medium text-[#000080] hover:underline"
+                            className="block w-full text-left pl-1 text-xs font-medium text-[#000080] dark:text-indigo-400 hover:underline"
                           >
                             +{overflow} more
                           </button>
@@ -388,7 +388,7 @@ function MonthView({ currentYear, currentMonth, cells, todayISO, eventsByDate, l
                         {isExpanded && (
                           <button
                             onClick={() => setExpandedDay(null)}
-                            className="block w-full text-left pl-1 text-xs font-medium text-[#000080] hover:underline"
+                            className="block w-full text-left pl-1 text-xs font-medium text-[#000080] dark:text-indigo-400 hover:underline"
                           >
                             Show less
                           </button>
@@ -432,24 +432,24 @@ function WeekView({ weekStart, eventsByDate, onPrev, onNext, onEventClick }: Wee
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-6 py-4">
-        <button onClick={onPrev} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#000080] hover:bg-[#F3F4F6]">
+      <div className="mb-4 flex items-center justify-between rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-6 py-4">
+        <button onClick={onPrev} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#000080] dark:text-indigo-400 hover:bg-[#F3F4F6] dark:bg-slate-700/30">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <h2 className="text-lg font-bold text-[#000080]">{weekLabel}</h2>
-        <button onClick={onNext} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#000080] hover:bg-[#F3F4F6]">
+        <h2 className="text-lg font-bold text-[#000080] dark:text-indigo-400">{weekLabel}</h2>
+        <button onClick={onNext} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#000080] dark:text-indigo-400 hover:bg-[#F3F4F6] dark:bg-slate-700/30">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         {/* Header row */}
-        <div className="grid min-w-[560px] bg-[#F3F4F6]" style={{gridTemplateColumns:"64px repeat(7,1fr)"}}>
-          <div className="px-2 py-3 text-center text-xs font-bold text-[#000080]"/>
+        <div className="grid min-w-[560px] bg-[#F3F4F6] dark:bg-slate-700/30" style={{gridTemplateColumns:"64px repeat(7,1fr)"}}>
+          <div className="px-2 py-3 text-center text-xs font-bold text-[#000080] dark:text-indigo-400"/>
           {days.map((d, i) => (
             <div key={i} className="px-1 py-3 text-center">
-              <div className="text-sm font-bold text-[#000080]">{DAYS[i]}</div>
-              <div className="text-xs text-[#6B7280]">{d.getDate()}</div>
+              <div className="text-sm font-bold text-[#000080] dark:text-indigo-400">{DAYS[i]}</div>
+              <div className="text-xs text-[#6B7280] dark:text-slate-400">{d.getDate()}</div>
             </div>
           ))}
         </div>
@@ -459,7 +459,7 @@ function WeekView({ weekStart, eventsByDate, onPrev, onNext, onEventClick }: Wee
           {/* Hour labels */}
           <div>
             {hours.map(h => (
-              <div key={h} className="h-12 border-b border-[#F3F4F6] px-2 py-1 text-right text-xs text-[#6B7280]">
+              <div key={h} className="h-12 border-b border-[#F3F4F6] px-2 py-1 text-right text-xs text-[#6B7280] dark:text-slate-400">
                 {h === 12 ? "12 PM" : h < 12 ? `${h} AM` : `${h-12} PM`}
               </div>
             ))}
@@ -495,7 +495,7 @@ function WeekView({ weekStart, eventsByDate, onPrev, onNext, onEventClick }: Wee
                     >
                       <div className="font-medium truncate">{ev.title}</div>
                       {ev.startTime && <div className="text-[10px] opacity-90">{fmtEpoch(ev.startTime)}</div>}
-                      {ev.isCanceled && <div className="text-[9px] font-semibold uppercase tracking-wide text-gray-400">Cancelled</div>}
+                      {ev.isCanceled && <div className="text-[9px] font-semibold uppercase tracking-wide text-gray-400 dark:text-slate-500">Cancelled</div>}
                     </button>
                   );
                 })}

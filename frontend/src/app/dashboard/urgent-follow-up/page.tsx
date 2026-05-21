@@ -82,36 +82,36 @@ export default function UrgentFollowUpPage() {
         />
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Phone</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Service Attended</th>
-              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Assigned Officer</th>
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Name</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Phone</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Service Attended</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Assigned Officer</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={4} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
                   Loading follow-ups…
                 </td>
               </tr>
             ) : (
               <>
                 {paginated.map((f) => (
-                  <tr key={f.id} className="border-b border-[#F3F4F6] hover:bg-gray-50" style={{ height: "56px" }}>
-                    <td className="px-4 py-3 text-sm text-[#374151]">{f.name}</td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{f.phone}</td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{f.serviceAttended}</td>
-                    <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">{f.assignedOfficer}</td>
+                  <tr key={f.id} className="border-b border-[#F3F4F6] hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50" style={{ height: "56px" }}>
+                    <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{f.name}</td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{f.phone}</td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{f.serviceAttended}</td>
+                    <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{f.assignedOfficer}</td>
                   </tr>
                 ))}
                 {paginated.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                    <td colSpan={4} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
                       No follow-ups found.
                     </td>
                   </tr>

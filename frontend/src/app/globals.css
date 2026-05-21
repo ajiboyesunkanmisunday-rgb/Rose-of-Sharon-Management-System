@@ -8,6 +8,11 @@
   --foreground: #171717;
 }
 
+.dark {
+  --background: #0f172a;   /* slate-900 */
+  --foreground: #f1f5f9;   /* slate-100 */
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

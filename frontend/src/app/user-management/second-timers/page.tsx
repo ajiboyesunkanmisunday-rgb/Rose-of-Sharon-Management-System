@@ -284,8 +284,8 @@ export default function SecondTimersPage() {
           <Users2 className="h-6 w-6 text-[#2563EB]" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Second Timers</h1>
-          <p className="text-sm text-[#6B7280]">Engage returning visitors before they become members</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Second Timers</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Engage returning visitors before they become members</p>
         </div>
       </div>
 
@@ -369,13 +369,13 @@ export default function SecondTimersPage() {
 
       {/* Filter panel */}
       {showFilter && (
-        <div className="mb-4 flex flex-wrap items-end gap-4 rounded-xl border border-[#E5E7EB] bg-white p-4">
+        <div className="mb-4 flex flex-wrap items-end gap-4 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
           <div className="flex flex-col">
-            <label className="mb-1 block text-xs font-medium text-[#374151]">Service Attended</label>
+            <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">Service Attended</label>
             <select
               value={filterService}
               onChange={(e) => { setFilterService(e.target.value); setCurrentPage(1); }}
-              className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             >
               <option value="">All Services</option>
               <option value="Sunday Service">Sunday Service</option>
@@ -385,16 +385,16 @@ export default function SecondTimersPage() {
             </select>
           </div>
           <div className="flex flex-col">
-            <label className="mb-1 block text-xs font-medium text-[#374151]">From</label>
-            <input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]" />
+            <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">From</label>
+            <input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]" />
           </div>
           <div className="flex flex-col">
-            <label className="mb-1 block text-xs font-medium text-[#374151]">To</label>
-            <input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]" />
+            <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">To</label>
+            <input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]" />
           </div>
           <button
             onClick={() => { setFilterService(""); setFilterDateFrom(""); setFilterDateTo(""); setCurrentPage(1); }}
-            className="h-[42px] rounded-lg border border-[#E5E7EB] px-4 text-sm text-[#374151] hover:bg-gray-50"
+            className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 text-sm text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50"
           >
             Clear
           </button>
@@ -402,20 +402,20 @@ export default function SecondTimersPage() {
       )}
 
       {apiError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} —{" "}
           <button className="font-medium underline" onClick={() => fetchTimers(currentPage)}>Retry</button>
         </div>
       )}
 
       {actionError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {actionError}
         </div>
       )}
 
       {selectedRows.size > 0 && (
-        <div className="mb-2 text-sm text-gray-500">
+        <div className="mb-2 text-sm text-gray-500 dark:text-slate-400">
           {selectedRows.size} second timer{selectedRows.size > 1 ? "s" : ""} selected
         </div>
       )}
@@ -424,18 +424,18 @@ export default function SecondTimersPage() {
       <div className="sm:hidden space-y-3 mb-4">
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-2">
+            <div key={i} className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 space-y-2">
               <div className="skeleton h-4 w-32" /><div className="skeleton h-3 w-24" />
             </div>
           ))
         ) : displayedTimers.length === 0 ? (
-          <p className="text-center text-sm text-gray-400 py-8">No second timers found.</p>
+          <p className="text-center text-sm text-gray-400 dark:text-slate-500 py-8">No second timers found.</p>
         ) : (
           displayedTimers.map((st) => (
             <div
               key={st.id}
               onClick={() => router.push(`/user-management/second-timers/${st.id}`)}
-              className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 transition-colors"
             >
               <UserAvatar
                 id={st.id}
@@ -444,9 +444,9 @@ export default function SecondTimersPage() {
                 profilePictureUrl={st.profilePictureUrl}
               />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-[#111827] truncate">{fullName(st)}</p>
-                <p className="text-xs text-[#6B7280]">{st.phoneNumber}</p>
-                <p className="text-xs text-[#9CA3AF]">Calls: {st.noOfCalls ?? 0} · Visits: {st.noOfVisits ?? 0}</p>
+                <p className="text-sm font-semibold text-[#111827] dark:text-slate-100 truncate">{fullName(st)}</p>
+                <p className="text-xs text-[#6B7280] dark:text-slate-400">{st.phoneNumber}</p>
+                <p className="text-xs text-[#9CA3AF] dark:text-slate-400">Calls: {st.noOfCalls ?? 0} · Visits: {st.noOfVisits ?? 0}</p>
               </div>
               <div onClick={(e) => e.stopPropagation()}>
                 <ActionDropdown
@@ -464,25 +464,25 @@ export default function SecondTimersPage() {
       </div>
 
       {/* Table — hidden on mobile */}
-      <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
               <th className="px-4 py-4">
                 <input
                   type="checkbox"
                   checked={allPageSelected}
                   onChange={(e) => handleSelectAll(e.target.checked)}
-                  className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
+                  className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
                 />
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Phone</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Email</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Service Attended</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Assigned Follow-up</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Calls</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Visits</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Name</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Phone</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Email</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Service Attended</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Assigned Follow-up</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Calls</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Visits</th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
@@ -491,13 +491,13 @@ export default function SecondTimersPage() {
               Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={9} />)
             ) : displayedTimers.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-gray-400">No second timers found.</td>
+                <td colSpan={9} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">No second timers found.</td>
               </tr>
             ) : (
               displayedTimers.map((st) => (
                 <tr
                   key={st.id}
-                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
+                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 cursor-pointer"
                   style={{ height: "56px" }}
                   onClick={() => router.push(`/user-management/second-timers/${st.id}`)}
                 >
@@ -506,20 +506,20 @@ export default function SecondTimersPage() {
                       type="checkbox"
                       checked={selectedRows.has(st.id)}
                       onChange={() => handleSelectRow(st.id)}
-                      className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
+                      className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
                     />
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151] max-w-[200px]"><span className="block truncate">{fullName(st)}</span></td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">{st.phoneNumber}</td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{st.email}</td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
-                    {st.serviceAttended || <span className="text-[#9CA3AF]">—</span>}
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[200px]"><span className="block truncate">{fullName(st)}</span></td>
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{st.phoneNumber}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{st.email}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
+                    {st.serviceAttended || <span className="text-[#9CA3AF] dark:text-slate-400">—</span>}
                   </td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
-                    {st.assignedFollowUp ? fullName(st.assignedFollowUp) : <span className="text-[#9CA3AF]">—</span>}
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
+                    {st.assignedFollowUp ? fullName(st.assignedFollowUp) : <span className="text-[#9CA3AF] dark:text-slate-400">—</span>}
                   </td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{st.noOfCalls ?? 0}</td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{st.noOfVisits ?? 0}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{st.noOfCalls ?? 0}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{st.noOfVisits ?? 0}</td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <ActionDropdown
                       actions={[
@@ -571,13 +571,13 @@ export default function SecondTimersPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Report</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Report</label>
             <textarea
               value={callReport}
               onChange={(e) => setCallReport(e.target.value)}
               placeholder="Enter Report"
               rows={5}
-              className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-gray-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-gray-400 dark:text-slate-500 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
           </div>
           <button
@@ -598,13 +598,13 @@ export default function SecondTimersPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Report</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Report</label>
             <textarea
               value={visitReport}
               onChange={(e) => setVisitReport(e.target.value)}
               placeholder="Enter Report"
               rows={5}
-              className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-gray-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-gray-400 dark:text-slate-500 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
           </div>
           <button

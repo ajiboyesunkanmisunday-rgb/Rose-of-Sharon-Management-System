@@ -67,7 +67,7 @@ export default function AddRolePage() {
         backHref="/settings/roles"
       />
 
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           <FormField
             label="Role Name"
@@ -88,18 +88,18 @@ export default function AddRolePage() {
           />
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-[#374151]">
+            <label className="mb-2 block text-sm font-medium text-[#374151] dark:text-slate-300">
               Permissions
             </label>
-            <div className="overflow-x-auto rounded-lg border border-[#E5E7EB]">
+            <div className="overflow-x-auto rounded-lg border border-[#E5E7EB] dark:border-slate-700">
               <table className="min-w-[500px] w-full text-left text-sm">
                 <thead>
-                  <tr className="bg-[#F3F4F6]">
-                    <th className="px-4 py-3 text-sm font-bold text-[#000080]">Module</th>
+                  <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
+                    <th className="px-4 py-3 text-sm font-bold text-[#000080] dark:text-indigo-400">Module</th>
                     {ACTIONS.map((a) => (
                       <th
                         key={a}
-                        className="px-4 py-3 text-center text-sm font-bold capitalize text-[#000080]"
+                        className="px-4 py-3 text-center text-sm font-bold capitalize text-[#000080] dark:text-indigo-400"
                       >
                         {a}
                       </th>
@@ -109,14 +109,14 @@ export default function AddRolePage() {
                 <tbody>
                   {MODULES.map((m) => (
                     <tr key={m} className="border-b border-[#F3F4F6]">
-                      <td className="px-4 py-3 text-[#111827]">{m}</td>
+                      <td className="px-4 py-3 text-[#111827] dark:text-slate-100">{m}</td>
                       {ACTIONS.map((a) => (
                         <td key={a} className="px-4 py-3 text-center">
                           <input
                             type="checkbox"
                             checked={permissions[m][a]}
                             onChange={() => togglePermission(m, a)}
-                            className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
+                            className="h-4 w-4 rounded border-[#E5E7EB] dark:border-slate-700 text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
                           />
                         </td>
                       ))}

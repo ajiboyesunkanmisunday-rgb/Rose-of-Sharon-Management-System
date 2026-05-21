@@ -79,9 +79,9 @@ export default function EditEMemberPage() {
   useEffect(() => { populate(); }, [populate]);
 
   const inputStyles =
-    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
   const selectStyles = inputStyles;
-  const labelStyles = "mb-1 block text-sm font-medium text-[#374151]";
+  const labelStyles = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,11 +121,11 @@ export default function EditEMemberPage() {
     <DashboardLayout>
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">User Management</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.push(`/user-management/e-members/${id}`)}
-            className="flex items-center text-[#000080] transition-colors hover:text-[#000066]"
+            className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -142,14 +142,14 @@ export default function EditEMemberPage() {
               <polyline points="12 19 5 12 12 5" />
             </svg>
           </button>
-          <h2 className="text-[22px] font-bold text-[#000080]">
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">
             Edit E-Member
           </h2>
         </div>
       </div>
 
       {/* Form Container */}
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
             {/* First Name */}
@@ -208,7 +208,7 @@ export default function EditEMemberPage() {
                 type="email"
                 value={email}
                 readOnly
-                className={`${inputStyles} cursor-not-allowed bg-[#F9FAFB] text-[#9CA3AF]`}
+                className={`${inputStyles} cursor-not-allowed bg-[#F9FAFB] text-[#9CA3AF] dark:text-slate-400`}
                 title="Email cannot be changed"
               />
             </div>
@@ -242,7 +242,7 @@ export default function EditEMemberPage() {
                 <button
                   type="button"
                   onClick={() => setShowSpouseModal(true)}
-                  className="mt-2 text-xs font-medium text-[#000080] underline hover:text-[#000066]"
+                  className="mt-2 text-xs font-medium text-[#000080] dark:text-indigo-400 underline hover:text-[#000066]"
                 >
                   {spouse ? `Spouse: ${spouse.name} (change)` : "+ Link Spouse"}
                 </button>
@@ -277,7 +277,7 @@ export default function EditEMemberPage() {
 
           {/* Buttons */}
           {submitError && (
-            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{submitError}</div>
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{submitError}</div>
           )}
           <div className="mt-8 flex items-center justify-end gap-3">
             <Button

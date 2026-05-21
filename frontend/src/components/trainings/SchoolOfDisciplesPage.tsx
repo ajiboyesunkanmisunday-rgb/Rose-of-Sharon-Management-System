@@ -114,54 +114,54 @@ function AttendanceModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl">
+      <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-800 shadow-xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#E5E7EB] px-5 py-4">
+        <div className="flex items-center justify-between border-b border-[#E5E7EB] dark:border-slate-700 px-5 py-4">
           <div className="flex items-center gap-2">
             <CalendarCheck className="h-5 w-5" style={{ color: ACCENT }} />
             <div>
-              <h2 className="text-base font-bold text-[#111827]">Mark Attendance</h2>
-              <p className="text-xs text-[#6B7280]">{fullName(student)}</p>
+              <h2 className="text-base font-bold text-[#111827] dark:text-slate-100">Mark Attendance</h2>
+              <p className="text-xs text-[#6B7280] dark:text-slate-400">{fullName(student)}</p>
             </div>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-[#F3F4F6]">
-            <X className="h-4 w-4 text-[#6B7280]" />
+          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-[#F3F4F6] dark:bg-slate-700/30">
+            <X className="h-4 w-4 text-[#6B7280] dark:text-slate-400" />
           </button>
         </div>
 
         <div className="p-5 space-y-5">
 
           {/* Student identifiers */}
-          <div className="flex items-center gap-4 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-4 py-3">
+          <div className="flex items-center gap-4 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] px-4 py-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Admission No</p>
-              <p className="text-sm font-semibold text-[#111827]">{student.admissionNo ?? "—"}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-slate-400">Admission No</p>
+              <p className="text-sm font-semibold text-[#111827] dark:text-slate-100">{student.admissionNo ?? "—"}</p>
             </div>
-            <div className="h-8 w-px bg-[#E5E7EB]" />
+            <div className="h-8 w-px bg-[#E5E7EB] dark:bg-slate-700" />
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Set</p>
-              <p className="text-sm font-semibold text-[#111827]">{student.set ?? "—"}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-slate-400">Set</p>
+              <p className="text-sm font-semibold text-[#111827] dark:text-slate-100">{student.set ?? "—"}</p>
             </div>
           </div>
 
           {/* Training event selector */}
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-slate-400">
               Select Training Event
             </p>
 
             {eventsLoading ? (
-              <div className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] px-3 py-2.5 text-sm text-[#9CA3AF]">
+              <div className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2.5 text-sm text-[#9CA3AF] dark:text-slate-400">
                 <RefreshCw className="h-4 w-4 animate-spin" />
                 Loading events…
               </div>
             ) : eventsError ? (
-              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+              <p className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-xs text-red-700">
                 {eventsError}
               </p>
             ) : events.length === 0 ? (
-              <p className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2.5 text-sm text-[#9CA3AF]">
+              <p className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] px-3 py-2.5 text-sm text-[#9CA3AF] dark:text-slate-400">
                 No training events found for set &quot;{student.set}&quot;.
               </p>
             ) : (
@@ -169,7 +169,7 @@ function AttendanceModal({
                 <select
                   value={selectedEventId}
                   onChange={(e) => { setSelectedEventId(e.target.value); setError(""); }}
-                  className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2.5 pr-8 text-sm text-[#111827] outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]"
+                  className="w-full appearance-none rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 pr-8 text-sm text-[#111827] dark:text-slate-100 outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]"
                 >
                   <option value="">— Select an event —</option>
                   {events.map((ev) => (
@@ -180,7 +180,7 @@ function AttendanceModal({
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF] dark:text-slate-400" />
               </div>
             )}
 
@@ -197,17 +197,17 @@ function AttendanceModal({
           </div>
 
           {error && (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            <p className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-xs text-red-700">
               {error}
             </p>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 border-t border-[#E5E7EB] px-5 py-4">
+        <div className="flex justify-end gap-2 border-t border-[#E5E7EB] dark:border-slate-700 px-5 py-4">
           <button
             onClick={onClose}
-            className="rounded-lg border border-[#E5E7EB] px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F9FAFB]"
+            className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-2 text-sm font-medium text-[#374151] dark:text-slate-300 hover:bg-[#F9FAFB]"
           >
             Cancel
           </button>
@@ -251,14 +251,14 @@ function RemarkModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-[#E5E7EB] px-5 py-4">
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 shadow-xl">
+        <div className="flex items-center justify-between border-b border-[#E5E7EB] dark:border-slate-700 px-5 py-4">
           <div>
-            <h2 className="text-base font-bold text-[#111827]">Official Remark</h2>
-            <p className="text-xs text-[#6B7280]">{fullName(student)}</p>
+            <h2 className="text-base font-bold text-[#111827] dark:text-slate-100">Official Remark</h2>
+            <p className="text-xs text-[#6B7280] dark:text-slate-400">{fullName(student)}</p>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-[#F3F4F6]">
-            <X className="h-4 w-4 text-[#6B7280]" />
+          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-[#F3F4F6] dark:bg-slate-700/30">
+            <X className="h-4 w-4 text-[#6B7280] dark:text-slate-400" />
           </button>
         </div>
         <div className="p-5">
@@ -267,13 +267,13 @@ function RemarkModal({
             onChange={(e) => setText(e.target.value)}
             rows={4}
             placeholder="Enter official remark…"
-            className="w-full resize-none rounded-lg border border-[#E5E7EB] px-3 py-2.5 text-sm text-[#111827] placeholder-[#9CA3AF] outline-none focus:border-[#D97706]"
+            className="w-full resize-none rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2.5 text-sm text-[#111827] dark:text-slate-100 placeholder-[#9CA3AF] outline-none focus:border-[#D97706]"
           />
         </div>
-        <div className="flex justify-end gap-2 border-t border-[#E5E7EB] px-5 py-4">
+        <div className="flex justify-end gap-2 border-t border-[#E5E7EB] dark:border-slate-700 px-5 py-4">
           <button
             onClick={onClose}
-            className="rounded-lg border border-[#E5E7EB] px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F9FAFB]"
+            className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-2 text-sm font-medium text-[#374151] dark:text-slate-300 hover:bg-[#F9FAFB]"
           >
             Cancel
           </button>
@@ -345,8 +345,8 @@ function StudentCard({
 
   return (
     <div
-      className={`relative flex flex-col rounded-xl border bg-white p-5 shadow-sm transition-shadow hover:shadow-md ${
-        selected ? "ring-1" : "border-[#E5E7EB]"
+      className={`relative flex flex-col rounded-xl border bg-white dark:bg-slate-800 p-5 shadow-sm transition-shadow hover:shadow-md ${
+        selected ? "ring-1" : "border-[#E5E7EB] dark:border-slate-700"
       }`}
       style={selected ? { borderColor: ACCENT, boxShadow: `0 0 0 1px ${ACCENT}` } : {}}
     >
@@ -377,14 +377,14 @@ function StudentCard({
             className="h-14 w-14 rounded-full object-cover"
           />
         ) : (
-          <div className={`flex h-14 w-14 items-center justify-center rounded-full ${bg} text-lg font-bold text-[#000080]`}>
+          <div className={`flex h-14 w-14 items-center justify-center rounded-full ${bg} text-lg font-bold text-[#000080] dark:text-indigo-400`}>
             {initials(student)}
           </div>
         )}
       </div>
 
       {/* Name + set */}
-      <h3 className="text-sm font-bold text-[#111827]">{fullName(student)}</h3>
+      <h3 className="text-sm font-bold text-[#111827] dark:text-slate-100">{fullName(student)}</h3>
       {student.set && (
         <span
           className="mt-1 inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold text-white"
@@ -395,21 +395,21 @@ function StudentCard({
         </span>
       )}
       {student.occupation && (
-        <p className="mt-1 text-xs text-[#6B7280]">{student.occupation}</p>
+        <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">{student.occupation}</p>
       )}
 
       {/* Parish / activity info */}
       {(student.currentParishPastorName || student.activityInCurrentParish) && (
         <div className="mt-2 space-y-0.5">
           {student.currentParishPastorName && (
-            <p className="text-[10px] text-[#6B7280]">
-              <span className="font-medium text-[#374151]">Pastor:</span>{" "}
+            <p className="text-[10px] text-[#6B7280] dark:text-slate-400">
+              <span className="font-medium text-[#374151] dark:text-slate-300">Pastor:</span>{" "}
               {student.currentParishPastorName}
             </p>
           )}
           {student.activityInCurrentParish && (
-            <p className="text-[10px] text-[#6B7280]">
-              <span className="font-medium text-[#374151]">Activity:</span>{" "}
+            <p className="text-[10px] text-[#6B7280] dark:text-slate-400">
+              <span className="font-medium text-[#374151] dark:text-slate-300">Activity:</span>{" "}
               {student.activityInCurrentParish}
             </p>
           )}
@@ -429,14 +429,14 @@ function StudentCard({
       {/* Contact */}
       <div className="mt-3 space-y-1">
         {phone && (
-          <div className="flex items-center gap-1.5 text-xs text-[#374151]">
-            <Phone className="h-3 w-3 shrink-0 text-[#9CA3AF]" />
+          <div className="flex items-center gap-1.5 text-xs text-[#374151] dark:text-slate-300">
+            <Phone className="h-3 w-3 shrink-0 text-[#9CA3AF] dark:text-slate-400" />
             <span>{phone}</span>
           </div>
         )}
         {student.email && (
-          <div className="flex items-center gap-1.5 text-xs text-[#374151]">
-            <Mail className="h-3 w-3 shrink-0 text-[#9CA3AF]" />
+          <div className="flex items-center gap-1.5 text-xs text-[#374151] dark:text-slate-300">
+            <Mail className="h-3 w-3 shrink-0 text-[#9CA3AF] dark:text-slate-400" />
             <span className="truncate">{student.email}</span>
           </div>
         )}
@@ -444,7 +444,7 @@ function StudentCard({
 
       {/* Dates */}
       {student.createdOn && (
-        <p className="mt-2 text-[10px] text-[#9CA3AF]">Enrolled {fmtDate(student.createdOn)}</p>
+        <p className="mt-2 text-[10px] text-[#9CA3AF] dark:text-slate-400">Enrolled {fmtDate(student.createdOn)}</p>
       )}
       {student.graduationDate && (
         <p className="mt-0.5 text-[10px] font-medium text-green-600">Graduated {fmtDate(student.graduationDate)}</p>
@@ -454,14 +454,14 @@ function StudentCard({
       <div className="mt-3 flex gap-2">
         <button
           onClick={() => onAttendance(student)}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium text-[#374151] transition-colors hover:border-[#D97706] hover:text-[#D97706]"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-[#374151] dark:text-slate-300 transition-colors hover:border-[#D97706] hover:text-[#D97706]"
         >
           <CalendarCheck className="h-3 w-3" />
           Attendance
         </button>
         <button
           onClick={() => onRemark(student)}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium text-[#374151] transition-colors hover:border-[#D97706] hover:text-[#D97706]"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-[#374151] dark:text-slate-300 transition-colors hover:border-[#D97706] hover:text-[#D97706]"
         >
           <MessageSquare className="h-3 w-3" />
           {student.officialRemarks ? "Edit Remark" : "Remark"}
@@ -469,7 +469,7 @@ function StudentCard({
       </div>
       <button
         onClick={() => onViewForm(student.id)}
-        className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium text-[#374151] transition-colors hover:border-[#000080] hover:text-[#000080]"
+        className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-[#374151] dark:text-slate-300 transition-colors hover:border-[#000080] hover:text-[#000080] dark:text-indigo-400"
       >
         <Eye className="h-3 w-3" />
         View Form
@@ -633,8 +633,8 @@ export default function SchoolOfDisciplesPage() {
           <BookOpen className="h-6 w-6" style={{ color: ACCENT }} />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">School of Disciples</h1>
-          <p className="text-sm text-[#6B7280]">Members enrolled in the SOD programme</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">School of Disciples</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Members enrolled in the SOD programme</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <button
@@ -646,7 +646,7 @@ export default function SchoolOfDisciplesPage() {
           </button>
           <button
             onClick={() => router.push("/trainings/sod/form?mode=blank")}
-            className="flex items-center gap-2 rounded-lg border border-[#000080] bg-white px-4 py-2 text-xs font-semibold text-[#000080] hover:bg-[#000080] hover:text-white transition-colors"
+            className="flex items-center gap-2 rounded-lg border border-[#000080] bg-white dark:bg-slate-800 px-4 py-2 text-xs font-semibold text-[#000080] dark:text-indigo-400 hover:bg-[#000080] hover:text-white transition-colors"
           >
             <FileText className="h-3.5 w-3.5" />
             Download Blank Form
@@ -654,7 +654,7 @@ export default function SchoolOfDisciplesPage() {
           <button
             onClick={() => load(setFilter)}
             disabled={loading}
-            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:text-[#D97706] hover:border-[#D97706] disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 hover:text-[#D97706] hover:border-[#D97706] disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
             Refresh
@@ -665,34 +665,34 @@ export default function SchoolOfDisciplesPage() {
       {/* Stats */}
       {!loading && (
         <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 text-center">
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center">
             <p className="text-2xl font-bold" style={{ color: ACCENT }}>{allStudents.length}</p>
-            <p className="mt-1 text-xs text-[#6B7280]">Total enrolled</p>
+            <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">Total enrolled</p>
           </div>
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 text-center">
-            <p className="text-2xl font-bold text-[#16A34A]">{graduated.length}</p>
-            <p className="mt-1 text-xs text-[#6B7280]">Graduated</p>
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center">
+            <p className="text-2xl font-bold text-[#16A34A] dark:text-green-300">{graduated.length}</p>
+            <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">Graduated</p>
           </div>
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 text-center">
-            <p className="text-2xl font-bold text-[#000080]">{inTraining.length}</p>
-            <p className="mt-1 text-xs text-[#6B7280]">In training</p>
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center">
+            <p className="text-2xl font-bold text-[#000080] dark:text-indigo-400">{inTraining.length}</p>
+            <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">In training</p>
           </div>
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 text-center">
-            <p className="text-2xl font-bold text-[#374151]">{availableSets.length}</p>
-            <p className="mt-1 text-xs text-[#6B7280]">Set{availableSets.length !== 1 ? "s" : ""}</p>
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center">
+            <p className="text-2xl font-bold text-[#374151] dark:text-slate-300">{availableSets.length}</p>
+            <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">Set{availableSets.length !== 1 ? "s" : ""}</p>
           </div>
         </div>
       )}
 
       {/* Banners */}
       {successMsg && (
-        <div className="mb-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 dark:bg-green-900/20 px-4 py-3 text-sm text-green-700">
           <CheckCircle className="h-4 w-4 shrink-0" />
           {successMsg}
         </div>
       )}
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error}{" "}
           <button onClick={() => load(setFilter)} className="font-medium underline">Retry</button>
         </div>
@@ -714,7 +714,7 @@ export default function SchoolOfDisciplesPage() {
           <select
             value={setFilter}
             onChange={(e) => { setSetFilter(e.target.value); setPage(1); }}
-            className="appearance-none rounded-lg border border-[#E5E7EB] bg-white pl-3 pr-8 py-2.5 text-sm text-[#374151] outline-none focus:border-[#D97706]"
+            className="appearance-none rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 pl-3 pr-8 py-2.5 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#D97706]"
           >
             {/* Show loaded set + surrounding years so user can switch cohorts */}
             {Array.from(
@@ -728,7 +728,7 @@ export default function SchoolOfDisciplesPage() {
               <option key={s} value={s}>Set {s}</option>
             ))}
           </select>
-          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
+          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF] dark:text-slate-400" />
         </div>
 
         {selected.size > 0 && (
@@ -742,7 +742,7 @@ export default function SchoolOfDisciplesPage() {
           </button>
         )}
 
-        <span className="ml-auto text-sm text-[#6B7280]">
+        <span className="ml-auto text-sm text-[#6B7280] dark:text-slate-400">
           {filtered.length} {filtered.length === 1 ? "student" : "students"}
         </span>
       </div>
@@ -750,7 +750,7 @@ export default function SchoolOfDisciplesPage() {
       {/* Select-all row */}
       {!loading && paginated.length > 0 && (
         <div className="mb-3 flex items-center gap-3">
-          <label className="flex cursor-pointer items-center gap-2 text-xs text-[#6B7280]">
+          <label className="flex cursor-pointer items-center gap-2 text-xs text-[#6B7280] dark:text-slate-400">
             <input
               type="checkbox"
               checked={selected.size === paginated.length && paginated.length > 0}
@@ -761,7 +761,7 @@ export default function SchoolOfDisciplesPage() {
             Select all on this page
           </label>
           {selected.size > 0 && (
-            <button onClick={() => setSelected(new Set())} className="text-xs text-[#6B7280] underline hover:text-[#374151]">
+            <button onClick={() => setSelected(new Set())} className="text-xs text-[#6B7280] dark:text-slate-400 underline hover:text-[#374151] dark:text-slate-300">
               Clear selection
             </button>
           )}
@@ -770,18 +770,18 @@ export default function SchoolOfDisciplesPage() {
 
       {/* Grid */}
       {loading ? (
-        <div className="flex h-48 items-center justify-center text-sm text-[#9CA3AF]">
+        <div className="flex h-48 items-center justify-center text-sm text-[#9CA3AF] dark:text-slate-400">
           <RefreshCw className="mr-2 h-5 w-5 animate-spin" />
           Loading students…
         </div>
       ) : allStudents.length === 0 ? (
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-12 text-center">
+        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-12 text-center">
           <Users className="mx-auto mb-3 h-10 w-10 text-[#E5E7EB]" />
-          <p className="text-sm font-medium text-[#374151]">No students enrolled yet</p>
-          <p className="mt-1 text-xs text-[#9CA3AF]">Students added to the School of Disciples programme will appear here.</p>
+          <p className="text-sm font-medium text-[#374151] dark:text-slate-300">No students enrolled yet</p>
+          <p className="mt-1 text-xs text-[#9CA3AF] dark:text-slate-400">Students added to the School of Disciples programme will appear here.</p>
         </div>
       ) : paginated.length === 0 ? (
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-10 text-center text-sm text-[#9CA3AF]">
+        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-10 text-center text-sm text-[#9CA3AF] dark:text-slate-400">
           No students match your search.
         </div>
       ) : (
@@ -802,7 +802,7 @@ export default function SchoolOfDisciplesPage() {
 
       {/* Legend */}
       {!loading && allStudents.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-4 text-xs text-[#9CA3AF]">
+        <div className="mt-4 flex flex-wrap gap-4 text-xs text-[#9CA3AF] dark:text-slate-400">
           <span className="flex items-center gap-1.5">
             <CheckCircle className="h-3.5 w-3.5 text-green-500" /> Graduated
           </span>

@@ -23,8 +23,8 @@ const settingsCards = [
     description: "Church info, service times and branding",
     href: "/settings/general",
     icon: Settings,
-    color: "bg-[#EEF2FF]",
-    iconColor: "text-[#000080]",
+    color: "bg-[#EEF2FF] dark:bg-indigo-900/30",
+    iconColor: "text-[#000080] dark:text-indigo-400",
   },
   {
     label: "Roles & Permissions",
@@ -32,15 +32,15 @@ const settingsCards = [
     href: "/settings/roles",
     icon: ShieldCheck,
     color: "bg-[#F0FDF4]",
-    iconColor: "text-[#16A34A]",
+    iconColor: "text-[#16A34A] dark:text-green-300",
   },
   {
     label: "Groups",
     description: "Create and manage congregation groups",
     href: "/settings/groups",
     icon: Users,
-    color: "bg-[#FFF7ED]",
-    iconColor: "text-[#EA580C]",
+    color: "bg-[#FFF7ED] dark:bg-orange-900/30",
+    iconColor: "text-[#EA580C] dark:text-orange-400",
   },
   {
     label: "Change Password",
@@ -75,25 +75,25 @@ export default function MySettingsPage() {
     <DashboardLayout>
       {/* ── Page header ── */}
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F3F4F6]">
-          <Settings className="h-6 w-6 text-[#374151]" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F3F4F6] dark:bg-slate-700/30">
+          <Settings className="h-6 w-6 text-[#374151] dark:text-slate-300" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Settings</h1>
-          <p className="text-sm text-[#6B7280]">Manage your account and system preferences</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Settings</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Manage your account and system preferences</p>
         </div>
       </div>
 
       {/* ── Profile card ── */}
-      <div className="mb-6 flex flex-col gap-4 rounded-xl border border-[#E5E7EB] bg-white p-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-6 flex flex-col gap-4 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           {/* Avatar */}
           <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-[#000080] text-xl font-bold text-white">
             {initials}
           </div>
           <div>
-            <p className="text-[18px] font-bold text-[#000000]">{fullName}</p>
-            <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-[#6B7280]">
+            <p className="text-[18px] font-bold text-[#000000] dark:text-slate-100">{fullName}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-[#6B7280] dark:text-slate-400">
               {user?.email && (
                 <span className="flex items-center gap-1">
                   <Mail className="h-3.5 w-3.5" />
@@ -102,7 +102,7 @@ export default function MySettingsPage() {
               )}
               {user?.userType && (
                 <span className="flex items-center gap-1">
-                  <BadgeCheck className="h-3.5 w-3.5 text-[#000080]" />
+                  <BadgeCheck className="h-3.5 w-3.5 text-[#000080] dark:text-indigo-400" />
                   <span className="capitalize">{user.userType.replace(/_/g, " ").toLowerCase()}</span>
                 </span>
               )}
@@ -111,7 +111,7 @@ export default function MySettingsPage() {
         </div>
         <button
           onClick={() => router.push("/settings/change-password")}
-          className="flex items-center gap-2 self-start rounded-lg border border-[#E5E7EB] px-4 py-2 text-sm font-medium text-[#000080] transition-colors hover:border-[#000080] hover:bg-[#EEF2FF] sm:self-auto"
+          className="flex items-center gap-2 self-start rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-2 text-sm font-medium text-[#000080] dark:text-indigo-400 transition-colors hover:border-[#000080] hover:bg-[#EEF2FF] dark:bg-indigo-900/30 sm:self-auto"
         >
           <KeyRound className="h-4 w-4" />
           Change Password
@@ -126,16 +126,16 @@ export default function MySettingsPage() {
             <Link
               key={card.href}
               href={card.href}
-              className="group flex flex-col gap-3 rounded-xl border border-[#E5E7EB] bg-white p-5 transition-all hover:border-[#000080] hover:shadow-md"
+              className="group flex flex-col gap-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5 transition-all hover:border-[#000080] hover:shadow-md"
             >
               <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${card.color}`}>
                 <Icon className={`h-5 w-5 ${card.iconColor}`} />
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-[#000000]">{card.label}</p>
-                <p className="mt-0.5 text-xs text-[#6B7280]">{card.description}</p>
+                <p className="font-semibold text-[#000000] dark:text-slate-100">{card.label}</p>
+                <p className="mt-0.5 text-xs text-[#6B7280] dark:text-slate-400">{card.description}</p>
               </div>
-              <ChevronRight className="h-4 w-4 self-end text-[#9CA3AF] transition-colors group-hover:text-[#000080]" />
+              <ChevronRight className="h-4 w-4 self-end text-[#9CA3AF] dark:text-slate-400 transition-colors group-hover:text-[#000080] dark:text-indigo-400" />
             </Link>
           );
         })}

@@ -16,7 +16,7 @@ const statusColors: Record<string, string> = {
 
 const typeColors: Record<string, string> = {
   SMS: "bg-[#000080] text-white",
-  Email: "bg-[#B5B5F3] text-[#000080]",
+  Email: "bg-[#B5B5F3] text-[#000080] dark:text-indigo-400",
 };
 
 export default function MessageDetailClient() {
@@ -54,7 +54,7 @@ export default function MessageDetailClient() {
         backHref="/communication/messages"
       />
 
-      <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <div className="flex items-center gap-3">
           <span className={`rounded-full px-3 py-1 text-xs font-medium ${typeColors[message.type]}`}>
             {message.type}
@@ -65,39 +65,39 @@ export default function MessageDetailClient() {
         </div>
 
         {message.subject && (
-          <h2 className="mt-3 text-xl font-bold text-[#111827]">{message.subject}</h2>
+          <h2 className="mt-3 text-xl font-bold text-[#111827] dark:text-slate-100">{message.subject}</h2>
         )}
 
         <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">Recipient</p>
-            <p className="mt-1 text-sm font-medium text-[#111827]">{message.recipient}</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Recipient</p>
+            <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{message.recipient}</p>
           </div>
           {message.recipientEmail && (
             <div>
-              <p className="text-xs font-medium text-[#6B7280]">Email</p>
-              <p className="mt-1 text-sm text-[#374151]">{message.recipientEmail}</p>
+              <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Email</p>
+              <p className="mt-1 text-sm text-[#374151] dark:text-slate-300">{message.recipientEmail}</p>
             </div>
           )}
           {message.recipientPhone && (
             <div>
-              <p className="text-xs font-medium text-[#6B7280]">Phone</p>
-              <p className="mt-1 text-sm text-[#374151]">{message.recipientPhone}</p>
+              <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Phone</p>
+              <p className="mt-1 text-sm text-[#374151] dark:text-slate-300">{message.recipientPhone}</p>
             </div>
           )}
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">Sent By</p>
-            <p className="mt-1 text-sm font-medium text-[#111827]">{message.sentBy}</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Sent By</p>
+            <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{message.sentBy}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">Date</p>
-            <p className="mt-1 text-sm font-medium text-[#111827]">{message.date}</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Date</p>
+            <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{message.date}</p>
           </div>
         </div>
 
         <div className="mt-6 border-t border-[#F3F4F6] pt-4">
-          <p className="text-xs font-medium text-[#6B7280]">Message</p>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-[#374151]">{message.content}</p>
+          <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Message</p>
+          <p className="mt-1 whitespace-pre-wrap text-sm text-[#374151] dark:text-slate-300">{message.content}</p>
         </div>
       </div>
 

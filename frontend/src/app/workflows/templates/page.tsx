@@ -54,8 +54,8 @@ export default function WorkflowTemplatesPage() {
             <LayoutTemplate className="h-6 w-6 text-[#A21CAF]" />
           </div>
           <div>
-            <h1 className="text-[28px] font-bold text-[#000000]">Workflow Templates</h1>
-            <p className="text-sm text-[#6B7280]">Reusable step sequences for guest follow-up workflows</p>
+            <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Workflow Templates</h1>
+            <p className="text-sm text-[#6B7280] dark:text-slate-400">Reusable step sequences for guest follow-up workflows</p>
           </div>
         </div>
         <Button
@@ -76,28 +76,28 @@ export default function WorkflowTemplatesPage() {
         {workflowTemplates.map((template) => (
           <div
             key={template.id}
-            className="rounded-xl border border-[#E5E7EB] bg-white p-6"
+            className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6"
           >
             <div className="flex items-start justify-between gap-3">
-              <h3 className="text-base font-bold text-[#000080]">{template.name}</h3>
+              <h3 className="text-base font-bold text-[#000080] dark:text-indigo-400">{template.name}</h3>
               <span
                 className={`rounded-full px-3 py-1 text-xs font-medium ${
                   template.active
                     ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-600"
+                    : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400"
                 }`}
               >
                 {template.active ? "Active" : "Inactive"}
               </span>
             </div>
-            <p className="mt-2 text-sm text-[#6B7280]">{template.description}</p>
-            <p className="mt-2 text-xs text-[#9CA3AF]">
-              Trigger: <span className="font-medium text-[#374151]">{template.trigger}</span>
+            <p className="mt-2 text-sm text-[#6B7280] dark:text-slate-400">{template.description}</p>
+            <p className="mt-2 text-xs text-[#9CA3AF] dark:text-slate-400">
+              Trigger: <span className="font-medium text-[#374151] dark:text-slate-300">{template.trigger}</span>
             </p>
 
             <ol className="mt-4 space-y-2">
               {template.steps.map((step, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-sm text-[#374151]">
+                <li key={idx} className="flex items-start gap-2 text-sm text-[#374151] dark:text-slate-300">
                   <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#000080] text-white">
                     <StepIcon />
                   </span>
@@ -108,7 +108,7 @@ export default function WorkflowTemplatesPage() {
               ))}
             </ol>
 
-            <div className="mt-5 flex items-center justify-between border-t border-[#F3F4F6] pt-4 text-xs text-[#6B7280]">
+            <div className="mt-5 flex items-center justify-between border-t border-[#F3F4F6] pt-4 text-xs text-[#6B7280] dark:text-slate-400">
               <span>
                 Created by <strong>{template.createdBy}</strong> · {template.lastModified}
               </span>
@@ -117,14 +117,14 @@ export default function WorkflowTemplatesPage() {
             <div className="mt-4 flex flex-wrap gap-3">
               <button
                 onClick={() => router.push(`/workflows/templates/${template.id}/edit`)}
-                className="text-xs font-medium text-[#000080] underline transition-colors hover:text-[#000066]"
+                className="text-xs font-medium text-[#000080] dark:text-indigo-400 underline transition-colors hover:text-[#000066]"
               >
                 Edit
               </button>
               <span className="text-xs text-[#D1D5DB]">·</span>
               <button
                 onClick={() => handleDuplicate(template.id)}
-                className="text-xs font-medium text-[#000080] underline transition-colors hover:text-[#000066]"
+                className="text-xs font-medium text-[#000080] dark:text-indigo-400 underline transition-colors hover:text-[#000066]"
               >
                 Duplicate
               </button>

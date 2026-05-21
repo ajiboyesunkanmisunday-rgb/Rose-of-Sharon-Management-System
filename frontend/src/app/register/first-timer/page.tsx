@@ -4,10 +4,10 @@ import Image from "next/image";
 import { useState } from "react";
 
 const inputClass =
-  "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none";
-const labelClass = "mb-1 block text-sm font-medium text-[#374151]";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none";
+const labelClass = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
 const selectClass =
-  "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none appearance-none bg-white";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none appearance-none bg-white dark:bg-slate-800";
 
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
 const months = [
@@ -105,7 +105,7 @@ export default function FirstTimerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-slate-800">
       {/* Header */}
       <div className="px-8 pt-6">
         <Image
@@ -127,7 +127,7 @@ export default function FirstTimerPage() {
           Getting To Know You Better (First Timer)
         </h1>
 
-        <p className="mt-6 text-sm font-semibold text-[#374151]">
+        <p className="mt-6 text-sm font-semibold text-[#374151] dark:text-slate-300">
           Enter Your Details
         </p>
 
@@ -138,7 +138,7 @@ export default function FirstTimerPage() {
             <label className={labelClass}>Title</label>
             <div className="mt-1 flex items-center gap-6">
               {["Mr", "Mrs", "Miss"].map((t) => (
-                <label key={t} className="flex items-center gap-2 text-sm text-[#374151] cursor-pointer">
+                <label key={t} className="flex items-center gap-2 text-sm text-[#374151] dark:text-slate-300 cursor-pointer">
                   <input
                     type="radio"
                     name="title"
@@ -247,7 +247,7 @@ export default function FirstTimerPage() {
                   name="countryCode"
                   value={formData.countryCode}
                   onChange={handleChange}
-                  className="w-24 rounded-lg border border-[#E5E7EB] px-2 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none appearance-none bg-white"
+                  className="w-24 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-2 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none appearance-none bg-white dark:bg-slate-800"
                 >
                   <option value="+0">+0</option>
                   <option value="+234">+234</option>
@@ -273,7 +273,7 @@ export default function FirstTimerPage() {
                   name="whatsappCountryCode"
                   value={formData.whatsappCountryCode}
                   onChange={handleChange}
-                  className="w-24 rounded-lg border border-[#E5E7EB] px-2 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none appearance-none bg-white"
+                  className="w-24 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-2 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none appearance-none bg-white dark:bg-slate-800"
                 >
                   <option value="+0">+0</option>
                   <option value="+234">+234</option>
@@ -296,7 +296,7 @@ export default function FirstTimerPage() {
 
           {/* Address Section Header */}
           <div className="pt-2">
-            <p className="text-sm font-semibold text-[#374151]">Address</p>
+            <p className="text-sm font-semibold text-[#374151] dark:text-slate-300">Address</p>
           </div>
 
           {/* Street / City */}

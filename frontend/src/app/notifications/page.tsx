@@ -120,8 +120,8 @@ const mockNotifications: Notification[] = [
 const TYPE_CONFIG: Record<NotifType, { label: string; icon: React.ReactNode; bgColor: string; dotColor: string; badgeClass: string }> = {
   info: {
     label: "General",
-    bgColor: "bg-[#DBEAFE]",
-    dotColor: "bg-blue-500",
+    bgColor: "bg-[#DBEAFE] dark:bg-blue-900/30",
+    dotColor: "bg-blue-50 dark:bg-blue-900/200",
     badgeClass: "bg-blue-100 text-blue-700",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -131,8 +131,8 @@ const TYPE_CONFIG: Record<NotifType, { label: string; icon: React.ReactNode; bgC
   },
   success: {
     label: "Success",
-    bgColor: "bg-[#DCFCE7]",
-    dotColor: "bg-green-500",
+    bgColor: "bg-[#DCFCE7] dark:bg-green-900/30",
+    dotColor: "bg-green-50 dark:bg-green-900/200",
     badgeClass: "bg-green-100 text-green-700",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -142,7 +142,7 @@ const TYPE_CONFIG: Record<NotifType, { label: string; icon: React.ReactNode; bgC
   },
   warning: {
     label: "Warning",
-    bgColor: "bg-[#FEF9C3]",
+    bgColor: "bg-[#FEF9C3] dark:bg-yellow-900/30",
     dotColor: "bg-yellow-500",
     badgeClass: "bg-yellow-100 text-yellow-700",
     icon: (
@@ -154,8 +154,8 @@ const TYPE_CONFIG: Record<NotifType, { label: string; icon: React.ReactNode; bgC
   },
   alert: {
     label: "Alert",
-    bgColor: "bg-[#FEE2E2]",
-    dotColor: "bg-red-500",
+    bgColor: "bg-[#FEE2E2] dark:bg-red-900/30",
+    dotColor: "bg-red-50 dark:bg-red-900/200",
     badgeClass: "bg-red-100 text-red-700",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -177,7 +177,7 @@ const TYPE_CONFIG: Record<NotifType, { label: string; icon: React.ReactNode; bgC
   },
   anniversary: {
     label: "Anniversary",
-    bgColor: "bg-[#EDE9FE]",
+    bgColor: "bg-[#EDE9FE] dark:bg-purple-900/30",
     dotColor: "bg-purple-500",
     badgeClass: "bg-purple-100 text-purple-700",
     icon: (
@@ -188,9 +188,9 @@ const TYPE_CONFIG: Record<NotifType, { label: string; icon: React.ReactNode; bgC
   },
   system: {
     label: "System",
-    bgColor: "bg-[#F3F4F6]",
+    bgColor: "bg-[#F3F4F6] dark:bg-slate-700/30",
     dotColor: "bg-gray-500",
-    badgeClass: "bg-gray-100 text-gray-600",
+    badgeClass: "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="3" />
@@ -257,15 +257,15 @@ export default function NotificationsPage() {
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF]">
-            <Bell className="h-6 w-6 text-[#000080]" />
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF] dark:bg-indigo-900/30">
+            <Bell className="h-6 w-6 text-[#000080] dark:text-indigo-400" />
           </div>
           <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Notifications</h1>
-          <p className="mt-1 text-sm text-[#6B7280]">
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Notifications</h1>
+          <p className="mt-1 text-sm text-[#6B7280] dark:text-slate-400">
             {unreadCount > 0 ? (
               <span>
-                You have <span className="font-semibold text-[#000080]">{unreadCount}</span> unread notification{unreadCount !== 1 ? "s" : ""}
+                You have <span className="font-semibold text-[#000080] dark:text-indigo-400">{unreadCount}</span> unread notification{unreadCount !== 1 ? "s" : ""}
               </span>
             ) : (
               "All notifications have been read"
@@ -286,15 +286,15 @@ export default function NotificationsPage() {
       </div>
 
       {/* Read / Unread tabs */}
-      <div className="mb-4 flex gap-6 border-b border-[#E5E7EB]">
+      <div className="mb-4 flex gap-6 border-b border-[#E5E7EB] dark:border-slate-700">
         {FILTER_TABS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setFilterTab(tab.key)}
             className={`relative pb-3 text-sm font-medium transition-colors ${
               filterTab === tab.key
-                ? "border-b-2 border-[#000080] text-[#000080]"
-                : "text-[#6B7280] hover:text-[#374151]"
+                ? "border-b-2 border-[#000080] text-[#000080] dark:text-indigo-400"
+                : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"
             }`}
           >
             {tab.label}
@@ -316,7 +316,7 @@ export default function NotificationsPage() {
             className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               typeFilter === t.key
                 ? "bg-[#000080] text-white"
-                : "bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB]"
+                : "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#374151] dark:text-slate-300 hover:bg-[#E5E7EB] dark:bg-slate-700"
             }`}
           >
             {t.label}
@@ -326,13 +326,13 @@ export default function NotificationsPage() {
 
       {/* Notification list */}
       {filteredNotifications.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-[#E5E7EB] bg-white py-16 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 py-16 text-center">
           <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-3">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
           </svg>
-          <p className="text-sm font-medium text-[#6B7280]">No notifications here</p>
-          <p className="mt-1 text-xs text-[#9CA3AF]">Check back later for updates</p>
+          <p className="text-sm font-medium text-[#6B7280] dark:text-slate-400">No notifications here</p>
+          <p className="mt-1 text-xs text-[#9CA3AF] dark:text-slate-400">Check back later for updates</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -344,7 +344,7 @@ export default function NotificationsPage() {
                 className={`group relative flex items-start gap-4 rounded-xl border transition-all ${
                   !notification.read
                     ? "border-[#C7D2FE] bg-[#F5F7FF] shadow-sm"
-                    : "border-[#E5E7EB] bg-white hover:border-[#C7D2FE]"
+                    : "border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-[#C7D2FE]"
                 }`}
               >
                 {/* Unread accent bar */}
@@ -363,7 +363,7 @@ export default function NotificationsPage() {
                 <div className="flex-1 min-w-0 py-4 pr-4">
                   <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className={`text-sm font-bold ${!notification.read ? "text-[#111827]" : "text-[#374151]"}`}>
+                      <p className={`text-sm font-bold ${!notification.read ? "text-[#111827] dark:text-slate-100" : "text-[#374151] dark:text-slate-300"}`}>
                         {notification.title}
                       </p>
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${cfg.badgeClass}`}>
@@ -374,14 +374,14 @@ export default function NotificationsPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-xs text-[#9CA3AF] whitespace-nowrap">{notification.timeAgo}</span>
+                      <span className="text-xs text-[#9CA3AF] dark:text-slate-400 whitespace-nowrap">{notification.timeAgo}</span>
                       {/* Action buttons — visible on hover */}
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         {!notification.read && (
                           <button
                             onClick={() => handleMarkRead(notification.id)}
                             title="Mark as read"
-                            className="rounded p-1 text-[#6B7280] hover:bg-[#E5E7EB] hover:text-[#000080]"
+                            className="rounded p-1 text-[#6B7280] dark:text-slate-400 hover:bg-[#E5E7EB] dark:bg-slate-700 hover:text-[#000080] dark:text-indigo-400"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="20 6 9 17 4 12" />
@@ -391,7 +391,7 @@ export default function NotificationsPage() {
                         <button
                           onClick={() => handleDelete(notification.id)}
                           title="Delete"
-                          className="rounded p-1 text-[#6B7280] hover:bg-red-50 hover:text-red-500"
+                          className="rounded p-1 text-[#6B7280] dark:text-slate-400 hover:bg-red-50 dark:bg-red-900/20 hover:text-red-500"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="3 6 5 6 21 6" />
@@ -401,7 +401,7 @@ export default function NotificationsPage() {
                       </div>
                     </div>
                   </div>
-                  <p className="mt-1 text-sm text-[#6B7280] leading-relaxed">{notification.description}</p>
+                  <p className="mt-1 text-sm text-[#6B7280] dark:text-slate-400 leading-relaxed">{notification.description}</p>
                 </div>
               </div>
             );

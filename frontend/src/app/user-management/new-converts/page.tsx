@@ -285,8 +285,8 @@ export default function NewConvertsPage() {
           <Sparkles className="h-6 w-6 text-[#A21CAF]" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">New Converts</h1>
-          <p className="text-sm text-[#6B7280]">Disciple and track growth of newly saved members</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">New Converts</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Disciple and track growth of newly saved members</p>
         </div>
       </div>
 
@@ -301,14 +301,14 @@ export default function NewConvertsPage() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <label htmlFor="believers-class-filter" className="whitespace-nowrap text-sm font-medium text-[#374151]">
+            <label htmlFor="believers-class-filter" className="whitespace-nowrap text-sm font-medium text-[#374151] dark:text-slate-300">
               Believers Class
             </label>
             <select
               id="believers-class-filter"
               value={believersClassFilter}
               onChange={(e) => { setBelieversClassFilter(e.target.value as BelieversClassFilter); setCurrentPage(1); }}
-              className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             >
               {BELIEVERS_CLASSES.map((c) => (
                 <option key={c} value={c}>{c}</option>
@@ -375,20 +375,20 @@ export default function NewConvertsPage() {
       </div>
 
       {apiError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} —{" "}
           <button className="font-medium underline" onClick={() => fetchConverts(currentPage)}>Retry</button>
         </div>
       )}
 
       {actionError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {actionError}
         </div>
       )}
 
       {selectedRows.size > 0 && (
-        <div className="mb-2 text-sm text-gray-500">
+        <div className="mb-2 text-sm text-gray-500 dark:text-slate-400">
           {selectedRows.size} new convert{selectedRows.size > 1 ? "s" : ""} selected
         </div>
       )}
@@ -397,18 +397,18 @@ export default function NewConvertsPage() {
       <div className="sm:hidden space-y-3 mb-4">
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-2">
+            <div key={i} className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 space-y-2">
               <div className="skeleton h-4 w-36" /><div className="skeleton h-3 w-24" />
             </div>
           ))
         ) : displayedConverts.length === 0 ? (
-          <p className="text-center text-sm text-gray-400 py-8">No new converts found.</p>
+          <p className="text-center text-sm text-gray-400 dark:text-slate-500 py-8">No new converts found.</p>
         ) : (
           displayedConverts.map((nc) => (
             <div
               key={nc.id}
               onClick={() => router.push(`/user-management/new-converts/${nc.id}`)}
-              className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 transition-colors"
             >
               <UserAvatar
                 id={nc.id}
@@ -417,9 +417,9 @@ export default function NewConvertsPage() {
                 profilePictureUrl={nc.profilePictureUrl}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[#111827] truncate">{fullName(nc)}</p>
-                <p className="text-xs text-[#6B7280] truncate">{nc.phoneNumber}</p>
-                <p className="text-xs text-[#9CA3AF]">{nc.believerClassStage || "Not started"}</p>
+                <p className="text-sm font-medium text-[#111827] dark:text-slate-100 truncate">{fullName(nc)}</p>
+                <p className="text-xs text-[#6B7280] dark:text-slate-400 truncate">{nc.phoneNumber}</p>
+                <p className="text-xs text-[#9CA3AF] dark:text-slate-400">{nc.believerClassStage || "Not started"}</p>
               </div>
               <div onClick={(e) => e.stopPropagation()}>
                 <ActionDropdown
@@ -437,24 +437,24 @@ export default function NewConvertsPage() {
         )}
       </div>
 
-      <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
               <th className="px-4 py-4">
                 <input
                   type="checkbox"
                   checked={allPageSelected}
                   onChange={(e) => handleSelectAll(e.target.checked)}
-                  className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
+                  className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
                 />
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Phone</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Email</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Service Attended</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Believers Class</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Date Added</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Name</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Phone</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Email</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Service Attended</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Believers Class</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Date Added</th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
@@ -463,13 +463,13 @@ export default function NewConvertsPage() {
               Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={8} />)
             ) : displayedConverts.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">No new converts found.</td>
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">No new converts found.</td>
               </tr>
             ) : (
               displayedConverts.map((nc) => (
                 <tr
                   key={nc.id}
-                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
+                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 cursor-pointer"
                   style={{ height: "56px" }}
                   onClick={() => router.push(`/user-management/new-converts/${nc.id}`)}
                 >
@@ -478,20 +478,20 @@ export default function NewConvertsPage() {
                       type="checkbox"
                       checked={selectedRows.has(nc.id)}
                       onChange={() => handleSelectRow(nc.id)}
-                      className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
+                      className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
                     />
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151] max-w-[200px]"><span className="block truncate">{fullName(nc)}</span></td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">{nc.phoneNumber}</td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{nc.email}</td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
-                    {nc.service?.title || <span className="text-[#9CA3AF]">—</span>}
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[200px]"><span className="block truncate">{fullName(nc)}</span></td>
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{nc.phoneNumber}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{nc.email}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
+                    {nc.service?.title || <span className="text-[#9CA3AF] dark:text-slate-400">—</span>}
                   </td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {nc.believerClassStage || "Not started"}
                   </td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
-                    {nc.createdOn ? nc.createdOn.slice(0, 10) : <span className="text-[#9CA3AF]">—</span>}
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
+                    {nc.createdOn ? nc.createdOn.slice(0, 10) : <span className="text-[#9CA3AF] dark:text-slate-400">—</span>}
                   </td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <ActionDropdown
@@ -539,13 +539,13 @@ export default function NewConvertsPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Report</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Report</label>
             <textarea
               value={callReport}
               onChange={(e) => setCallReport(e.target.value)}
               placeholder="Enter Report"
               rows={5}
-              className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-gray-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-gray-400 dark:text-slate-500 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
           </div>
           <button
@@ -565,13 +565,13 @@ export default function NewConvertsPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Report</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Report</label>
             <textarea
               value={visitReport}
               onChange={(e) => setVisitReport(e.target.value)}
               placeholder="Enter Report"
               rows={5}
-              className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-gray-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-gray-400 dark:text-slate-500 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
           </div>
           <button
@@ -634,18 +634,18 @@ export default function NewConvertsPage() {
       {/* Bulk Believers Class Update Modal */}
       {showBulkClassModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-xl">
-            <h3 className="mb-1 text-lg font-bold text-[#111827]">Update Believers Class</h3>
-            <p className="mb-5 text-sm text-[#6B7280]">
+          <div className="w-full max-w-sm rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-xl">
+            <h3 className="mb-1 text-lg font-bold text-[#111827] dark:text-slate-100">Update Believers Class</h3>
+            <p className="mb-5 text-sm text-[#6B7280] dark:text-slate-400">
               Set the believers class stage for{" "}
-              <strong className="text-[#111827]">{selectedRows.size}</strong>{" "}
+              <strong className="text-[#111827] dark:text-slate-100">{selectedRows.size}</strong>{" "}
               selected convert{selectedRows.size !== 1 ? "s" : ""}.
             </p>
-            <label className="mb-1 block text-sm font-medium text-[#374151]">Class Stage</label>
+            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">Class Stage</label>
             <select
               value={bulkClassStage}
               onChange={(e) => setBulkClassStage(e.target.value)}
-              className="w-full rounded-lg border border-[#E5E7EB] bg-white px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             >
               <option value="">Select stage…</option>
               {CLASS_OPTIONS_BULK.map((c) => (
@@ -655,7 +655,7 @@ export default function NewConvertsPage() {
             <div className="mt-5 flex justify-end gap-3">
               <button
                 onClick={() => { setShowBulkClassModal(false); setBulkClassStage(""); }}
-                className="rounded-lg border border-[#E5E7EB] px-4 py-2.5 text-sm font-medium text-[#374151] hover:bg-[#F9FAFB]"
+                className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-2.5 text-sm font-medium text-[#374151] dark:text-slate-300 hover:bg-[#F9FAFB]"
               >
                 Cancel
               </button>

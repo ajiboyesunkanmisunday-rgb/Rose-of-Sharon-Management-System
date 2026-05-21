@@ -36,7 +36,7 @@ export default function AddNotesModal({ isOpen, onClose, onSave }: AddNotesModal
     <Modal isOpen={isOpen} onClose={onClose} title="Add Notes">
       <div className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">
             Note
           </label>
           <textarea
@@ -44,11 +44,11 @@ export default function AddNotesModal({ isOpen, onClose, onSave }: AddNotesModal
             onChange={(e) => setNote(e.target.value)}
             placeholder="Enter Note"
             rows={5}
-            className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-gray-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-gray-400 dark:text-slate-500 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
           />
         </div>
         {saveError && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-sm text-red-700">
             {saveError}
           </div>
         )}

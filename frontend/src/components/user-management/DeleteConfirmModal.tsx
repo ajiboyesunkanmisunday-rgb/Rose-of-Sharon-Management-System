@@ -53,7 +53,7 @@ export default function DeleteConfirmModal({
       onClick={handleOverlayClick}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
     >
-      <div className="relative w-full max-w-[400px] overflow-hidden rounded-2xl bg-white shadow-xl">
+      <div className="relative w-full max-w-[400px] overflow-hidden rounded-2xl bg-white dark:bg-slate-800 shadow-xl">
         {/* Navy Header */}
         <div className="flex items-center justify-between bg-[#000080] px-6 py-4">
           <h2 className="text-lg font-bold text-white">{title ?? "Delete"}</h2>
@@ -81,14 +81,14 @@ export default function DeleteConfirmModal({
 
         {/* Body */}
         <div className="px-6 py-8">
-          <p className="text-center text-sm text-[#374151]">{message}</p>
+          <p className="text-center text-sm text-[#374151] dark:text-slate-300">{message}</p>
         </div>
 
         {/* Footer Buttons */}
         <div className="flex items-center justify-end gap-3 px-6 pb-6">
           <button
             onClick={onClose}
-            className="rounded-xl border-2 border-[#000080] px-6 py-2.5 text-sm font-medium text-[#000080] transition-colors hover:bg-[#000080]/5"
+            className="rounded-xl border-2 border-[#000080] px-6 py-2.5 text-sm font-medium text-[#000080] dark:text-indigo-400 transition-colors hover:bg-[#000080]/5"
           >
             Back
           </button>

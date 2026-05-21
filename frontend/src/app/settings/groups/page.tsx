@@ -19,7 +19,7 @@ import {
 const ITEMS_PER_PAGE = 10;
 
 const inputClass =
-  "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none transition-colors focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none transition-colors focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
 
 export default function GroupsPage() {
   const router = useRouter();
@@ -106,11 +106,11 @@ export default function GroupsPage() {
       {/* Page Header */}
       <div className="mb-6 flex items-center gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F0FDF4]">
-          <Users className="h-6 w-6 text-[#16A34A]" />
+          <Users className="h-6 w-6 text-[#16A34A] dark:text-green-300" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Groups</h1>
-          <p className="text-sm text-[#6B7280]">Manage church departments, units and fellowship groups</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Groups</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Manage church departments, units and fellowship groups</p>
         </div>
       </div>
 
@@ -140,7 +140,7 @@ export default function GroupsPage() {
 
       {/* Error banner */}
       {apiError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} —{" "}
           <button className="font-medium underline" onClick={() => fetchGroups(currentPage)}>
             Retry
@@ -149,27 +149,27 @@ export default function GroupsPage() {
       )}
 
       {/* Groups Table */}
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Group Name</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Description</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Members</th>
-              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Group Head</th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">Actions</th>
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Group Name</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Description</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Members</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Group Head</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={5} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
                   Loading groups…
                 </td>
               </tr>
             ) : displayedGroups.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={5} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
                   No groups found.
                 </td>
               </tr>
@@ -177,18 +177,18 @@ export default function GroupsPage() {
               displayedGroups.map((group) => (
                 <tr
                   key={group.id}
-                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
+                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 cursor-pointer"
                   style={{ height: "56px" }}
                   onDoubleClick={() => router.push(`/settings/groups/${group.id}`)}
                 >
-                  <td className="px-4 py-3 text-sm font-medium text-[#374151]">{group.name}</td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                  <td className="px-4 py-3 text-sm font-medium text-[#374151] dark:text-slate-300">{group.name}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {group.description || "—"}
                   </td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {group.totalMembers ?? "—"}
                   </td>
-                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">
+                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {groupHeadName(group.groupHead) || "—"}
                   </td>
                   <td className="px-4 py-3">
@@ -229,12 +229,12 @@ export default function GroupsPage() {
       >
         <div className="space-y-4">
           {saveError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
               {saveError}
             </div>
           )}
           <div>
-            <label className="mb-1 block text-sm font-medium text-[#374151]">Group Name</label>
+            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">Group Name</label>
             <input
               type="text"
               value={newGroup.name}
@@ -244,7 +244,7 @@ export default function GroupsPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[#374151]">Description</label>
+            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">Description</label>
             <textarea
               value={newGroup.description}
               onChange={(e) => setNewGroup({ ...newGroup, description: e.target.value })}

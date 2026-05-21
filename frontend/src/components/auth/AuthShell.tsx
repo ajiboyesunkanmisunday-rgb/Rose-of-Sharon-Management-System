@@ -29,7 +29,7 @@ export default function AuthShell({
           {/* Content sits above the overlay */}
           <div className="relative z-10 flex items-center gap-3">
             <div
-              className="h-20 w-20 shrink-0 rounded-full bg-white"
+              className="h-20 w-20 shrink-0 rounded-full bg-white dark:bg-slate-800"
               style={{
                 backgroundImage: "url('/rccg-logo.svg')",
                 backgroundSize: "72%",
@@ -65,7 +65,7 @@ export default function AuthShell({
             {/* Mobile brand */}
             <div className="mb-8 flex items-center gap-3 lg:hidden">
               <div
-                className="h-14 w-14 shrink-0 rounded-full bg-white border border-[#E5E7EB]"
+                className="h-14 w-14 shrink-0 rounded-full bg-white dark:bg-slate-800 border border-[#E5E7EB] dark:border-slate-700"
                 style={{
                   backgroundImage: "url('/rccg-logo.svg')",
                   backgroundSize: "72%",
@@ -74,20 +74,20 @@ export default function AuthShell({
                 }}
               />
               <div>
-                <p className="text-xs font-medium text-[#000080]">RCCG</p>
-                <p className="text-base font-semibold text-[#000000]">
+                <p className="text-xs font-medium text-[#000080] dark:text-indigo-400">RCCG</p>
+                <p className="text-base font-semibold text-[#000000] dark:text-slate-100">
                   Rose of Sharon
                 </p>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-sm sm:p-8">
+            <div className="rounded-2xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm sm:p-8">
               <div className="mb-6">
-                <h1 className="text-[24px] font-bold text-[#000000]">
+                <h1 className="text-[24px] font-bold text-[#000000] dark:text-slate-100">
                   {title}
                 </h1>
                 {subtitle && (
-                  <p className="mt-1 text-sm text-[#6B7280]">{subtitle}</p>
+                  <p className="mt-1 text-sm text-[#6B7280] dark:text-slate-400">{subtitle}</p>
                 )}
               </div>
 
@@ -95,7 +95,7 @@ export default function AuthShell({
             </div>
 
             {footer && (
-              <div className="mt-6 text-center text-sm text-[#6B7280]">
+              <div className="mt-6 text-center text-sm text-[#6B7280] dark:text-slate-400">
                 {footer}
               </div>
             )}

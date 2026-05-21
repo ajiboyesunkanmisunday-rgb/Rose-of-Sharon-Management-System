@@ -179,10 +179,10 @@ function KpiCard({ label, value, sub, color = C.navy }: {
   label: string; value: string | number; sub?: string; color?: string;
 }) {
   return (
-    <div className="rounded-xl border border-[#E5E7EB] bg-white p-5 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">{label}</p>
+    <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-wider text-[#6B7280] dark:text-slate-400">{label}</p>
       <p className="mt-2 text-3xl font-bold" style={{ color }}>{value}</p>
-      {sub && <p className="mt-1 text-xs text-[#9CA3AF]">{sub}</p>}
+      {sub && <p className="mt-1 text-xs text-[#9CA3AF] dark:text-slate-400">{sub}</p>}
     </div>
   );
 }
@@ -191,8 +191,8 @@ function ChartCard({ title, children, className = "" }: {
   title: string; children: React.ReactNode; className?: string;
 }) {
   return (
-    <div className={`rounded-xl border border-[#E5E7EB] bg-white p-5 shadow-sm ${className}`}>
-      <h3 className="mb-4 text-sm font-bold text-[#111827]">{title}</h3>
+    <div className={`rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm ${className}`}>
+      <h3 className="mb-4 text-sm font-bold text-[#111827] dark:text-slate-100">{title}</h3>
       {children}
     </div>
   );
@@ -441,15 +441,15 @@ export default function AnalyticsDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <RefreshCw className="h-8 w-8 animate-spin text-[#000080]" />
-        <span className="ml-3 text-sm text-[#6B7280]">Loading analytics…</span>
+        <RefreshCw className="h-8 w-8 animate-spin text-[#000080] dark:text-indigo-400" />
+        <span className="ml-3 text-sm text-[#6B7280] dark:text-slate-400">Loading analytics…</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
         {error}
         <button onClick={load} className="ml-3 font-semibold underline">Retry</button>
       </div>
@@ -463,36 +463,36 @@ export default function AnalyticsDashboard() {
       {/* Refresh button */}
       <div className="flex justify-end">
         <button onClick={load}
-          className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-xs font-medium text-[#374151] shadow-sm hover:border-[#000080] hover:text-[#000080]">
+          className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 shadow-sm hover:border-[#000080] hover:text-[#000080] dark:text-indigo-400">
           <RefreshCw className="h-3.5 w-3.5" /> Refresh Data
         </button>
       </div>
 
       {/* ── Server-Side Analytics ─────────────────────────────────── */}
-      <div className="rounded-xl border border-[#000080] bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-[#000080] bg-white dark:bg-slate-800 p-5 shadow-sm">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold text-[#000080]">Server-Side Analytics</h2>
-            <p className="text-xs text-[#6B7280]">Counts pulled directly from the backend — set a date range and fetch</p>
+            <h2 className="text-base font-bold text-[#000080] dark:text-indigo-400">Server-Side Analytics</h2>
+            <p className="text-xs text-[#6B7280] dark:text-slate-400">Counts pulled directly from the backend — set a date range and fetch</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5 text-[#6B7280]" />
-              <span className="text-xs text-[#6B7280]">From</span>
+              <Calendar className="h-3.5 w-3.5 text-[#6B7280] dark:text-slate-400" />
+              <span className="text-xs text-[#6B7280] dark:text-slate-400">From</span>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs text-[#374151] outline-none focus:border-[#000080]"
+                className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080]"
               />
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs text-[#6B7280]">To</span>
+              <span className="text-xs text-[#6B7280] dark:text-slate-400">To</span>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs text-[#374151] outline-none focus:border-[#000080]"
+                className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080]"
               />
             </div>
             <button
@@ -507,7 +507,7 @@ export default function AnalyticsDashboard() {
         </div>
 
         {svrError && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs text-red-700">
+          <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-2 text-xs text-red-700">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             {svrError}
           </div>
@@ -517,30 +517,30 @@ export default function AnalyticsDashboard() {
           <div className="space-y-5">
             {/* KPI row */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              <div className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">Total Members</p>
-                <p className="mt-1 text-2xl font-bold text-[#000080]">{svrStats.totalMembers.toLocaleString()}</p>
-                <p className="text-[10px] text-[#9CA3AF]">Members + E-Members (all time)</p>
+              <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] dark:text-slate-400">Total Members</p>
+                <p className="mt-1 text-2xl font-bold text-[#000080] dark:text-indigo-400">{svrStats.totalMembers.toLocaleString()}</p>
+                <p className="text-[10px] text-[#9CA3AF] dark:text-slate-400">Members + E-Members (all time)</p>
               </div>
-              <div className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">New Members</p>
-                <p className="mt-1 text-2xl font-bold text-[#16A34A]">{svrStats.membersInPeriod.toLocaleString()}</p>
-                <p className="text-[10px] text-[#9CA3AF]">In selected period</p>
+              <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] dark:text-slate-400">New Members</p>
+                <p className="mt-1 text-2xl font-bold text-[#16A34A] dark:text-green-300">{svrStats.membersInPeriod.toLocaleString()}</p>
+                <p className="text-[10px] text-[#9CA3AF] dark:text-slate-400">In selected period</p>
               </div>
-              <div className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">First Timers</p>
-                <p className="mt-1 text-2xl font-bold text-[#EA580C]">{svrStats.firstTimersInPeriod.toLocaleString()}</p>
-                <p className="text-[10px] text-[#9CA3AF]">In selected period</p>
+              <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] dark:text-slate-400">First Timers</p>
+                <p className="mt-1 text-2xl font-bold text-[#EA580C] dark:text-orange-400">{svrStats.firstTimersInPeriod.toLocaleString()}</p>
+                <p className="text-[10px] text-[#9CA3AF] dark:text-slate-400">In selected period</p>
               </div>
-              <div className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">Second Timers</p>
+              <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] dark:text-slate-400">Second Timers</p>
                 <p className="mt-1 text-2xl font-bold text-[#9333EA]">{svrStats.secondTimersInPeriod.toLocaleString()}</p>
-                <p className="text-[10px] text-[#9CA3AF]">In selected period</p>
+                <p className="text-[10px] text-[#9CA3AF] dark:text-slate-400">In selected period</p>
               </div>
-              <div className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">New Converts</p>
+              <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] dark:text-slate-400">New Converts</p>
                 <p className="mt-1 text-2xl font-bold text-[#DB2777]">{svrStats.newConvertsInPeriod.toLocaleString()}</p>
-                <p className="text-[10px] text-[#9CA3AF]">In selected period</p>
+                <p className="text-[10px] text-[#9CA3AF] dark:text-slate-400">In selected period</p>
               </div>
             </div>
 
@@ -549,7 +549,7 @@ export default function AnalyticsDashboard() {
               {/* Visiting vs Not Visiting */}
               <ChartCard title="Visiting vs Not Visiting">
                 {!svrStats.visiting ? (
-                  <p className="py-8 text-center text-xs text-[#9CA3AF]">No data for selected period.</p>
+                  <p className="py-8 text-center text-xs text-[#9CA3AF] dark:text-slate-400">No data for selected period.</p>
                 ) : (
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart
@@ -569,7 +569,7 @@ export default function AnalyticsDashboard() {
               {/* Service sections */}
               <ChartCard title="Favourite Parts of Service">
                 {!svrStats.service ? (
-                  <p className="py-8 text-center text-xs text-[#9CA3AF]">No data for selected period.</p>
+                  <p className="py-8 text-center text-xs text-[#9CA3AF] dark:text-slate-400">No data for selected period.</p>
                 ) : (
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart
@@ -590,7 +590,7 @@ export default function AnalyticsDashboard() {
               {/* Medium of invitation */}
               <ChartCard title="Medium of Invitation">
                 {!svrStats.invitation ? (
-                  <p className="py-8 text-center text-xs text-[#9CA3AF]">No data for selected period.</p>
+                  <p className="py-8 text-center text-xs text-[#9CA3AF] dark:text-slate-400">No data for selected period.</p>
                 ) : (
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart
@@ -612,7 +612,7 @@ export default function AnalyticsDashboard() {
             {/* Urgent followup — shown in the existing section below (server endpoint not yet available) */}
           </div>
         ) : !svrLoading ? (
-          <p className="py-6 text-center text-xs text-[#9CA3AF]">
+          <p className="py-6 text-center text-xs text-[#9CA3AF] dark:text-slate-400">
             Select a date range and click <strong>Fetch</strong> to load server-side statistics.
           </p>
         ) : null}
@@ -668,7 +668,7 @@ export default function AnalyticsDashboard() {
         {/* Chart 2 */}
         <ChartCard title="2. Membership Across All Groups">
           {groupData.length === 0 ? (
-            <p className="py-10 text-center text-xs text-[#9CA3AF]">No group data available.</p>
+            <p className="py-10 text-center text-xs text-[#9CA3AF] dark:text-slate-400">No group data available.</p>
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={groupData} layout="vertical" margin={{ top: 4, right: 10, left: 20, bottom: 0 }}>
@@ -701,9 +701,9 @@ export default function AnalyticsDashboard() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-            <div className="mt-2 flex gap-6 text-xs text-[#6B7280]">
-              <span><span className="font-semibold text-[#EA580C]">{ftToStRate}%</span> of first timers returned as second timers</span>
-              <span><span className="font-semibold text-[#000080]">{stToMemRate}%</span> of second timers became full members</span>
+            <div className="mt-2 flex gap-6 text-xs text-[#6B7280] dark:text-slate-400">
+              <span><span className="font-semibold text-[#EA580C] dark:text-orange-400">{ftToStRate}%</span> of first timers returned as second timers</span>
+              <span><span className="font-semibold text-[#000080] dark:text-indigo-400">{stToMemRate}%</span> of second timers became full members</span>
             </div>
           </ChartCard>
         </div>
@@ -744,8 +744,8 @@ export default function AnalyticsDashboard() {
               {genderData.map((g) => (
                 <div key={g.name} className="flex items-center gap-2">
                   <span className="h-3 w-3 rounded-full" style={{ background: g.color }} />
-                  <span className="text-xs text-[#374151]">{g.name}</span>
-                  <span className="ml-auto text-xs font-bold text-[#111827]">{g.value.toLocaleString()}</span>
+                  <span className="text-xs text-[#374151] dark:text-slate-300">{g.name}</span>
+                  <span className="ml-auto text-xs font-bold text-[#111827] dark:text-slate-100">{g.value.toLocaleString()}</span>
                 </div>
               ))}
             </div>
@@ -770,7 +770,7 @@ export default function AnalyticsDashboard() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ChartCard title="5. First Timers — By Service Attended This Month">
           {ftByService.length === 0 ? (
-            <p className="py-10 text-center text-xs text-[#9CA3AF]">No service attendance data on first timers.</p>
+            <p className="py-10 text-center text-xs text-[#9CA3AF] dark:text-slate-400">No service attendance data on first timers.</p>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={ftByService} margin={{ top: 4, right: 10, left: -10, bottom: 0 }}>
@@ -786,7 +786,7 @@ export default function AnalyticsDashboard() {
 
         <ChartCard title="6. Second Timers — By Service Attended This Month">
           {stByService.length === 0 ? (
-            <p className="py-10 text-center text-xs text-[#9CA3AF]">No service attendance data on second timers.</p>
+            <p className="py-10 text-center text-xs text-[#9CA3AF] dark:text-slate-400">No service attendance data on second timers.</p>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={stByService} margin={{ top: 4, right: 10, left: -10, bottom: 0 }}>
@@ -804,7 +804,7 @@ export default function AnalyticsDashboard() {
       {/* ── Row 6: SOD / SOM / WIT / Baptismal ───────────────────── */}
       <ChartCard title="9. Special Ministry Groups — SOD / SOM / Workers in Training / Baptismal">
         {specialGroupData.length === 0 ? (
-          <p className="py-6 text-center text-xs text-[#9CA3AF]">
+          <p className="py-6 text-center text-xs text-[#9CA3AF] dark:text-slate-400">
             No groups matching SOD, SOM, Workers in Training, or Baptismal found.
             Ensure groups with those names are created in Settings → Groups.
           </p>
@@ -874,7 +874,7 @@ export default function AnalyticsDashboard() {
             <Bar dataKey="Left" fill={C.red} radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
-        <p className="mt-2 text-[10px] text-[#9CA3AF]">
+        <p className="mt-2 text-[10px] text-[#9CA3AF] dark:text-slate-400">
           Based on visitors/members with a recorded reason for leaving.
         </p>
       </ChartCard>
@@ -884,7 +884,7 @@ export default function AnalyticsDashboard() {
         {/* Chart 17: Favourite parts of service */}
         <ChartCard title="17. Favourite Parts of Service — First Timers">
           {favouritePartsData.length === 0 ? (
-            <p className="py-10 text-center text-xs text-[#9CA3AF]">No favourite-part data recorded yet.</p>
+            <p className="py-10 text-center text-xs text-[#9CA3AF] dark:text-slate-400">No favourite-part data recorded yet.</p>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={favouritePartsData} layout="vertical" margin={{ top: 4, right: 16, left: 10, bottom: 0 }}>
@@ -901,7 +901,7 @@ export default function AnalyticsDashboard() {
         {/* Chart 19: How did you hear about the church */}
         <ChartCard title="19. How First Timers Heard About the Church">
           {howDidYouHearData.length === 0 ? (
-            <p className="py-10 text-center text-xs text-[#9CA3AF]">No invitation-source data recorded yet.</p>
+            <p className="py-10 text-center text-xs text-[#9CA3AF] dark:text-slate-400">No invitation-source data recorded yet.</p>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={howDidYouHearData} layout="vertical" margin={{ top: 4, right: 16, left: 10, bottom: 0 }}>
@@ -940,11 +940,11 @@ export default function AnalyticsDashboard() {
             {visitingData.map((g) => (
               <div key={g.name} className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full" style={{ background: g.color }} />
-                <span className="text-xs text-[#374151]">{g.name}</span>
-                <span className="ml-3 text-sm font-bold text-[#111827]">{g.value.toLocaleString()}</span>
+                <span className="text-xs text-[#374151] dark:text-slate-300">{g.name}</span>
+                <span className="ml-3 text-sm font-bold text-[#111827] dark:text-slate-100">{g.value.toLocaleString()}</span>
               </div>
             ))}
-            <p className="mt-1 text-[10px] text-[#9CA3AF]">Based on first-timer records with <em>isVisiting</em> flag.</p>
+            <p className="mt-1 text-[10px] text-[#9CA3AF] dark:text-slate-400">Based on first-timer records with <em>isVisiting</em> flag.</p>
           </div>
         </div>
       </ChartCard>
@@ -995,17 +995,17 @@ export default function AnalyticsDashboard() {
           <ChartCard title="15. People Needing Urgent Followup (No Calls or Visits Yet)">
             <div className="max-h-[300px] overflow-y-auto">
               {urgentList.length === 0 ? (
-                <p className="py-8 text-center text-xs text-[#9CA3AF]">All visitors have been contacted.</p>
+                <p className="py-8 text-center text-xs text-[#9CA3AF] dark:text-slate-400">All visitors have been contacted.</p>
               ) : (
                 <table className="w-full text-xs">
                   <thead className="sticky top-0 bg-[#F9FAFB]">
-                    <tr className="border-b border-[#E5E7EB]">
-                      <th className="px-3 py-2 text-left text-[#6B7280]">#</th>
-                      <th className="px-3 py-2 text-left text-[#6B7280]">Name</th>
-                      <th className="px-3 py-2 text-left text-[#6B7280]">Type</th>
-                      <th className="px-3 py-2 text-left text-[#6B7280]">Phone</th>
-                      <th className="px-3 py-2 text-left text-[#6B7280]">Assigned To</th>
-                      <th className="px-3 py-2 text-left text-[#6B7280]">Added</th>
+                    <tr className="border-b border-[#E5E7EB] dark:border-slate-700">
+                      <th className="px-3 py-2 text-left text-[#6B7280] dark:text-slate-400">#</th>
+                      <th className="px-3 py-2 text-left text-[#6B7280] dark:text-slate-400">Name</th>
+                      <th className="px-3 py-2 text-left text-[#6B7280] dark:text-slate-400">Type</th>
+                      <th className="px-3 py-2 text-left text-[#6B7280] dark:text-slate-400">Phone</th>
+                      <th className="px-3 py-2 text-left text-[#6B7280] dark:text-slate-400">Assigned To</th>
+                      <th className="px-3 py-2 text-left text-[#6B7280] dark:text-slate-400">Added</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1021,14 +1021,14 @@ export default function AnalyticsDashboard() {
                         : "—";
                       return (
                         <tr key={u.id} className="border-b border-[#F3F4F6] hover:bg-[#FAFAFA]">
-                          <td className="px-3 py-2 text-[#9CA3AF]">{i + 1}</td>
-                          <td className="px-3 py-2 font-medium text-[#111827]">{name}</td>
+                          <td className="px-3 py-2 text-[#9CA3AF] dark:text-slate-400">{i + 1}</td>
+                          <td className="px-3 py-2 font-medium text-[#111827] dark:text-slate-100">{name}</td>
                           <td className="px-3 py-2">
                             <span className="rounded-full bg-[#FEF3C7] px-2 py-0.5 text-[10px] font-medium text-[#92400E]">{type}</span>
                           </td>
-                          <td className="px-3 py-2 text-[#374151]">{phone}</td>
-                          <td className="px-3 py-2 text-[#374151]">{assigned}</td>
-                          <td className="px-3 py-2 text-[#374151]">{added}</td>
+                          <td className="px-3 py-2 text-[#374151] dark:text-slate-300">{phone}</td>
+                          <td className="px-3 py-2 text-[#374151] dark:text-slate-300">{assigned}</td>
+                          <td className="px-3 py-2 text-[#374151] dark:text-slate-300">{added}</td>
                         </tr>
                       );
                     })}
@@ -1040,7 +1040,7 @@ export default function AnalyticsDashboard() {
               <div className="mt-3 flex justify-end border-t border-[#F3F4F6] pt-3">
                 <a
                   href="/reports/followup"
-                  className="text-xs font-semibold text-[#000080] underline hover:text-[#000066]"
+                  className="text-xs font-semibold text-[#000080] dark:text-indigo-400 underline hover:text-[#000066]"
                 >
                   View all {[...firstTimers, ...secondTimers].filter((u) => (u.noOfCalls ?? 0) === 0 && (u.noOfVisits ?? 0) === 0).length} people needing followup →
                 </a>

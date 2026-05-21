@@ -38,7 +38,7 @@ interface PhoneInputProps {
 
 // No width classes in shared style — width is applied explicitly by element.
 const sharedStyles =
-  "h-[46px] rounded-lg border border-[#E5E7EB] text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  "h-[46px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
 
 export default function PhoneInput({
   label,
@@ -54,7 +54,7 @@ export default function PhoneInput({
 }: PhoneInputProps) {
   return (
     <div className={className}>
-      <label className="mb-1 block text-sm font-medium text-[#374151]">
+      <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
         {label}
         {required && <span className="text-red-500"> *</span>}
       </label>
@@ -69,7 +69,7 @@ export default function PhoneInput({
           value={code}
           onChange={(e) => onCodeChange(e.target.value)}
           aria-label="Country code"
-          className={`${sharedStyles} w-full bg-white px-2 text-center`}
+          className={`${sharedStyles} w-full bg-white dark:bg-slate-800 px-2 text-center`}
         >
           {COUNTRY_CODES.map((c) => (
             <option key={c.code} value={c.code}>
@@ -94,7 +94,7 @@ export default function PhoneInput({
           maxLength={10}
           className={`${sharedStyles} w-full px-4`}
         />
-        <p className="col-span-full mt-1 text-xs text-[#9CA3AF]">
+        <p className="col-span-full mt-1 text-xs text-[#9CA3AF] dark:text-slate-400">
           Do not include the leading 0 (e.g. enter 8132577456 not 08132577456)
         </p>
       </div>

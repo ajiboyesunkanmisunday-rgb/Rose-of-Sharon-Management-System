@@ -121,15 +121,15 @@ const mockAttendance: Student[] = [
 ];
 
 const statusBadgeColors: Record<string, string> = {
-  Active: "bg-[#DCFCE7] text-[#16A34A]",
-  Completed: "bg-[#F3F4F6] text-[#6B7280]",
-  Upcoming: "bg-[#DBEAFE] text-[#2563EB]",
-  Pending: "bg-[#FEF9C3] text-[#CA8A04]",
-  Approved: "bg-[#DCFCE7] text-[#16A34A]",
-  Rejected: "bg-[#FEE2E2] text-[#DC2626]",
-  "On Hold": "bg-[#FEF9C3] text-[#CA8A04]",
-  Present: "bg-[#DCFCE7] text-[#16A34A]",
-  Absent: "bg-[#FEE2E2] text-[#DC2626]",
+  Active: "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
+  Completed: "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#6B7280] dark:text-slate-400",
+  Upcoming: "bg-[#DBEAFE] dark:bg-blue-900/30 text-[#2563EB]",
+  Pending: "bg-[#FEF9C3] dark:bg-yellow-900/30 text-[#CA8A04] dark:text-yellow-300",
+  Approved: "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
+  Rejected: "bg-[#FEE2E2] dark:bg-red-900/30 text-[#DC2626] dark:text-red-400",
+  "On Hold": "bg-[#FEF9C3] dark:bg-yellow-900/30 text-[#CA8A04] dark:text-yellow-300",
+  Present: "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
+  Absent: "bg-[#FEE2E2] dark:bg-red-900/30 text-[#DC2626] dark:text-red-400",
 };
 
 const tabs: { key: Tab; label: string }[] = [
@@ -160,7 +160,7 @@ export default function CourseDetailPage() {
     return (
       <DashboardLayout>
         <div className="flex h-64 items-center justify-center">
-          <p className="text-gray-400">Course not found.</p>
+          <p className="text-gray-400 dark:text-slate-500">Course not found.</p>
         </div>
       </DashboardLayout>
     );
@@ -203,7 +203,7 @@ export default function CourseDetailPage() {
             )}
             <button
               onClick={() => console.log("Remove:", student.id)}
-              className="rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium text-[#DC2626] transition-colors hover:bg-red-50"
+              className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-[#DC2626] dark:text-red-400 transition-colors hover:bg-red-50 dark:bg-red-900/20"
             >
               Remove
             </button>
@@ -213,7 +213,7 @@ export default function CourseDetailPage() {
         return (
           <button
             onClick={() => console.log("Mark Attendance:", student.id)}
-            className="rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] transition-colors hover:bg-[#000080]/5"
+            className="rounded-lg border border-[#000080] px-3 py-1.5 text-xs font-medium text-[#000080] dark:text-indigo-400 transition-colors hover:bg-[#000080]/5"
           >
             Mark Attendance
           </button>
@@ -222,7 +222,7 @@ export default function CourseDetailPage() {
         return (
           <button
             onClick={() => console.log("Remove:", student.id)}
-            className="rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium text-[#DC2626] transition-colors hover:bg-red-50"
+            className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-[#DC2626] dark:text-red-400 transition-colors hover:bg-red-50 dark:bg-red-900/20"
           >
             Remove
           </button>
@@ -239,7 +239,7 @@ export default function CourseDetailPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.push("/trainings/courses")}
-            className="flex items-center text-[#000080] transition-colors hover:text-[#000066]"
+            className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -256,44 +256,44 @@ export default function CourseDetailPage() {
               <polyline points="12 19 5 12 12 5" />
             </svg>
           </button>
-          <h2 className="text-[22px] font-bold text-[#000080]">
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">
             {course.name}
           </h2>
         </div>
       </div>
 
       {/* Course Info Card */}
-      <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">Course Name</p>
-            <p className="mt-1 text-sm font-semibold text-[#111827]">
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Course Name</p>
+            <p className="mt-1 text-sm font-semibold text-[#111827] dark:text-slate-100">
               {course.name}
             </p>
           </div>
           <div className="lg:col-span-2">
-            <p className="text-xs font-medium text-[#6B7280]">Description</p>
-            <p className="mt-1 text-sm text-[#374151]">
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Description</p>
+            <p className="mt-1 text-sm text-[#374151] dark:text-slate-300">
               {course.description}
             </p>
           </div>
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">Start Date</p>
-            <p className="mt-1 text-sm text-[#374151]">{course.startDate}</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Start Date</p>
+            <p className="mt-1 text-sm text-[#374151] dark:text-slate-300">{course.startDate}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">End Date</p>
-            <p className="mt-1 text-sm text-[#374151]">{course.endDate}</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">End Date</p>
+            <p className="mt-1 text-sm text-[#374151] dark:text-slate-300">{course.endDate}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">Instructor</p>
-            <p className="mt-1 text-sm text-[#374151]">{course.instructor}</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Instructor</p>
+            <p className="mt-1 text-sm text-[#374151] dark:text-slate-300">{course.instructor}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">Status</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Status</p>
             <span
               className={`mt-1 inline-block rounded-full px-3 py-1 text-xs font-medium ${
-                statusBadgeColors[course.status] || "bg-gray-200 text-gray-700"
+                statusBadgeColors[course.status] || "bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-slate-300"
               }`}
             >
               {course.status}
@@ -303,15 +303,15 @@ export default function CourseDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 flex gap-6 border-b border-[#E5E7EB]">
+      <div className="mb-6 flex gap-6 border-b border-[#E5E7EB] dark:border-slate-700">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`pb-3 text-sm font-medium transition-colors ${
               activeTab === tab.key
-                ? "border-b-2 border-[#000080] text-[#000080]"
-                : "text-[#6B7280] hover:text-[#374151]"
+                ? "border-b-2 border-[#000080] text-[#000080] dark:text-indigo-400"
+                : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"
             }`}
           >
             {tab.label}
@@ -320,26 +320,26 @@ export default function CourseDetailPage() {
       </div>
 
       {/* Tab Table */}
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Name
               </th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Phone
               </th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Email
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Date
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 {getStatusLabel()}
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Actions
               </th>
             </tr>
@@ -348,26 +348,26 @@ export default function CourseDetailPage() {
             {tabData.map((student) => (
               <tr
                 key={student.id}
-                className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50"
+                className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50"
                 style={{ height: "56px" }}
               >
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                   {student.name}
                 </td>
-                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                   {student.phone}
                 </td>
-                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                   {student.email}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#374151]">
+                <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                   {student.date}
                 </td>
                 <td className="px-4 py-3">
                   <span
                     className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
                       statusBadgeColors[student.status] ||
-                      "bg-gray-200 text-gray-700"
+                      "bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-slate-300"
                     }`}
                   >
                     {student.status}
@@ -380,7 +380,7 @@ export default function CourseDetailPage() {
               <tr>
                 <td
                   colSpan={6}
-                  className="px-4 py-8 text-center text-gray-400"
+                  className="px-4 py-8 text-center text-gray-400 dark:text-slate-500"
                 >
                   No records found.
                 </td>

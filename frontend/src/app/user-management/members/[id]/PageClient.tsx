@@ -41,10 +41,10 @@ const UserIcon = () => (
 );
 
 const reqStatusColors: Record<string, string> = {
-  RECEIVED:    "bg-[#F3F4F6] text-[#6B7280]",
-  ASSIGNED:    "bg-[#DBEAFE] text-[#1D4ED8]",
-  IN_PROGRESS: "bg-[#FEF9C3] text-[#CA8A04]",
-  RESOLVED:    "bg-[#DCFCE7] text-[#16A34A]",
+  RECEIVED:    "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#6B7280] dark:text-slate-400",
+  ASSIGNED:    "bg-[#DBEAFE] dark:bg-blue-900/30 text-[#1D4ED8] dark:text-blue-300",
+  IN_PROGRESS: "bg-[#FEF9C3] dark:bg-yellow-900/30 text-[#CA8A04] dark:text-yellow-300",
+  RESOLVED:    "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
 };
 
 export default function ViewMemberProfilePage() {
@@ -172,7 +172,7 @@ export default function ViewMemberProfilePage() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error} — <button className="font-medium underline" onClick={fetchUser}>Retry</button>
         </div>
       )}
@@ -222,7 +222,7 @@ export default function ViewMemberProfilePage() {
                   ].map(({ label, value }) => value ? (
                     <div key={label}>
                       <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">{label}</p>
-                      <p className="mt-1 text-sm text-[#111827] dark:text-slate-200">{value}</p>
+                      <p className="mt-1 text-sm text-[#111827] dark:text-slate-100 dark:text-slate-200">{value}</p>
                     </div>
                   ) : null)}
 
@@ -257,7 +257,7 @@ export default function ViewMemberProfilePage() {
             <div className="flex gap-8">
               {tabs.map((tab) => (
                 <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                  className={`pb-3 text-sm font-medium transition-colors ${activeTab === tab.key ? "border-b-2 border-[#000080] dark:border-indigo-400 text-[#000080] dark:text-indigo-400" : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:hover:text-slate-200"}`}>
+                  className={`pb-3 text-sm font-medium transition-colors ${activeTab === tab.key ? "border-b-2 border-[#000080] dark:border-indigo-400 text-[#000080] dark:text-indigo-400" : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300 dark:hover:text-slate-200"}`}>
                   {tab.label}
                 </button>
               ))}
@@ -267,7 +267,7 @@ export default function ViewMemberProfilePage() {
           {activeTab === "requests" && (
             <>
               {reqLoading ? (
-                <div className="py-8 text-center text-gray-400">Loading requests…</div>
+                <div className="py-8 text-center text-gray-400 dark:text-slate-500">Loading requests…</div>
               ) : requests.length === 0 ? (
                 <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-8 text-center text-sm text-gray-400 dark:text-slate-500">No requests found.</div>
               ) : (
@@ -282,7 +282,7 @@ export default function ViewMemberProfilePage() {
                             <span className="rounded-full bg-[#000080] px-3 py-1 text-xs font-medium text-white">
                               {(req.requestType ?? "").replace(/_/g, " ")}
                             </span>
-                            <span className={`rounded-full px-3 py-1 text-xs font-medium ${reqStatusColors[req.requestStatus ?? ""] ?? "bg-gray-100 text-gray-600"}`}>
+                            <span className={`rounded-full px-3 py-1 text-xs font-medium ${reqStatusColors[req.requestStatus ?? ""] ?? "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400"}`}>
                               {(req.requestStatus ?? "").replace(/_/g, " ")}
                             </span>
                           </div>
@@ -305,7 +305,7 @@ export default function ViewMemberProfilePage() {
 
           {/* Actions */}
           {actionMsg && (
-            <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700">{actionMsg}</div>
+            <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 text-sm text-blue-700">{actionMsg}</div>
           )}
           <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
             <Button variant="secondary" onClick={() => router.push(`/user-management/members/${id}/edit`)}>Edit</Button>

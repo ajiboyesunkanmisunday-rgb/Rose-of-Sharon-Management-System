@@ -59,7 +59,7 @@ export default function AddWorkflowTemplatePage() {
         backHref="/workflows/templates"
       />
 
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           <FormField
             label="Template Name"
@@ -90,7 +90,7 @@ export default function AddWorkflowTemplatePage() {
           />
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-[#374151]">
+            <label className="mb-2 block text-sm font-medium text-[#374151] dark:text-slate-300">
               Steps
             </label>
             <div className="space-y-2">
@@ -104,13 +104,13 @@ export default function AddWorkflowTemplatePage() {
                     value={step}
                     onChange={(e) => handleStepChange(idx, e.target.value)}
                     placeholder={`Step ${idx + 1} description`}
-                    className="w-full rounded-lg border border-[#E5E7EB] px-4 py-2.5 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+                    className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-2.5 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
                   />
                   {steps.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeStep(idx)}
-                      className="rounded-lg p-2 text-red-500 hover:bg-red-50"
+                      className="rounded-lg p-2 text-red-500 hover:bg-red-50 dark:bg-red-900/20"
                       aria-label="Remove step"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -125,7 +125,7 @@ export default function AddWorkflowTemplatePage() {
             <button
               type="button"
               onClick={addStep}
-              className="mt-2 text-sm font-medium text-[#000080] underline transition-colors hover:text-[#000066]"
+              className="mt-2 text-sm font-medium text-[#000080] dark:text-indigo-400 underline transition-colors hover:text-[#000066]"
             >
               + Add step
             </button>
@@ -138,9 +138,9 @@ export default function AddWorkflowTemplatePage() {
               name="active"
               checked={formData.active}
               onChange={handleChange}
-              className="h-4 w-4 rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
+              className="h-4 w-4 rounded border-[#E5E7EB] dark:border-slate-700 text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
             />
-            <label htmlFor="active" className="text-sm text-[#374151]">
+            <label htmlFor="active" className="text-sm text-[#374151] dark:text-slate-300">
               Activate template immediately
             </label>
           </div>

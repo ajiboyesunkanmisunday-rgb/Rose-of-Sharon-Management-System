@@ -35,7 +35,7 @@ export default function QRCodeModal({ isOpen, onClose, value, title }: QRCodeMod
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title || "Registration QR Code"}>
       <div className="flex flex-col items-center gap-4 py-4">
-        <p className="text-sm text-[#6B7280] text-center">
+        <p className="text-sm text-[#6B7280] dark:text-slate-400 text-center">
           Scan this code to open the registration form
         </p>
         <QRCodeCanvas
@@ -45,7 +45,7 @@ export default function QRCodeModal({ isOpen, onClose, value, title }: QRCodeMod
           level="H"
           marginSize={2}
         />
-        <p className="text-xs text-[#9CA3AF] break-all text-center max-w-xs">{url}</p>
+        <p className="text-xs text-[#9CA3AF] dark:text-slate-400 break-all text-center max-w-xs">{url}</p>
         <div className="flex gap-3 mt-2">
           <button
             onClick={handleDownload}
@@ -55,7 +55,7 @@ export default function QRCodeModal({ isOpen, onClose, value, title }: QRCodeMod
           </button>
           <button
             onClick={handleCopyLink}
-            className="rounded-lg border border-[#E5E7EB] px-4 py-2 text-xs font-medium text-[#374151] hover:bg-gray-50 transition-colors"
+            className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 transition-colors"
           >
             Copy Link
           </button>

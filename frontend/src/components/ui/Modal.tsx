@@ -52,7 +52,7 @@ export default function Modal({ isOpen, onClose, title, children, size = "sm" }:
           <h2 className="text-xl font-bold text-[#000080] dark:text-indigo-400">{title}</h2>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 dark:text-slate-500 transition-colors hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-600 dark:hover:text-slate-300"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 dark:text-slate-500 transition-colors hover:bg-gray-100 dark:bg-slate-700 dark:hover:bg-slate-700 hover:text-gray-600 dark:text-slate-400 dark:hover:text-slate-300"
             aria-label="Close modal"
           >
             <svg

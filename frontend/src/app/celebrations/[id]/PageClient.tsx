@@ -75,7 +75,7 @@ export default function CelebrationDetailClient() {
     return (
       <DashboardLayout>
         <PageHeader title="Celebrations" subtitle="Loading…" backHref="/celebrations" />
-        <div className="py-12 text-center text-sm text-gray-400">Loading celebration details…</div>
+        <div className="py-12 text-center text-sm text-gray-400 dark:text-slate-500">Loading celebration details…</div>
       </DashboardLayout>
     );
   }
@@ -84,7 +84,7 @@ export default function CelebrationDetailClient() {
     return (
       <DashboardLayout>
         <PageHeader title="Celebrations" subtitle="Error" backHref="/celebrations" />
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error || "Celebration not found."}
           <button className="ml-2 font-medium underline" onClick={loadCelebration}>Retry</button>
         </div>
@@ -103,26 +103,26 @@ export default function CelebrationDetailClient() {
     <DashboardLayout>
       <PageHeader title="Celebrations" subtitle={name} backHref="/celebrations" />
 
-      <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <div className="flex items-center gap-3">
-          <span className="rounded-full bg-[#B5B5F3]/30 px-3 py-1 text-xs font-medium text-[#000080]">
+          <span className="rounded-full bg-[#B5B5F3]/30 px-3 py-1 text-xs font-medium text-[#000080] dark:text-indigo-400">
             {type}
           </span>
-          <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColors[status] ?? "bg-gray-100 text-gray-600"}`}>
+          <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColors[status] ?? "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400"}`}>
             {status}
           </span>
         </div>
-        <h2 className="mt-3 text-xl font-bold text-[#111827]">{name}</h2>
+        <h2 className="mt-3 text-xl font-bold text-[#111827] dark:text-slate-100">{name}</h2>
 
         <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">Date</p>
-            <p className="mt-1 text-sm font-medium text-[#111827]">{date}</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Date</p>
+            <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{date}</p>
           </div>
           {celebration.createdOn && (
             <div>
-              <p className="text-xs font-medium text-[#6B7280]">Created</p>
-              <p className="mt-1 text-sm font-medium text-[#111827]">
+              <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Created</p>
+              <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">
                 {new Date(celebration.createdOn).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
               </p>
             </div>
@@ -131,8 +131,8 @@ export default function CelebrationDetailClient() {
 
         {celebration.notes && (
           <div className="mt-6 border-t border-[#F3F4F6] pt-4">
-            <p className="text-xs font-medium text-[#6B7280]">Notes</p>
-            <p className="mt-1 text-sm text-[#374151]">{celebration.notes}</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Notes</p>
+            <p className="mt-1 text-sm text-[#374151] dark:text-slate-300">{celebration.notes}</p>
           </div>
         )}
       </div>

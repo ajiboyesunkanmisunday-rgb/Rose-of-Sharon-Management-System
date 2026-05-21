@@ -76,20 +76,20 @@ export default function NotificationSettingsPage() {
     <DashboardLayout>
       {/* Page Header */}
       <div className="mb-1">
-        <h1 className="text-[28px] font-bold text-[#000000]">Notifications</h1>
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Notifications</h1>
       </div>
       <div className="mb-6">
-        <p className="text-sm text-[#6B7280]">Settings</p>
+        <p className="text-sm text-[#6B7280] dark:text-slate-400">Settings</p>
       </div>
 
       {showToast && (
-        <div className="fixed right-6 top-24 z-50 rounded-lg bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-lg transition-opacity">
+        <div className="fixed right-6 top-24 z-50 rounded-lg bg-green-50 dark:bg-green-900/200 px-4 py-3 text-sm font-medium text-white shadow-lg transition-opacity">
           Settings saved successfully
         </div>
       )}
 
       {/* Settings Card */}
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <div className="divide-y divide-[#E5E7EB]">
           {settings.map((setting) => (
             <div
@@ -97,8 +97,8 @@ export default function NotificationSettingsPage() {
               className="flex items-center justify-between py-5 first:pt-0 last:pb-0"
             >
               <div className="pr-4">
-                <p className="text-sm font-bold text-[#111827]">{setting.label}</p>
-                <p className="mt-1 text-sm text-[#6B7280]">{setting.description}</p>
+                <p className="text-sm font-bold text-[#111827] dark:text-slate-100">{setting.label}</p>
+                <p className="mt-1 text-sm text-[#6B7280] dark:text-slate-400">{setting.description}</p>
               </div>
               {/* Toggle Switch */}
               <button
@@ -108,7 +108,7 @@ export default function NotificationSettingsPage() {
                 }`}
               >
                 <span
-                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white dark:bg-slate-800 shadow transition-transform duration-200 ${
                     setting.enabled ? "translate-x-[22px]" : "translate-x-[2px]"
                   } mt-[2px]`}
                 />

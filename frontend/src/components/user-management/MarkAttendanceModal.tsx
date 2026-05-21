@@ -35,19 +35,19 @@ export default function MarkAttendanceModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Mark Believers Class Attendance" size="md">
       <div className="space-y-4">
-        <p className="text-sm text-[#6B7280]">
+        <p className="text-sm text-[#6B7280] dark:text-slate-400">
           Mark the highest Believers Class that{" "}
-          <strong className="text-[#111827]">{memberName}</strong> has attended.
+          <strong className="text-[#111827] dark:text-slate-100">{memberName}</strong> has attended.
         </p>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-[#374151]">
+          <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
             Highest Class Attended
           </label>
           <select
             value={selected}
             onChange={(e) => setSelected(e.target.value)}
-            className="w-full rounded-lg border border-[#E5E7EB] bg-white px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
           >
             <option value="">None</option>
             {CLASS_OPTIONS.map((c) => (
@@ -56,7 +56,7 @@ export default function MarkAttendanceModal({
               </option>
             ))}
           </select>
-          <p className="mt-2 text-xs text-[#6B7280]">
+          <p className="mt-2 text-xs text-[#6B7280] dark:text-slate-400">
             Selecting a class marks all previous classes as also attended.
           </p>
         </div>

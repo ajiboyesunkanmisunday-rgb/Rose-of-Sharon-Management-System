@@ -44,12 +44,12 @@ export default function PhotoUpload({
     <div className={className}>
       {/* Entire block (label + image preview + hint) is one clickable label */}
       <label className="group block cursor-pointer">
-        <span className="mb-1 block text-sm font-medium text-[#374151]">
+        <span className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
           {label}
         </span>
         <div className="flex items-center gap-4">
           <span
-            className={`${SIZE_CLASSES[previewSize]} flex shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-[#E5E7EB] bg-white transition-colors group-hover:border-[#000080]`}
+            className={`${SIZE_CLASSES[previewSize]} flex shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 transition-colors group-hover:border-[#000080]`}
           >
             {preview || value ? (
               <img
@@ -58,7 +58,7 @@ export default function PhotoUpload({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <span className="flex flex-col items-center justify-center text-[#9CA3AF] group-hover:text-[#000080]">
+              <span className="flex flex-col items-center justify-center text-[#9CA3AF] dark:text-slate-400 group-hover:text-[#000080] dark:text-indigo-400">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -79,7 +79,7 @@ export default function PhotoUpload({
             )}
           </span>
           {hint && (
-            <span className="text-xs text-[#6B7280] group-hover:text-[#000080]">
+            <span className="text-xs text-[#6B7280] dark:text-slate-400 group-hover:text-[#000080] dark:text-indigo-400">
               {hint}
             </span>
           )}

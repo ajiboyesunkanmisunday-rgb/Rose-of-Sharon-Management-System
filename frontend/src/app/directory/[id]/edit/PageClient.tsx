@@ -130,15 +130,15 @@ export default function EditContactClient() {
       />
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
       {loading ? (
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-10 text-center text-sm text-gray-400">
+        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-10 text-center text-sm text-gray-400 dark:text-slate-500">
           Loading contact…
         </div>
       ) : (
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
               <FormField

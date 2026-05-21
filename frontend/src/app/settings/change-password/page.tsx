@@ -48,7 +48,7 @@ function ChangePasswordInner() {
       {toast && (
         <div
           className={`fixed right-6 top-24 z-50 rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lg ${
-            toast.type === "success" ? "bg-green-500" : "bg-red-500"
+            toast.type === "success" ? "bg-green-50 dark:bg-green-900/200" : "bg-red-50 dark:bg-red-900/200"
           }`}
         >
           {toast.msg}
@@ -67,7 +67,7 @@ function ChangePasswordInner() {
         </div>
       )}
 
-      <div className="max-w-[560px] rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="max-w-[560px] rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           <FormField label="Current Password" name="current" type="password" value={current}
             onChange={(e) => setCurrent(e.target.value)} placeholder="Enter current password" required />
@@ -94,8 +94,8 @@ export default function ChangePasswordPage() {
           <KeyRound className="h-6 w-6 text-[#D97706]" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Change Password</h1>
-          <p className="text-sm text-[#6B7280]">Update your admin account password</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Change Password</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Update your admin account password</p>
         </div>
       </div>
 

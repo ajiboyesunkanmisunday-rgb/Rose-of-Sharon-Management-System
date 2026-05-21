@@ -160,36 +160,36 @@ export default function EMemberProfilePage() {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">User Management</h1>
         <div className="flex items-center gap-2">
-          <button onClick={() => router.push("/user-management/e-members")} className="flex items-center text-[#000080] transition-colors hover:text-[#000066]">
+          <button onClick={() => router.push("/user-management/e-members")} className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]">
             <BackArrow />
           </button>
-          <h2 className="text-[22px] font-bold text-[#000080]">E-Member Profile</h2>
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">E-Member Profile</h2>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error} — <button className="font-medium underline" onClick={fetchUser}>Retry</button>
         </div>
       )}
 
       {loading ? (
-        <div className="flex h-48 items-center justify-center text-gray-400">Loading…</div>
+        <div className="flex h-48 items-center justify-center text-gray-400 dark:text-slate-500">Loading…</div>
       ) : (
         <>
           {/* Profile Card */}
-          <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
+          <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
             <div className="flex flex-col gap-6 md:flex-row">
               {/* Photo */}
-              <div className="relative flex h-[180px] w-[150px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] sm:h-[250px] sm:w-[200px]">
+              <div className="relative flex h-[180px] w-[150px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E5E7EB] dark:bg-slate-700 sm:h-[250px] sm:w-[200px]">
                 <ProfilePhoto src={user?.profilePictureUrl} />
               </div>
 
               {/* Details */}
               <div className="flex-1">
-                <h2 className="mb-5 text-lg font-bold text-[#000000]">Basic Details</h2>
+                <h2 className="mb-5 text-lg font-bold text-[#000000] dark:text-slate-100">Basic Details</h2>
                 <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-3">
                   {[
                     { label: "First Name",      value: user?.firstName },
@@ -209,15 +209,15 @@ export default function EMemberProfilePage() {
                     { label: "Date Joined",            value: fmtDate(user?.createdOn) },
                   ].map(({ label, value }) => value ? (
                     <div key={label}>
-                      <p className="text-xs font-medium text-[#6B7280]">{label}</p>
-                      <p className="mt-1 text-sm text-[#111827]">{value}</p>
+                      <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">{label}</p>
+                      <p className="mt-1 text-sm text-[#111827] dark:text-slate-100">{value}</p>
                     </div>
                   ) : null)}
 
                   {/* Spouse — only shown for married members */}
                   {(isMarried || hasSpouse) && (
                     <div>
-                      <p className="text-xs font-medium text-[#6B7280]">Spouse</p>
+                      <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Spouse</p>
                       {spouseLinkedIncorrectly && (
                         <p className="mb-0.5 text-[10px] font-semibold text-amber-600">
                           ⚠ Marital status is {user?.maritalStatus} but a spouse is linked
@@ -226,12 +226,12 @@ export default function EMemberProfilePage() {
                       {user?.spouse ? (
                         <button
                           onClick={() => router.push(`/user-management/members/${user.spouse!.id}`)}
-                          className="mt-1 text-sm font-medium text-[#000080] underline hover:text-[#000066]"
+                          className="mt-1 text-sm font-medium text-[#000080] dark:text-indigo-400 underline hover:text-[#000066]"
                         >
                           {fullName(user.spouse)}
                         </button>
                       ) : (
-                        <p className="mt-1 text-sm text-[#9CA3AF]">Not linked</p>
+                        <p className="mt-1 text-sm text-[#9CA3AF] dark:text-slate-400">Not linked</p>
                       )}
                     </div>
                   )}
@@ -241,11 +241,11 @@ export default function EMemberProfilePage() {
           </div>
 
           {/* Tabs */}
-          <div className="mb-4 border-b border-[#E5E7EB]">
+          <div className="mb-4 border-b border-[#E5E7EB] dark:border-slate-700">
             <div className="flex gap-8">
               {tabs.map((tab) => (
                 <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                  className={`pb-3 text-sm font-medium transition-colors ${activeTab === tab.key ? "border-b-2 border-[#000080] text-[#000080]" : "text-[#6B7280] hover:text-[#374151]"}`}>
+                  className={`pb-3 text-sm font-medium transition-colors ${activeTab === tab.key ? "border-b-2 border-[#000080] text-[#000080] dark:text-indigo-400" : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"}`}>
                   {tab.label}
                 </button>
               ))}
@@ -253,11 +253,11 @@ export default function EMemberProfilePage() {
           </div>
 
           {activeTab === "details" && user && (
-            <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 text-sm text-center text-gray-400">
+            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 text-sm text-center text-gray-400 dark:text-slate-500">
               Assigned Follow-Up:{" "}
-              <span className="font-medium text-[#374151]">{fullName(user.assignedFollowUp) || "Not assigned"}</span>
+              <span className="font-medium text-[#374151] dark:text-slate-300">{fullName(user.assignedFollowUp) || "Not assigned"}</span>
               {(user.noOfCalls !== undefined || user.noOfVisits !== undefined) && (
-                <span className="ml-4 text-[#374151]">
+                <span className="ml-4 text-[#374151] dark:text-slate-300">
                   · Calls: <strong>{user.noOfCalls ?? 0}</strong>
                   &nbsp;· Visits: <strong>{user.noOfVisits ?? 0}</strong>
                 </span>
@@ -268,20 +268,20 @@ export default function EMemberProfilePage() {
           {activeTab === "activity" && (
             <div className="space-y-4">
               {saveMsg && (
-                <div className={`rounded-lg px-4 py-3 text-sm ${saveMsg.startsWith("Failed") ? "bg-red-50 text-red-700 border border-red-200" : "bg-green-50 text-green-700 border border-green-200"}`}>
+                <div className={`rounded-lg px-4 py-3 text-sm ${saveMsg.startsWith("Failed") ? "bg-red-50 dark:bg-red-900/20 text-red-700 border border-red-200" : "bg-green-50 dark:bg-green-900/20 text-green-700 border border-green-200"}`}>
                   {saveMsg}
                 </div>
               )}
 
               {/* Add Call Report */}
-              <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
-                <h3 className="mb-3 text-sm font-bold text-[#111827]">Log Call</h3>
+              <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+                <h3 className="mb-3 text-sm font-bold text-[#111827] dark:text-slate-100">Log Call</h3>
                 <textarea
                   value={callText}
                   onChange={(e) => setCallText(e.target.value)}
                   placeholder="Describe the call…"
                   rows={3}
-                  className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+                  className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
                 />
                 <div className="mt-2 flex justify-end">
                   <Button variant="primary" onClick={() => handleSaveActivity("call")} disabled={saving || !callText.trim()}>
@@ -291,14 +291,14 @@ export default function EMemberProfilePage() {
               </div>
 
               {/* Add Visit Report */}
-              <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
-                <h3 className="mb-3 text-sm font-bold text-[#111827]">Log Visit</h3>
+              <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+                <h3 className="mb-3 text-sm font-bold text-[#111827] dark:text-slate-100">Log Visit</h3>
                 <textarea
                   value={visitText}
                   onChange={(e) => setVisitText(e.target.value)}
                   placeholder="Describe the visit…"
                   rows={3}
-                  className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+                  className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
                 />
                 <div className="mt-2 flex justify-end">
                   <Button variant="primary" onClick={() => handleSaveActivity("visit")} disabled={saving || !visitText.trim()}>
@@ -308,42 +308,42 @@ export default function EMemberProfilePage() {
               </div>
 
               {/* Activity History */}
-              <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
-                <h3 className="mb-3 text-sm font-bold text-[#111827]">Activity History</h3>
+              <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+                <h3 className="mb-3 text-sm font-bold text-[#111827] dark:text-slate-100">Activity History</h3>
                 {notesLoading ? (
-                  <p className="text-sm text-gray-400">Loading…</p>
+                  <p className="text-sm text-gray-400 dark:text-slate-500">Loading…</p>
                 ) : notes.length === 0 ? (
-                  <p className="text-sm text-gray-400">No activity recorded yet.</p>
+                  <p className="text-sm text-gray-400 dark:text-slate-500">No activity recorded yet.</p>
                 ) : (
                   <div className="space-y-3">
                     {notes.map((n, i) => {
                       const noteType = (n.noteCategory ?? n.type ?? "").toUpperCase();
                       const badgeClass =
-                        noteType.includes("CALL")  ? "bg-[#DBEAFE] text-[#1D4ED8]" :
-                        noteType.includes("VISIT") ? "bg-[#DCFCE7] text-[#16A34A]" :
-                                                      "bg-[#F3F4F6] text-[#6B7280]";
+                        noteType.includes("CALL")  ? "bg-[#DBEAFE] dark:bg-blue-900/30 text-[#1D4ED8] dark:text-blue-300" :
+                        noteType.includes("VISIT") ? "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300" :
+                                                      "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#6B7280] dark:text-slate-400";
                       const badgeLabel =
                         noteType.includes("CALL")  ? "Call Log" :
                         noteType.includes("VISIT") ? "Visit Log" : "Note";
                       return (
-                        <div key={n.id ?? i} className="rounded-lg border border-[#E5E7EB] p-3">
+                        <div key={n.id ?? i} className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 p-3">
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                               <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badgeClass}`}>{badgeLabel}</span>
-                              <span className="text-xs text-[#9CA3AF]">{fmtDate(n.createdOn)}</span>
+                              <span className="text-xs text-[#9CA3AF] dark:text-slate-400">{fmtDate(n.createdOn)}</span>
                             </div>
                             {n.id && (
                               <button
                                 onClick={() => handleDeleteNote(n.id!)}
                                 disabled={deletingNoteId === n.id}
-                                className="rounded p-0.5 text-[#9CA3AF] hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+                                className="rounded p-0.5 text-[#9CA3AF] dark:text-slate-400 hover:bg-red-50 dark:bg-red-900/20 hover:text-red-500 disabled:opacity-50"
                                 title="Delete"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                               </button>
                             )}
                           </div>
-                          <p className="mt-2 text-sm text-[#374151]">{n.content ?? "—"}</p>
+                          <p className="mt-2 text-sm text-[#374151] dark:text-slate-300">{n.content ?? "—"}</p>
                         </div>
                       );
                     })}

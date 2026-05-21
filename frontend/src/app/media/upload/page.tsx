@@ -21,10 +21,10 @@ const MEDIA_MAX_BYTES   = 200 * 1024 * 1024; // 200 MB
 const DESC_MAX_CHARS    = 500;
 
 const inputClass =
-  "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
 const selectClass =
-  "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080] appearance-none";
-const labelClass = "mb-1 block text-sm font-medium text-[#374151]";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080] appearance-none";
+const labelClass = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
 
 export default function UploadMediaPage() {
   const router = useRouter();
@@ -133,12 +133,12 @@ export default function UploadMediaPage() {
       />
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
 
           {/* Title */}
@@ -175,8 +175,8 @@ export default function UploadMediaPage() {
           {/* Description with character counter */}
           <div>
             <div className="mb-1 flex items-center justify-between">
-              <label className="text-sm font-medium text-[#374151]">Description</label>
-              <span className={`text-xs ${description.length > DESC_MAX_CHARS ? "text-red-500 font-semibold" : "text-[#9CA3AF]"}`}>
+              <label className="text-sm font-medium text-[#374151] dark:text-slate-300">Description</label>
+              <span className={`text-xs ${description.length > DESC_MAX_CHARS ? "text-red-500 font-semibold" : "text-[#9CA3AF] dark:text-slate-400"}`}>
                 {description.length}/{DESC_MAX_CHARS}
               </span>
             </div>
@@ -200,7 +200,7 @@ export default function UploadMediaPage() {
                 className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
                   !useYoutube
                     ? "border-[#000080] bg-[#000080] text-white"
-                    : "border-[#E5E7EB] text-[#374151] hover:border-[#000080] hover:text-[#000080]"
+                    : "border-[#E5E7EB] dark:border-slate-700 text-[#374151] dark:text-slate-300 hover:border-[#000080] hover:text-[#000080] dark:text-indigo-400"
                 }`}
               >
                 <Upload className="h-4 w-4" />
@@ -212,7 +212,7 @@ export default function UploadMediaPage() {
                 className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
                   useYoutube
                     ? "border-[#000080] bg-[#000080] text-white"
-                    : "border-[#E5E7EB] text-[#374151] hover:border-[#000080] hover:text-[#000080]"
+                    : "border-[#E5E7EB] dark:border-slate-700 text-[#374151] dark:text-slate-300 hover:border-[#000080] hover:text-[#000080] dark:text-indigo-400"
                 }`}
               >
                 <Link2 className="h-4 w-4" />
@@ -226,7 +226,7 @@ export default function UploadMediaPage() {
             <div>
               <label className={labelClass}>
                 Upload File <span className="text-red-500">*</span>
-                <span className="ml-1 text-xs font-normal text-[#6B7280]">(max 200 MB)</span>
+                <span className="ml-1 text-xs font-normal text-[#6B7280] dark:text-slate-400">(max 200 MB)</span>
               </label>
               <input
                 ref={fileInputRef}
@@ -234,19 +234,19 @@ export default function UploadMediaPage() {
                 accept="audio/*,video/*,image/*"
                 onChange={handleFileChange}
                 required={!useYoutube}
-                className="block w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] file:mr-3 file:rounded-lg file:border-0 file:bg-[#000080] file:px-3 file:py-1 file:text-xs file:font-medium file:text-white"
+                className="block w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-[#000080] file:px-3 file:py-1 file:text-xs file:font-medium file:text-white"
               />
               {mediaFile && (
-                <p className="mt-1 text-xs text-[#6B7280]">
+                <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">
                   Selected: {mediaFile.name} ({(mediaFile.size / 1_048_576).toFixed(1)} MB)
                 </p>
               )}
-              <p className="mt-1.5 text-xs text-[#6B7280]">
+              <p className="mt-1.5 text-xs text-[#6B7280] dark:text-slate-400">
                 Tip: For sermons or recordings available on YouTube, use the{" "}
                 <button
                   type="button"
                   onClick={() => { setUseYoutube(true); clearFileInput(); }}
-                  className="font-medium text-[#000080] underline"
+                  className="font-medium text-[#000080] dark:text-indigo-400 underline"
                 >
                   YouTube / External Link
                 </button>{" "}
@@ -269,7 +269,7 @@ export default function UploadMediaPage() {
                 className={inputClass}
                 required={useYoutube}
               />
-              <p className="mt-1 text-xs text-[#6B7280]">
+              <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">
                 Paste the full link to the YouTube video or any other online resource.
               </p>
             </div>

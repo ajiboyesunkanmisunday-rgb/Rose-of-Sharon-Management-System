@@ -169,8 +169,8 @@ export default function DashboardPage() {
       sublabel: monthLabel,
       value: stats.loading ? "—" : stats.firstTimersMonth.toLocaleString(),
       icon: UserPlus,
-      iconBg: "bg-[#FFF7ED]",
-      iconColor: "text-[#EA580C]",
+      iconBg: "bg-[#FFF7ED] dark:bg-orange-900/30",
+      iconColor: "text-[#EA580C] dark:text-orange-400",
       href: "/user-management/first-timers",
     },
     {
@@ -178,8 +178,8 @@ export default function DashboardPage() {
       sublabel: monthLabel,
       value: stats.loading ? "—" : stats.secondTimersMonth.toLocaleString(),
       icon: UserCheck,
-      iconBg: "bg-[#F0FDF4]",
-      iconColor: "text-[#16A34A]",
+      iconBg: "bg-[#F0FDF4] dark:bg-green-900/30",
+      iconColor: "text-[#16A34A] dark:text-green-300",
       href: "/user-management/second-timers",
     },
     {
@@ -187,8 +187,8 @@ export default function DashboardPage() {
       sublabel: monthLabel,
       value: stats.loading ? "—" : stats.newConvertsMonth.toLocaleString(),
       icon: Star,
-      iconBg: "bg-[#FDF4FF]",
-      iconColor: "text-[#A21CAF]",
+      iconBg: "bg-[#FDF4FF] dark:bg-purple-900/30",
+      iconColor: "text-[#A21CAF] dark:text-purple-400",
       href: "/user-management/new-converts",
     },
     {
@@ -196,8 +196,8 @@ export default function DashboardPage() {
       sublabel: "Members + E-Members",
       value: stats.loading ? "—" : stats.activeMembers.toLocaleString(),
       icon: Users,
-      iconBg: "bg-[#EEF2FF]",
-      iconColor: "text-[#000080]",
+      iconBg: "bg-[#EEF2FF] dark:bg-indigo-900/30",
+      iconColor: "text-[#000080] dark:text-indigo-400",
       href: "/user-management/members",
     },
   ];
@@ -306,7 +306,7 @@ export default function DashboardPage() {
                   className="w-full rounded-t-md bg-[#000080] dark:bg-indigo-600 transition-all"
                   style={{ height: `${(item.value / maxAttendance) * 180}px` }}
                 />
-                <span className="text-[10px] text-[#6B7280] dark:text-slate-500 text-center">{item.day}</span>
+                <span className="text-[10px] text-[#6B7280] dark:text-slate-400 text-center">{item.day}</span>
               </div>
             ))}
           </div>

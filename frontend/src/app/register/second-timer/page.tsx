@@ -87,13 +87,13 @@ export default function RegisterSecondTimerPage() {
   };
 
   const inputStyles =
-    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
   const selectStyles =
-    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
-  const labelStyles = "mb-1 block text-sm font-medium text-[#374151]";
+    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  const labelStyles = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-slate-800">
       {/* Logo */}
       <div className="px-8 py-6">
         <Image
@@ -112,13 +112,13 @@ export default function RegisterSecondTimerPage() {
       {/* Content */}
       <div className="mx-auto max-w-5xl px-8 py-8">
         {/* Title */}
-        <h1 className="mb-8 text-center text-[28px] font-bold text-[#000000]">
+        <h1 className="mb-8 text-center text-[28px] font-bold text-[#000000] dark:text-slate-100">
           We Are Glad You Came Back! (Second Timer)
         </h1>
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          <h2 className="mb-6 text-base font-medium text-[#374151]">
+          <h2 className="mb-6 text-base font-medium text-[#374151] dark:text-slate-300">
             Enter Your Details
           </h2>
 
@@ -127,7 +127,7 @@ export default function RegisterSecondTimerPage() {
             <label className={labelStyles}>Title</label>
             <div className="flex items-center gap-6 pt-1">
               {TITLES.map((t) => (
-                <label key={t} className="flex items-center gap-2 text-sm text-[#374151] cursor-pointer">
+                <label key={t} className="flex items-center gap-2 text-sm text-[#374151] dark:text-slate-300 cursor-pointer">
                   <input
                     type="radio"
                     name="title"
@@ -165,7 +165,7 @@ export default function RegisterSecondTimerPage() {
                   name="mobileCountryCode"
                   value={formData.mobileCountryCode}
                   onChange={handleChange}
-                  className="w-[100px] rounded-lg border border-[#E5E7EB] px-2 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+                  className="w-[100px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-2 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
                 >
                   <option value="+234">+234</option>
                   <option value="+233">+233</option>
@@ -210,7 +210,7 @@ export default function RegisterSecondTimerPage() {
                   name="whatsappCountryCode"
                   value={formData.whatsappCountryCode}
                   onChange={handleChange}
-                  className="w-[100px] rounded-lg border border-[#E5E7EB] px-2 py-3 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+                  className="w-[100px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-2 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
                 >
                   <option value="+234">+234</option>
                   <option value="+233">+233</option>
@@ -274,7 +274,7 @@ export default function RegisterSecondTimerPage() {
           </div>
 
           {/* Address Section */}
-          <h2 className="mb-4 mt-8 text-base font-medium text-[#374151]">
+          <h2 className="mb-4 mt-8 text-base font-medium text-[#374151] dark:text-slate-300">
             Address
           </h2>
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">

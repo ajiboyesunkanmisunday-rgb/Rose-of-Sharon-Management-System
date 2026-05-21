@@ -112,8 +112,8 @@ export default function MediaPage() {
           <Film className="h-6 w-6 text-[#059669]" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Media</h1>
-          <p className="text-sm text-[#6B7280]">Sermons, podcasts, videos, and pictures</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Media</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Sermons, podcasts, videos, and pictures</p>
         </div>
       </div>
 
@@ -142,15 +142,15 @@ export default function MediaPage() {
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 flex gap-8 overflow-x-auto border-b border-[#E5E7EB]">
+      <div className="mb-6 flex gap-8 overflow-x-auto border-b border-[#E5E7EB] dark:border-slate-700">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => { setActiveTab(tab.key); setCurrentPage(1); }}
             className={`whitespace-nowrap pb-3 text-sm font-medium transition-colors ${
               activeTab === tab.key
-                ? "border-b-2 border-[#000080] text-[#000080]"
-                : "text-[#6B7280] hover:text-[#374151]"
+                ? "border-b-2 border-[#000080] text-[#000080] dark:text-indigo-400"
+                : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"
             }`}
           >
             {tab.label}
@@ -159,15 +159,15 @@ export default function MediaPage() {
       </div>
 
       {apiError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} — <button className="font-medium underline" onClick={() => fetchMedia(currentPage)}>Retry</button>
         </div>
       )}
 
       {loading ? (
-        <div className="py-12 text-center text-gray-400">Loading…</div>
+        <div className="py-12 text-center text-gray-400 dark:text-slate-500">Loading…</div>
       ) : displayed.length === 0 ? (
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-12 text-center text-sm text-gray-400">
+        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-12 text-center text-sm text-gray-400 dark:text-slate-500">
           No media found.
         </div>
       ) : (
@@ -181,9 +181,9 @@ export default function MediaPage() {
             return (
               <div
                 key={item.id}
-                className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white transition-shadow hover:shadow-md"
+                className="overflow-hidden rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 transition-shadow hover:shadow-md"
               >
-                <div className="flex h-[160px] items-center justify-center overflow-hidden bg-[#F3F4F6]">
+                <div className="flex h-[160px] items-center justify-center overflow-hidden bg-[#F3F4F6] dark:bg-slate-700/30">
                   {isImage && mediaUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -207,11 +207,11 @@ export default function MediaPage() {
                   <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${categoryColors[tabKey] ?? categoryColors.OTHER}`}>
                     {tabLabels[tabKey] ?? "Media"}
                   </span>
-                  <h3 className="mt-3 text-sm font-semibold text-[#111827] line-clamp-2 break-all">{item.title ?? item.displayName ?? "Untitled"}</h3>
+                  <h3 className="mt-3 text-sm font-semibold text-[#111827] dark:text-slate-100 line-clamp-2 break-all">{item.title ?? item.displayName ?? "Untitled"}</h3>
                   {item.description && (
-                    <p className="mt-1 line-clamp-2 text-xs text-[#6B7280]">{item.description}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-[#6B7280] dark:text-slate-400">{item.description}</p>
                   )}
-                  <div className="mt-1 flex items-center gap-2 text-xs text-[#9CA3AF]">
+                  <div className="mt-1 flex items-center gap-2 text-xs text-[#9CA3AF] dark:text-slate-400">
                     <span>{fmtDate(item.createdOn)}</span>
                     {fileSizeFmt(mediaSize) && <span>· {fileSizeFmt(mediaSize)}</span>}
                   </div>

@@ -9,17 +9,17 @@ import { ActiveWorkflowCard, ActiveWorkflowStage, WorkflowCardStatus } from "@/l
 
 // ── Column config ───────────────────────────────────────────────────────────────
 const COLUMNS: { stage: ActiveWorkflowStage; headerBg: string; headerText: string; dotColor: string }[] = [
-  { stage: "First Timers",   headerBg: "bg-blue-50",   headerText: "text-blue-800",  dotColor: "bg-blue-400"   },
+  { stage: "First Timers",   headerBg: "bg-blue-50 dark:bg-blue-900/20",   headerText: "text-blue-800",  dotColor: "bg-blue-400"   },
   { stage: "Follow-up Call", headerBg: "bg-yellow-50", headerText: "text-yellow-800",dotColor: "bg-yellow-400" },
   { stage: "Follow-up Visit",headerBg: "bg-purple-50", headerText: "text-purple-800",dotColor: "bg-purple-400" },
-  { stage: "Second Timers",  headerBg: "bg-green-50",  headerText: "text-green-800", dotColor: "bg-green-400"  },
+  { stage: "Second Timers",  headerBg: "bg-green-50 dark:bg-green-900/20",  headerText: "text-green-800", dotColor: "bg-green-400"  },
   { stage: "New Converts",   headerBg: "bg-indigo-50", headerText: "text-indigo-800",dotColor: "bg-indigo-400" },
 ];
 
 const STATUS_COLORS: Record<WorkflowCardStatus, string> = {
-  "On Track": "bg-[#DCFCE7] text-[#16A34A]",
-  Overdue:    "bg-[#FEE2E2] text-[#DC2626]",
-  Pending:    "bg-[#FEF9C3] text-[#CA8A04]",
+  "On Track": "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
+  Overdue:    "bg-[#FEE2E2] dark:bg-red-900/30 text-[#DC2626] dark:text-red-400",
+  Pending:    "bg-[#FEF9C3] dark:bg-yellow-900/30 text-[#CA8A04] dark:text-yellow-300",
 };
 
 type ColumnsState = Record<ActiveWorkflowStage, ActiveWorkflowCard[]>;
@@ -94,7 +94,7 @@ export default function ActiveWorkflowsPage() {
     <DashboardLayout>
       {/* Toast */}
       {toast && (
-        <div className="pointer-events-none fixed bottom-6 right-6 z-50 rounded-xl border border-[#E5E7EB] bg-white px-5 py-3 text-sm font-medium text-[#111827] shadow-xl">
+        <div className="pointer-events-none fixed bottom-6 right-6 z-50 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-3 text-sm font-medium text-[#111827] dark:text-slate-100 shadow-xl">
           {toast}
         </div>
       )}
@@ -102,11 +102,11 @@ export default function ActiveWorkflowsPage() {
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F0FDF4]">
-          <Activity className="h-6 w-6 text-[#16A34A]" />
+          <Activity className="h-6 w-6 text-[#16A34A] dark:text-green-300" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Guest Follow-up Pipeline</h1>
-          <p className="text-sm text-[#6B7280]">
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Guest Follow-up Pipeline</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">
             {totalCards} active guest{totalCards !== 1 ? "s" : ""} · Drag cards between columns to update stage
           </p>
         </div>
@@ -124,8 +124,8 @@ export default function ActiveWorkflowsPage() {
               onDragOver={(e) => handleDragOver(e, col.stage)}
               onDrop={(e) => handleDrop(e, col.stage)}
               onDragLeave={() => setDragOver(null)}
-              className={`flex min-w-[270px] flex-1 flex-col rounded-xl border-2 bg-white transition-all ${
-                isOver ? "border-[#000080] shadow-md" : "border-[#E5E7EB]"
+              className={`flex min-w-[270px] flex-1 flex-col rounded-xl border-2 bg-white dark:bg-slate-800 transition-all ${
+                isOver ? "border-[#000080] shadow-md" : "border-[#E5E7EB] dark:border-slate-700"
               }`}
             >
               {/* Column header */}
@@ -134,14 +134,14 @@ export default function ActiveWorkflowsPage() {
                   <span className={`h-2.5 w-2.5 rounded-full ${col.dotColor}`} />
                   <h3 className={`text-sm font-bold ${col.headerText}`}>{col.stage}</h3>
                 </div>
-                <span className="rounded-full bg-white/80 px-2.5 py-0.5 text-xs font-bold text-[#374151]">
+                <span className="rounded-full bg-white dark:bg-slate-800/80 px-2.5 py-0.5 text-xs font-bold text-[#374151] dark:text-slate-300">
                   {colCards.length}
                 </span>
               </div>
 
               {/* Drop zone hint */}
               {isOver && (
-                <div className="mx-3 mt-2 rounded-lg border-2 border-dashed border-[#000080]/40 bg-[#F0F2FF] py-3 text-center text-xs font-medium text-[#000080]">
+                <div className="mx-3 mt-2 rounded-lg border-2 border-dashed border-[#000080]/40 bg-[#F0F2FF] py-3 text-center text-xs font-medium text-[#000080] dark:text-indigo-400">
                   Drop here
                 </div>
               )}
@@ -149,7 +149,7 @@ export default function ActiveWorkflowsPage() {
               {/* Cards */}
               <div className="flex flex-1 flex-col gap-2.5 p-3">
                 {colCards.length === 0 && !isOver ? (
-                  <div className="flex flex-1 items-center justify-center py-6 text-xs text-[#9CA3AF]">
+                  <div className="flex flex-1 items-center justify-center py-6 text-xs text-[#9CA3AF] dark:text-slate-400">
                     No guests
                   </div>
                 ) : (
@@ -188,29 +188,29 @@ function GuestCard({
       draggable
       onDragStart={() => onDragStart(card.id, card.stage)}
       onDragEnd={onDragEnd}
-      className={`group rounded-xl border bg-white p-3.5 shadow-sm transition-all cursor-grab active:cursor-grabbing ${
+      className={`group rounded-xl border bg-white dark:bg-slate-800 p-3.5 shadow-sm transition-all cursor-grab active:cursor-grabbing ${
         isMoving
           ? "opacity-50 scale-95"
-          : "border-[#E5E7EB] hover:border-[#000080] hover:shadow-md"
+          : "border-[#E5E7EB] dark:border-slate-700 hover:border-[#000080] hover:shadow-md"
       }`}
     >
       {/* Name + grip handle */}
       <div className="mb-2 flex items-start justify-between gap-2">
-        <p className="text-sm font-semibold text-[#111827] leading-snug">{card.memberName}</p>
-        <GripVertical className="h-4 w-4 shrink-0 text-[#D1D5DB] group-hover:text-[#9CA3AF]" />
+        <p className="text-sm font-semibold text-[#111827] dark:text-slate-100 leading-snug">{card.memberName}</p>
+        <GripVertical className="h-4 w-4 shrink-0 text-[#D1D5DB] group-hover:text-[#9CA3AF] dark:text-slate-400" />
       </div>
 
       {/* Meta */}
       <div className="space-y-1.5">
-        <div className="flex items-center gap-1.5 text-xs text-[#374151]">
-          <Phone className="h-3 w-3 shrink-0 text-[#9CA3AF]" />
+        <div className="flex items-center gap-1.5 text-xs text-[#374151] dark:text-slate-300">
+          <Phone className="h-3 w-3 shrink-0 text-[#9CA3AF] dark:text-slate-400" />
           <span>{card.phone}</span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-[#374151]">
-          <User className="h-3 w-3 shrink-0 text-[#9CA3AF]" />
+        <div className="flex items-center gap-1.5 text-xs text-[#374151] dark:text-slate-300">
+          <User className="h-3 w-3 shrink-0 text-[#9CA3AF] dark:text-slate-400" />
           <span>Assigned: <span className="font-medium">{card.assignedTo}</span></span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-[#9CA3AF]">
+        <div className="flex items-center gap-1.5 text-xs text-[#9CA3AF] dark:text-slate-400">
           <CalendarDays className="h-3 w-3 shrink-0" />
           <span>Added {card.dateAdded}</span>
         </div>
@@ -223,7 +223,7 @@ function GuestCard({
         </span>
         <button
           onClick={onView}
-          className="text-xs font-medium text-[#000080] underline hover:text-[#000066]"
+          className="text-xs font-medium text-[#000080] dark:text-indigo-400 underline hover:text-[#000066]"
         >
           View
         </button>

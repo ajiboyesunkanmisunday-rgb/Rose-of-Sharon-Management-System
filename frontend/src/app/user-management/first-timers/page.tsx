@@ -378,7 +378,7 @@ export default function FirstTimersPage() {
             <select
               value={filterService}
               onChange={(e) => { setFilterService(e.target.value); setCurrentPage(1); }}
-              className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500"
+              className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500"
             >
               <option value="">All Services</option>
               <option value="Sunday Service">Sunday Service</option>
@@ -388,15 +388,15 @@ export default function FirstTimersPage() {
           </div>
           <div className="flex flex-col">
             <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">From</label>
-            <input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500" />
+            <input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500" />
           </div>
           <div className="flex flex-col">
             <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">To</label>
-            <input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500" />
+            <input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500" />
           </div>
           <button
             onClick={() => { setFilterService(""); setFilterDateFrom(""); setFilterDateTo(""); setCurrentPage(1); }}
-            className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-600 px-4 text-sm text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700"
+            className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 dark:border-slate-600 px-4 text-sm text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:bg-slate-700/50 dark:hover:bg-slate-700"
           >
             Clear
           </button>
@@ -405,7 +405,7 @@ export default function FirstTimersPage() {
 
       {/* API error */}
       {apiError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} —{" "}
           <button className="font-medium underline" onClick={() => fetchTimers(currentPage)}>
             Retry
@@ -415,13 +415,13 @@ export default function FirstTimersPage() {
 
       {/* Action error */}
       {actionError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {actionError}
         </div>
       )}
 
       {selectedRows.size > 0 && (
-        <div className="mb-2 text-sm text-gray-500">
+        <div className="mb-2 text-sm text-gray-500 dark:text-slate-400">
           {selectedRows.size} first timer{selectedRows.size > 1 ? "s" : ""} selected
         </div>
       )}
@@ -436,13 +436,13 @@ export default function FirstTimersPage() {
             </div>
           ))
         ) : displayedTimers.length === 0 ? (
-          <p className="text-center text-sm text-gray-400 py-8">No first timers found.</p>
+          <p className="text-center text-sm text-gray-400 dark:text-slate-500 py-8">No first timers found.</p>
         ) : (
           displayedTimers.map((ft) => (
             <div
               key={ft.id}
               onClick={() => router.push(`/user-management/first-timers/${ft.id}`)}
-              className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+              className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 cursor-pointer hover:bg-gray-50 dark:bg-slate-700/50 dark:hover:bg-slate-700/50 transition-colors"
             >
               <UserAvatar
                 id={ft.id}
@@ -480,16 +480,16 @@ export default function FirstTimersPage() {
                   type="checkbox"
                   checked={allPageSelected}
                   onChange={(e) => handleSelectAll(e.target.checked)}
-                  className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
+                  className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
                 />
               </th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Name</th>
               <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Phone</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Email</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Service Attended</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Assigned Follow-up</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Calls</th>
-              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Visits</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Email</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Service Attended</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Assigned Follow-up</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Calls</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Visits</th>
               <th className="px-4 py-4"></th>
             </tr>
           </thead>
@@ -498,13 +498,13 @@ export default function FirstTimersPage() {
               Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={9} />)
             ) : displayedTimers.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-gray-400">No first timers found.</td>
+                <td colSpan={9} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">No first timers found.</td>
               </tr>
             ) : (
               displayedTimers.map((ft) => (
                 <tr
                   key={ft.id}
-                  className="border-b border-[#F3F4F6] dark:border-slate-700 transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer"
+                  className="border-b border-[#F3F4F6] dark:border-slate-700 transition-colors hover:bg-gray-50 dark:bg-slate-700/50 dark:hover:bg-slate-700/50 cursor-pointer"
                   style={{ height: "56px" }}
                   onClick={() => router.push(`/user-management/first-timers/${ft.id}`)}
                 >
@@ -513,20 +513,20 @@ export default function FirstTimersPage() {
                       type="checkbox"
                       checked={selectedRows.has(ft.id)}
                       onChange={() => handleSelectRow(ft.id)}
-                      className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
+                      className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
                     />
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151] max-w-[200px]"><span className="block truncate">{fullName(ft)}</span></td>
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[200px]"><span className="block truncate">{fullName(ft)}</span></td>
                   <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{ft.phoneNumber}</td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{ft.email}</td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{ft.email}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {ft.serviceAttended || <span className="text-[#9CA3AF] dark:text-slate-500">—</span>}
                   </td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {ft.assignedFollowUp ? fullName(ft.assignedFollowUp) : <span className="text-[#9CA3AF] dark:text-slate-500">—</span>}
                   </td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{ft.noOfCalls ?? 0}</td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">{ft.noOfVisits ?? 0}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{ft.noOfCalls ?? 0}</td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{ft.noOfVisits ?? 0}</td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <ActionDropdown
                       actions={[
@@ -579,13 +579,13 @@ export default function FirstTimersPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Report</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Report</label>
             <textarea
               value={callReport}
               onChange={(e) => setCallReport(e.target.value)}
               placeholder="Enter Report"
               rows={5}
-              className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-gray-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-gray-400 dark:text-slate-500 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
           </div>
           <button
@@ -606,13 +606,13 @@ export default function FirstTimersPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Report</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Report</label>
             <textarea
               value={visitReport}
               onChange={(e) => setVisitReport(e.target.value)}
               placeholder="Enter Report"
               rows={5}
-              className="w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-gray-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-gray-400 dark:text-slate-500 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
           </div>
           <button

@@ -14,7 +14,7 @@ const PROGRAM_COLORS: Record<MinistryProgram, string> = {
   "Sunday Sermon": "bg-[#000080] text-white",
   "Tuesday Digging Deep": "bg-green-100 text-green-800",
   "Thursday Prayer": "bg-orange-100 text-orange-800",
-  Other: "bg-gray-100 text-gray-700",
+  Other: "bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300",
 };
 
 const PROGRAM_OPTIONS: Array<MinistryProgram | "All"> = [
@@ -208,20 +208,20 @@ export default function MinistersOnDutyPage() {
           className="hidden"
         />
         <Link href="/calendar/ministers/add">
-          <Button variant="outline" className="border-[#000080] text-[#000080] hover:bg-[#F3F4F6]">
+          <Button variant="outline" className="border-[#000080] text-[#000080] dark:text-indigo-400 hover:bg-[#F3F4F6] dark:bg-slate-700/30">
             Add Minister to Event
           </Button>
         </Link>
         <button
           onClick={handleDownloadTemplate}
-          className="text-sm font-medium text-[#000080] underline transition-colors hover:text-[#000055]"
+          className="text-sm font-medium text-[#000080] dark:text-indigo-400 underline transition-colors hover:text-[#000055]"
         >
           Download CSV Template
         </button>
       </div>
 
       {toast && (
-        <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+        <div className="mb-4 rounded-lg border border-green-200 bg-green-50 dark:bg-green-900/20 px-4 py-3 text-sm text-green-800">
           {toast}
         </div>
       )}
@@ -229,15 +229,15 @@ export default function MinistersOnDutyPage() {
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* Left: mini calendar */}
         <div className="lg:w-1/2">
-          <div className="mb-4 rounded-xl border border-[#E5E7EB] bg-white px-6 py-4">
-            <h2 className="text-lg font-bold text-[#000080]">April 2026</h2>
+          <div className="mb-4 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-6 py-4">
+            <h2 className="text-lg font-bold text-[#000080] dark:text-indigo-400">April 2026</h2>
           </div>
-          <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
-            <div className="grid grid-cols-7 min-w-[320px] bg-[#F3F4F6]">
+          <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
+            <div className="grid grid-cols-7 min-w-[320px] bg-[#F3F4F6] dark:bg-slate-700/30">
               {DAYS.map((d) => (
                 <div
                   key={d}
-                  className="px-2 py-2 text-center text-xs font-bold text-[#000080]"
+                  className="px-2 py-2 text-center text-xs font-bold text-[#000080] dark:text-indigo-400"
                 >
                   {d}
                 </div>
@@ -253,12 +253,12 @@ export default function MinistersOnDutyPage() {
                   <div
                     key={idx}
                     className={`min-h-[80px] border-b border-r border-[#F3F4F6] p-1.5 ${
-                      day ? "bg-white" : "bg-[#FAFAFA]"
+                      day ? "bg-white dark:bg-slate-800" : "bg-[#FAFAFA]"
                     }`}
                   >
                     {day && (
                       <>
-                        <span className="text-xs font-medium text-[#374151]">
+                        <span className="text-xs font-medium text-[#374151] dark:text-slate-300">
                           {day}
                         </span>
                         <div className="mt-1 space-y-1">
@@ -272,7 +272,7 @@ export default function MinistersOnDutyPage() {
                             </div>
                           ))}
                           {dayEntries.length > 2 && (
-                            <span className="text-[10px] text-[#6B7280]">
+                            <span className="text-[10px] text-[#6B7280] dark:text-slate-400">
                               +{dayEntries.length - 2} more
                             </span>
                           )}
@@ -289,13 +289,13 @@ export default function MinistersOnDutyPage() {
         {/* Right: list */}
         <div className="lg:flex-1">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-[#111827]">Schedule</h3>
+            <h3 className="text-sm font-semibold text-[#111827] dark:text-slate-100">Schedule</h3>
             <select
               value={programFilter}
               onChange={(e) =>
                 setProgramFilter(e.target.value)
               }
-              className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             >
               <option value="All">All Categories</option>
               <option value="SERVICE">Service</option>
@@ -309,10 +309,10 @@ export default function MinistersOnDutyPage() {
           <div className="space-y-3">
             {loading ? (
               Array(3).fill(0).map((_, i) => (
-                <div key={i} className="h-24 animate-pulse rounded-xl border border-[#E5E7EB] bg-gray-50" />
+                <div key={i} className="h-24 animate-pulse rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50" />
               ))
             ) : filtered.length === 0 ? (
-              <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 text-center text-sm text-[#6B7280]">
+              <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 text-center text-sm text-[#6B7280] dark:text-slate-400">
                 No ministers scheduled for this period.
               </div>
             ) : (
@@ -322,18 +322,18 @@ export default function MinistersOnDutyPage() {
                 .map((m) => (
                   <div
                     key={m.id}
-                    className="flex items-center justify-between rounded-xl border border-[#E5E7EB] bg-white p-4"
+                    className="flex items-center justify-between rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4"
                   >
                     <div className="flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span
-                          className="rounded-full px-2.5 py-1 text-[11px] font-medium bg-blue-50 text-blue-700"
+                          className="rounded-full px-2.5 py-1 text-[11px] font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700"
                         >
                           {m.title}
                         </span>
-                        <span className="text-xs text-[#6B7280]">{m.date}</span>
+                        <span className="text-xs text-[#6B7280] dark:text-slate-400">{m.date}</span>
                       </div>
-                      <p className="mt-2 text-sm font-semibold text-[#111827]">
+                      <p className="mt-2 text-sm font-semibold text-[#111827] dark:text-slate-100">
                         {m.preacher || "TBA"}
                       </p>
                     </div>

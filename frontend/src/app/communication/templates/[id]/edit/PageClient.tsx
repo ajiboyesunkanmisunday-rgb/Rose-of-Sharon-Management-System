@@ -93,15 +93,15 @@ export default function EditTemplateClient() {
   };
 
   const inputCls =
-    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
-  const labelCls = "mb-1 block text-sm font-medium text-[#374151]";
+    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+  const labelCls = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
 
   return (
     <DashboardLayout>
       <div className="mb-6">
         <button
           onClick={() => router.push("/communication/templates")}
-          className="mb-1 flex items-center gap-1 text-sm text-[#000080] hover:underline"
+          className="mb-1 flex items-center gap-1 text-sm text-[#000080] dark:text-indigo-400 hover:underline"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -118,23 +118,23 @@ export default function EditTemplateClient() {
           </svg>
           Back to Templates
         </button>
-        <h1 className="text-[28px] font-bold text-[#000000]">Edit Template</h1>
-        {name && <p className="text-sm text-[#6B7280]">{name}</p>}
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Edit Template</h1>
+        {name && <p className="text-sm text-[#6B7280] dark:text-slate-400">{name}</p>}
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
       {loading ? (
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-10 text-center text-sm text-gray-400">
+        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-10 text-center text-sm text-gray-400 dark:text-slate-500">
           Loading template…
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 space-y-5">
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 space-y-5">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <SelectField
                 label="Category"
@@ -188,12 +188,12 @@ export default function EditTemplateClient() {
                 className={inputCls}
                 required
               />
-              <p className="mt-1 text-xs text-[#6B7280]">
+              <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">
                 Placeholders:{" "}
-                <code className="rounded bg-gray-100 px-1">
+                <code className="rounded bg-gray-100 dark:bg-slate-700 px-1">
                   {"{firstName}"}
                 </code>
-                <code className="rounded bg-gray-100 px-1">{"{name}"}</code>{" "}
+                <code className="rounded bg-gray-100 dark:bg-slate-700 px-1">{"{name}"}</code>{" "}
               </p>
             </div>
 

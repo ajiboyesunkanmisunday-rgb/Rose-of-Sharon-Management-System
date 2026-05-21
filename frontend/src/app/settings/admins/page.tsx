@@ -141,14 +141,14 @@ export default function AdminUsersPage() {
     <DashboardLayout>
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF]">
-            <ShieldCheck className="h-6 w-6 text-[#000080]" />
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF] dark:bg-indigo-900/30">
+            <ShieldCheck className="h-6 w-6 text-[#000080] dark:text-indigo-400" />
           </div>
           <div>
-            <h1 className="text-[28px] font-bold text-[#000000]">
+            <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">
               Admin Users
             </h1>
-            <p className="text-sm text-[#6B7280]">
+            <p className="text-sm text-[#6B7280] dark:text-slate-400">
               Manage users with administrative access
             </p>
           </div>
@@ -173,7 +173,7 @@ export default function AdminUsersPage() {
       </div>
 
       {apiError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} —{" "}
           <button className="font-medium underline" onClick={fetchAdmins}>
             Retry
@@ -181,26 +181,26 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Admin Name
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Email
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Type
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Role
               </th>
-              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Last Login
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Actions
               </th>
             </tr>
@@ -208,13 +208,13 @@ export default function AdminUsersPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={6} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
                   Loading…
                 </td>
               </tr>
             ) : admins.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={6} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
                   No admin users found.
                 </td>
               </tr>
@@ -222,10 +222,10 @@ export default function AdminUsersPage() {
               admins.map((admin) => (
                 <tr
                   key={admin.id}
-                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50"
+                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50"
                   style={{ height: "56px" }}
                 >
-                  <td className="px-4 py-3 text-sm font-medium text-[#374151]">
+                  <td className="px-4 py-3 text-sm font-medium text-[#374151] dark:text-slate-300">
                     <div className="flex items-center gap-3">
                       {admin.profilePictureUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -235,14 +235,14 @@ export default function AdminUsersPage() {
                           className="h-8 w-8 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-[10px] font-bold text-gray-600">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-slate-700 text-[10px] font-bold text-gray-600 dark:text-slate-400">
                           {admin.firstName[0]}{admin.lastName[0]}
                         </div>
                       )}
                       <span>{admin.firstName} {admin.lastName}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {admin.email}
                   </td>
                   <td className="px-4 py-3 text-sm">
@@ -254,10 +254,10 @@ export default function AdminUsersPage() {
                       {admin.userType?.replace("_", " ")}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {admin.roleName || "—"}
                   </td>
-                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151]">
+                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {fmtDate(admin.lastLogin)}
                   </td>
                   <td className="px-4 py-3">

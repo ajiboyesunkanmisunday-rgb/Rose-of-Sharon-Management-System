@@ -28,7 +28,7 @@ export default function LinkSpousePage() {
   const [error,       setError]       = useState("");
 
   const inputStyles =
-    "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
 
   const handleSearch = useCallback(async () => {
     if (!search.trim()) return;
@@ -61,25 +61,25 @@ export default function LinkSpousePage() {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000]">User Management</h1>
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">User Management</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-[#000080] transition-colors hover:text-[#000066]"
+            className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
             </svg>
           </button>
-          <h2 className="text-[22px] font-bold text-[#000080]">Link Spouse</h2>
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">Link Spouse</h2>
         </div>
       </div>
 
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
-        <h2 className="mb-6 text-[18px] font-bold text-[#000000]">Search for a Member</h2>
+      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+        <h2 className="mb-6 text-[18px] font-bold text-[#000000] dark:text-slate-100">Search for a Member</h2>
 
         {error && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{error}</div>
         )}
 
         <div className="mb-6 flex gap-3">
@@ -106,33 +106,33 @@ export default function LinkSpousePage() {
             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <p className="mt-4 text-sm text-[#6B7280]">Search for a member to link as spouse</p>
+            <p className="mt-4 text-sm text-[#6B7280] dark:text-slate-400">Search for a member to link as spouse</p>
           </div>
         ) : searching ? (
-          <div className="flex h-24 items-center justify-center text-gray-400">Searching…</div>
+          <div className="flex h-24 items-center justify-center text-gray-400 dark:text-slate-500">Searching…</div>
         ) : results.length === 0 ? (
-          <div className="py-12 text-center text-sm text-[#6B7280]">No members found matching your search.</div>
+          <div className="py-12 text-center text-sm text-[#6B7280] dark:text-slate-400">No members found matching your search.</div>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-[#E5E7EB]">
+          <div className="overflow-x-auto rounded-lg border border-[#E5E7EB] dark:border-slate-700">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="bg-[#F3F4F6]">
-                  <th className="px-4 py-4 text-sm font-bold text-[#000080]">Name</th>
-                  <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Phone</th>
-                  <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">Email</th>
+                <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
+                  <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Name</th>
+                  <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Phone</th>
+                  <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Email</th>
                   <th className="px-4 py-4"></th>
                 </tr>
               </thead>
               <tbody>
                 {results.map((member) => (
-                  <tr key={member.id} className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50" style={{ height: "56px" }}>
-                    <td className="px-4 py-3 text-sm text-[#374151]">
+                  <tr key={member.id} className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50" style={{ height: "56px" }}>
+                    <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                       {[member.firstName, member.middleName, member.lastName].filter(Boolean).join(" ")}
                     </td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                    <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                       {member.phoneNumber}
                     </td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                    <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                       {member.email}
                     </td>
                     <td className="px-4 py-3">

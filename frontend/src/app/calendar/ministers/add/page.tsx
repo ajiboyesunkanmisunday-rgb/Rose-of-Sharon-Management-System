@@ -144,9 +144,9 @@ export default function AddMinisterPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* Section 1: Event Selection */}
-          <div className="bg-white p-6 rounded-2xl border border-[#E5E7EB] space-y-4">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-[#E5E7EB] dark:border-slate-700 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[#000080] flex items-center gap-2">
+              <h3 className="text-sm font-bold text-[#000080] dark:text-indigo-400 flex items-center gap-2">
                 <Calendar className="w-4 h-4" /> Event Details
               </h3>
               <label className="flex items-center gap-2 cursor-pointer group">
@@ -154,9 +154,9 @@ export default function AddMinisterPage() {
                   type="checkbox" 
                   checked={isNewEvent}
                   onChange={(e) => setIsNewEvent(e.target.checked)}
-                  className="rounded border-[#E5E7EB] text-[#000080] focus:ring-[#000080]"
+                  className="rounded border-[#E5E7EB] dark:border-slate-700 text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
                 />
-                <span className="text-xs font-medium text-[#374151] group-hover:text-[#000080]">New Event?</span>
+                <span className="text-xs font-medium text-[#374151] dark:text-slate-300 group-hover:text-[#000080] dark:text-indigo-400">New Event?</span>
               </label>
             </div>
 
@@ -170,9 +170,9 @@ export default function AddMinisterPage() {
               />
             ) : (
               <div className="relative" ref={eventRef}>
-                <label className="block text-xs font-semibold text-[#6B7280] mb-1">Search Existing Event</label>
+                <label className="block text-xs font-semibold text-[#6B7280] dark:text-slate-400 mb-1">Search Existing Event</label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF] dark:text-slate-400" />
                   <input 
                     type="text"
                     value={selectedEvent ? selectedEvent.title : eventQuery}
@@ -181,17 +181,17 @@ export default function AddMinisterPage() {
                       else setEventQuery(e.target.value);
                     }}
                     placeholder="Search by title..."
-                    className={`w-full pl-10 pr-10 py-2.5 bg-[#F9FAFB] border rounded-xl text-sm text-[#374151] focus:outline-none ${selectedEvent ? 'border-green-500 bg-green-50' : 'border-[#E5E7EB]'}`}
+                    className={`w-full pl-10 pr-10 py-2.5 bg-[#F9FAFB] border rounded-xl text-sm text-[#374151] dark:text-slate-300 focus:outline-none ${selectedEvent ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-[#E5E7EB] dark:border-slate-700'}`}
                   />
                   {selectedEvent && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
                       <Check className="w-4 h-4 text-green-500" />
-                      <X className="w-4 h-4 text-[#9CA3AF] cursor-pointer" onClick={() => setSelectedEvent(null)} />
+                      <X className="w-4 h-4 text-[#9CA3AF] dark:text-slate-400 cursor-pointer" onClick={() => setSelectedEvent(null)} />
                     </div>
                   )}
                 </div>
                 {showEventDropdown && eventResults.length > 0 && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-[#E5E7EB] rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                  <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-[#E5E7EB] dark:border-slate-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
                     {eventResults.map(ev => (
                       <div key={ev.id} onClick={() => { 
                         setSelectedEvent(ev); 
@@ -201,9 +201,9 @@ export default function AddMinisterPage() {
                           date: ev.date,
                           category: ev.eventCategory || "SPECIAL_SERVICE"
                         }));
-                      }} className="px-4 py-2 hover:bg-[#F3F4F6] cursor-pointer text-sm">
-                        <div className="font-medium text-[#111827]">{ev.title}</div>
-                        <div className="text-[10px] text-[#6B7280]">{ev.date} · {ev.eventCategory}</div>
+                      }} className="px-4 py-2 hover:bg-[#F3F4F6] dark:bg-slate-700/30 cursor-pointer text-sm">
+                        <div className="font-medium text-[#111827] dark:text-slate-100">{ev.title}</div>
+                        <div className="text-[10px] text-[#6B7280] dark:text-slate-400">{ev.date} · {ev.eventCategory}</div>
                       </div>
                     ))}
                   </div>
@@ -212,11 +212,11 @@ export default function AddMinisterPage() {
             )}
 
             <div className="flex flex-col">
-              <label className="text-xs font-semibold text-[#6B7280] mb-1">Category</label>
+              <label className="text-xs font-semibold text-[#6B7280] dark:text-slate-400 mb-1">Category</label>
               <select 
                 value={formData.category}
                 onChange={(e) => setFormData(p => ({ ...p, category: e.target.value }))}
-                className="w-full px-4 py-2.5 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm text-[#374151] focus:outline-none focus:border-[#000080]"
+                className="w-full px-4 py-2.5 bg-[#F9FAFB] border border-[#E5E7EB] dark:border-slate-700 rounded-xl text-sm text-[#374151] dark:text-slate-300 focus:outline-none focus:border-[#000080]"
               >
                 <option value="SERVICE">Service</option>
                 <option value="SPECIAL_SERVICE">Special Service</option>
@@ -228,15 +228,15 @@ export default function AddMinisterPage() {
           </div>
 
           {/* Section 2: Preacher Selection */}
-          <div className="bg-white p-6 rounded-2xl border border-[#E5E7EB] space-y-4">
-            <h3 className="text-sm font-bold text-[#000080] flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-[#E5E7EB] dark:border-slate-700 space-y-4">
+            <h3 className="text-sm font-bold text-[#000080] dark:text-indigo-400 flex items-center gap-2">
               <User className="w-4 h-4" /> Preacher Details
             </h3>
             
             <div className="relative" ref={preacherRef}>
-              <label className="block text-xs font-semibold text-[#6B7280] mb-1">Search Preacher (Members)</label>
+              <label className="block text-xs font-semibold text-[#6B7280] dark:text-slate-400 mb-1">Search Preacher (Members)</label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF] dark:text-slate-400" />
                 <input 
                   type="text"
                   value={selectedPreacher ? `${selectedPreacher.firstName} ${selectedPreacher.lastName}` : preacherQuery}
@@ -245,21 +245,21 @@ export default function AddMinisterPage() {
                     else setPreacherQuery(e.target.value);
                   }}
                   placeholder="Search name or email..."
-                  className={`w-full pl-10 pr-10 py-2.5 bg-[#F9FAFB] border rounded-xl text-sm text-[#374151] focus:outline-none ${selectedPreacher ? 'border-green-500 bg-green-50' : 'border-[#E5E7EB]'}`}
+                  className={`w-full pl-10 pr-10 py-2.5 bg-[#F9FAFB] border rounded-xl text-sm text-[#374151] dark:text-slate-300 focus:outline-none ${selectedPreacher ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-[#E5E7EB] dark:border-slate-700'}`}
                 />
                 {selectedPreacher && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
                     <Check className="w-4 h-4 text-green-500" />
-                    <X className="w-4 h-4 text-[#9CA3AF] cursor-pointer" onClick={() => setSelectedPreacher(null)} />
+                    <X className="w-4 h-4 text-[#9CA3AF] dark:text-slate-400 cursor-pointer" onClick={() => setSelectedPreacher(null)} />
                   </div>
                 )}
               </div>
               {showPreacherDropdown && preacherResults.length > 0 && (
-                <div className="absolute z-50 w-full mt-1 bg-white border border-[#E5E7EB] rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-[#E5E7EB] dark:border-slate-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
                   {preacherResults.map(p => (
-                    <div key={p.id} onClick={() => { setSelectedPreacher(p); setShowPreacherDropdown(false); }} className="px-4 py-2 hover:bg-[#F3F4F6] cursor-pointer text-sm">
-                      <div className="font-medium text-[#111827]">{p.firstName} {p.lastName}</div>
-                      <div className="text-[10px] text-[#6B7280]">{p.email}</div>
+                    <div key={p.id} onClick={() => { setSelectedPreacher(p); setShowPreacherDropdown(false); }} className="px-4 py-2 hover:bg-[#F3F4F6] dark:bg-slate-700/30 cursor-pointer text-sm">
+                      <div className="font-medium text-[#111827] dark:text-slate-100">{p.firstName} {p.lastName}</div>
+                      <div className="text-[10px] text-[#6B7280] dark:text-slate-400">{p.email}</div>
                     </div>
                   ))}
                 </div>
@@ -275,8 +275,8 @@ export default function AddMinisterPage() {
           </div>
 
           {/* Section 3: Schedule & Connectivity */}
-          <div className="bg-white p-6 rounded-2xl border border-[#E5E7EB] space-y-4 md:col-span-2">
-            <h3 className="text-sm font-bold text-[#000080] flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-[#E5E7EB] dark:border-slate-700 space-y-4 md:col-span-2">
+            <h3 className="text-sm font-bold text-[#000080] dark:text-indigo-400 flex items-center gap-2">
               <Clock className="w-4 h-4" /> Assignment Schedule
             </h3>
             
@@ -307,7 +307,7 @@ export default function AddMinisterPage() {
           </div>
         </div>
 
-        {error && <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">{error}</div>}
+        {error && <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 rounded-xl text-sm text-red-600">{error}</div>}
 
         <div className="mt-8 flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>Cancel</Button>

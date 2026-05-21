@@ -32,7 +32,7 @@ export default function AddMemberModal({
     <Modal isOpen={isOpen} onClose={onClose} title="Add Member">
       <div className="space-y-3">
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">
             First Name
           </label>
           <input
@@ -40,11 +40,11 @@ export default function AddMemberModal({
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             placeholder="Enter first name"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 dark:text-slate-300 outline-none placeholder:text-gray-400 dark:text-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">
             Last Name
           </label>
           <input
@@ -52,11 +52,11 @@ export default function AddMemberModal({
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             placeholder="Enter last name"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 dark:text-slate-300 outline-none placeholder:text-gray-400 dark:text-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">
             Email
           </label>
           <input
@@ -64,11 +64,11 @@ export default function AddMemberModal({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter email"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 dark:text-slate-300 outline-none placeholder:text-gray-400 dark:text-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">
             Phone
           </label>
           <input
@@ -76,18 +76,18 @@ export default function AddMemberModal({
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="Enter phone number"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 dark:text-slate-300 outline-none placeholder:text-gray-400 dark:text-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             maxLength={10}
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">
             Department
           </label>
           <select
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 dark:text-slate-300 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           >
             <option value="">Select department</option>
             <option value="ushering">Ushering</option>

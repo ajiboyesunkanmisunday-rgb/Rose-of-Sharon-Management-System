@@ -68,17 +68,17 @@ const CATALOGUE: Record<Exclude<ReportTab, "analytics">, CategoryDef[]> = {
       {
         id: "members", title: "Members Report",
         description: "Full list of all registered members in the ministry.",
-        icon: <Users className="h-5 w-5" />, iconBg: "bg-[#EEF2FF]", iconColor: "text-[#000080]",
+        icon: <Users className="h-5 w-5" />, iconBg: "bg-[#EEF2FF] dark:bg-indigo-900/30", iconColor: "text-[#000080] dark:text-indigo-400",
       },
       {
         id: "e-members", title: "E-Members Report",
         description: "Full list of all registered e-members in the ministry.",
-        icon: <UserCheck className="h-5 w-5" />, iconBg: "bg-[#F0FDF4]", iconColor: "text-[#16A34A]",
+        icon: <UserCheck className="h-5 w-5" />, iconBg: "bg-[#F0FDF4]", iconColor: "text-[#16A34A] dark:text-green-300",
       },
       {
         id: "first-timers", title: "First Timers Report",
         description: "All first-time visitors and their service attendance details.",
-        icon: <UserPlus className="h-5 w-5" />, iconBg: "bg-[#FFF7ED]", iconColor: "text-[#EA580C]",
+        icon: <UserPlus className="h-5 w-5" />, iconBg: "bg-[#FFF7ED] dark:bg-orange-900/30", iconColor: "text-[#EA580C] dark:text-orange-400",
       },
       {
         id: "second-timers", title: "Second Timers Report",
@@ -110,12 +110,12 @@ const CATALOGUE: Record<Exclude<ReportTab, "analytics">, CategoryDef[]> = {
       {
         id: "church-anniversary", title: "Church Anniversary Report",
         description: "Annual celebration report — Rose of Sharon, est. June 1996.",
-        icon: <Church className="h-5 w-5" />, iconBg: "bg-[#EEF2FF]", iconColor: "text-[#000080]",
+        icon: <Church className="h-5 w-5" />, iconBg: "bg-[#EEF2FF] dark:bg-indigo-900/30", iconColor: "text-[#000080] dark:text-indigo-400",
       },
       {
         id: "departmental", title: "Departmental Anniversary",
         description: "Departments and their founding anniversaries.",
-        icon: <Building2 className="h-5 w-5" />, iconBg: "bg-[#F0FDF4]", iconColor: "text-[#16A34A]",
+        icon: <Building2 className="h-5 w-5" />, iconBg: "bg-[#F0FDF4]", iconColor: "text-[#16A34A] dark:text-green-300",
       },
     ],
   }],
@@ -376,8 +376,8 @@ function ExportBar({ rows, title, cols, onPDF }: {
   const headers = cols.map((c) => c.label);
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-      <p className="text-sm font-medium text-[#374151]">
-        <span className="font-bold text-[#000080]">{rows.length}</span> record{rows.length !== 1 ? "s" : ""} found
+      <p className="text-sm font-medium text-[#374151] dark:text-slate-300">
+        <span className="font-bold text-[#000080] dark:text-indigo-400">{rows.length}</span> record{rows.length !== 1 ? "s" : ""} found
       </p>
       <div className="flex flex-wrap gap-2">
         {[
@@ -390,7 +390,7 @@ function ExportBar({ rows, title, cols, onPDF }: {
             className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition
               ${btn.label === "PDF/Print"
                 ? "border-[#000080] bg-[#000080] text-white hover:bg-[#000066]"
-                : "border-[#E5E7EB] bg-white text-[#374151] hover:border-[#000080] hover:text-[#000080]"}`}>
+                : "border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 text-[#374151] dark:text-slate-300 hover:border-[#000080] hover:text-[#000080] dark:text-indigo-400"}`}>
             {btn.icon} {btn.label}
           </button>
         ))}
@@ -401,26 +401,26 @@ function ExportBar({ rows, title, cols, onPDF }: {
 
 function ReportTable({ rows, cols, title }: { rows: ReportRow[]; cols: ColDef[]; title: string }) {
   return (
-    <div id="report-print-area" className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+    <div id="report-print-area" className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
-            <th className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280]">#</th>
+          <tr className="border-b border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB]">
+            <th className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280] dark:text-slate-400">#</th>
             {cols.map((c) => (
-              <th key={c.key} className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280]">{c.label}</th>
+              <th key={c.key} className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280] dark:text-slate-400">{c.label}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={row.id} className="border-b border-[#E5E7EB] last:border-0 hover:bg-[#F9FAFB]">
-              <td className="px-4 py-3 text-[#9CA3AF]">{i+1}</td>
+            <tr key={row.id} className="border-b border-[#E5E7EB] dark:border-slate-700 last:border-0 hover:bg-[#F9FAFB]">
+              <td className="px-4 py-3 text-[#9CA3AF] dark:text-slate-400">{i+1}</td>
               {cols.map((c) => (
-                <td key={c.key} className="px-4 py-3 text-[#374151]">
+                <td key={c.key} className="px-4 py-3 text-[#374151] dark:text-slate-300">
                   {c.key === "fullName"
-                    ? <span className="font-medium text-[#111827]">{row[c.key]}</span>
+                    ? <span className="font-medium text-[#111827] dark:text-slate-100">{row[c.key]}</span>
                     : c.key === "userType"
-                      ? <span className="rounded-full bg-[#EEF2FF] px-2.5 py-0.5 text-xs font-medium text-[#000080]">{String(row[c.key])}</span>
+                      ? <span className="rounded-full bg-[#EEF2FF] dark:bg-indigo-900/30 px-2.5 py-0.5 text-xs font-medium text-[#000080] dark:text-indigo-400">{String(row[c.key])}</span>
                       : String(row[c.key])}
                 </td>
               ))}
@@ -429,22 +429,22 @@ function ReportTable({ rows, cols, title }: { rows: ReportRow[]; cols: ColDef[];
         </tbody>
       </table>
       {rows.length === 0 && (
-        <p className="py-12 text-center text-sm text-[#9CA3AF]">No records found for the selected filters.</p>
+        <p className="py-12 text-center text-sm text-[#9CA3AF] dark:text-slate-400">No records found for the selected filters.</p>
       )}
     </div>
   );
 }
 
 // ─── Styled input primitives ─────────────────────────────────────────────────
-const inputCls = "w-full rounded-lg border border-[#D1D5DB] bg-white px-3.5 py-2.5 text-sm text-[#111827] placeholder-[#9CA3AF] shadow-sm outline-none transition focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/10";
-const selectCls = "w-full rounded-lg border border-[#D1D5DB] bg-white px-3.5 py-2.5 text-sm text-[#111827] shadow-sm outline-none transition focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/10 cursor-pointer";
+const inputCls = "w-full rounded-lg border border-[#D1D5DB] bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm text-[#111827] dark:text-slate-100 placeholder-[#9CA3AF] shadow-sm outline-none transition focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/10";
+const selectCls = "w-full rounded-lg border border-[#D1D5DB] bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm text-[#111827] dark:text-slate-100 shadow-sm outline-none transition focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/10 cursor-pointer";
 
 function FilterSection({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
       <div className="mb-3 flex items-center gap-2">
-        <span className="text-[#000080]">{icon}</span>
-        <span className="text-xs font-bold uppercase tracking-widest text-[#374151]">{title}</span>
+        <span className="text-[#000080] dark:text-indigo-400">{icon}</span>
+        <span className="text-xs font-bold uppercase tracking-widest text-[#374151] dark:text-slate-300">{title}</span>
       </div>
       {children}
     </div>
@@ -499,13 +499,13 @@ function MembershipFilters({
     : null;
 
   return (
-    <div className="rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-5">
+    <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-[#FAFAFA] p-5">
       <div className="space-y-5">
 
         {/* Row 1: Search */}
         <FilterSection title="Search" icon={searchIcon}>
           <div className="relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
             <input type="text" value={search} onChange={(e) => onSearch(e.target.value)}
@@ -513,7 +513,7 @@ function MembershipFilters({
               className={`${inputCls} pl-9`}
             />
             {search && (
-              <button onClick={() => onSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151]">
+              <button onClick={() => onSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             )}
@@ -529,7 +529,7 @@ function MembershipFilters({
                   className={`flex-1 rounded-lg border py-2 text-sm font-medium transition ${
                     gender === g
                       ? "border-[#000080] bg-[#000080] text-white"
-                      : "border-[#D1D5DB] bg-white text-[#374151] hover:border-[#000080] hover:text-[#000080]"
+                      : "border-[#D1D5DB] bg-white dark:bg-slate-800 text-[#374151] dark:text-slate-300 hover:border-[#000080] hover:text-[#000080] dark:text-indigo-400"
                   }`}>
                   {g}
                 </button>
@@ -556,28 +556,28 @@ function MembershipFilters({
               onClick={() => setBdayOpen((o) => !o)}
               className={`flex w-full items-center justify-between rounded-lg border px-3.5 py-2.5 text-sm shadow-sm transition ${
                 bdaySummary
-                  ? "border-[#000080] bg-[#EEF2FF] text-[#000080] font-medium"
-                  : "border-[#D1D5DB] bg-white text-[#9CA3AF] hover:border-[#000080]"
+                  ? "border-[#000080] bg-[#EEF2FF] dark:bg-indigo-900/30 text-[#000080] dark:text-indigo-400 font-medium"
+                  : "border-[#D1D5DB] bg-white dark:bg-slate-800 text-[#9CA3AF] dark:text-slate-400 hover:border-[#000080]"
               }`}>
               <span>{bdaySummary ?? "Select birthday range…"}</span>
               <svg className={`h-4 w-4 transition-transform ${bdayOpen ? "rotate-180" : ""}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
 
             {bdayOpen && (
-              <div className="mt-2 rounded-xl border border-[#000080]/20 bg-white p-4 shadow-md">
+              <div className="mt-2 rounded-xl border border-[#000080]/20 bg-white dark:bg-slate-800 p-4 shadow-md">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[#6B7280]">From</p>
+                    <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[#6B7280] dark:text-slate-400">From</p>
                     <div className="flex gap-2">
                       <div className="flex-1">
-                        <label className="mb-1 block text-[10px] text-[#9CA3AF]">Day</label>
+                        <label className="mb-1 block text-[10px] text-[#9CA3AF] dark:text-slate-400">Day</label>
                         <input type="number" min={1} max={31}
                           value={bdayFrom?.day ?? ""}
                           onChange={(e) => onBdayFrom({ day: Number(e.target.value), month: bdayFrom?.month ?? 1 })}
                           placeholder="1" className={inputCls} />
                       </div>
                       <div className="flex-[2]">
-                        <label className="mb-1 block text-[10px] text-[#9CA3AF]">Month</label>
+                        <label className="mb-1 block text-[10px] text-[#9CA3AF] dark:text-slate-400">Month</label>
                         <select value={bdayFrom?.month ?? ""}
                           onChange={(e) => onBdayFrom({ day: bdayFrom?.day ?? 1, month: Number(e.target.value) })}
                           className={selectCls}>
@@ -588,17 +588,17 @@ function MembershipFilters({
                     </div>
                   </div>
                   <div>
-                    <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[#6B7280]">To</p>
+                    <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[#6B7280] dark:text-slate-400">To</p>
                     <div className="flex gap-2">
                       <div className="flex-1">
-                        <label className="mb-1 block text-[10px] text-[#9CA3AF]">Day</label>
+                        <label className="mb-1 block text-[10px] text-[#9CA3AF] dark:text-slate-400">Day</label>
                         <input type="number" min={1} max={31}
                           value={bdayTo?.day ?? ""}
                           onChange={(e) => onBdayTo({ day: Number(e.target.value), month: bdayTo?.month ?? 12 })}
                           placeholder="31" className={inputCls} />
                       </div>
                       <div className="flex-[2]">
-                        <label className="mb-1 block text-[10px] text-[#9CA3AF]">Month</label>
+                        <label className="mb-1 block text-[10px] text-[#9CA3AF] dark:text-slate-400">Month</label>
                         <select value={bdayTo?.month ?? ""}
                           onChange={(e) => onBdayTo({ day: bdayTo?.day ?? 31, month: Number(e.target.value) })}
                           className={selectCls}>
@@ -629,15 +629,15 @@ function MembershipFilters({
               value={joinedYear} onChange={(e) => onJoinedYear(e.target.value)}
               placeholder={`e.g. ${new Date().getFullYear()}`}
               className={inputCls} />
-            <p className="mt-1 text-[11px] text-[#9CA3AF]">Filter by the year the person joined</p>
+            <p className="mt-1 text-[11px] text-[#9CA3AF] dark:text-slate-400">Filter by the year the person joined</p>
           </FilterSection>
         </div>
 
         {hasFilters && (
-          <div className="flex justify-end border-t border-[#E5E7EB] pt-3">
+          <div className="flex justify-end border-t border-[#E5E7EB] dark:border-slate-700 pt-3">
             <button
               onClick={() => { onSearch(""); onGender("All"); onGroup(""); onBdayFrom(null); onBdayTo(null); onJoinedYear(""); setBdayOpen(false); }}
-              className="flex items-center gap-1.5 text-xs font-medium text-[#000080] underline underline-offset-2 hover:text-[#000066]">
+              className="flex items-center gap-1.5 text-xs font-medium text-[#000080] dark:text-indigo-400 underline underline-offset-2 hover:text-[#000066]">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               Clear all filters
             </button>
@@ -673,13 +673,13 @@ function CelebrationFilters({
   );
 
   return (
-    <div className="rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-5 space-y-6">
+    <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-[#FAFAFA] p-5 space-y-6">
       {/* Quick select */}
       <FilterSection title="Quick Select" icon={calIcon}>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {quick.map((q) => (
             <button key={q.label} onClick={() => onDateRange(q.fn())}
-              className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2.5 text-center text-sm font-medium text-[#374151] shadow-sm transition hover:border-[#000080] hover:bg-[#F0F2FF] hover:text-[#000080] hover:shadow">
+              className="rounded-lg border border-[#D1D5DB] bg-white dark:bg-slate-800 px-3 py-2.5 text-center text-sm font-medium text-[#374151] dark:text-slate-300 shadow-sm transition hover:border-[#000080] hover:bg-[#F0F2FF] hover:text-[#000080] dark:text-indigo-400 hover:shadow">
               {q.label}
             </button>
           ))}
@@ -688,21 +688,21 @@ function CelebrationFilters({
 
       {/* Date range */}
       <FilterSection title="Custom Date Range" icon={calIcon}>
-        <div className="rounded-xl border border-[#000080]/20 bg-white p-4">
+        <div className="rounded-xl border border-[#000080]/20 bg-white dark:bg-slate-800 p-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* From */}
             <div>
-              <p className="mb-2 text-xs font-semibold text-[#6B7280]">FROM</p>
+              <p className="mb-2 text-xs font-semibold text-[#6B7280] dark:text-slate-400">FROM</p>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-[#9CA3AF]">Day</label>
+                  <label className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-[#9CA3AF] dark:text-slate-400">Day</label>
                   <input type="number" min={1} max={31}
                     value={dateRange.startDay}
                     onChange={(e) => onDateRange({ ...dateRange, startDay: Number(e.target.value) })}
                     className={inputCls} />
                 </div>
                 <div className="flex-[2]">
-                  <label className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-[#9CA3AF]">Month</label>
+                  <label className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-[#9CA3AF] dark:text-slate-400">Month</label>
                   <select value={dateRange.startMonth}
                     onChange={(e) => onDateRange({ ...dateRange, startMonth: Number(e.target.value) })}
                     className={selectCls}>
@@ -713,17 +713,17 @@ function CelebrationFilters({
             </div>
             {/* To */}
             <div>
-              <p className="mb-2 text-xs font-semibold text-[#6B7280]">TO</p>
+              <p className="mb-2 text-xs font-semibold text-[#6B7280] dark:text-slate-400">TO</p>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-[#9CA3AF]">Day</label>
+                  <label className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-[#9CA3AF] dark:text-slate-400">Day</label>
                   <input type="number" min={1} max={31}
                     value={dateRange.endDay}
                     onChange={(e) => onDateRange({ ...dateRange, endDay: Number(e.target.value) })}
                     className={inputCls} />
                 </div>
                 <div className="flex-[2]">
-                  <label className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-[#9CA3AF]">Month</label>
+                  <label className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-[#9CA3AF] dark:text-slate-400">Month</label>
                   <select value={dateRange.endMonth}
                     onChange={(e) => onDateRange({ ...dateRange, endMonth: Number(e.target.value) })}
                     className={selectCls}>
@@ -735,7 +735,7 @@ function CelebrationFilters({
           </div>
           {/* Summary badge */}
           <div className="mt-3 flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EEF2FF] px-3 py-1 text-xs font-medium text-[#000080]">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EEF2FF] dark:bg-indigo-900/30 px-3 py-1 text-xs font-medium text-[#000080] dark:text-indigo-400">
               <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               {MONTH_NAMES[dateRange.startMonth-1]} {dateRange.startDay} — {MONTH_NAMES[dateRange.endMonth-1]} {dateRange.endDay}
             </span>
@@ -751,7 +751,7 @@ function CelebrationFilters({
               className={`flex-1 rounded-lg border py-2.5 text-sm font-medium transition ${
                 gender === g
                   ? "border-[#000080] bg-[#000080] text-white shadow-sm"
-                  : "border-[#D1D5DB] bg-white text-[#374151] hover:border-[#000080] hover:text-[#000080]"
+                  : "border-[#D1D5DB] bg-white dark:bg-slate-800 text-[#374151] dark:text-slate-300 hover:border-[#000080] hover:text-[#000080] dark:text-indigo-400"
               }`}>
               {g}
             </button>
@@ -927,7 +927,7 @@ export default function ReportsPage() {
         {/* Back nav */}
         <div className="mb-6 flex items-center gap-4">
           <button onClick={back}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-[#374151] transition hover:bg-[#F3F4F6]">
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 text-[#374151] dark:text-slate-300 transition hover:bg-[#F3F4F6] dark:bg-slate-700/30">
             <ChevronLeft className="h-5 w-5" />
           </button>
           {currentDef && (
@@ -936,8 +936,8 @@ export default function ReportsPage() {
             </div>
           )}
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">Reports</p>
-            <h1 className="text-[22px] font-bold text-[#000000]">{currentDef?.title}</h1>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Reports</p>
+            <h1 className="text-[22px] font-bold text-[#000000] dark:text-slate-100">{currentDef?.title}</h1>
           </div>
         </div>
 
@@ -945,12 +945,12 @@ export default function ReportsPage() {
         {isMembership && (
           <div className="space-y-5">
             {/* Filters card */}
-            <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
               <div className="mb-4 flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000080" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
                 </svg>
-                <h2 className="text-base font-bold text-[#111827]">Filters</h2>
+                <h2 className="text-base font-bold text-[#111827] dark:text-slate-100">Filters</h2>
               </div>
               <MembershipFilters
                 search={memSearch}     onSearch={setMemSearch}
@@ -970,7 +970,7 @@ export default function ReportsPage() {
                   )}
                 </button>
                 {hasGenerated && !loading && (
-                  <span className="text-xs text-[#6B7280]">
+                  <span className="text-xs text-[#6B7280] dark:text-slate-400">
                     {totalFetched} total record{totalFetched !== 1 ? "s" : ""} fetched
                     {filteredRows.length !== totalFetched && ` · ${filteredRows.length} shown after filters`}
                   </span>
@@ -979,7 +979,7 @@ export default function ReportsPage() {
             </div>
 
             {error && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
                 {error}
               </div>
             )}
@@ -1001,12 +1001,12 @@ export default function ReportsPage() {
         {/* ── Birthday / Wedding ── */}
         {isCelebration && (
           <div className="space-y-5">
-            <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
               <div className="mb-5 flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000080" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
                 </svg>
-                <h2 className="text-base font-bold text-[#111827]">Report Filters</h2>
+                <h2 className="text-base font-bold text-[#111827] dark:text-slate-100">Report Filters</h2>
               </div>
               <CelebrationFilters
                 dateRange={dateRange} onDateRange={setDateRange}
@@ -1018,7 +1018,7 @@ export default function ReportsPage() {
                   {loading ? <><RefreshCw className="h-4 w-4 animate-spin" /> Generating…</> : "Generate Report"}
                 </button>
                 {hasGenerated && !loading && (
-                  <span className="text-xs text-[#6B7280]">
+                  <span className="text-xs text-[#6B7280] dark:text-slate-400">
                     {filteredRows.length} record{filteredRows.length !== 1 ? "s" : ""} found
                   </span>
                 )}
@@ -1026,7 +1026,7 @@ export default function ReportsPage() {
             </div>
 
             {error && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+              <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{error}</div>
             )}
 
             {hasGenerated && !loading && !error && (
@@ -1046,16 +1046,16 @@ export default function ReportsPage() {
         {/* ── Church Anniversary ── */}
         {isChurch && (
           <div className="space-y-5">
-            <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
               <div className="flex flex-wrap items-start justify-between gap-6">
                 <div>
-                  <h2 className="text-xl font-bold text-[#000080]">
+                  <h2 className="text-xl font-bold text-[#000080] dark:text-indigo-400">
                     Rose of Sharon — {yearsOld}th Anniversary
                   </h2>
-                  <p className="mt-1 text-sm text-[#6B7280]">Founded: June 15, 1996</p>
-                  <p className="mt-1 text-sm text-[#6B7280]">
+                  <p className="mt-1 text-sm text-[#6B7280] dark:text-slate-400">Founded: June 15, 1996</p>
+                  <p className="mt-1 text-sm text-[#6B7280] dark:text-slate-400">
                     Next anniversary: June 15, {nextAnniv.getFullYear()} —{" "}
-                    <span className="font-semibold text-[#000080]">{daysToAnniv} days away</span>
+                    <span className="font-semibold text-[#000080] dark:text-indigo-400">{daysToAnniv} days away</span>
                   </p>
                 </div>
                 <div className="rounded-xl bg-[#000080] px-10 py-6 text-center text-white shadow-md">
@@ -1064,9 +1064,9 @@ export default function ReportsPage() {
                 </div>
               </div>
             </div>
-            <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
-              <h2 className="mb-1 text-sm font-semibold text-[#374151]">June Birthday Report</h2>
-              <p className="mb-4 text-xs text-[#6B7280]">
+            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+              <h2 className="mb-1 text-sm font-semibold text-[#374151] dark:text-slate-300">June Birthday Report</h2>
+              <p className="mb-4 text-xs text-[#6B7280] dark:text-slate-400">
                 Generate a list of all members celebrating birthdays during the church anniversary month (June).
               </p>
               <button
@@ -1080,50 +1080,50 @@ export default function ReportsPage() {
 
         {/* ── Departmental ── */}
         {isDeptl && (
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-sm font-semibold text-[#374151]">Department Anniversaries</h2>
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+            <h2 className="mb-4 text-sm font-semibold text-[#374151] dark:text-slate-300">Department Anniversaries</h2>
             <div className="mb-5 flex flex-wrap gap-2">
               <button onClick={() => setSelectedDept("all")}
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium transition
-                  ${selectedDept === "all" ? "bg-[#000080] text-white" : "border border-[#E5E7EB] text-[#374151] hover:border-[#000080]"}`}>
+                  ${selectedDept === "all" ? "bg-[#000080] text-white" : "border border-[#E5E7EB] dark:border-slate-700 text-[#374151] dark:text-slate-300 hover:border-[#000080]"}`}>
                 All
               </button>
               {DEPARTMENTS.map((d) => (
                 <button key={d.name} onClick={() => setSelectedDept(d.name)}
                   className={`rounded-lg px-3 py-1.5 text-xs font-medium transition
-                    ${selectedDept === d.name ? "bg-[#000080] text-white" : "border border-[#E5E7EB] text-[#374151] hover:border-[#000080]"}`}>
+                    ${selectedDept === d.name ? "bg-[#000080] text-white" : "border border-[#E5E7EB] dark:border-slate-700 text-[#374151] dark:text-slate-300 hover:border-[#000080]"}`}>
                   {d.name}
                 </button>
               ))}
             </div>
-            <div className="overflow-x-auto rounded-xl border border-[#E5E7EB]">
+            <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
+                  <tr className="border-b border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB]">
                     {["Department","Founded","Years Active","Anniversary Month"].map((h) => (
-                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280]">{h}</th>
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280] dark:text-slate-400">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {DEPARTMENTS.filter((d) => selectedDept === "all" || d.name === selectedDept).map((d) => (
-                    <tr key={d.name} className="border-b border-[#E5E7EB] last:border-0 hover:bg-[#F9FAFB]">
-                      <td className="px-4 py-3 font-medium text-[#111827]">{d.name}</td>
-                      <td className="px-4 py-3 text-[#374151]">
+                    <tr key={d.name} className="border-b border-[#E5E7EB] dark:border-slate-700 last:border-0 hover:bg-[#F9FAFB]">
+                      <td className="px-4 py-3 font-medium text-[#111827] dark:text-slate-100">{d.name}</td>
+                      <td className="px-4 py-3 text-[#374151] dark:text-slate-300">
                         {d.founded.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="rounded-full bg-[#EEF2FF] px-2.5 py-0.5 text-xs font-medium text-[#000080]">
+                        <span className="rounded-full bg-[#EEF2FF] dark:bg-indigo-900/30 px-2.5 py-0.5 text-xs font-medium text-[#000080] dark:text-indigo-400">
                           {today.getFullYear() - d.founded.getFullYear()} yrs
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-[#374151]">{MONTH_NAMES[d.founded.getMonth()]}</td>
+                      <td className="px-4 py-3 text-[#374151] dark:text-slate-300">{MONTH_NAMES[d.founded.getMonth()]}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <p className="mt-4 rounded-lg bg-[#F9FAFB] px-4 py-3 text-xs text-[#6B7280]">
+            <p className="mt-4 rounded-lg bg-[#F9FAFB] px-4 py-3 text-xs text-[#6B7280] dark:text-slate-400">
               ℹ️ Individual member joining dates per department will be available once the backend exposes that field in the group membership response.
             </p>
           </div>
@@ -1131,12 +1131,12 @@ export default function ReportsPage() {
 
         {/* ── Attendance (Coming Soon) ── */}
         {isAttendance && (
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-12 text-center shadow-sm">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#EEF2FF]">
-              <FileText className="h-7 w-7 text-[#000080]" />
+          <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-12 text-center shadow-sm">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#EEF2FF] dark:bg-indigo-900/30">
+              <FileText className="h-7 w-7 text-[#000080] dark:text-indigo-400" />
             </div>
-            <h2 className="text-base font-semibold text-[#111827]">Event Attendance Report</h2>
-            <p className="mt-2 text-sm text-[#6B7280]">
+            <h2 className="text-base font-semibold text-[#111827] dark:text-slate-100">Event Attendance Report</h2>
+            <p className="mt-2 text-sm text-[#6B7280] dark:text-slate-400">
               Attendance tracking data will be available once the event attendance API is fully connected.
             </p>
           </div>
@@ -1155,17 +1155,17 @@ export default function ReportsPage() {
           <BarChart2 className="h-6 w-6 text-[#059669]" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Reports</h1>
-          <p className="text-sm text-[#6B7280]">Generate and export detailed reports for your church ministry</p>
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Reports</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Generate and export detailed reports for your church ministry</p>
         </div>
       </div>
 
       {/* Tab switcher */}
-      <div className="mb-6 flex gap-1 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-1">
+      <div className="mb-6 flex gap-1 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] p-1">
         {(["analytics","membership","celebrations","attendance"] as ReportTab[]).map((t) => (
           <button key={t} onClick={() => setActiveTab(t)}
             className={`flex-1 rounded-lg py-2.5 text-sm font-medium capitalize transition
-              ${activeTab === t ? "bg-white text-[#000080] shadow-sm" : "text-[#6B7280] hover:text-[#374151]"}`}>
+              ${activeTab === t ? "bg-white dark:bg-slate-800 text-[#000080] dark:text-indigo-400 shadow-sm" : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"}`}>
             {t}
           </button>
         ))}
@@ -1177,14 +1177,14 @@ export default function ReportsPage() {
       {/* Category blocks */}
       {activeTab !== "analytics" && <div className="space-y-6">
         {CATALOGUE[activeTab as Exclude<ReportTab, "analytics">].map((cat) => (
-          <div key={cat.title} className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-sm">
+          <div key={cat.title} className="overflow-hidden rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
             <div className="border-b-2 border-[#000080] bg-[#F0F2FF] px-6 py-5">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#000080] text-white">
                   {cat.icon}
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-[#000080]">{cat.title}</h2>
+                  <h2 className="text-lg font-bold text-[#000080] dark:text-indigo-400">{cat.title}</h2>
                   <p className="text-sm text-[#4B5563]">{cat.description}</p>
                 </div>
               </div>
@@ -1199,10 +1199,10 @@ export default function ReportsPage() {
                   </div>
                   {/* Text */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-[#111827] group-hover:text-[#000080]">{r.title}</p>
-                    <p className="mt-0.5 text-xs text-[#6B7280]">{r.description}</p>
+                    <p className="text-sm font-semibold text-[#111827] dark:text-slate-100 group-hover:text-[#000080] dark:text-indigo-400">{r.title}</p>
+                    <p className="mt-0.5 text-xs text-[#6B7280] dark:text-slate-400">{r.description}</p>
                   </div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-[#9CA3AF] transition group-hover:translate-x-0.5 group-hover:text-[#000080]" />
+                  <ChevronRight className="h-4 w-4 shrink-0 text-[#9CA3AF] dark:text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-[#000080] dark:text-indigo-400" />
                 </button>
               ))}
             </div>

@@ -10,7 +10,7 @@ import { getEvent, cancelEvent, type EventResponse } from "@/lib/api";
 
 const categoryColors: Record<string, string> = {
   Service: "bg-[#000080] text-white",
-  "Bible Study": "bg-green-500 text-white",
+  "Bible Study": "bg-green-50 dark:bg-green-900/200 text-white",
   Youth: "bg-purple-500 text-white",
   Birthday: "bg-orange-500 text-white",
   Meeting: "bg-yellow-500 text-white",
@@ -80,7 +80,7 @@ export default function CalendarEventDetailClient() {
     return (
       <DashboardLayout>
         <PageHeader title="Calendar" subtitle="Loading…" backHref="/calendar" />
-        <div className="py-12 text-center text-sm text-gray-400">Loading event details…</div>
+        <div className="py-12 text-center text-sm text-gray-400 dark:text-slate-500">Loading event details…</div>
       </DashboardLayout>
     );
   }
@@ -89,7 +89,7 @@ export default function CalendarEventDetailClient() {
     return (
       <DashboardLayout>
         <PageHeader title="Calendar" subtitle="Error" backHref="/calendar" />
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error || "Event not found."}
           <button className="ml-2 font-medium underline" onClick={loadEvent}>Retry</button>
         </div>
@@ -119,45 +119,45 @@ export default function CalendarEventDetailClient() {
         backHref="/calendar"
       />
 
-      <div className="mb-6 rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${categoryColors[category] ?? "bg-gray-500 text-white"}`}>
           {category.replace(/_/g, " ")}
         </span>
-        <h2 className="mt-3 text-xl font-bold text-[#111827]">{event.title}</h2>
+        <h2 className="mt-3 text-xl font-bold text-[#111827] dark:text-slate-100">{event.title}</h2>
 
         <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">Date</p>
-            <p className="mt-1 text-sm font-medium text-[#111827]">{date}</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Date</p>
+            <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{date}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-[#6B7280]">Time</p>
-            <p className="mt-1 text-sm font-medium text-[#111827]">{timeRange}</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Time</p>
+            <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{timeRange}</p>
           </div>
           {location && (
             <div>
-              <p className="text-xs font-medium text-[#6B7280]">Location</p>
-              <p className="mt-1 text-sm font-medium text-[#111827]">{location}</p>
+              <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Location</p>
+              <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{location}</p>
             </div>
           )}
           {event.preacher && (
             <div>
-              <p className="text-xs font-medium text-[#6B7280]">Preacher / Speaker</p>
-              <p className="mt-1 text-sm font-medium text-[#111827]">{event.preacher}</p>
+              <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Preacher / Speaker</p>
+              <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{event.preacher}</p>
             </div>
           )}
           {event.topic && (
             <div>
-              <p className="text-xs font-medium text-[#6B7280]">Topic</p>
-              <p className="mt-1 text-sm font-medium text-[#111827]">{event.topic}</p>
+              <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Topic</p>
+              <p className="mt-1 text-sm font-medium text-[#111827] dark:text-slate-100">{event.topic}</p>
             </div>
           )}
         </div>
 
         {event.additionalInstructions && (
           <div className="mt-6 border-t border-[#F3F4F6] pt-4">
-            <p className="text-xs font-medium text-[#6B7280]">Description</p>
-            <p className="mt-1 text-sm text-[#374151]">{event.additionalInstructions}</p>
+            <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Description</p>
+            <p className="mt-1 text-sm text-[#374151] dark:text-slate-300">{event.additionalInstructions}</p>
           </div>
         )}
       </div>

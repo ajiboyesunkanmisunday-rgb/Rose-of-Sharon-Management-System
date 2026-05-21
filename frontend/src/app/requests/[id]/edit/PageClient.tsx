@@ -99,22 +99,22 @@ export default function EditRequestClient() {
       />
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-[#374151]">Title</label>
-            <p className="h-[42px] flex items-center rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] bg-[#F9FAFB]">
+            <label className="mb-1.5 block text-xs font-medium text-[#374151] dark:text-slate-300">Title</label>
+            <p className="h-[42px] flex items-center rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 bg-[#F9FAFB]">
               {formData.subject || "—"}
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-[#374151]">Category</label>
-              <p className="h-[42px] flex items-center rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] bg-[#F9FAFB]">
+              <label className="mb-1.5 block text-xs font-medium text-[#374151] dark:text-slate-300">Category</label>
+              <p className="h-[42px] flex items-center rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 bg-[#F9FAFB]">
                 {formData.category || "—"}
               </p>
             </div>
@@ -126,8 +126,8 @@ export default function EditRequestClient() {
               options={STATUS_OPTIONS}
             />
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-[#374151]">Submitted By</label>
-              <p className="h-[42px] flex items-center rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] bg-[#F9FAFB]">
+              <label className="mb-1.5 block text-xs font-medium text-[#374151] dark:text-slate-300">Submitted By</label>
+              <p className="h-[42px] flex items-center rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 bg-[#F9FAFB]">
                 {formData.submittedBy || "—"}
               </p>
             </div>

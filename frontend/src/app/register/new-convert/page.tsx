@@ -5,10 +5,10 @@ import { useState } from "react";
 import { createNewConvert } from "@/lib/api";
 
 const inputClass =
-  "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none";
-const labelClass = "mb-1 block text-sm font-medium text-[#374151]";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none";
+const labelClass = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
 const selectClass =
-  "w-full rounded-lg border border-[#E5E7EB] px-4 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none appearance-none bg-white";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none appearance-none bg-white dark:bg-slate-800";
 
 const countries = [
   "Nigeria", "United Kingdom", "United States", "Canada", "Ghana",
@@ -82,7 +82,7 @@ export default function NewConvertRegisterPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white dark:bg-slate-800">
         {/* Header */}
         <div className="px-8 pt-6">
           <Image
@@ -115,7 +115,7 @@ export default function NewConvertRegisterPage() {
           <h2 className="mt-6 text-2xl font-bold text-[#1F2937]">
             Welcome to the Family!
           </h2>
-          <p className="mt-3 max-w-md text-sm text-[#6B7280]">
+          <p className="mt-3 max-w-md text-sm text-[#6B7280] dark:text-slate-400">
             Congratulations on your decision. We are delighted to welcome you to
             RCCG Rose of Sharon. A pastor will be in touch with you soon.
           </p>
@@ -146,7 +146,7 @@ export default function NewConvertRegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-slate-800">
       {/* Header */}
       <div className="px-8 pt-6">
         <Image
@@ -167,13 +167,13 @@ export default function NewConvertRegisterPage() {
         <h1 className="text-center text-[28px] font-bold text-[#1F2937]">
           New Convert Registration
         </h1>
-        <p className="mt-2 text-center text-sm text-[#6B7280]">
+        <p className="mt-2 text-center text-sm text-[#6B7280] dark:text-slate-400">
           We are so glad you made this decision. Please fill in your details below.
         </p>
 
         {/* Error Banner */}
         {error && (
-          <div className="mt-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <div className="mt-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="18"
@@ -194,7 +194,7 @@ export default function NewConvertRegisterPage() {
           </div>
         )}
 
-        <p className="mt-6 text-sm font-semibold text-[#374151]">
+        <p className="mt-6 text-sm font-semibold text-[#374151] dark:text-slate-300">
           Enter Your Details
         </p>
 
@@ -237,7 +237,7 @@ export default function NewConvertRegisterPage() {
             <div>
               <label className={labelClass}>
                 Middle Name{" "}
-                <span className="font-normal text-[#9CA3AF]">(optional)</span>
+                <span className="font-normal text-[#9CA3AF] dark:text-slate-400">(optional)</span>
               </label>
               <input
                 type="text"
@@ -257,7 +257,7 @@ export default function NewConvertRegisterPage() {
                   name="countryCode"
                   value={formData.countryCode}
                   onChange={handleChange}
-                  className="w-36 rounded-lg border border-[#E5E7EB] px-2 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none appearance-none bg-white"
+                  className="w-36 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-2 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none appearance-none bg-white dark:bg-slate-800"
                 >
                   {countryCodes.map((cc) => (
                     <option key={cc.value} value={cc.value}>
@@ -284,7 +284,7 @@ export default function NewConvertRegisterPage() {
             <div>
               <label className={labelClass}>
                 Email{" "}
-                <span className="font-normal text-[#9CA3AF]">(optional)</span>
+                <span className="font-normal text-[#9CA3AF] dark:text-slate-400">(optional)</span>
               </label>
               <input
                 type="email"
@@ -298,7 +298,7 @@ export default function NewConvertRegisterPage() {
             <div>
               <label className={labelClass}>
                 Gender{" "}
-                <span className="font-normal text-[#9CA3AF]">(optional)</span>
+                <span className="font-normal text-[#9CA3AF] dark:text-slate-400">(optional)</span>
               </label>
               <select
                 name="gender"
@@ -315,9 +315,9 @@ export default function NewConvertRegisterPage() {
 
           {/* Address Section */}
           <div className="pt-2">
-            <p className="text-sm font-semibold text-[#374151]">
+            <p className="text-sm font-semibold text-[#374151] dark:text-slate-300">
               Address{" "}
-              <span className="font-normal text-[#9CA3AF]">(optional)</span>
+              <span className="font-normal text-[#9CA3AF] dark:text-slate-400">(optional)</span>
             </p>
           </div>
 
