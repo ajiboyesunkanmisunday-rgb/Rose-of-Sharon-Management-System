@@ -38,6 +38,14 @@ function fileSizeFmt(bytes?: number) {
   return `${bytes} B`;
 }
 
+/** Extract the raw YouTube/external URL stored in the description field. */
+function extractExternalLink(description?: string | null): string | null {
+  if (!description) return null;
+  const match = description.match(/^\[External Link\]:\s*(\S+)/);
+  return match ? match[1] : null;
+}
+
+/** Given any YouTube URL variant, return the hqdefault thumbnail URL. */
 function getYoutubeThumbnail(url?: string | null): string | null {
   if (!url) return null;
   try {
@@ -198,8 +206,14 @@ export default function MediaPage() {
             const isImage = tabKey === "PICTURES";
             const mediaUrl = item.displayUrl ?? item.url;
             const mediaSize = item.size ?? item.fileSize;
+            // For non-image media, try to resolve a thumbnail:
+            //   1. Backend-supplied thumbnailUrl
+            //   2. YouTube link embedded in description as "[External Link]: <url>"
+            //   3. displayUrl / url (in case the field itself is a YouTube link)
             const thumbnail = !isImage
-              ? getYoutubeThumbnail(item.youtubeLink ?? item.displayUrl ?? item.url)
+              ? (item.thumbnailUrl ||
+                  getYoutubeThumbnail(extractExternalLink(item.description)) ||
+                  getYoutubeThumbnail(item.displayUrl ?? item.url))
               : null;
             return (
               <div
