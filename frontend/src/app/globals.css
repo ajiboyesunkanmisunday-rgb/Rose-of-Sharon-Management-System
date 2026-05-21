@@ -38,6 +38,15 @@ html.theme-transitioning *::after {
     box-shadow 0.25s ease !important;
 }
 
+/* ── Page transition fade-in ───────────────────────────────────────────────── */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.page-enter {
+  animation: page-enter 0.22s ease forwards;
+}
+
 /* ── Toast animations ───────────────────────────────────────────────────── */
 @keyframes slide-in {
   from { opacity: 0; transform: translateX(24px); }
