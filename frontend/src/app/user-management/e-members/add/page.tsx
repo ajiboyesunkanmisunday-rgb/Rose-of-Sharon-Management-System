@@ -3,13 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import PublicFormLayout from "@/components/layout/PublicFormLayout";
 import Button from "@/components/ui/Button";
 import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import MultiSelect from "@/components/ui/MultiSelect";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { createEMember, uploadProfilePicture, getAllGroups, type GroupResponse } from "@/lib/api";
+import { createEMember, uploadProfilePicture, getAllGroups, isAuthenticated, type GroupResponse } from "@/lib/api";
 import CountryStateSelect from "@/components/ui/CountryStateSelect";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { useEventServices } from "@/hooks/useEventServices";
@@ -17,9 +18,13 @@ import { useEventServices } from "@/hooks/useEventServices";
 export default function AddEMemberPage() {
   const router = useRouter();
 
+  const [isPublic, setIsPublic] = useState<boolean | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+
   // Real groups from API
   const [availableGroups, setAvailableGroups] = useState<GroupResponse[]>([]);
   useEffect(() => {
+    setIsPublic(!isAuthenticated());
     getAllGroups().then(setAvailableGroups).catch(() => {});
   }, []);
   const groupNames = availableGroups.map((g) => g.name);
@@ -107,7 +112,11 @@ export default function AddEMemberPage() {
           ? groups.map((name) => availableGroups.find((g) => g.name === name)?.id).filter(Boolean) as string[]
           : undefined,
       });
-      router.push("/user-management/e-members");
+      if (!isAuthenticated()) {
+        setSubmitted(true);
+      } else {
+        router.push("/user-management/e-members");
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to save e-member.";
       setError(msg);
@@ -115,41 +124,48 @@ export default function AddEMemberPage() {
     }
   };
 
-  return (
-    <DashboardLayout>
-      {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">
-          User Management
-        </h1>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => router.push("/user-management/e-members")}
-            className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
-          </button>
-          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">
-            Add E-Member
-          </h2>
-        </div>
+  // Loading state while checking auth
+  if (isPublic === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#000080] border-t-transparent" />
       </div>
+    );
+  }
 
+  // Success screen for public users
+  if (submitted && isPublic) {
+    return (
+      <PublicFormLayout title="">
+        <div className="flex flex-col items-center py-16 text-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-[#000080]">Submission Successful!</h2>
+          <p className="mt-2 text-gray-600">Thank you! Your information has been recorded.</p>
+          <button
+            onClick={() => {
+              setSubmitted(false);
+              setFirstName(""); setMiddleName(""); setLastName(""); setGender("");
+              setPhone(""); setEmail(""); setDobDay(""); setDobMonth(""); setDobYear("");
+              setState(""); setCountry("Nigeria"); setMaritalStatus(""); setServiceAttended("");
+              setGroups([]); setPhoto(null); setSpouse(null);
+            }}
+            className="mt-6 rounded-lg bg-[#000080] px-6 py-3 text-white font-medium"
+          >
+            Submit Another
+          </button>
+        </div>
+      </PublicFormLayout>
+    );
+  }
+
+  const formContent = (
+    <>
       {/* Form Container */}
-      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+      <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6">
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
             {/* First Name */}
@@ -344,14 +360,16 @@ export default function AddEMemberPage() {
           )}
 
           {/* Buttons */}
-          <div className="mt-8 flex items-center justify-end gap-3">
-            <Button
-              variant="secondary"
-              onClick={() => router.push("/user-management/e-members")}
-            >
-              Cancel
-            </Button>
-            <Button variant="primary" type="submit" disabled={loading}>
+          <div className="mt-8 flex flex-col-reverse sm:flex-row items-center justify-end gap-3">
+            {!isPublic && (
+              <Button
+                variant="secondary"
+                onClick={() => router.push("/user-management/e-members")}
+              >
+                Cancel
+              </Button>
+            )}
+            <Button variant="primary" type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading ? "Saving…" : "Add E-Member"}
             </Button>
           </div>
@@ -364,6 +382,50 @@ export default function AddEMemberPage() {
         onSave={(data) => setSpouse(data)}
         initial={spouse || undefined}
       />
+    </>
+  );
+
+  if (isPublic) {
+    return (
+      <PublicFormLayout title="E-Member Registration" subtitle="Register as an online church member">
+        {formContent}
+      </PublicFormLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout>
+      {/* Page Header */}
+      <div className="mb-6">
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">
+          User Management
+        </h1>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.push("/user-management/e-members")}
+            className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+          </button>
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">
+            Add E-Member
+          </h2>
+        </div>
+      </div>
+      {formContent}
     </DashboardLayout>
   );
 }
