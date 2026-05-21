@@ -38,6 +38,26 @@ function fileSizeFmt(bytes?: number) {
   return `${bytes} B`;
 }
 
+function getYoutubeThumbnail(url?: string | null): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    let id: string | null = null;
+    if (u.hostname === "youtu.be") {
+      id = u.pathname.slice(1).split(/[/?]/)[0] || null;
+    } else if (u.hostname.includes("youtube.com")) {
+      id =
+        u.searchParams.get("v") ??
+        u.pathname.split("/embed/")[1]?.split(/[/?]/)[0] ??
+        u.pathname.split("/shorts/")[1]?.split(/[/?]/)[0] ??
+        null;
+    }
+    return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
+  } catch {
+    return null;
+  }
+}
+
 function fmtDate(s?: string) {
   if (!s) return "—";
   return new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
@@ -178,12 +198,15 @@ export default function MediaPage() {
             const isImage = tabKey === "PICTURES";
             const mediaUrl = item.displayUrl ?? item.url;
             const mediaSize = item.size ?? item.fileSize;
+            const thumbnail = !isImage
+              ? getYoutubeThumbnail(item.youtubeLink ?? item.displayUrl ?? item.url)
+              : null;
             return (
               <div
                 key={item.id}
                 className="overflow-hidden rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 transition-shadow hover:shadow-md"
               >
-                <div className="flex h-[160px] items-center justify-center overflow-hidden bg-[#F3F4F6] dark:bg-slate-700/30">
+                <div className="relative flex h-[160px] items-center justify-center overflow-hidden bg-[#F3F4F6] dark:bg-slate-700/30">
                   {isImage && mediaUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -192,11 +215,36 @@ export default function MediaPage() {
                       className="h-full w-full object-cover"
                       onError={(e) => {
                         const t = e.currentTarget;
-                        t.onerror = null; // prevent infinite loop
+                        t.onerror = null;
                         t.style.display = "none";
                         t.parentElement?.classList.add("broken-img");
                       }}
                     />
+                  ) : thumbnail ? (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={thumbnail}
+                        alt={item.title ?? ""}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          const t = e.currentTarget;
+                          t.onerror = null;
+                          t.style.display = "none";
+                          // show sibling play icon when thumbnail fails
+                          const overlay = t.nextElementSibling as HTMLElement | null;
+                          if (overlay) overlay.style.display = "flex";
+                        }}
+                      />
+                      {/* Play-button overlay on top of thumbnail */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/60">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="1">
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                          </svg>
+                        </div>
+                      </div>
+                    </>
                   ) : (
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#9CA3AF" stroke="#9CA3AF" strokeWidth="1">
                       <polygon points="5 3 19 12 5 21 5 3" />
