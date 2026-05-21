@@ -30,6 +30,16 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
   const { isDark, toggle: toggleTheme } = useTheme();
   const { sidebarWidth } = useSidebar();
 
+  // Track whether we're in the mobile breakpoint (< lg = 1024px).
+  // On mobile the sidebar is an overlay, so the TopNav must start at left:0.
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
   // ── User state ─────────────────────────────────────────────────────────────
   const [user, setUser] = useState<StoredUser | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -160,7 +170,7 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
   return (
     <header
       className="fixed right-0 top-0 z-30 flex h-16 items-center border-b border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-900 px-4 gap-3 lg:px-6"
-      style={{ left: `max(0px, ${sidebarWidth}px)`, transition: "left 0.3s ease" }}
+      style={{ left: isMobile ? 0 : `max(0px, ${sidebarWidth}px)`, transition: "left 0.3s ease" }}
     >
       {/* Hamburger — mobile only */}
       <button
