@@ -5,9 +5,14 @@ import { useRouter } from "next/navigation";
 import { ChevronDown, Menu, Bell, Search, X, Users, CalendarClock, UserPlus, Sun, Moon } from "lucide-react";
 import { getStoredUser, setStoredUser, getUser, logoutUser, searchMembers, searchEvents, type StoredUser } from "@/lib/api";
 import { useTheme } from "@/context/ThemeContext";
+import { useSidebar } from "@/context/SidebarContext";
 
-// ── Notification badge count (reads from localStorage, synced with notifications page) ──
-const MOCK_UNREAD = 5; // matches the mock unread count in notifications page
+// ── Notification unread count ──────────────────────────────────────────────
+// Derived from the mock notification data (4 unread items in the notifications page)
+const MOCK_UNREAD = 4;
+
+// ── Recent searches — localStorage key ─────────────────────────────────────
+const RECENT_KEY = "rosms-recent-searches";
 
 interface SearchResult {
   id: string;
@@ -24,6 +29,7 @@ interface TopNavProps {
 export default function TopNav({ onMenuOpen }: TopNavProps) {
   const router = useRouter();
   const { isDark, toggle: toggleTheme } = useTheme();
+  const { sidebarWidth } = useSidebar();
 
   // ── User state ─────────────────────────────────────────────────────────────
   const [user, setUser] = useState<StoredUser | null>(null);
@@ -59,9 +65,27 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
   const [searchQuery,   setSearchQuery]   = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const searchRef   = useRef<HTMLDivElement>(null);
   const inputRef    = useRef<HTMLInputElement>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load recent searches from localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(RECENT_KEY);
+      if (raw) setRecentSearches(JSON.parse(raw) as string[]);
+    } catch { /* ignore */ }
+  }, []);
+
+  const saveRecent = useCallback((q: string) => {
+    if (!q.trim()) return;
+    setRecentSearches((prev) => {
+      const next = [q.trim(), ...prev.filter((r) => r !== q.trim())].slice(0, 3);
+      localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
 
   const doSearch = useCallback(async (q: string) => {
     if (!q.trim()) { setSearchResults([]); return; }
@@ -125,8 +149,23 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
     return <Users className="h-4 w-4 text-[#000080] dark:text-indigo-400 shrink-0" />;
   };
 
+  // Also add ⌘K / Ctrl+K keyboard shortcut to open search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
   return (
-    <header className="fixed left-0 right-0 top-0 z-30 flex h-16 items-center border-b border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-900 px-4 gap-3 lg:left-[272px] lg:px-6">
+    <header
+      className="fixed right-0 top-0 z-30 flex h-16 items-center border-b border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-900 px-4 gap-3 lg:px-6"
+      style={{ left: `max(0px, ${sidebarWidth}px)`, transition: "left 0.3s ease" }}
+    >
 
       {/* Hamburger — mobile only */}
       <button
@@ -149,7 +188,7 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
               placeholder="Search members, events…"
               className="flex-1 text-sm text-[#111827] dark:text-slate-100 outline-none placeholder:text-[#9CA3AF] dark:placeholder:text-slate-500 bg-transparent min-w-0"
             />
-            <button onClick={() => { setSearchOpen(false); setSearchQuery(""); setSearchResults([]); }}>
+            <button onClick={() => { if (searchQuery.trim()) saveRecent(searchQuery); setSearchOpen(false); setSearchQuery(""); setSearchResults([]); }}>
               <X className="h-4 w-4 text-[#9CA3AF] dark:text-slate-500 hover:text-[#374151] dark:hover:text-slate-300" />
             </button>
           </div>
@@ -160,30 +199,50 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
           >
             <Search className="h-4 w-4 shrink-0" />
             <span className="hidden sm:inline">Search…</span>
+            <span className="hidden sm:inline ml-auto text-[10px] bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-slate-500 px-1.5 py-0.5 rounded font-mono">⌘K</span>
           </button>
         )}
 
-        {/* Search results dropdown */}
-        {searchOpen && (searchQuery.trim().length > 0) && (
+        {/* Search dropdown — recent searches or live results */}
+        {searchOpen && (
           <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-72 overflow-y-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg dark:shadow-slate-900">
-            {searchLoading ? (
-              <div className="px-4 py-3 text-sm text-[#9CA3AF] dark:text-slate-500 text-center">Searching…</div>
-            ) : searchResults.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-[#9CA3AF] dark:text-slate-500 text-center">No results for &ldquo;{searchQuery}&rdquo;</div>
-            ) : (
-              searchResults.map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => { router.push(r.href); setSearchOpen(false); setSearchQuery(""); setSearchResults([]); }}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-[#F9FAFB] dark:hover:bg-slate-700 transition-colors"
-                >
-                  {kindIcon(r.kind)}
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-[#111827] dark:text-slate-100 truncate">{r.label}</p>
-                    <p className="text-xs text-[#9CA3AF] dark:text-slate-500 truncate">{r.sub}</p>
-                  </div>
-                </button>
-              ))
+            {/* No query → show recent searches */}
+            {!searchQuery.trim() && recentSearches.length > 0 && (
+              <div>
+                <p className="px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] dark:text-slate-500">Recent</p>
+                {recentSearches.map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setSearchQuery(r)}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-left hover:bg-[#F9FAFB] dark:hover:bg-slate-700 transition-colors"
+                  >
+                    <Search className="h-3.5 w-3.5 text-[#9CA3AF] dark:text-slate-500 shrink-0" />
+                    <span className="text-sm text-[#374151] dark:text-slate-300">{r}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Live results */}
+            {searchQuery.trim().length > 0 && (
+              searchLoading ? (
+                <div className="px-4 py-3 text-sm text-[#9CA3AF] dark:text-slate-500 text-center">Searching…</div>
+              ) : searchResults.length === 0 ? (
+                <div className="px-4 py-3 text-sm text-[#9CA3AF] dark:text-slate-500 text-center">No results for &ldquo;{searchQuery}&rdquo;</div>
+              ) : (
+                searchResults.map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => { saveRecent(searchQuery); router.push(r.href); setSearchOpen(false); setSearchQuery(""); setSearchResults([]); }}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-[#F9FAFB] dark:hover:bg-slate-700 transition-colors"
+                  >
+                    {kindIcon(r.kind)}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-[#111827] dark:text-slate-100 truncate">{r.label}</p>
+                      <p className="text-xs text-[#9CA3AF] dark:text-slate-500 truncate">{r.sub}</p>
+                    </div>
+                  </button>
+                ))
+              )
             )}
           </div>
         )}
