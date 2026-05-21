@@ -260,6 +260,16 @@
   status = 200
 
 [[redirects]]
+  from   = "/trainings/som/form/"
+  to     = "/trainings/som/form/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/trainings/som/form/view/:id/"
+  to     = "/trainings/som/form/index.html"
+  status = 200
+
+[[redirects]]
   from   = "/trainings/som/"
   to     = "/trainings/som/index.html"
   status = 200
