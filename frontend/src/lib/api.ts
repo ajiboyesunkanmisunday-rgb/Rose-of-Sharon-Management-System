@@ -1985,6 +1985,7 @@ export interface MediaResponse {
   date?: string;
   description?: string;
   thumbnailUrl?: string;
+  youtubeLink?: string;
   mediaCategory?: string;
   tags?: string[];
   createdOn?: string;
