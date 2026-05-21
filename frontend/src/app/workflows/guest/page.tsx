@@ -18,10 +18,10 @@ const COLUMNS: {
   headerText: string;
   dot: string;
 }[] = [
-  { status: "FIRST_TIMER",               label: "First Timers",         headerBg: "bg-blue-50 dark:bg-blue-900/20",   headerText: "text-blue-800",   dot: "bg-blue-400"   },
-  { status: "SECOND_TIMER_WITHOUT_GROUP", label: "2nd Timer (No Group)", headerBg: "bg-yellow-50", headerText: "text-yellow-800", dot: "bg-yellow-400" },
-  { status: "SECOND_TIMER_WITH_GROUP",   label: "2nd Timer (In Group)", headerBg: "bg-purple-50", headerText: "text-purple-800", dot: "bg-purple-400" },
-  { status: "FULL_MEMBER",               label: "Full Members",         headerBg: "bg-green-50 dark:bg-green-900/20",  headerText: "text-green-800",  dot: "bg-green-400"  },
+  { status: "FIRST_TIMER",               label: "First Timers",         headerBg: "bg-blue-50 dark:bg-blue-900/20",    headerText: "text-blue-800 dark:text-blue-300",    dot: "bg-blue-400"   },
+  { status: "SECOND_TIMER_WITHOUT_GROUP", label: "2nd Timer (No Group)", headerBg: "bg-yellow-50 dark:bg-yellow-900/20", headerText: "text-yellow-800 dark:text-yellow-300", dot: "bg-yellow-400" },
+  { status: "SECOND_TIMER_WITH_GROUP",   label: "2nd Timer (In Group)", headerBg: "bg-purple-50 dark:bg-purple-900/20", headerText: "text-purple-800 dark:text-purple-300", dot: "bg-purple-400" },
+  { status: "FULL_MEMBER",               label: "Full Members",         headerBg: "bg-green-50 dark:bg-green-900/20",   headerText: "text-green-800 dark:text-green-300",  dot: "bg-green-400"  },
 ];
 
 const COL_ORDER = COLUMNS.map((c) => c.status);
@@ -112,7 +112,7 @@ function GuestCard({
             {user.profilePictureUrl ? (
               <img src={user.profilePictureUrl} alt={name} className="h-9 w-9 shrink-0 rounded-full object-cover" />
             ) : (
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-800">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-xs font-bold text-blue-800 dark:text-blue-300">
                 {initials}
               </div>
             )}
@@ -294,8 +294,8 @@ export default function GuestWorkflowPage() {
 
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#EFF6FF]">
-            <GitBranch className="h-5 w-5 text-[#2563EB]" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#EFF6FF] dark:bg-blue-900/30">
+            <GitBranch className="h-5 w-5 text-[#2563EB] dark:text-blue-300" />
           </div>
           <div>
             <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Workflows</h1>
@@ -327,7 +327,7 @@ export default function GuestWorkflowPage() {
       {loading ? (
         <div className="flex h-64 items-center justify-center">
           <div className="flex flex-col items-center gap-3 text-[#6B7280] dark:text-slate-400">
-            <GitBranch className="h-8 w-8 animate-pulse text-[#2563EB]" />
+            <GitBranch className="h-8 w-8 animate-pulse text-[#2563EB] dark:text-blue-300" />
             <p className="text-sm">Loading guest workflow…</p>
           </div>
         </div>
@@ -350,8 +350,8 @@ export default function GuestWorkflowPage() {
                 }}
                 className={`flex min-w-[260px] flex-1 flex-col rounded-xl border-2 transition-all ${
                   isColOver
-                    ? "border-[#000080] bg-[#E8EAF0] shadow-md"
-                    : "border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB]"
+                    ? "border-[#000080] dark:border-indigo-500 bg-[#E8EAF0] dark:bg-indigo-900/20 shadow-md"
+                    : "border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] dark:bg-slate-800/50"
                 }`}
               >
                 {/* Column header */}
@@ -367,7 +367,7 @@ export default function GuestWorkflowPage() {
 
                 {/* Drop hint when empty */}
                 {isColOver && users.length === 0 && (
-                  <div className="mx-3 mt-2 rounded-lg border-2 border-dashed border-[#000080]/40 bg-[#E8EAF0] py-3 text-center text-xs font-medium text-[#000080] dark:text-indigo-400">
+                  <div className="mx-3 mt-2 rounded-lg border-2 border-dashed border-[#000080]/40 dark:border-indigo-500/40 bg-[#E8EAF0] dark:bg-indigo-900/20 py-3 text-center text-xs font-medium text-[#000080] dark:text-indigo-400">
                     Drop here
                   </div>
                 )}
