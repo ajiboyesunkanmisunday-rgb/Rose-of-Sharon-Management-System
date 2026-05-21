@@ -3,12 +3,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import PublicFormLayout from "@/components/layout/PublicFormLayout";
 import Button from "@/components/ui/Button";
 import PhoneInput from "@/components/ui/PhoneInput";
 import MultiSelect from "@/components/ui/MultiSelect";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { createMember, uploadProfilePicture, getAllGroups, type GroupResponse } from "@/lib/api";
+import { createMember, uploadProfilePicture, getAllGroups, isAuthenticated, type GroupResponse } from "@/lib/api";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import CountryStateSelect from "@/components/ui/CountryStateSelect";
 
@@ -16,9 +17,13 @@ export default function AddMemberPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [isPublic, setIsPublic] = useState<boolean | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+
   // Real groups from API
   const [availableGroups, setAvailableGroups] = useState<GroupResponse[]>([]);
   useEffect(() => {
+    setIsPublic(!isAuthenticated());
     getAllGroups().then(setAvailableGroups).catch(() => {});
   }, []);
   const groupNames = availableGroups.map((g) => g.name);
@@ -94,7 +99,11 @@ export default function AddMemberPage() {
           ? groups.map((name) => availableGroups.find((g) => g.name === name)?.id).filter(Boolean) as string[]
           : undefined,
       });
-      router.push("/user-management/members");
+      if (!isAuthenticated()) {
+        setSubmitted(true);
+      } else {
+        router.push("/user-management/members");
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to save member.";
       setError(msg);
@@ -122,56 +131,57 @@ export default function AddMemberPage() {
 
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
   const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
   ];
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 100 }, (_, i) => String(currentYear - i));
 
-  return (
-    <DashboardLayout>
-      {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">User Management</h1>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => router.push("/user-management/members")}
-            className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
-          </button>
-          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">Add Member</h2>
-        </div>
+  // Loading state while checking auth
+  if (isPublic === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#000080] border-t-transparent" />
       </div>
+    );
+  }
 
+  // Success screen for public users
+  if (submitted && isPublic) {
+    return (
+      <PublicFormLayout title="">
+        <div className="flex flex-col items-center py-16 text-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-[#000080]">Submission Successful!</h2>
+          <p className="mt-2 text-gray-600">Thank you! Your information has been recorded.</p>
+          <button
+            onClick={() => {
+              setSubmitted(false);
+              setFirstName(""); setMiddleName(""); setLastName(""); setPhone(""); setEmail("");
+              setGender(""); setDobDay(""); setDobMonth(""); setDobYear("");
+              setStreet(""); setCity(""); setState(""); setCountry(""); setMaritalStatus("");
+              setGroups([]); setPhotoPreview(null); setPhotoFile(null); setSpouse(null);
+            }}
+            className="mt-6 rounded-lg bg-[#000080] px-6 py-3 text-white font-medium"
+          >
+            Submit Another
+          </button>
+        </div>
+      </PublicFormLayout>
+    );
+  }
+
+  const formContent = (
+    <>
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-6 lg:flex-row">
-          {/* Right Side - Profile Photo (30%) — first on mobile, second on desktop */}
+          {/* Right Side - Profile Photo (30%) */}
           <div className="w-full lg:order-2 lg:w-[30%]">
-            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6">
               <h2 className="mb-6 text-[18px] font-bold text-[#000000] dark:text-slate-100">
                 Profile Photo
               </h2>
@@ -216,9 +226,9 @@ export default function AddMemberPage() {
             </div>
           </div>
 
-          {/* Left Side - Form (70%) — second on mobile, first on desktop */}
+          {/* Left Side - Form (70%) */}
           <div className="w-full lg:order-1 lg:w-[70%]">
-            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6">
               <h2 className="mb-6 text-[18px] font-bold text-[#000000] dark:text-slate-100">
                 Enter Details
               </h2>
@@ -424,13 +434,12 @@ export default function AddMemberPage() {
 
               {/* Save Member Button */}
               <div className="mt-6 flex justify-end">
-                <Button type="submit" variant="primary" disabled={loading}>
+                <Button type="submit" variant="primary" disabled={loading} className="w-full sm:w-auto">
                   {loading ? "Saving…" : "Save Member"}
                 </Button>
               </div>
             </div>
           </div>
-
         </div>
       </form>
 
@@ -440,6 +449,46 @@ export default function AddMemberPage() {
         onSave={(data) => setSpouse(data)}
         initial={spouse || undefined}
       />
+    </>
+  );
+
+  if (isPublic) {
+    return (
+      <PublicFormLayout title="New Member Registration" subtitle="Join our church community">
+        {formContent}
+      </PublicFormLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout>
+      {/* Page Header */}
+      <div className="mb-6">
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">User Management</h1>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.push("/user-management/members")}
+            className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+          </button>
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">Add Member</h2>
+        </div>
+      </div>
+      {formContent}
     </DashboardLayout>
   );
 }

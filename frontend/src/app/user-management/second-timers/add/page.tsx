@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import PublicFormLayout from "@/components/layout/PublicFormLayout";
 import Button from "@/components/ui/Button";
 import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { createSecondTimer, uploadProfilePicture } from "@/lib/api";
+import { createSecondTimer, uploadProfilePicture, isAuthenticated } from "@/lib/api";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import CountryStateSelect from "@/components/ui/CountryStateSelect";
 import { OCCUPATIONS } from "@/lib/occupations";
@@ -16,6 +17,9 @@ import { useEventServices } from "@/hooks/useEventServices";
 
 export default function AddSecondTimerPage() {
   const router = useRouter();
+
+  const [isPublic, setIsPublic] = useState<boolean | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
@@ -47,6 +51,10 @@ export default function AddSecondTimerPage() {
   const [showSpouseModal, setShowSpouseModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setIsPublic(!isAuthenticated());
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,7 +95,11 @@ export default function AddSecondTimerPage() {
         fromOnline: worshippedOnline || undefined,
         eventId: serviceAttended || undefined,
       });
-      router.push("/user-management/second-timers");
+      if (!isAuthenticated()) {
+        setSubmitted(true);
+      } else {
+        router.push("/user-management/second-timers");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save second timer.");
       setLoading(false);
@@ -102,54 +114,57 @@ export default function AddSecondTimerPage() {
 
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
   const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
   ];
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 100 }, (_, i) => String(currentYear - i));
 
-  return (
-    <DashboardLayout>
-      {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">User Management</h1>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
-          </button>
-          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">Add Second Timer</h2>
-        </div>
+  // Loading state while checking auth
+  if (isPublic === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#000080] border-t-transparent" />
       </div>
+    );
+  }
 
+  // Success screen for public users
+  if (submitted && isPublic) {
+    return (
+      <PublicFormLayout title="">
+        <div className="flex flex-col items-center py-16 text-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-[#000080]">Submission Successful!</h2>
+          <p className="mt-2 text-gray-600">Thank you! Your information has been recorded.</p>
+          <button
+            onClick={() => {
+              setSubmitted(false);
+              setFirstName(""); setMiddleName(""); setLastName(""); setGender(""); setEmail("");
+              setPhone(""); setWhatsappNumber(""); setDobDay(""); setDobMonth(""); setDobYear("");
+              setStreet(""); setCity(""); setState(""); setCountry(""); setMaritalStatus("");
+              setOccupation(""); setServiceAttended(""); setIsVisiting(false);
+              setHowDidYouHear(""); setHowWasService(""); setFavouriteParts(""); setWorshippedOnline(false);
+              setPhoto(null); setSpouse(null);
+            }}
+            className="mt-6 rounded-lg bg-[#000080] px-6 py-3 text-white font-medium"
+          >
+            Submit Another
+          </button>
+        </div>
+      </PublicFormLayout>
+    );
+  }
+
+  const formContent = (
+    <>
       <form onSubmit={handleSubmit}>
         {/* Enter Details Section */}
-        <div className="mb-8 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+        <div className="mb-8 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6">
           <h2 className="mb-6 text-[18px] font-bold text-[#000000] dark:text-slate-100">
             Enter Details
           </h2>
@@ -303,7 +318,7 @@ export default function AddSecondTimerPage() {
         </div>
 
         {/* Address Section */}
-        <div className="mb-8 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+        <div className="mb-8 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6">
           <h2 className="mb-6 text-[18px] font-bold text-[#000000] dark:text-slate-100">Address</h2>
 
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
@@ -339,7 +354,7 @@ export default function AddSecondTimerPage() {
         </div>
 
         {/* More Details Section */}
-        <div className="mb-8 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+        <div className="mb-8 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6">
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
             <div>
               <label className={labelStyles}>Marital Status</label>
@@ -446,7 +461,7 @@ export default function AddSecondTimerPage() {
         )}
 
         <div className="mt-6 flex justify-end">
-          <Button type="submit" variant="primary" disabled={loading}>
+          <Button type="submit" variant="primary" disabled={loading} className="w-full sm:w-auto">
             {loading ? "Saving…" : "Save"}
           </Button>
         </div>
@@ -458,6 +473,46 @@ export default function AddSecondTimerPage() {
         onSave={(data) => setSpouse(data)}
         initial={spouse || undefined}
       />
+    </>
+  );
+
+  if (isPublic) {
+    return (
+      <PublicFormLayout title="Second Timer Registration" subtitle="Welcome back! Please fill in your details">
+        {formContent}
+      </PublicFormLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout>
+      {/* Page Header */}
+      <div className="mb-6">
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">User Management</h1>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+          </button>
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">Add Second Timer</h2>
+        </div>
+      </div>
+      {formContent}
     </DashboardLayout>
   );
 }
