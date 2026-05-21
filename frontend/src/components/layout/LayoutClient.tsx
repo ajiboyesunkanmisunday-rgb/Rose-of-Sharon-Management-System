@@ -62,7 +62,7 @@ export default function LayoutClient({
 
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
         {/* Sidebar — always visible on desktop, drawer on mobile */}
         <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
@@ -81,7 +81,7 @@ export default function LayoutClient({
         {/* Main content area
             - Mobile/tablet: full width, pushed below top bar
             - Desktop: indented by sidebar width (272px) */}
-        <main className="mt-16 min-h-[calc(100vh-64px)] bg-white p-4 sm:p-6 lg:ml-[272px]">
+        <main className="mt-16 min-h-[calc(100vh-64px)] bg-white dark:bg-slate-800 p-4 sm:p-6 lg:ml-[272px]">
           {children}
         </main>
       </div>

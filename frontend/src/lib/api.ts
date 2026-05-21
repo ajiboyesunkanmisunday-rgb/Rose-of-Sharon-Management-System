@@ -34,6 +34,7 @@ export interface StoredUser {
   lastName: string;
   email: string;
   userType?: string;
+  profilePictureUrl?: string;
 }
 
 export function getStoredUser(): StoredUser | null {
@@ -453,6 +454,7 @@ export async function loginUser(body: LoginRequest): Promise<UserResponse> {
     lastName: response.lastName,
     email: response.email,
     userType: response.userType,
+    profilePictureUrl: response.profilePictureUrl,
   });
 
   return response;

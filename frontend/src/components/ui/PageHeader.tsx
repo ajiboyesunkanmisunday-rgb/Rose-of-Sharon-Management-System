@@ -35,13 +35,13 @@ export default function PageHeader({
   return (
     <div className="mb-6 flex items-start justify-between gap-4">
       <div>
-        <h1 className="text-[28px] font-bold text-[#000000]">{title}</h1>
+        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">{title}</h1>
         {subtitle && (
           <div className="mt-1 flex items-center gap-2">
             {hasBack && (
               <button
                 onClick={handleBack}
-                className="flex items-center text-[#000080] transition-colors hover:text-[#000066]"
+                className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066] dark:hover:text-indigo-300"
                 aria-label="Go back"
               >
                 <svg
@@ -60,7 +60,7 @@ export default function PageHeader({
                 </svg>
               </button>
             )}
-            <h2 className="text-[22px] font-bold text-[#000080]">{subtitle}</h2>
+            <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">{subtitle}</h2>
           </div>
         )}
       </div>
