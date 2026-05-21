@@ -182,12 +182,12 @@ export default function MembersPage() {
     <DashboardLayout>
       {/* Page Header */}
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF]">
-          <Users className="h-6 w-6 text-[#000080]" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF] dark:bg-indigo-900/30">
+          <Users className="h-6 w-6 text-[#000080] dark:text-indigo-400" />
         </div>
         <div>
-          <h1 className="text-[28px] font-bold text-[#000000]">Members</h1>
-          <p className="text-sm text-[#6B7280]">
+          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Members</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">
             View and manage all registered church members
           </p>
         </div>
@@ -326,27 +326,27 @@ export default function MembersPage() {
 
       {/* Inline Filter Row */}
       {showFilter && (
-        <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4">
+        <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
           <div>
-            <label className="mb-1 block text-xs font-medium text-[#374151]">
+            <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">
               Start Date
             </label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="rounded-lg border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-[#374151]">
+            <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">
               End Date
             </label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+              className="rounded-lg border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500"
             />
           </div>
           <Button onClick={handleExport}>Export CSV</Button>
@@ -390,7 +390,7 @@ export default function MembersPage() {
           Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-2"
+              className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 space-y-2"
             >
               <div className="skeleton h-4 w-32" />
               <div className="skeleton h-3 w-24" />
@@ -408,7 +408,7 @@ export default function MembersPage() {
               onClick={() =>
                 router.push(`/user-management/members/${member.id}`)
               }
-              className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
             >
               <UserAvatar
                 id={member.id}
@@ -417,14 +417,14 @@ export default function MembersPage() {
                 profilePictureUrl={member.profilePictureUrl}
               />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-[#111827] truncate">
+                <p className="text-sm font-semibold text-[#111827] dark:text-slate-100 truncate">
                   {member.firstName} {member.lastName}
                 </p>
-                <p className="text-xs text-[#6B7280] truncate">
+                <p className="text-xs text-[#6B7280] dark:text-slate-400 truncate">
                   {member.phoneNumber}
                 </p>
                 {member.email && (
-                  <p className="text-xs text-[#9CA3AF] truncate">
+                  <p className="text-xs text-[#9CA3AF] dark:text-slate-500 truncate">
                     {member.email}
                   </p>
                 )}
@@ -457,10 +457,10 @@ export default function MembersPage() {
       </div>
 
       {/* Table — hidden on mobile */}
-      <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#F3F4F6]">
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
               <th className="px-4 py-4">
                 <input
                   type="checkbox"
@@ -470,13 +470,13 @@ export default function MembersPage() {
                 />
               </th>
               <th className="px-4 py-4"></th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 First Name
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Last Name
               </th>
-              <th className="px-4 py-4 text-sm font-bold text-[#000080]">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">
                 Phone
               </th>
               <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080]">
@@ -500,7 +500,7 @@ export default function MembersPage() {
               displayedMembers.map((member) => (
                 <tr
                   key={member.id}
-                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 cursor-pointer"
+                  className="border-b border-[#F3F4F6] dark:border-slate-700 transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer"
                   style={{ height: "56px" }}
                   onClick={() =>
                     router.push(`/user-management/members/${member.id}`)
@@ -525,16 +525,16 @@ export default function MembersPage() {
                       profilePictureUrl={member.profilePictureUrl}
                     />
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {member.firstName}
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {member.lastName}
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#374151]">
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {member.phoneNumber}
                   </td>
-                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151]">
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {member.email}
                   </td>
                   <td
