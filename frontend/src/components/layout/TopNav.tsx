@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Menu, Bell, Search, X, Users, CalendarClock, UserPlus, Sun, Moon } from "lucide-react";
-import { getStoredUser, logoutUser, searchMembers, searchEvents, type StoredUser } from "@/lib/api";
+import { getStoredUser, setStoredUser, getUser, logoutUser, searchMembers, searchEvents, type StoredUser } from "@/lib/api";
 import { useTheme } from "@/context/ThemeContext";
 
 // ── Notification badge count (reads from localStorage, synced with notifications page) ──
@@ -29,7 +29,26 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
   const [user, setUser] = useState<StoredUser | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  useEffect(() => { setUser(getStoredUser()); }, []);
+  useEffect(() => {
+    const stored = getStoredUser();
+    setUser(stored);
+
+    // If the stored user has no photo URL, silently fetch their full profile
+    // from the API and backfill it into localStorage so the avatar shows.
+    // This handles users who logged in before profilePictureUrl was persisted.
+    if (stored?.id && !stored.profilePictureUrl &&
+        !stored.id.startsWith("mock-") && !stored.id.startsWith("session_")) {
+      getUser(stored.id)
+        .then((profile) => {
+          if (profile.profilePictureUrl) {
+            const updated = { ...stored, profilePictureUrl: profile.profilePictureUrl };
+            setStoredUser(updated);
+            setUser(updated);
+          }
+        })
+        .catch(() => { /* non-critical — silently ignore */ });
+    }
+  }, []);
 
   const displayName  = user ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email || "User" : "—";
   const displayEmail = user?.email ?? "";
