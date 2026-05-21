@@ -24,6 +24,7 @@ interface SearchableSelectProps {
   onChange: (value: string) => void;
   required?: boolean;
   className?: string;
+  disabled?: boolean;
 }
 
 export default function SearchableSelect({
@@ -35,6 +36,7 @@ export default function SearchableSelect({
   onChange,
   required,
   className = "",
+  disabled = false,
 }: SearchableSelectProps) {
   const id = useId();
   const [open,   setOpen]   = useState(false);
@@ -106,12 +108,15 @@ export default function SearchableSelect({
       <button
         id={id}
         type="button"
-        onClick={() => setOpen((s) => !s)}
+        onClick={() => { if (!disabled) setOpen((s) => !s); }}
+        disabled={disabled}
         className={`flex w-full items-center justify-between rounded-lg border px-4 py-3 text-sm outline-none transition-colors ${
-          open
-            ? "border-[#000080] ring-1 ring-[#000080]"
-            : "border-[#E5E7EB] dark:border-slate-700 hover:border-[#9CA3AF]"
-        } bg-white dark:bg-slate-800 text-left`}
+          disabled
+            ? "border-[#E5E7EB] dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50 text-gray-400 dark:text-slate-500 cursor-not-allowed"
+            : open
+              ? "border-[#000080] ring-1 ring-[#000080] bg-white dark:bg-slate-800"
+              : "border-[#E5E7EB] dark:border-slate-700 hover:border-[#9CA3AF] bg-white dark:bg-slate-800"
+        } text-left`}
       >
         <span className={displayLabel ? "text-[#374151] dark:text-slate-300" : "text-[#9CA3AF] dark:text-slate-400"}>
           {displayLabel || placeholder}

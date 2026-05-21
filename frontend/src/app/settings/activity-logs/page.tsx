@@ -32,6 +32,25 @@ export default function ActivityLogsPage() {
   
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [dateError, setDateError] = useState("");
+
+  // Validate dates whenever they change
+  useEffect(() => {
+    if (!fromDate && !toDate) {
+      setDateError("");
+      return;
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    if (fromDate && fromDate > today) {
+      setDateError("Start date cannot be in the future");
+      return;
+    }
+    if (fromDate && toDate && toDate < fromDate) {
+      setDateError("End date cannot be before start date");
+      return;
+    }
+    setDateError("");
+  }, [fromDate, toDate]);
 
   const fetchLogs = useCallback(async (page: number, q: string, start?: string, end?: string) => {
     setLoading(true);
@@ -63,8 +82,9 @@ export default function ActivityLogsPage() {
   }, []);
 
   useEffect(() => {
+    if (dateError) return;
     fetchLogs(currentPage, activeSearch, fromDate, toDate);
-  }, [currentPage, activeSearch, fromDate, toDate, fetchLogs]);
+  }, [currentPage, activeSearch, fromDate, toDate, fetchLogs, dateError]);
 
   const handleSearch = () => {
     setActiveSearch(search);
@@ -84,12 +104,22 @@ export default function ActivityLogsPage() {
       </div>
 
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <DateRangePicker
-          from={fromDate}
-          to={toDate}
-          onFromChange={setFromDate}
-          onToChange={setToDate}
-        />
+        <div className="flex flex-wrap items-end gap-2">
+          <DateRangePicker
+            from={fromDate}
+            to={toDate}
+            onFromChange={setFromDate}
+            onToChange={setToDate}
+          />
+          {(fromDate || toDate) && (
+            <button
+              onClick={() => { setFromDate(""); setToDate(""); setCurrentPage(1); }}
+              className="h-11 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-4 text-sm text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+            >
+              Clear
+            </button>
+          )}
+        </div>
         <div className="flex w-full sm:w-auto items-center gap-2">
            <div className="w-full sm:w-72">
             <SearchBar
@@ -108,6 +138,12 @@ export default function ActivityLogsPage() {
            </button>
         </div>
       </div>
+
+      {dateError && (
+        <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 dark:bg-orange-900/20 px-4 py-2 text-sm text-orange-700 dark:text-orange-300">
+          {dateError}
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700 flex justify-between items-center animate-in fade-in slide-in-from-top-1">
