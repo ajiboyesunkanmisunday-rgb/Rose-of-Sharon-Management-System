@@ -294,11 +294,12 @@ export default function MediaPage() {
 
   const displayed = items.filter((item) => {
     const cat = item.mediaCategory ?? item.type ?? item.category;
-    // Exclude profile pictures — they clutter the media gallery.
-    // Backend stores them as category PICTURE but titles them "profile-<timestamp>".
-    if (cat && cat.toUpperCase().includes("PROFILE")) return false;
-    const title = (item.title ?? (item as { displayName?: string }).displayName ?? "").toLowerCase();
-    if (title.startsWith("profile-") || title.startsWith("profile_")) return false;
+    // Exclude items whose mediaCategory explicitly marks them as profile pictures.
+    // Note: profile pictures uploaded via user forms are stored with category PICTURE
+    // and titled "profile-<timestamp>" — filtering them by title breaks server-side
+    // pagination (all items on a page get hidden). The backend needs a dedicated
+    // filter param or a separate media category for profile pictures to solve this properly.
+    if (cat && cat.toUpperCase() === "PROFILE_PICTURE") return false;
     if (activeTab !== "ALL" && toTab(cat) !== activeTab) return false;
     if (search.trim()) {
       const q = search.toLowerCase();
