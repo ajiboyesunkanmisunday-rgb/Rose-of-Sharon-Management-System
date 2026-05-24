@@ -45,12 +45,13 @@ function WorkersFormViewLoader({ id }: { id: string }) {
 
 function WorkersFormInner() {
   const searchParams = useSearchParams();
-  const mode = searchParams.get("mode");
-  const id = searchParams.get("id");
+  const mode   = searchParams.get("mode");
+  const id     = searchParams.get("id");
+  const userId = searchParams.get("userId") ?? undefined;
 
   if (mode === "blank") return <WorkersFormCore mode="blank" />;
   if (mode === "view" && id) return <WorkersFormViewLoader id={id} />;
-  return <WorkersFormCore mode="fill" />;
+  return <WorkersFormCore mode="fill" userId={userId} />;
 }
 
 export default function WorkersInTrainingFormPage() {
