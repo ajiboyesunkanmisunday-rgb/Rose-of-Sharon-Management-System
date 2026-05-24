@@ -116,29 +116,47 @@ const MailIcon = () => (
 
 // ── Image fetch helpers for export ──────────────────────────────────────────
 
+/**
+ * Fetch an image and return it as a base64 data-URL.
+ * Routes through the Netlify img-proxy function first (server-to-server,
+ * no CORS restrictions), then falls back to a direct browser fetch for
+ * local dev where the proxy is not running.
+ */
 async function fetchBase64(url: string): Promise<string | null> {
-  try {
-    const r = await fetch(url, { mode: "cors" });
-    if (!r.ok) return null;
-    const buf = await r.arrayBuffer();
-    const bytes = new Uint8Array(buf);
-    let bin = "";
-    bytes.forEach((b) => (bin += String.fromCharCode(b)));
-    const mime = r.headers.get("content-type") ?? "image/jpeg";
-    return `data:${mime};base64,${btoa(bin)}`;
-  } catch {
-    return null;
+  if (!url) return null;
+  const candidates = [
+    `/.netlify/functions/img-proxy?url=${encodeURIComponent(url)}`,
+    url,
+  ];
+  for (const u of candidates) {
+    try {
+      const r = await fetch(u);
+      if (!r.ok) continue;
+      const buf = await r.arrayBuffer();
+      const bytes = new Uint8Array(buf);
+      let bin = "";
+      bytes.forEach((b) => (bin += String.fromCharCode(b)));
+      const mime = r.headers.get("content-type") ?? "image/jpeg";
+      return `data:${mime};base64,${btoa(bin)}`;
+    } catch { continue; }
   }
+  return null;
 }
 
 async function fetchBuffer(url: string): Promise<ArrayBuffer | null> {
-  try {
-    const r = await fetch(url, { mode: "cors" });
-    if (!r.ok) return null;
-    return r.arrayBuffer();
-  } catch {
-    return null;
+  if (!url) return null;
+  const candidates = [
+    `/.netlify/functions/img-proxy?url=${encodeURIComponent(url)}`,
+    url,
+  ];
+  for (const u of candidates) {
+    try {
+      const r = await fetch(u);
+      if (!r.ok) continue;
+      return r.arrayBuffer();
+    } catch { continue; }
   }
+  return null;
 }
 
 // ── Export row type ──────────────────────────────────────────────────────────
@@ -235,35 +253,44 @@ async function exportData(
 
     const hasImages = Object.keys(imgMap).length > 0;
 
-    doc.setFontSize(14);
+    doc.setFontSize(16);
     doc.setTextColor(0, 0, 128);
-    doc.text(filename.replace(/_/g, " "), 14, 15);
+    doc.text(filename.replace(/_/g, " "), 14, 16);
     doc.setTextColor(0, 0, 0);
 
-    const imgCellW = hasImages ? 16 : 0;
+    // 40 mm wide photo column — large enough for a clear portrait thumbnail
+    const imgCellW = hasImages ? 40 : 0;
+    // Row height must accommodate the image (jsPDF-autotable unit = mm)
+    const imgRowH  = hasImages ? 42 : 0;
 
     autoTable(doc, {
-      startY: 22,
+      startY: 24,
       head: [hasImages ? ["Photo", ...columns] : columns],
       body: rows.map((r) =>
         hasImages
           ? ["", ...columns.map((c) => r[c] ?? "")]
           : columns.map((c) => r[c] ?? "")
       ),
-      styles: { fontSize: 9, cellPadding: 3, valign: "middle" },
-      headStyles: { fillColor: [0, 0, 128], textColor: 255, fontStyle: "bold" },
-      columnStyles: hasImages ? { 0: { cellWidth: imgCellW } } : {},
+      styles: { fontSize: 10, cellPadding: 4, valign: "middle" },
+      headStyles: { fillColor: [0, 0, 128], textColor: 255, fontStyle: "bold", fontSize: 11 },
+      bodyStyles: hasImages ? { minCellHeight: imgRowH } : {},
+      columnStyles: hasImages ? { 0: { cellWidth: imgCellW, halign: "center" } } : {},
       rowPageBreak: "avoid",
       didDrawCell: (data) => {
         if (!hasImages) return;
         if (data.section === "body" && data.column.index === 0) {
           const b64 = imgMap[data.row.index];
           if (b64) {
-            const x = data.cell.x + 1;
-            const y = data.cell.y + 1;
-            const size = Math.min(data.cell.height - 2, imgCellW - 2);
+            // Detect format from the data-URL prefix
+            const fmt = b64.startsWith("data:image/png") ? "PNG"
+                      : b64.startsWith("data:image/gif") ? "GIF"
+                      : "JPEG";
+            // Centre the image within the cell
+            const drawSize = Math.min(data.cell.height - 4, imgCellW - 4);
+            const x = data.cell.x + (imgCellW - drawSize) / 2;
+            const y = data.cell.y + (data.cell.height - drawSize) / 2;
             try {
-              doc.addImage(b64, "JPEG", x, y, size, size);
+              doc.addImage(b64, fmt, x, y, drawSize, drawSize);
             } catch {
               // skip if format not supported
             }
@@ -324,16 +351,23 @@ async function exportData(
 
         if (hasImages) {
           const buf = bufMap[i];
+          const photoUrl = r["_photoUrl"] ?? "";
+          const imgType: "jpg" | "png" | "gif" =
+            photoUrl.toLowerCase().includes(".png") ? "png"
+            : photoUrl.toLowerCase().includes(".gif") ? "gif"
+            : "jpg";
           cells.push(
             new TableCell({
+              width: { size: 1200, type: WidthType.DXA },
               children: [
                 new Paragraph({
+                  alignment: AlignmentType.CENTER,
                   children: buf
                     ? [
                         new ImageRun({
                           data: buf,
-                          transformation: { width: 40, height: 40 },
-                          type: "jpg",
+                          transformation: { width: 90, height: 90 },
+                          type: imgType,
                         }),
                       ]
                     : [new TextRun("—")],
