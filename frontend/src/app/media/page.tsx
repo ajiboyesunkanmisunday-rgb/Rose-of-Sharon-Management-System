@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
-import { getMedia, type MediaResponse } from "@/lib/api";
+import { getMedia, getMediaByCategory, type MediaResponse } from "@/lib/api";
 import { Film } from "lucide-react";
 
 const ITEMS_PER_PAGE = 12;
@@ -275,11 +275,31 @@ export default function MediaPage() {
   const [search,      setSearch]      = useState("");
   const [activeTab,   setActiveTab]   = useState("ALL");
 
-  const fetchMedia = useCallback(async (page: number) => {
+  /**
+   * Maps each tab key to the exact category string the backend expects on
+   * GET /api/v1/media/category?category=X.  When a specific tab is active we
+   * call the category endpoint directly — the backend never returns
+   * PROFILE_PICTURE items from those categories, so no client-side filtering
+   * is needed and server-side pagination stays accurate.
+   *
+   * For the ALL tab we still use the main /api/v1/media endpoint and apply a
+   * lightweight client-side guard for the PROFILE_PICTURE category.
+   */
+  const TAB_CATEGORY: Record<string, string> = {
+    SERMONS:  "SERMON",
+    PODCASTS: "PODCAST",
+    VIDEOS:   "VIDEO",
+    PICTURES: "PICTURE",
+  };
+
+  const fetchMedia = useCallback(async (page: number, tab: string) => {
     setLoading(true);
     setApiError("");
     try {
-      const res = await getMedia(page - 1, ITEMS_PER_PAGE);
+      const categoryKey = TAB_CATEGORY[tab];
+      const res = categoryKey
+        ? await getMediaByCategory(categoryKey, page - 1, ITEMS_PER_PAGE)
+        : await getMedia(page - 1, ITEMS_PER_PAGE);
       setItems(res.content ?? []);
       setTotalPages(res.totalPages ?? 1);
       setTotalItems(res.totalElements ?? 0);
@@ -288,19 +308,16 @@ export default function MediaPage() {
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => { fetchMedia(currentPage); }, [currentPage, fetchMedia]);
+  useEffect(() => { fetchMedia(currentPage, activeTab); }, [currentPage, activeTab, fetchMedia]);
 
+  // For the ALL tab: lightly filter out any PROFILE_PICTURE items that slip
+  // through. For category tabs the backend already guarantees the right items.
   const displayed = items.filter((item) => {
     const cat = item.mediaCategory ?? item.type ?? item.category;
-    // Exclude items whose mediaCategory explicitly marks them as profile pictures.
-    // Note: profile pictures uploaded via user forms are stored with category PICTURE
-    // and titled "profile-<timestamp>" — filtering them by title breaks server-side
-    // pagination (all items on a page get hidden). The backend needs a dedicated
-    // filter param or a separate media category for profile pictures to solve this properly.
-    if (cat && cat.toUpperCase() === "PROFILE_PICTURE") return false;
-    if (activeTab !== "ALL" && toTab(cat) !== activeTab) return false;
+    if (activeTab === "ALL" && cat && cat.toUpperCase() === "PROFILE_PICTURE") return false;
     if (search.trim()) {
       const q = search.toLowerCase();
       return (

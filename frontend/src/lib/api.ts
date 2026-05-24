@@ -2006,8 +2006,20 @@ export async function getMedia(
   );
 }
 
-export async function getMediaCategories(): Promise<string[]> {
-  return apiFetch<string[]>("/api/v1/media/category");
+/**
+ * Fetch media items filtered by a specific category.
+ * Uses the dedicated /api/v1/media/category endpoint which only returns items
+ * of the requested category — cleanly excludes PROFILE_PICTURE and other
+ * unrelated types without relying on client-side filtering.
+ */
+export async function getMediaByCategory(
+  category: string,
+  pageNo = 0,
+  pageSize = 12,
+): Promise<CustomPageResponse<MediaResponse>> {
+  return apiFetch<CustomPageResponse<MediaResponse>>(
+    `/api/v1/media/category?category=${encodeURIComponent(category)}&pageNo=${pageNo}&pageSize=${pageSize}`,
+  );
 }
 
 export async function getMediaItem(id: string): Promise<MediaResponse> {
