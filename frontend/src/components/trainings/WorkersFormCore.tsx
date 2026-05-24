@@ -307,8 +307,12 @@ export default function WorkersFormCore({
 
   /* ── Submit ──────────────────────────────────────────────────────────── */
   const handleSubmit = async () => {
-    if (!firstName.trim() || !surname.trim() || !homePhone.trim()) {
-      setSubmitError("First Name, Surname, and Phone Number are required.");
+    // Accept any phone entered anywhere on the form as the primary contact number.
+    // The "Phone:" field is in Section B (Addresses), but users often fill the
+    // Next-of-Kin phone first — we use whichever phone is available.
+    const effectivePhone = homePhone.trim() || mobile.trim() || nokPhone.trim();
+    if (!firstName.trim() || !surname.trim() || !effectivePhone) {
+      setSubmitError("First Name, Surname, and at least one Phone Number are required. (Fill the Phone field in Section B — Addresses — or the Mobile / Next-of-Kin phone.)");
       return;
     }
     setSubmitError("");
@@ -360,8 +364,8 @@ export default function WorkersFormCore({
         lastName:          surname.trim(),
         maidenName:        maidenName.trim()  || undefined,
         countryCode:       "234",
-        phoneNumber:       normalisePhone(homePhone),
-        otherPhoneNumber:  mobile.trim() ? normalisePhone(mobile) : undefined,
+        phoneNumber:       normalisePhone(effectivePhone),
+        otherPhoneNumber:  mobile.trim() && mobile.trim() !== effectivePhone ? normalisePhone(mobile) : undefined,
         email:             email.trim()       || undefined,
         sex:               sexNorm as string | undefined,
         dateOfBirth:       safeDate(dob),
