@@ -553,7 +553,7 @@ export default function AnalyticsDashboard() {
                 ) : (
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart
-                      data={svrStats.visiting.columns.map((c) => ({ name: c.feature ?? "Unknown", count: c.totalCount }))}
+                      data={svrStats.visiting.columns.map((c) => ({ name: c.feature ?? "Not Specified", count: c.totalCount }))}
                       margin={{ top: 4, right: 10, left: -10, bottom: 40 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
@@ -573,7 +573,7 @@ export default function AnalyticsDashboard() {
                 ) : (
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart
-                      data={svrStats.service.columns.map((c) => { const f = c.feature ?? "Unknown"; return { name: f.length > 14 ? f.slice(0, 12) + "…" : f, count: c.totalCount }; })}
+                      data={svrStats.service.columns.map((c) => { const f = c.feature ?? "Not Specified"; return { name: f.length > 14 ? f.slice(0, 12) + "…" : f, count: c.totalCount }; })}
                       layout="vertical"
                       margin={{ top: 4, right: 16, left: 10, bottom: 0 }}
                     >
@@ -594,7 +594,7 @@ export default function AnalyticsDashboard() {
                 ) : (
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart
-                      data={svrStats.invitation.columns.map((c) => { const f = c.feature ?? "Unknown"; return { name: f.length > 14 ? f.slice(0, 12) + "…" : f, count: c.totalCount }; })}
+                      data={svrStats.invitation.columns.map((c) => { const f = c.feature ?? "Not Specified"; return { name: f.length > 14 ? f.slice(0, 12) + "…" : f, count: c.totalCount }; })}
                       layout="vertical"
                       margin={{ top: 4, right: 16, left: 10, bottom: 0 }}
                     >
