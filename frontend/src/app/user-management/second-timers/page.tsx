@@ -94,6 +94,15 @@ export default function SecondTimersPage() {
     fetchTimers(currentPage, activeSearch);
   }, [currentPage, activeSearch, fetchTimers]);
 
+  // Live search — update activeSearch 400ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setActiveSearch(search);
+      if (search !== activeSearch) setCurrentPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const displayedTimers = timers.filter((st) => {
     if (filterService && st.serviceAttended !== filterService) return false;
     if (filterDateFrom || filterDateTo) {
@@ -289,10 +298,7 @@ export default function SecondTimersPage() {
         <div className="w-full sm:w-72">
           <SearchBar
             value={search}
-            onChange={(val) => {
-              setSearch(val);
-              if (!val.trim()) { setActiveSearch(""); setCurrentPage(1); }
-            }}
+            onChange={(val) => setSearch(val)}
             onSearch={() => { setActiveSearch(search); setCurrentPage(1); }}
             placeholder="Search..."
           />
