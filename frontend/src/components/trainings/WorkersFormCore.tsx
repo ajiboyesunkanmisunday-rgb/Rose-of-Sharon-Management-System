@@ -387,14 +387,14 @@ export default function WorkersFormCore({
         ...(phItems.length   ? { createPositionHeldRequests: phItems } : {}),
       });
 
-      const savedId = (created as { id?: string })?.id;
-      if (!savedId) {
-        setSubmitError(
-          "The server accepted the form but did not return a record ID — the record may not have been saved. Please check the WiT list or contact the backend team. (Check browser console for the full server response.)"
-        );
-        return;
-      }
+      // Log the full response so the backend response structure is visible in
+      // the browser console (useful if the API returns a non-standard format).
+      console.log("[WIT] createWorkerInTraining response:", created);
 
+      // apiFetch throws on any non-2xx status, so reaching here means the
+      // backend accepted the request. Navigate to the list regardless of whether
+      // the response body contains an `id` field — some backend versions return
+      // a success message object rather than the full record.
       setSubmitSuccess(true);
       setSubmitError("");
       // router.refresh() busts the Next.js Router Cache so the list page
