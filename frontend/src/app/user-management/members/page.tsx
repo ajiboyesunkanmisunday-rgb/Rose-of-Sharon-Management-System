@@ -87,6 +87,15 @@ export default function MembersPage() {
     fetchMembers(currentPage, activeSearch);
   }, [currentPage, activeSearch, fetchMembers]);
 
+  // Live search — update activeSearch 400ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setActiveSearch(search);
+      if (search !== activeSearch) setCurrentPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const displayedMembers = members;
 
   const handleSelectAll = (checked: boolean) => {
@@ -187,10 +196,7 @@ export default function MembersPage() {
         <div className="w-full sm:w-72">
           <SearchBar
             value={search}
-            onChange={(val) => {
-              setSearch(val);
-              if (!val.trim()) { setActiveSearch(""); setCurrentPage(1); }
-            }}
+            onChange={(val) => setSearch(val)}
             onSearch={() => { setActiveSearch(search); setCurrentPage(1); }}
             placeholder="Search..."
           />
