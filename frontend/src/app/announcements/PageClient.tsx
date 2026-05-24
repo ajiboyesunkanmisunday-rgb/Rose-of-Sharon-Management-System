@@ -611,7 +611,7 @@ function ReadModal({
 }) {
   const by = item.submittedBy;
   const name = by
-    ? `${by.firstName || ""} ${by.lastName || ""}`.trim() || by.email
+    ? `${by.firstName || ""} ${by.lastName || ""}`.trim() || by.email || "Unknown"
     : "Unknown";
 
   return (
@@ -751,7 +751,7 @@ function AnnouncementCard({
 }) {
   const by = item.submittedBy;
   const name = by
-    ? `${by.firstName || ""} ${by.lastName || ""}`.trim() || by.email
+    ? `${by.firstName || ""} ${by.lastName || ""}`.trim() || by.email || "Unknown"
     : "Unknown";
 
   // Track double-click without triggering single-click actions
