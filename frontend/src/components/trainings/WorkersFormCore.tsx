@@ -181,8 +181,10 @@ const GIFTS_ALL = [
 export default function WorkersFormCore({
   mode,
   initialData,
+  userId,
 }: {
   mode: WitMode;
+  userId?: string;
   initialData?: WorkersInTrainingFullResponse;
 }) {
   const ro = mode !== "fill";
@@ -339,6 +341,7 @@ export default function WorkersFormCore({
       const nonRccg = [group1, group2].filter(Boolean);
 
       const created = await createWorkerInTraining({
+        userId:            userId || undefined,
         set:               set.trim() || undefined,
         profilePictureUrl,
         firstName:         firstName.trim(),

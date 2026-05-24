@@ -294,8 +294,11 @@ export default function MediaPage() {
 
   const displayed = items.filter((item) => {
     const cat = item.mediaCategory ?? item.type ?? item.category;
-    // Exclude profile pictures — they clutter the media gallery
+    // Exclude profile pictures — they clutter the media gallery.
+    // Backend stores them as category PICTURE but titles them "profile-<timestamp>".
     if (cat && cat.toUpperCase().includes("PROFILE")) return false;
+    const title = (item.title ?? (item as { displayName?: string }).displayName ?? "").toLowerCase();
+    if (title.startsWith("profile-") || title.startsWith("profile_")) return false;
     if (activeTab !== "ALL" && toTab(cat) !== activeTab) return false;
     if (search.trim()) {
       const q = search.toLowerCase();
