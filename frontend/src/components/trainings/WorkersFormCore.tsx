@@ -397,8 +397,9 @@ export default function WorkersFormCore({
 
       setSubmitSuccess(true);
       setSubmitError("");
-      // Navigate to the list so the new record is immediately visible.
-      setTimeout(() => router.push("/trainings/workers"), 1500);
+      // router.refresh() busts the Next.js Router Cache so the list page
+      // remounts and re-fetches data instead of serving a stale cached version.
+      setTimeout(() => { router.refresh(); router.push("/trainings/workers"); }, 1500);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Failed to submit. Please try again.");
     } finally {
