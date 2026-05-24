@@ -270,6 +270,9 @@ export default function WorkersInTrainingPage() {
     try {
       // Fetch up to 500 records (paginated fetchAll)
       const first = await getWorkersInTraining(0, 200);
+      // Log the raw response so we can confirm what the backend is actually returning.
+      // Open browser console (F12 → Console) and look for "[WIT LIST]" to see this.
+      console.log("[WIT LIST] GET /api/v1/workers-in-training response:", first);
       const rows = [...(first.content ?? [])];
       const total = Math.min(first.totalPages ?? 1, 10);
       if (total > 1) {

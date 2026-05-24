@@ -323,6 +323,15 @@ export default function WorkersFormCore({
                     : sex.toLowerCase().startsWith("m") ? "MALE"
                     : sex || undefined;
 
+      // Normalise phone: strip all non-digit characters, then remove a leading
+      // "0" when a country code is present (Nigerian local numbers start with 0
+      // but the backend expects the number without it, e.g. 8012345678 not 08012345678).
+      const normalisePhone = (raw: string) => {
+        let n = raw.trim().replace(/\D/g, "");
+        if (n.startsWith("0")) n = n.slice(1);
+        return n;
+      };
+
       const qualItems = quals
         .filter((q) => q.institution.trim())
         .map((q) => ({ institution: q.institution, date: q.dates || undefined, qualificationReceived: q.qualification || undefined }));
@@ -340,7 +349,7 @@ export default function WorkersFormCore({
 
       const nonRccg = [group1, group2].filter(Boolean);
 
-      const created = await createWorkerInTraining({
+      const body = {
         userId:            userId || undefined,
         set:               set.trim() || undefined,
         profilePictureUrl,
@@ -349,8 +358,8 @@ export default function WorkersFormCore({
         lastName:          surname.trim(),
         maidenName:        maidenName.trim()  || undefined,
         countryCode:       "234",
-        phoneNumber:       homePhone.trim(),
-        otherPhoneNumber:  mobile.trim()      || undefined,
+        phoneNumber:       normalisePhone(homePhone),
+        otherPhoneNumber:  mobile.trim() ? normalisePhone(mobile) : undefined,
         email:             email.trim()       || undefined,
         sex:               sexNorm as string | undefined,
         dateOfBirth:       safeDate(dob),
@@ -359,7 +368,7 @@ export default function WorkersFormCore({
         noOfChildren:      numChildren.trim() ? Number(numChildren.trim()) : undefined,
         nextOfKinName:         nokName.trim() || undefined,
         nextOfKinRelationship: nokRel.trim()  || undefined,
-        nextOfKinPhoneNumber:  nokPhone.trim()|| undefined,
+        nextOfKinPhoneNumber:  nokPhone.trim() ? normalisePhone(nokPhone) : undefined,
         nextOfKinFullAddress:  nokAddr.trim() || undefined,
         street:            homeAddr.trim()    || undefined,
         city:              homeCity.trim()    || undefined,
@@ -368,7 +377,7 @@ export default function WorkersFormCore({
         occupation:        occupation.trim()  || undefined,
         employer:          employer.trim()    || undefined,
         officeFullAddress: officeAddr.trim()  || undefined,
-        officePhoneNumber: officePhone.trim() || undefined,
+        officePhoneNumber: officePhone.trim() ? normalisePhone(officePhone) : undefined,
         salvationDate:             safeDate(salvDate),
         salvationLocation:         salvWhere.trim()   || undefined,
         waterBaptismDate:          safeDate(waterDate),
@@ -385,7 +394,13 @@ export default function WorkersFormCore({
         ...(qualItems.length ? { qualificationRequests: qualItems } : {}),
         ...(wpItems.length   ? { createPastPlaceOfWorshipRequests: wpItems } : {}),
         ...(phItems.length   ? { createPositionHeldRequests: phItems } : {}),
-      });
+      };
+
+      // Log the full request body so any field issues are visible in the browser
+      // console (F12 → Console) before the request is sent.
+      console.log("[WIT] createWorkerInTraining request body:", body);
+
+      const created = await createWorkerInTraining(body);
 
       // Log the full response so the backend response structure is visible in
       // the browser console (useful if the API returns a non-standard format).
@@ -401,7 +416,8 @@ export default function WorkersFormCore({
       // remounts and re-fetches data instead of serving a stale cached version.
       setTimeout(() => { router.refresh(); router.push("/trainings/workers"); }, 1500);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Failed to submit. Please try again.");
+      const msg = err instanceof Error ? err.message : "Failed to submit. Please try again.";
+      setSubmitError(`${msg} (Open browser console — F12 → Console — for the full server error.)`);
     } finally {
       setSubmitting(false);
       setUploading(false);
