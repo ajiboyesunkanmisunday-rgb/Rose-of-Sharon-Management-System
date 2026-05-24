@@ -294,6 +294,8 @@ export default function MediaPage() {
 
   const displayed = items.filter((item) => {
     const cat = item.mediaCategory ?? item.type ?? item.category;
+    // Exclude profile pictures — they clutter the media gallery
+    if (cat && cat.toUpperCase().includes("PROFILE")) return false;
     if (activeTab !== "ALL" && toTab(cat) !== activeTab) return false;
     if (search.trim()) {
       const q = search.toLowerCase();

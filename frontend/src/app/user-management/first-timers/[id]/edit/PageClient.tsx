@@ -11,7 +11,6 @@ import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
 import { getUser, updateFirstTimer, uploadProfilePicture } from "@/lib/api";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import CountryStateSelect from "@/components/ui/CountryStateSelect";
-import { OCCUPATIONS } from "@/lib/occupations";
 import { useEventServices } from "@/hooks/useEventServices";
 
 export default function EditFirstTimerPage() {
@@ -295,10 +294,7 @@ export default function EditFirstTimerPage() {
             </div>
             <div>
               <label className={labelStyles}>Occupation</label>
-              <select value={occupation} onChange={(e) => setOccupation(e.target.value)} className={selectStyles}>
-                <option value="">Select Occupation</option>
-                {OCCUPATIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-              </select>
+              <input type="text" value={occupation} onChange={(e) => setOccupation(e.target.value)} placeholder="Enter occupation" className={inputStyles} />
             </div>
             <div>
               <label className={labelStyles}>How did you hear about our church?</label>

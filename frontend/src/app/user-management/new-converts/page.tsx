@@ -16,6 +16,7 @@ import QRCodeModal from "@/components/user-management/QRCodeModal";
 import Modal from "@/components/ui/Modal";
 import {
   getNewConverts,
+  searchNewConverts,
   deleteNewConvertsBulk,
   addCallReport,
   addVisitReport,
@@ -51,6 +52,7 @@ export default function NewConvertsPage() {
 
   // UI
   const [search, setSearch] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [believersClassFilter, setBelieversClassFilter] = useState<BelieversClassFilter>("All");
@@ -72,11 +74,13 @@ export default function NewConvertsPage() {
   const [visitReport, setVisitReport] = useState("");
   const [selectedConvertId, setSelectedConvertId] = useState<string | null>(null);
 
-  const fetchConverts = useCallback(async (page: number) => {
+  const fetchConverts = useCallback(async (page: number, q = "") => {
     setLoading(true);
     setApiError("");
     try {
-      const res = await getNewConverts(page - 1, ITEMS_PER_PAGE);
+      const res = q.trim()
+        ? await searchNewConverts(q.trim(), page - 1, ITEMS_PER_PAGE)
+        : await getNewConverts(page - 1, ITEMS_PER_PAGE);
       setConverts(res.content ?? []);
       setTotalPages(res.totalPages || 1);
       setTotalItems(res.totalElements || 0);
@@ -89,21 +93,13 @@ export default function NewConvertsPage() {
   }, []);
 
   useEffect(() => {
-    fetchConverts(currentPage);
-  }, [currentPage, fetchConverts]);
+    fetchConverts(currentPage, activeSearch);
+  }, [currentPage, activeSearch, fetchConverts]);
 
   const displayedConverts = converts.filter((nc) => {
     if (believersClassFilter !== "All") {
       const cls = nc.believerClassStage || "Not started";
       if (cls !== believersClassFilter) return false;
-    }
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      return (
-        fullName(nc).toLowerCase().includes(q) ||
-        (nc.email ?? "").toLowerCase().includes(q) ||
-        (nc.phoneNumber ?? "").includes(q)
-      );
     }
     return true;
   });
@@ -295,8 +291,11 @@ export default function NewConvertsPage() {
           <div className="w-full sm:w-72">
             <SearchBar
               value={search}
-              onChange={(val) => { setSearch(val); setCurrentPage(1); }}
-              onSearch={() => setCurrentPage(1)}
+              onChange={(val) => {
+                setSearch(val);
+                if (!val.trim()) { setActiveSearch(""); setCurrentPage(1); }
+              }}
+              onSearch={() => { setActiveSearch(search); setCurrentPage(1); }}
               placeholder="Search..."
             />
           </div>
@@ -377,7 +376,7 @@ export default function NewConvertsPage() {
       {apiError && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} —{" "}
-          <button className="font-medium underline" onClick={() => fetchConverts(currentPage)}>Retry</button>
+          <button className="font-medium underline" onClick={() => fetchConverts(currentPage, activeSearch)}>Retry</button>
         </div>
       )}
 

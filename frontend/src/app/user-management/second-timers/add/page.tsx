@@ -12,7 +12,6 @@ import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
 import { createSecondTimer, uploadProfilePicture, isAuthenticated } from "@/lib/api";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import CountryStateSelect from "@/components/ui/CountryStateSelect";
-import { OCCUPATIONS } from "@/lib/occupations";
 import { useEventServices } from "@/hooks/useEventServices";
 
 export default function AddSecondTimerPage() {
@@ -381,14 +380,13 @@ export default function AddSecondTimerPage() {
             </div>
             <div>
               <label className={labelStyles}>Occupation</label>
-              <select
+              <input
+                type="text"
                 value={occupation}
                 onChange={(e) => setOccupation(e.target.value)}
-                className={selectStyles}
-              >
-                <option value="">Select Occupation</option>
-                {OCCUPATIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-              </select>
+                placeholder="Enter occupation"
+                className={inputStyles}
+              />
             </div>
             <div>
               <label className={labelStyles}>

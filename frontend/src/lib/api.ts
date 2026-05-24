@@ -3520,7 +3520,7 @@ export async function getSchoolOfMinistries(
   pageSize = 20,
 ): Promise<CustomPageResponse<SchoolOfMinistryResponse>> {
   return apiFetch<CustomPageResponse<SchoolOfMinistryResponse>>(
-    `/api/v1/school-of-ministry?pageNo=${pageNo}&pageSize=${pageSize}`,
+    `/api/v1/school-of-disciples?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
@@ -3528,7 +3528,7 @@ export async function getSchoolOfMinistry(
   id: string,
 ): Promise<SchoolOfMinistryFullResponse> {
   return apiFetch<SchoolOfMinistryFullResponse>(
-    `/api/v1/school-of-ministry/${id}`,
+    `/api/v1/school-of-disciples/${id}`,
   );
 }
 
@@ -3538,7 +3538,7 @@ export async function searchSchoolOfMinistries(
   pageSize = 20,
 ): Promise<CustomPageResponse<SchoolOfMinistryResponse>> {
   return apiFetch<CustomPageResponse<SchoolOfMinistryResponse>>(
-    `/api/v1/school-of-ministry/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    `/api/v1/school-of-disciples/search?pageNo=${pageNo}&pageSize=${pageSize}`,
     { method: "POST", body: JSON.stringify({ text }) },
   );
 }
@@ -3546,7 +3546,7 @@ export async function searchSchoolOfMinistries(
 export async function createSchoolOfMinistry(
   body: CreateSchoolOfMinistryRequest,
 ): Promise<SchoolOfMinistryResponse> {
-  return apiFetch<SchoolOfMinistryResponse>("/api/v1/school-of-ministry", {
+  return apiFetch<SchoolOfMinistryResponse>("/api/v1/school-of-disciples", {
     method: "POST",
     body: JSON.stringify(body),
   });
@@ -3557,7 +3557,7 @@ export async function giveSomOfficialRemark(
   text: string,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
-    `/api/v1/school-of-ministry/${id}/official-remark`,
+    `/api/v1/school-of-disciples/${id}/official-remark`,
     { method: "PATCH", body: JSON.stringify({ text }) },
   );
 }
