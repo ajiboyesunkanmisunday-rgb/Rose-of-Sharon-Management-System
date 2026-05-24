@@ -365,7 +365,9 @@ export default function SomFormCore({
 
       setSubmitSuccess(true);
       setSubmitError("");
-      setTimeout(() => router.push("/trainings/som"), 1500);
+      // router.refresh() busts the Next.js Router Cache so the list page
+      // remounts and re-fetches data instead of serving a stale cached version.
+      setTimeout(() => { router.refresh(); router.push("/trainings/som"); }, 1500);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to submit. Please try again.";
       setSubmitError(`${msg} (Check browser console → F12 → Console for the full server error.)`);
