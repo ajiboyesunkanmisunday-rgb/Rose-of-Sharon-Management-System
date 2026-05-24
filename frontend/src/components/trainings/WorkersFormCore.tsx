@@ -17,6 +17,7 @@ import { Printer, Send, CheckCircle } from "lucide-react";
 import {
   createWorkerInTraining,
   searchWorkersInTraining,
+  searchAllMembers,
   uploadProfilePicture,
   getStoredUser,
   type WorkersInTrainingFullResponse,
@@ -356,10 +357,43 @@ export default function WorkersFormCore({
 
       const nonRccg = [group1, group2].filter(Boolean);
 
-      // userId must be non-empty — the backend rejects with "User cannot be empty"
-      // when it is absent. Fall back to the logged-in admin's own ID so standalone
-      // "New Application" submissions (no ?userId= in URL) are accepted.
-      const effectiveUserId = userId || getStoredUser()?.id || undefined;
+      // The backend requires a valid member userId. Resolution order:
+      // 1. Explicit ?userId= URL param (set when admin navigates from a member profile)
+      // 2. Search the members directory by the submitted phone number
+      // 3. Search by first + last name as a fallback
+      // 4. Admin's own stored ID as a last resort (may still fail if backend
+      //    validates that the userId belongs to a MEMBER-type account)
+      let effectiveUserId: string | undefined = userId || undefined;
+      if (!effectiveUserId) {
+        try {
+          const normPhone = normalisePhone(effectivePhone);
+          const byPhone = await searchAllMembers(normPhone, 0, 5);
+          const phoneMatch = byPhone.content?.find(
+            (m) => normalisePhone(m.phoneNumber ?? "") === normPhone,
+          ) ?? byPhone.content?.[0];
+          if (phoneMatch?.id) {
+            effectiveUserId = phoneMatch.id;
+          } else {
+            // Try searching by full name
+            const byName = await searchAllMembers(
+              `${firstName.trim()} ${surname.trim()}`, 0, 5,
+            );
+            const nameMatch = byName.content?.find(
+              (m) =>
+                m.firstName?.toLowerCase() === firstName.trim().toLowerCase() &&
+                m.lastName?.toLowerCase() === surname.trim().toLowerCase(),
+            ) ?? byName.content?.[0];
+            if (nameMatch?.id) {
+              effectiveUserId = nameMatch.id;
+            }
+          }
+        } catch {
+          // member search failed — fall through to admin-id fallback
+        }
+        if (!effectiveUserId) {
+          effectiveUserId = getStoredUser()?.id || undefined;
+        }
+      }
 
       const body = {
         userId:            effectiveUserId,
