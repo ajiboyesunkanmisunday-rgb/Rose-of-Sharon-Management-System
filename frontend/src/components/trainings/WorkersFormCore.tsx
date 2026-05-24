@@ -18,6 +18,7 @@ import {
   createWorkerInTraining,
   searchWorkersInTraining,
   uploadProfilePicture,
+  getStoredUser,
   type WorkersInTrainingFullResponse,
 } from "@/lib/api";
 
@@ -355,8 +356,13 @@ export default function WorkersFormCore({
 
       const nonRccg = [group1, group2].filter(Boolean);
 
+      // userId must be non-empty — the backend rejects with "User cannot be empty"
+      // when it is absent. Fall back to the logged-in admin's own ID so standalone
+      // "New Application" submissions (no ?userId= in URL) are accepted.
+      const effectiveUserId = userId || getStoredUser()?.id || undefined;
+
       const body = {
-        userId:            userId || undefined,
+        userId:            effectiveUserId,
         set:               set.trim() || undefined,
         profilePictureUrl,
         firstName:         firstName.trim(),
