@@ -15,6 +15,7 @@ import BulkImportModal from "@/components/user-management/BulkImportModal";
 import NoLongerMemberModal from "@/components/user-management/NoLongerMemberModal";
 import {
   getEMembers,
+  searchEMembers,
   deleteEMembersBulk,
   markUserAsInactive,
   type UserResponse,
@@ -37,6 +38,7 @@ export default function EMembersPage() {
 
   // UI state
   const [search, setSearch] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
@@ -56,11 +58,13 @@ export default function EMembersPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  const fetchEMembers = useCallback(async (page: number) => {
+  const fetchEMembers = useCallback(async (page: number, q = "") => {
     setLoading(true);
     setApiError("");
     try {
-      const res = await getEMembers(page - 1, ITEMS_PER_PAGE);
+      const res = q.trim()
+        ? await searchEMembers(q.trim(), page - 1, ITEMS_PER_PAGE)
+        : await getEMembers(page - 1, ITEMS_PER_PAGE);
       setEMembers(res.content ?? []);
       setTotalPages(res.totalPages || 1);
       setTotalItems(res.totalElements || 0);
@@ -73,23 +77,10 @@ export default function EMembersPage() {
   }, []);
 
   useEffect(() => {
-    fetchEMembers(currentPage);
-  }, [currentPage, fetchEMembers]);
+    fetchEMembers(currentPage, activeSearch);
+  }, [currentPage, activeSearch, fetchEMembers]);
 
-  const handleSearch = () => setCurrentPage(1);
-
-  const displayedEMembers = search.trim()
-    ? eMembers.filter((m) => {
-        const q = search.toLowerCase();
-        return (
-          m.firstName.toLowerCase().includes(q) ||
-          m.lastName.toLowerCase().includes(q) ||
-          m.email.toLowerCase().includes(q) ||
-          m.phoneNumber.includes(q) ||
-          (m.country ?? "").toLowerCase().includes(q)
-        );
-      })
-    : eMembers;
+  const displayedEMembers = eMembers;
 
   const handleSelectAll = (checked: boolean) => {
     const next = new Set(selectedRows);
@@ -179,8 +170,11 @@ export default function EMembersPage() {
         <div className="w-full sm:w-72">
           <SearchBar
             value={search}
-            onChange={setSearch}
-            onSearch={handleSearch}
+            onChange={(val) => {
+              setSearch(val);
+              if (!val.trim()) { setActiveSearch(""); setCurrentPage(1); }
+            }}
+            onSearch={() => { setActiveSearch(search); setCurrentPage(1); }}
             placeholder="Search..."
           />
         </div>
@@ -291,7 +285,7 @@ export default function EMembersPage() {
       {apiError && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} —{" "}
-          <button className="font-medium underline" onClick={() => fetchEMembers(currentPage)}>
+          <button className="font-medium underline" onClick={() => fetchEMembers(currentPage, activeSearch)}>
             Retry
           </button>
         </div>

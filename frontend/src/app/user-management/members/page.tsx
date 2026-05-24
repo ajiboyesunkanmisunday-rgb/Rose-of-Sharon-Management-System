@@ -15,6 +15,7 @@ import BulkImportModal from "@/components/user-management/BulkImportModal";
 import NoLongerMemberModal from "@/components/user-management/NoLongerMemberModal";
 import {
   getMembers,
+  searchMembers,
   deleteMembersBulk,
   markUserAsInactive,
   type UserResponse,
@@ -41,6 +42,7 @@ export default function MembersPage() {
 
   // UI state
   const [search, setSearch] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
@@ -62,11 +64,13 @@ export default function MembersPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  const fetchMembers = useCallback(async (page: number) => {
+  const fetchMembers = useCallback(async (page: number, q = "") => {
     setLoading(true);
     setApiError("");
     try {
-      const res = await getMembers(page - 1, ITEMS_PER_PAGE);
+      const res = q.trim()
+        ? await searchMembers(q.trim(), page - 1, ITEMS_PER_PAGE)
+        : await getMembers(page - 1, ITEMS_PER_PAGE);
       setMembers(res.content ?? []);
       setTotalPages(res.totalPages ?? 1);
       setTotalItems(res.totalElements ?? 0);
@@ -80,25 +84,10 @@ export default function MembersPage() {
   }, []);
 
   useEffect(() => {
-    fetchMembers(currentPage);
-  }, [currentPage, fetchMembers]);
+    fetchMembers(currentPage, activeSearch);
+  }, [currentPage, activeSearch, fetchMembers]);
 
-  const handleSearch = () => {
-    setCurrentPage(1);
-  };
-
-  // Client-side search filter on already-fetched page
-  const displayedMembers = search.trim()
-    ? members.filter((m) => {
-        const q = search.toLowerCase();
-        return (
-          m.firstName.toLowerCase().includes(q) ||
-          m.lastName.toLowerCase().includes(q) ||
-          m.email.toLowerCase().includes(q) ||
-          m.phoneNumber.includes(q)
-        );
-      })
-    : members;
+  const displayedMembers = members;
 
   const handleSelectAll = (checked: boolean) => {
     const next = new Set(selectedRows);
@@ -198,8 +187,11 @@ export default function MembersPage() {
         <div className="w-full sm:w-72">
           <SearchBar
             value={search}
-            onChange={setSearch}
-            onSearch={handleSearch}
+            onChange={(val) => {
+              setSearch(val);
+              if (!val.trim()) { setActiveSearch(""); setCurrentPage(1); }
+            }}
+            onSearch={() => { setActiveSearch(search); setCurrentPage(1); }}
             placeholder="Search..."
           />
         </div>
@@ -377,7 +369,7 @@ export default function MembersPage() {
           {apiError} —{" "}
           <button
             className="font-medium underline"
-            onClick={() => fetchMembers(currentPage)}
+            onClick={() => fetchMembers(currentPage, activeSearch)}
           >
             Retry
           </button>

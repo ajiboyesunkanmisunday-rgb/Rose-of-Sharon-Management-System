@@ -389,12 +389,13 @@ export default function PhoneInput({
           onChange={(e) => {
             let digits = e.target.value.replace(/\D/g, "");
             if (digits.startsWith("0")) digits = digits.slice(1);
-            digits = digits.slice(0, 15);
+            const maxDigits = code === "+234" ? 10 : 15;
+            digits = digits.slice(0, maxDigits);
             onNumberChange(digits);
           }}
           placeholder={placeholder}
           required={required}
-          maxLength={15}
+          maxLength={code === "+234" ? 10 : 15}
           className={`${sharedStyles} w-full px-4 bg-white dark:bg-slate-800`}
         />
 
