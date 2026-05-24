@@ -19,7 +19,7 @@ import { Download, X, ChevronLeft, ChevronRight, Check } from "lucide-react";
 
 type Tab = "RECEIVED" | "APPROVED" | "DECLINED";
 
-function fmtDateOnly(s?: string) {
+function fmtDateOnly(s?: string): string {
   if (!s) return "—";
   const parts = s.split("T")[0].split("-");
   if (parts.length === 3) {
@@ -34,7 +34,7 @@ function fmtDateOnly(s?: string) {
   return s;
 }
 
-function fmtDate(s?: string) {
+function fmtDate(s?: string): string {
   if (!s) return "—";
   try {
     return new Date(s).toLocaleString("en-GB", {
