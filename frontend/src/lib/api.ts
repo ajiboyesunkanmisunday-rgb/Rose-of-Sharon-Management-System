@@ -2593,13 +2593,13 @@ export async function searchAuditLogsInTimeframe(
 
 /**
  * Upload a profile picture and return the hosted URL.
- * Uses /api/v1/media with category PROFILE_PICTURE so the image is stored
- * separately from general media (SERMON, PODCAST, VIDEO, PICTURE).
+ * Uses /api/v1/media with category IMAGES — the backend-supported enum value
+ * for image uploads (SERMON, PODCAST, VIDEOS, IMAGES, THUMBNAIL).
  */
 export async function uploadProfilePicture(file: File): Promise<string> {
   const result = await uploadMedia({
     title: `profile-${Date.now()}`,
-    category: "PROFILE_PICTURE",
+    category: "IMAGES",
     file,
   });
   const photoUrl = result.displayUrl ?? result.url;
