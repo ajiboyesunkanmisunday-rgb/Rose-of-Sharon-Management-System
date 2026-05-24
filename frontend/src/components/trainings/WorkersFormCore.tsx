@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { Printer, Send, CheckCircle } from "lucide-react";
 import {
   createWorkerInTraining,
+  searchWorkersInTraining,
   uploadProfilePicture,
   type WorkersInTrainingFullResponse,
 } from "@/lib/api";
@@ -294,6 +295,7 @@ export default function WorkersFormCore({
   const [uploading,     setUploading]     = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError,   setSubmitError]   = useState("");
+  const [submitDebug,   setSubmitDebug]   = useState("");
 
   /* ── Photo handler ───────────────────────────────────────────────────── */
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -402,19 +404,39 @@ export default function WorkersFormCore({
 
       const created = await createWorkerInTraining(body);
 
-      // Log the full response so the backend response structure is visible in
-      // the browser console (useful if the API returns a non-standard format).
+      // Log the full response so the backend response structure is visible.
       console.log("[WIT] createWorkerInTraining response:", created);
 
+      const raw         = created as unknown as Record<string, unknown>;
+      const createdId   = raw?.id   as string | undefined;
+      const createdMsg  = raw?.message as string | undefined;
+
+      // If the backend didn't return an id, immediately search by name to find
+      // out whether the record was actually persisted (helps diagnose pending-
+      // approval vs. silent failure scenarios).
+      let debugLine = `POST response: ${JSON.stringify(created)}`;
+      if (!createdId) {
+        try {
+          const searchRes = await searchWorkersInTraining(
+            `${firstName.trim()} ${surname.trim()}`, 0, 10,
+          );
+          console.log("[WIT] post-submit search result:", searchRes);
+          const found = searchRes.totalElements ?? 0;
+          debugLine += ` | Search by name found ${found} record(s): ${JSON.stringify(searchRes.content?.map(r => r.id))}`;
+        } catch (searchErr) {
+          debugLine += ` | Search failed: ${searchErr}`;
+        }
+      }
+      setSubmitDebug(debugLine);
+
       // apiFetch throws on any non-2xx status, so reaching here means the
-      // backend accepted the request. Navigate to the list regardless of whether
-      // the response body contains an `id` field — some backend versions return
-      // a success message object rather than the full record.
+      // backend accepted the request.
       setSubmitSuccess(true);
       setSubmitError("");
       // router.refresh() busts the Next.js Router Cache so the list page
       // remounts and re-fetches data instead of serving a stale cached version.
-      setTimeout(() => { router.refresh(); router.push("/trainings/workers"); }, 1500);
+      // Delay is longer so the debug info is readable before navigating.
+      setTimeout(() => { router.refresh(); router.push("/trainings/workers"); }, createdId ? 1500 : 6000);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to submit. Please try again.";
       setSubmitError(`${msg} (Open browser console — F12 → Console — for the full server error.)`);
@@ -481,11 +503,18 @@ export default function WorkersFormCore({
         <div className="wit-no-print" style={{
           background: "#D1FAE5", border: "1px solid #6EE7B7", borderRadius: 8,
           padding: "12px 20px", margin: "16px auto", maxWidth: "210mm",
-          display: "flex", alignItems: "center", gap: 10,
           fontFamily: "Arial, sans-serif", fontSize: 14,
         }}>
-          <CheckCircle size={18} color="#065F46" />
-          <span style={{ color: "#065F46", fontWeight: 600 }}>Application submitted! Redirecting to list…</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: submitDebug ? 8 : 0 }}>
+            <CheckCircle size={18} color="#065F46" />
+            <span style={{ color: "#065F46", fontWeight: 600 }}>Application submitted! Redirecting to list…</span>
+          </div>
+          {submitDebug && (
+            <pre style={{
+              margin: 0, fontSize: 10, color: "#065F46", background: "#A7F3D0",
+              borderRadius: 4, padding: "6px 8px", whiteSpace: "pre-wrap", wordBreak: "break-all",
+            }}>{submitDebug}</pre>
+          )}
         </div>
       )}
       {submitError && (
