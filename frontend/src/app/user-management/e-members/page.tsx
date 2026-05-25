@@ -58,6 +58,9 @@ export default function EMembersPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
+  // When locationFilter is active we fetch ALL pages and filter across them
+  const [locationMatches, setLocationMatches] = useState<UserResponse[] | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
 
   const fetchEMembers = useCallback(async (page: number, q = "") => {
     setLoading(true);
@@ -90,12 +93,42 @@ export default function EMembersPage() {
     return () => clearTimeout(timer);
   }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const displayedEMembers = locationFilter.trim()
-    ? eMembers.filter((m) => {
-        const loc = [m.street, m.city, m.state, m.country].filter(Boolean).join(" ").toLowerCase();
-        return loc.includes(locationFilter.trim().toLowerCase());
-      })
-    : eMembers;
+  // When locationFilter is non-empty, fetch ALL pages then filter across them
+  useEffect(() => {
+    const q = locationFilter.trim();
+    if (!q) { setLocationMatches(null); return; }
+    let cancelled = false;
+    setLocationLoading(true);
+    (async () => {
+      try {
+        const all: UserResponse[] = [];
+        let pg = 0;
+        let totalPg = 1;
+        while (pg < totalPg && pg < 20) {
+          const res = activeSearch.trim()
+            ? await searchEMembers(activeSearch.trim(), pg, 200)
+            : await getEMembers(pg, 200);
+          all.push(...(res.content ?? []));
+          totalPg = res.totalPages ?? 1;
+          pg++;
+        }
+        if (!cancelled) {
+          const lower = q.toLowerCase();
+          setLocationMatches(
+            all.filter((m) => {
+              const loc = [m.street, m.city, m.state, m.country]
+                .filter(Boolean).join(" ").toLowerCase();
+              return loc.includes(lower);
+            })
+          );
+        }
+      } catch { /* silently ignore */ }
+      finally { if (!cancelled) setLocationLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, [locationFilter, activeSearch]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const displayedEMembers = locationMatches !== null ? locationMatches : eMembers;
 
   const handleSelectAll = (checked: boolean) => {
     const next = new Set(selectedRows);
@@ -336,16 +369,16 @@ export default function EMembersPage() {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
+            {loading || locationLoading ? (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
-                  Loading e-members…
+                  {locationLoading ? "Searching across all records…" : "Loading e-members…"}
                 </td>
               </tr>
             ) : displayedEMembers.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
-                  No e-members found.
+                  {locationFilter.trim() ? `No e-members found with address matching "${locationFilter}".` : "No e-members found."}
                 </td>
               </tr>
             ) : (

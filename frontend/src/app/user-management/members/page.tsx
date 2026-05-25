@@ -64,6 +64,9 @@ export default function MembersPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
+  // When locationFilter is active we fetch ALL pages and filter across them
+  const [locationMatches,  setLocationMatches]  = useState<UserResponse[] | null>(null);
+  const [locationLoading,  setLocationLoading]  = useState(false);
 
   const fetchMembers = useCallback(async (page: number, q = "") => {
     setLoading(true);
@@ -97,12 +100,42 @@ export default function MembersPage() {
     return () => clearTimeout(timer);
   }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const displayedMembers = locationFilter.trim()
-    ? members.filter((m) => {
-        const loc = [m.street, m.city, m.state, m.country].filter(Boolean).join(" ").toLowerCase();
-        return loc.includes(locationFilter.trim().toLowerCase());
-      })
-    : members;
+  // When locationFilter is non-empty, fetch ALL pages then filter across them
+  useEffect(() => {
+    const q = locationFilter.trim();
+    if (!q) { setLocationMatches(null); return; }
+    let cancelled = false;
+    setLocationLoading(true);
+    (async () => {
+      try {
+        const all: UserResponse[] = [];
+        let pg = 0;
+        let totalPg = 1;
+        while (pg < totalPg && pg < 20) {
+          const res = activeSearch.trim()
+            ? await searchMembers(activeSearch.trim(), pg, 200)
+            : await getMembers(pg, 200);
+          all.push(...(res.content ?? []));
+          totalPg = res.totalPages ?? 1;
+          pg++;
+        }
+        if (!cancelled) {
+          const lower = q.toLowerCase();
+          setLocationMatches(
+            all.filter((m) => {
+              const loc = [m.street, m.city, m.state, m.country]
+                .filter(Boolean).join(" ").toLowerCase();
+              return loc.includes(lower);
+            })
+          );
+        }
+      } catch { /* silently ignore */ }
+      finally { if (!cancelled) setLocationLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, [locationFilter, activeSearch]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const displayedMembers = locationMatches !== null ? locationMatches : members;
 
   const handleSelectAll = (checked: boolean) => {
     const next = new Set(selectedRows);
@@ -403,7 +436,7 @@ export default function MembersPage() {
 
       {/* Mobile card view — shown below sm breakpoint */}
       <div className="sm:hidden space-y-3 mb-4">
-        {loading ? (
+        {loading || locationLoading ? (
           Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
@@ -416,7 +449,7 @@ export default function MembersPage() {
           ))
         ) : displayedMembers.length === 0 ? (
           <p className="text-center text-sm text-gray-400 dark:text-slate-500 py-8">
-            No members found.
+            {locationFilter.trim() ? `No members found matching "${locationFilter}".` : "No members found."}
           </p>
         ) : (
           displayedMembers.map((member) => (
@@ -503,14 +536,14 @@ export default function MembersPage() {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
+            {loading || locationLoading ? (
               Array.from({ length: 8 }).map((_, i) => (
                 <SkeletonRow key={i} columns={7} />
               ))
             ) : displayedMembers.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
-                  No members found.
+                  {locationFilter.trim() ? `No members found with address matching "${locationFilter}".` : "No members found."}
                 </td>
               </tr>
             ) : (
