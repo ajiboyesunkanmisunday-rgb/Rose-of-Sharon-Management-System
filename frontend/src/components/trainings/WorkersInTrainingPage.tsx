@@ -257,7 +257,6 @@ export default function WorkersInTrainingPage() {
   const [loading,       setLoading]       = useState(true);
   const [error,         setError]         = useState("");
   const [search,        setSearch]        = useState("");
-  const [setFilter,     setSetFilter]     = useState("");
   const [page,          setPage]          = useState(1);
   const [selected,      setSelected]      = useState<Set<string>>(new Set());
   const [graduating,    setGraduating]    = useState(false);
@@ -299,23 +298,18 @@ export default function WorkersInTrainingPage() {
     return [...sets].sort();
   }, [allWorkers]);
 
-  // Filter + search
+  // Filter + search (client-side name/phone/ministry search on already-fetched set)
   const filtered = useMemo(() => {
-    let list = allWorkers;
-    if (setFilter) list = list.filter((w) => w.set === setFilter);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (w) =>
-          fullName(w).toLowerCase().includes(q) ||
-          (w.email ?? "").toLowerCase().includes(q) ||
-          (w.phoneNumber ?? "").toLowerCase().includes(q) ||
-          (w.yourMinistry ?? "").toLowerCase().includes(q) ||
-          (w.set ?? "").toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [allWorkers, search, setFilter]);
+    if (!search.trim()) return allWorkers;
+    const q = search.toLowerCase();
+    return allWorkers.filter(
+      (w) =>
+        fullName(w).toLowerCase().includes(q) ||
+        (w.email ?? "").toLowerCase().includes(q) ||
+        (w.phoneNumber ?? "").toLowerCase().includes(q) ||
+        (w.yourMinistry ?? "").toLowerCase().includes(q)
+    );
+  }, [allWorkers, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   const safePage   = Math.min(page, totalPages);
@@ -365,7 +359,7 @@ export default function WorkersInTrainingPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await searchWorkersInTraining(search.trim(), 0, 200, setFilter || undefined);
+      const res = await searchWorkersInTraining(search.trim(), 0, 200, witSet || undefined);
       setAllWorkers(res.content ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Search failed.");
@@ -482,23 +476,6 @@ export default function WorkersInTrainingPage() {
             <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9CA3AF] dark:text-slate-400" />
           </div>
         </div>
-
-        {/* Set filter */}
-        {availableSets.length > 0 && (
-          <div className="relative">
-            <select
-              value={setFilter}
-              onChange={(e) => { setSetFilter(e.target.value); setPage(1); }}
-              className="appearance-none rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 pl-3 pr-8 py-2.5 text-sm text-[#374151] dark:text-slate-300 focus:border-[#7C3AED] focus:outline-none"
-            >
-              <option value="">All sets</option>
-              {availableSets.map((s) => (
-                <option key={s} value={s}>Set {s}</option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF] dark:text-slate-400" />
-          </div>
-        )}
 
         {/* Bulk actions */}
         {selected.size > 0 && (
