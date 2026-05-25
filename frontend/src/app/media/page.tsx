@@ -265,14 +265,15 @@ function MediaCard({ item, onNavigate }: { item: MediaResponse; onNavigate: () =
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 /**
- * Maps each tab key to the exact category string the backend expects on
+ * Maps each tab key to the exact category enum the backend expects on
  * GET /api/v1/media/category?category=X.
+ * Backend enum values: SERMON, PODCAST, VIDEOS, IMAGES, THUMBNAIL
  */
 const TAB_CATEGORY: Record<string, string> = {
   SERMONS:  "SERMON",
   PODCASTS: "PODCAST",
-  VIDEOS:   "VIDEO",
-  PICTURES: "PICTURE",
+  VIDEOS:   "VIDEOS",   // backend enum is "VIDEOS" not "VIDEO"
+  PICTURES: "IMAGES",   // backend enum is "IMAGES" not "PICTURE"
 };
 
 export default function MediaPage() {
