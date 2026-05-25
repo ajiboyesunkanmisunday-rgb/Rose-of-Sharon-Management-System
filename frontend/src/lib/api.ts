@@ -854,9 +854,10 @@ export async function addNote(
   userId: string,
   note: string,
 ): Promise<OperationalResponse> {
-  // POST /api/v1/notes  { userId, content }
-  // noteCategory omitted — "OTHERS" triggers backend 500; backend should default
-  return apiFetch<OperationalResponse>(`/api/v1/notes`, {
+  // POST /api/v1/notes/others  { userId, content }
+  // Uses the /others sub-path to match the /call and /visit pattern —
+  // the generic POST /api/v1/notes returns 500 (no default noteCategory on backend).
+  return apiFetch<OperationalResponse>(`/api/v1/notes/others`, {
     method: "POST",
     body: JSON.stringify({ userId, content: note }),
   });
