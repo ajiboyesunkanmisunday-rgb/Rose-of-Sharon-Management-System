@@ -2436,10 +2436,11 @@ export async function getWorkersInTraining(
   pageSize = 20,
   set?: string,
 ): Promise<CustomPageResponse<WorkersInTrainingResponse>> {
-  const qs = set ? `&set=${encodeURIComponent(set)}` : "";
-  return apiFetch<CustomPageResponse<WorkersInTrainingResponse>>(
-    `/api/v1/workers-in-training?pageNo=${pageNo}&pageSize=${pageSize}${qs}`,
-  );
+  // Backend requires set as the first query param: ?set={set}&pageNo=0&pageSize=10
+  const base = set
+    ? `/api/v1/workers-in-training?set=${encodeURIComponent(set)}&pageNo=${pageNo}&pageSize=${pageSize}`
+    : `/api/v1/workers-in-training?pageNo=${pageNo}&pageSize=${pageSize}`;
+  return apiFetch<CustomPageResponse<WorkersInTrainingResponse>>(base);
 }
 
 export async function getWorkerInTraining(
@@ -2456,9 +2457,11 @@ export async function searchWorkersInTraining(
   pageSize = 20,
   set?: string,
 ): Promise<CustomPageResponse<WorkersInTrainingResponse>> {
-  const qs = set ? `&set=${encodeURIComponent(set)}` : "";
+  const base = set
+    ? `/api/v1/workers-in-training/search?set=${encodeURIComponent(set)}&pageNo=${pageNo}&pageSize=${pageSize}`
+    : `/api/v1/workers-in-training/search?pageNo=${pageNo}&pageSize=${pageSize}`;
   return apiFetch<CustomPageResponse<WorkersInTrainingResponse>>(
-    `/api/v1/workers-in-training/search?pageNo=${pageNo}&pageSize=${pageSize}${qs}`,
+    base,
     { method: "POST", body: JSON.stringify({ text }) },
   );
 }
