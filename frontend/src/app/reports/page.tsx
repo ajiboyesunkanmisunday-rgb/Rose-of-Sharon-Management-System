@@ -43,16 +43,23 @@ interface CategoryDef { title: string; description: string; icon: React.ReactNod
 
 /** Normalised row used by every membership report table */
 interface ReportRow {
-  id:          string;
-  fullName:    string;
-  email:       string;
-  phone:       string;
-  gender:      string;
-  dobDisplay:  string;     // date of birth or celebration date
-  joinedDate:  string;     // createdOn formatted
-  group:       string;
-  userType:    string;
-  extra:       string;     // type-specific extra field
+  id:            string;
+  fullName:      string;
+  email:         string;
+  phone:         string;
+  gender:        string;
+  dobDisplay:    string;     // date of birth or celebration date
+  joinedDate:    string;     // createdOn formatted
+  group:         string;
+  userType:      string;
+  extra:         string;     // type-specific extra field
+  // Extended export-only fields
+  occupation:    string;
+  maritalStatus: string;
+  address:       string;
+  city:          string;
+  state:         string;
+  country:       string;
   // Raw birthday values for filtering (not shown in table)
   bdayDay?:   number;
   bdayMonth?: number;
@@ -173,33 +180,45 @@ function daysInMonth(month: number) { return new Date(2024, month, 0).getDate();
 // ─── Normalisers ─────────────────────────────────────────────────────────────
 function userToRow(u: UserResponse, type: string): ReportRow {
   return {
-    id:         u.id,
-    fullName:   [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—",
-    email:      u.email ?? "—",
-    phone:      fmtPhone(u.countryCode, u.phoneNumber),
-    gender:     u.sex ?? "—",
-    dobDisplay: fmtDOB(u.dayOfBirth, u.monthOfBirth, u.yearOfBirth),
-    joinedDate: fmtDate(u.createdOn),
-    group:      u.groups?.map((g) => g.name).join(", ") || "—",
-    userType:   type,
-    extra:      u.maritalStatus ?? "",
-    bdayDay:    u.dayOfBirth,
-    bdayMonth:  u.monthOfBirth,
+    id:            u.id,
+    fullName:      [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—",
+    email:         u.email ?? "—",
+    phone:         fmtPhone(u.countryCode, u.phoneNumber),
+    gender:        u.sex ?? "—",
+    dobDisplay:    fmtDOB(u.dayOfBirth, u.monthOfBirth, u.yearOfBirth),
+    joinedDate:    fmtDate(u.createdOn),
+    group:         u.groups?.map((g) => g.name).join(", ") || "—",
+    userType:      type,
+    extra:         u.maritalStatus ?? "",
+    occupation:    u.occupation ?? "—",
+    maritalStatus: u.maritalStatus ?? "—",
+    address:       u.street ?? "—",
+    city:          u.city ?? "—",
+    state:         u.state ?? "—",
+    country:       u.country ?? "—",
+    bdayDay:       u.dayOfBirth,
+    bdayMonth:     u.monthOfBirth,
   };
 }
 
 function convertToRow(u: NewConvertResponse): ReportRow {
   return {
-    id:         u.id,
-    fullName:   [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—",
-    email:      u.email ?? "—",
-    phone:      fmtPhone(u.countryCode, u.phoneNumber),
-    gender:     u.sex ?? "—",
-    dobDisplay: "—",
-    joinedDate: fmtDate(u.createdOn),
-    group:      "—",
-    userType:   "New Convert",
-    extra:      u.believerClassStage ?? "",
+    id:            u.id,
+    fullName:      [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—",
+    email:         u.email ?? "—",
+    phone:         fmtPhone(u.countryCode, u.phoneNumber),
+    gender:        u.sex ?? "—",
+    dobDisplay:    "—",
+    joinedDate:    fmtDate(u.createdOn),
+    group:         "—",
+    userType:      "New Convert",
+    extra:         u.believerClassStage ?? "",
+    occupation:    "—",
+    maritalStatus: "—",
+    address:       "—",
+    city:          "—",
+    state:         "—",
+    country:       "—",
   };
 }
 
@@ -262,41 +281,48 @@ function exportExcel(rows: ReportRow[], title: string, cols: (keyof ReportRow)[]
   dlBlob("﻿" + html, `${title}.xls`, "application/vnd.ms-excel;charset=UTF-8");
 }
 
-function exportTXT(rows: ReportRow[], title: string) {
-  const sep = "─".repeat(80);
+function exportTXT(rows: ReportRow[], title: string, cols: (keyof ReportRow)[], headers: string[]) {
+  const sep = "─".repeat(100);
+  const headerLine = headers.map((h, i) => h.padEnd(i === 0 ? 30 : 20)).join(" ").trimEnd();
   const lines = [
     `REPORT: ${title}`,
     `Generated: ${new Date().toLocaleString("en-GB")}`,
     `Total Records: ${rows.length}`,
     sep,
+    `     ${headerLine}`,
+    sep,
     ...rows.map((r, i) =>
-      `${String(i+1).padStart(4," ")}. ${r.fullName.padEnd(30)} ${r.phone.padEnd(18)} ${r.email}`
+      `${String(i+1).padStart(4," ")}. ${cols.map((c, ci) => String(r[c]).padEnd(ci === 0 ? 30 : 20)).join(" ").trimEnd()}`
     ),
     sep,
   ];
   dlBlob(lines.join("\n"), `${title}.txt`, "text/plain");
 }
 
-function exportPDF(title: string) {
-  const el = document.getElementById("report-print-area");
-  if (!el) return;
-  const w = window.open("","_blank");
-  if (!w) return;
-  w.document.write(`<html><head><title>${title}</title>
+function exportPDF(rows: ReportRow[], title: string, cols: (keyof ReportRow)[], headers: string[]) {
+  const th = (s: string) => `<th style="background:#000080;color:#fff;padding:6px 8px;text-align:left;font-size:11px;white-space:nowrap">${s}</th>`;
+  const td = (s: string) => `<td style="padding:5px 8px;border:1px solid #ddd;font-size:11px">${s}</td>`;
+  const html = `<html><head><title>${title}</title>
     <style>
       body{font-family:Arial,sans-serif;padding:24px;color:#111}
       h2{color:#000080;margin-bottom:4px}
       p.meta{color:#6B7280;font-size:12px;margin-bottom:16px}
-      table{border-collapse:collapse;width:100%;font-size:12px}
-      th{background:#000080;color:#fff;padding:8px 10px;text-align:left}
-      td{padding:6px 10px;border:1px solid #ddd}
+      table{border-collapse:collapse;width:100%;font-size:11px}
+      th{background:#000080;color:#fff;padding:6px 8px;text-align:left;white-space:nowrap}
+      td{padding:5px 8px;border:1px solid #ddd}
       tr:nth-child(even) td{background:#F9FAFB}
       @media print{button{display:none}}
     </style></head><body>
     <h2>${title}</h2>
-    <p class="meta">Generated: ${new Date().toLocaleString("en-GB")}</p>`);
-  w.document.write(el.innerHTML);
-  w.document.write("</body></html>");
+    <p class="meta">Generated: ${new Date().toLocaleString("en-GB")} &nbsp;|&nbsp; Total: ${rows.length}</p>
+    <table>
+      <thead><tr>${headers.map(th).join("")}</tr></thead>
+      <tbody>${rows.map((r, i) => `<tr><td style="padding:5px 8px;border:1px solid #ddd;font-size:11px;color:#9CA3AF">${i+1}</td>${cols.map((c) => td(String(r[c]))).join("")}</tr>`).join("")}</tbody>
+    </table>
+    </body></html>`;
+  const w = window.open("", "_blank");
+  if (!w) return;
+  w.document.write(html);
   w.document.close();
   w.focus();
   w.print();
@@ -338,6 +364,54 @@ const CELEB_COLS: ColDef[] = [
   { key: "group",      label: "Group"      },
 ];
 
+const MEMBER_EXPORT_COLS: ColDef[] = [
+  { key: "fullName",      label: "Full Name"      },
+  { key: "email",         label: "Email"          },
+  { key: "phone",         label: "Phone"          },
+  { key: "gender",        label: "Gender"         },
+  { key: "dobDisplay",    label: "Date of Birth"  },
+  { key: "maritalStatus", label: "Marital Status" },
+  { key: "occupation",    label: "Occupation"     },
+  { key: "address",       label: "Street Address" },
+  { key: "city",          label: "City"           },
+  { key: "state",         label: "State"          },
+  { key: "country",       label: "Country"        },
+  { key: "group",         label: "Group"          },
+  { key: "joinedDate",    label: "Date Joined"    },
+];
+const VISITOR_EXPORT_COLS: ColDef[] = [
+  { key: "fullName",      label: "Full Name"      },
+  { key: "email",         label: "Email"          },
+  { key: "phone",         label: "Phone"          },
+  { key: "gender",        label: "Gender"         },
+  { key: "dobDisplay",    label: "Date of Birth"  },
+  { key: "maritalStatus", label: "Marital Status" },
+  { key: "occupation",    label: "Occupation"     },
+  { key: "address",       label: "Street Address" },
+  { key: "city",          label: "City"           },
+  { key: "state",         label: "State"          },
+  { key: "country",       label: "Country"        },
+  { key: "joinedDate",    label: "Date"           },
+];
+const CONVERT_EXPORT_COLS: ColDef[] = [
+  { key: "fullName",      label: "Full Name"      },
+  { key: "email",         label: "Email"          },
+  { key: "phone",         label: "Phone"          },
+  { key: "gender",        label: "Gender"         },
+  { key: "dobDisplay",    label: "Date of Birth"  },
+  { key: "maritalStatus", label: "Marital Status" },
+  { key: "occupation",    label: "Occupation"     },
+  { key: "extra",         label: "Believer Class" },
+  { key: "joinedDate",    label: "Date"           },
+];
+
+function exportColsForReport(id: ReportId): ColDef[] {
+  if (id === "members" || id === "e-members") return MEMBER_EXPORT_COLS;
+  if (id === "new-converts")                  return CONVERT_EXPORT_COLS;
+  if (id === "birthdays" || id === "weddings") return CELEB_COLS;
+  return VISITOR_EXPORT_COLS;
+}
+
 function colsForReport(id: ReportId): ColDef[] {
   if (id === "members" || id === "e-members") return MEMBER_COLS;
   if (id === "new-converts")                  return CONVERT_COLS;
@@ -369,11 +443,12 @@ function nextMonthRange(): DateRange {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function ExportBar({ rows, title, cols, onPDF }: {
-  rows: ReportRow[]; title: string; cols: ColDef[]; onPDF: () => void;
+function ExportBar({ rows, title, cols, exportCols }: {
+  rows: ReportRow[]; title: string; cols: ColDef[]; exportCols?: ColDef[];
 }) {
-  const keys    = cols.map((c) => c.key);
-  const headers = cols.map((c) => c.label);
+  const eCols   = exportCols ?? cols;
+  const keys    = eCols.map((c) => c.key);
+  const headers = eCols.map((c) => c.label);
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
       <p className="text-sm font-medium text-[#374151] dark:text-slate-300">
@@ -381,10 +456,10 @@ function ExportBar({ rows, title, cols, onPDF }: {
       </p>
       <div className="flex flex-wrap gap-2">
         {[
-          { label: "CSV",       icon: <Download className="h-3.5 w-3.5" />,        fn: () => exportCSV(rows, title, keys, headers)   },
-          { label: "Excel",     icon: <FileSpreadsheet className="h-3.5 w-3.5" />, fn: () => exportExcel(rows, title, keys, headers) },
-          { label: "TXT",       icon: <FileText className="h-3.5 w-3.5" />,        fn: () => exportTXT(rows, title)                  },
-          { label: "PDF/Print", icon: <Printer className="h-3.5 w-3.5" />,         fn: onPDF                                         },
+          { label: "CSV",       icon: <Download className="h-3.5 w-3.5" />,        fn: () => exportCSV(rows, title, keys, headers)            },
+          { label: "Excel",     icon: <FileSpreadsheet className="h-3.5 w-3.5" />, fn: () => exportExcel(rows, title, keys, headers)          },
+          { label: "TXT",       icon: <FileText className="h-3.5 w-3.5" />,        fn: () => exportTXT(rows, title, keys, headers)            },
+          { label: "PDF/Print", icon: <Printer className="h-3.5 w-3.5" />,         fn: () => exportPDF(rows, title, keys, headers)            },
         ].map((btn) => (
           <button key={btn.label} onClick={btn.fn}
             className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition
@@ -799,6 +874,7 @@ export default function ReportsPage() {
     ? CATALOGUE[activeTab].flatMap((c: CategoryDef) => c.reports).find((r: ReportDef) => r.id === selectedReport)
     : undefined;
   const cols        = selectedReport ? colsForReport(selectedReport) : MEMBER_COLS;
+  const exportCols  = selectedReport ? exportColsForReport(selectedReport) : MEMBER_EXPORT_COLS;
 
   const isMembership  = selectedReport !== null && MEMBERSHIP_REPORT_IDS.includes(selectedReport);
   const isCelebration = selectedReport === "birthdays" || selectedReport === "weddings";
@@ -990,7 +1066,7 @@ export default function ReportsPage() {
                   rows={filteredRows}
                   title={currentDef?.title ?? ""}
                   cols={cols}
-                  onPDF={() => exportPDF(currentDef?.title ?? "")}
+                  exportCols={exportCols}
                 />
                 <ReportTable rows={filteredRows} cols={cols} title={currentDef?.title ?? ""} />
               </div>
@@ -1035,7 +1111,7 @@ export default function ReportsPage() {
                   rows={filteredRows}
                   title={currentDef?.title ?? ""}
                   cols={cols}
-                  onPDF={() => exportPDF(currentDef?.title ?? "")}
+                  exportCols={exportCols}
                 />
                 <ReportTable rows={filteredRows} cols={cols} title={currentDef?.title ?? ""} />
               </div>

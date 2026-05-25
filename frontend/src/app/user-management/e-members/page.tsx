@@ -57,6 +57,10 @@ export default function EMembersPage() {
   const [showFilter, setShowFilter] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+  // When locationFilter is active we fetch ALL pages and filter across them
+  const [locationMatches, setLocationMatches] = useState<UserResponse[] | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
 
   const fetchEMembers = useCallback(async (page: number, q = "") => {
     setLoading(true);
@@ -89,7 +93,42 @@ export default function EMembersPage() {
     return () => clearTimeout(timer);
   }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const displayedEMembers = eMembers;
+  // When locationFilter is non-empty, fetch ALL pages then filter across them
+  useEffect(() => {
+    const q = locationFilter.trim();
+    if (!q) { setLocationMatches(null); return; }
+    let cancelled = false;
+    setLocationLoading(true);
+    (async () => {
+      try {
+        const all: UserResponse[] = [];
+        let pg = 0;
+        let totalPg = 1;
+        while (pg < totalPg && pg < 20) {
+          const res = activeSearch.trim()
+            ? await searchEMembers(activeSearch.trim(), pg, 200)
+            : await getEMembers(pg, 200);
+          all.push(...(res.content ?? []));
+          totalPg = res.totalPages ?? 1;
+          pg++;
+        }
+        if (!cancelled) {
+          const lower = q.toLowerCase();
+          setLocationMatches(
+            all.filter((m) => {
+              const loc = [m.street, m.city, m.state, m.country]
+                .filter(Boolean).join(" ").toLowerCase();
+              return loc.includes(lower);
+            })
+          );
+        }
+      } catch { /* silently ignore */ }
+      finally { if (!cancelled) setLocationLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, [locationFilter, activeSearch]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const displayedEMembers = locationMatches !== null ? locationMatches : eMembers;
 
   const handleSelectAll = (checked: boolean) => {
     const next = new Set(selectedRows);
@@ -268,11 +307,21 @@ export default function EMembersPage() {
               className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
           </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">Location</label>
+            <input
+              type="text"
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+              placeholder="State, city, street…"
+              className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            />
+          </div>
           <Button onClick={() => setShowFilter(false)}>Apply</Button>
-          {(startDate || endDate) && (
+          {(startDate || endDate || locationFilter) && (
             <button
               type="button"
-              onClick={() => { setStartDate(""); setEndDate(""); }}
+              onClick={() => { setStartDate(""); setEndDate(""); setLocationFilter(""); }}
               className="text-sm font-medium text-[#000080] dark:text-indigo-400 underline hover:text-[#000066]"
             >
               Clear
@@ -320,16 +369,16 @@ export default function EMembersPage() {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
+            {loading || locationLoading ? (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
-                  Loading e-members…
+                  {locationLoading ? "Searching across all records…" : "Loading e-members…"}
                 </td>
               </tr>
             ) : displayedEMembers.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
-                  No e-members found.
+                  {locationFilter.trim() ? `No e-members found with address matching "${locationFilter}".` : "No e-members found."}
                 </td>
               </tr>
             ) : (

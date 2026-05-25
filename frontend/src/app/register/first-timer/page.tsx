@@ -2,12 +2,16 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import {
+  createFirstTimer,
+  createPrayerRequest,
+} from "@/lib/api";
 
 const inputClass =
-  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none bg-white dark:bg-slate-800 text-[#374151] dark:text-slate-300";
 const labelClass = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
 const selectClass =
-  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none appearance-none bg-white dark:bg-slate-800";
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none appearance-none bg-white dark:bg-slate-800 text-[#374151] dark:text-slate-300";
 
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
 const months = [
@@ -29,39 +33,28 @@ const countries = [
   "South Africa", "Germany", "France", "Australia", "Other",
 ];
 
-const ageGroups = ["18-25", "25-35", "35-45", "45-55", "55-65", "65+"];
-
-const socialMediaPlatforms = ["Facebook", "Instagram", "Twitter", "TikTok"];
-
 const occupations = [
   "Student", "Engineer", "Doctor", "Teacher", "Lawyer", "Business Owner",
   "Civil Servant", "Banker", "Nurse", "Accountant", "Pastor/Minister",
   "IT Professional", "Trader", "Artisan", "Unemployed", "Retired", "Other",
 ];
 
-const howDidYouHear = [
-  "Friend/Family", "Social Media", "Website", "Flyer/Poster",
-  "Walk-in", "Online Service", "Outreach/Evangelism", "Other",
+const howDidYouHearOptions = [
+  "Friends & Family", "Billboard", "Flyer", "Crusade",
+  "TV & Radio", "Social Media", "Others",
 ];
 
-const serviceRatings = ["Excellent", "Very Good", "Good", "Fair", "Poor"];
+const serviceRatings = ["Average", "Good", "Very Good", "Excellent"];
 
-const favouriteParts = [
-  "Worship", "Sermon/Word", "Prayers", "Fellowship", "Choir/Music",
-  "Children's Church", "Hospitality", "All of the above", "Other",
+const favouritePartsOptions = [
+  "Music", "Media", "Sermon", "Ambience", "Hospitality", "Friendliness",
 ];
 
-const joinGroups = [
-  "Choir/Music", "Ushering", "Media/Tech", "Children's Church",
-  "Protocol", "Evangelism", "Prayer Team", "Hospitality",
-  "Youth Fellowship", "Men's Fellowship", "Women's Fellowship",
-  "Not sure yet",
+const maritalStatusOptions = [
+  "Single", "Married", "Separated", "Divorced", "Single Parent", "Widowed",
 ];
-
-const contactMethods = ["Phone", "Email", "WhatsApp", "SMS"];
 
 export default function FirstTimerPage() {
-  const [title, setTitle] = useState("");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -71,26 +64,24 @@ export default function FirstTimerPage() {
     dobYear: "",
     countryCode: "+234",
     mobileNumber: "",
-    whatsappCountryCode: "+234",
-    whatsappNumber: "",
     street: "",
     city: "",
     state: "",
     country: "",
     maritalStatus: "",
-    ageGroup: "",
-    socialMedia: "",
-    socialMediaHandle: "",
     occupation: "",
     howDidYouHear: "",
     serviceRating: "",
     favouriteParts: "",
     worshippedOnline: "",
     attendRegularly: "",
-    joinGroup: "",
-    prayerRequest: "",
     preferredContact: "",
+    prayerRequest: "",
   });
+
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -98,11 +89,91 @@ export default function FirstTimerPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { title, ...formData };
-    console.log("First Timer Registration:", payload);
+
+    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.mobileNumber.trim()) {
+      setSubmitError("First Name, Last Name, and Mobile Number are required.");
+      return;
+    }
+
+    setSubmitError("");
+    setSubmitting(true);
+
+    try {
+      // Normalise phone: strip non-digits, remove leading 0
+      const normalisePhone = (raw: string) => {
+        let n = raw.trim().replace(/\D/g, "");
+        if (n.startsWith("0")) n = n.slice(1);
+        return n;
+      };
+
+      // Strip leading '+' from country code for API
+      const countryCodeNum = formData.countryCode.replace(/\D/g, "");
+
+      const body = {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim() || undefined,
+        countryCode: countryCodeNum,
+        phoneNumber: normalisePhone(formData.mobileNumber),
+        dayOfBirth: formData.dobDay ? Number(formData.dobDay) : undefined,
+        monthOfBirth: formData.dobMonth ? Number(formData.dobMonth) : undefined,
+        yearOfBirth: formData.dobYear ? Number(formData.dobYear) : undefined,
+        street: formData.street.trim() || undefined,
+        city: formData.city.trim() || undefined,
+        state: formData.state || undefined,
+        country: formData.country || undefined,
+        maritalStatus: formData.maritalStatus || undefined,
+        occupation: formData.occupation || undefined,
+        mediumOfInvitation: formData.howDidYouHear || undefined,
+        howWasService: formData.serviceRating || undefined,
+        favouritePartOfService: formData.favouriteParts || undefined,
+        fromOnline: formData.worshippedOnline === "Yes" ? true : formData.worshippedOnline === "No" ? false : undefined,
+      };
+
+      const created = await createFirstTimer(body);
+
+      // If a prayer request was entered, submit it
+      if (formData.prayerRequest.trim() && created?.id) {
+        try {
+          await createPrayerRequest({
+            userId: created.id,
+            subject: "Prayer Request",
+            content: formData.prayerRequest.trim(),
+          });
+        } catch {
+          // Prayer request failure is non-fatal
+        }
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to submit. Please try again.";
+      setSubmitError(msg);
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-slate-800 flex flex-col items-center justify-center px-8">
+        <div className="max-w-md w-full text-center">
+          <div className="mb-6 flex justify-center">
+            <Image src="/rccg-logo.svg" alt="RCCG Logo" width={160} height={43} priority />
+          </div>
+          <div className="rounded-2xl border border-green-200 bg-green-50 p-8">
+            <div className="mb-3 text-4xl">🎉</div>
+            <h2 className="text-xl font-bold text-green-800 mb-2">Welcome!</h2>
+            <p className="text-sm text-green-700">
+              Thank you for filling out this form. We are glad you joined us and hope to see you again soon!
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-800">
@@ -123,7 +194,7 @@ export default function FirstTimerPage() {
       {/* Content */}
       <div className="mx-auto max-w-5xl px-8 py-10">
         {/* Heading */}
-        <h1 className="text-center text-[28px] font-bold text-[#1F2937]">
+        <h1 className="text-center text-[28px] font-bold text-[#1F2937] dark:text-slate-100">
           Getting To Know You Better (First Timer)
         </h1>
 
@@ -133,30 +204,10 @@ export default function FirstTimerPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="mt-4 space-y-6">
-          {/* Title */}
-          <div>
-            <label className={labelClass}>Title</label>
-            <div className="mt-1 flex items-center gap-6">
-              {["Mr", "Mrs", "Miss"].map((t) => (
-                <label key={t} className="flex items-center gap-2 text-sm text-[#374151] dark:text-slate-300 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="title"
-                    value={t}
-                    checked={title === t}
-                    onChange={() => setTitle(t)}
-                    className="h-4 w-4 accent-[#000080]"
-                  />
-                  {t}
-                </label>
-              ))}
-            </div>
-          </div>
-
           {/* First Name / Email */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <label className={labelClass}>First Name</label>
+              <label className={labelClass}>First Name <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 name="firstName"
@@ -164,6 +215,7 @@ export default function FirstTimerPage() {
                 onChange={handleChange}
                 placeholder="Enter first name"
                 className={inputClass}
+                required
               />
             </div>
             <div>
@@ -182,7 +234,7 @@ export default function FirstTimerPage() {
           {/* Last Name / Date of Birth */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <label className={labelClass}>Last Name</label>
+              <label className={labelClass}>Last Name <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 name="lastName"
@@ -190,6 +242,7 @@ export default function FirstTimerPage() {
                 onChange={handleChange}
                 placeholder="Enter last name"
                 className={inputClass}
+                required
               />
             </div>
             <div>
@@ -203,9 +256,7 @@ export default function FirstTimerPage() {
                 >
                   <option value="">Day</option>
                   {days.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
+                    <option key={d} value={d}>{d}</option>
                   ))}
                 </select>
                 <select
@@ -216,9 +267,7 @@ export default function FirstTimerPage() {
                 >
                   <option value="">Month</option>
                   {months.map((m, i) => (
-                    <option key={m} value={i + 1}>
-                      {m}
-                    </option>
+                    <option key={m} value={i + 1}>{m}</option>
                   ))}
                 </select>
                 <select
@@ -229,32 +278,30 @@ export default function FirstTimerPage() {
                 >
                   <option value="">Year</option>
                   {years.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
+                    <option key={y} value={y}>{y}</option>
                   ))}
                 </select>
               </div>
             </div>
           </div>
 
-          {/* Mobile Number / WhatsApp Number */}
+          {/* Mobile Number */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <label className={labelClass}>Mobile Number</label>
+              <label className={labelClass}>Mobile Number <span className="text-red-500">*</span></label>
               <div className="flex gap-2">
                 <select
                   name="countryCode"
                   value={formData.countryCode}
                   onChange={handleChange}
-                  className="w-24 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-2 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none appearance-none bg-white dark:bg-slate-800"
+                  className="w-24 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-2 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none appearance-none bg-white dark:bg-slate-800 text-[#374151] dark:text-slate-300"
                 >
-                  <option value="+0">+0</option>
                   <option value="+234">+234</option>
                   <option value="+44">+44</option>
                   <option value="+1">+1</option>
                   <option value="+233">+233</option>
                   <option value="+27">+27</option>
+                  <option value="+0">+0</option>
                 </select>
                 <input
                   type="tel"
@@ -263,32 +310,7 @@ export default function FirstTimerPage() {
                   onChange={handleChange}
                   placeholder="Enter mobile number"
                   className={inputClass}
-                />
-              </div>
-            </div>
-            <div>
-              <label className={labelClass}>WhatsApp Number</label>
-              <div className="flex gap-2">
-                <select
-                  name="whatsappCountryCode"
-                  value={formData.whatsappCountryCode}
-                  onChange={handleChange}
-                  className="w-24 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-2 py-3 text-sm focus:border-[#000080] focus:ring-1 focus:ring-[#000080] outline-none appearance-none bg-white dark:bg-slate-800"
-                >
-                  <option value="+0">+0</option>
-                  <option value="+234">+234</option>
-                  <option value="+44">+44</option>
-                  <option value="+1">+1</option>
-                  <option value="+233">+233</option>
-                  <option value="+27">+27</option>
-                </select>
-                <input
-                  type="tel"
-                  name="whatsappNumber"
-                  value={formData.whatsappNumber}
-                  onChange={handleChange}
-                  placeholder="Enter WhatsApp number"
-                  className={inputClass}
+                  required
                 />
               </div>
             </div>
@@ -337,9 +359,7 @@ export default function FirstTimerPage() {
               >
                 <option value="">Select state</option>
                 {nigerianStates.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
+                  <option key={s} value={s}>{s}</option>
                 ))}
               </select>
             </div>
@@ -353,15 +373,13 @@ export default function FirstTimerPage() {
               >
                 <option value="">Select country</option>
                 {countries.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
+                  <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             </div>
           </div>
 
-          {/* Marital Status / Age Group */}
+          {/* Marital Status / Occupation */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
               <label className={labelClass}>Marital Status</label>
@@ -372,63 +390,11 @@ export default function FirstTimerPage() {
                 className={selectClass}
               >
                 <option value="">Select marital status</option>
-                <option value="Single">Single</option>
-                <option value="Married">Married</option>
-                <option value="Divorced">Divorced</option>
-                <option value="Widowed">Widowed</option>
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Age Group</label>
-              <select
-                name="ageGroup"
-                value={formData.ageGroup}
-                onChange={handleChange}
-                className={selectClass}
-              >
-                <option value="">Select age group</option>
-                {ageGroups.map((ag) => (
-                  <option key={ag} value={ag}>
-                    {ag}
-                  </option>
+                {maritalStatusOptions.map((s) => (
+                  <option key={s} value={s}>{s}</option>
                 ))}
               </select>
             </div>
-          </div>
-
-          {/* Social Media / Social Media Handle */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div>
-              <label className={labelClass}>Social Media</label>
-              <select
-                name="socialMedia"
-                value={formData.socialMedia}
-                onChange={handleChange}
-                className={selectClass}
-              >
-                <option value="">Select platform</option>
-                {socialMediaPlatforms.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Social Media Handle</label>
-              <input
-                type="text"
-                name="socialMediaHandle"
-                value={formData.socialMediaHandle}
-                onChange={handleChange}
-                placeholder="Enter your handle"
-                className={inputClass}
-              />
-            </div>
-          </div>
-
-          {/* Occupation */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
               <label className={labelClass}>Occupation</label>
               <select
@@ -439,9 +405,7 @@ export default function FirstTimerPage() {
               >
                 <option value="">Select occupation</option>
                 {occupations.map((o) => (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
+                  <option key={o} value={o}>{o}</option>
                 ))}
               </select>
             </div>
@@ -458,10 +422,8 @@ export default function FirstTimerPage() {
                 className={selectClass}
               >
                 <option value="">Select option</option>
-                {howDidYouHear.map((h) => (
-                  <option key={h} value={h}>
-                    {h}
-                  </option>
+                {howDidYouHearOptions.map((h) => (
+                  <option key={h} value={h}>{h}</option>
                 ))}
               </select>
             </div>
@@ -475,9 +437,7 @@ export default function FirstTimerPage() {
               >
                 <option value="">Select rating</option>
                 {serviceRatings.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
+                  <option key={r} value={r}>{r}</option>
                 ))}
               </select>
             </div>
@@ -496,10 +456,8 @@ export default function FirstTimerPage() {
                 className={selectClass}
               >
                 <option value="">Select option</option>
-                {favouriteParts.map((f) => (
-                  <option key={f} value={f}>
-                    {f}
-                  </option>
+                {favouritePartsOptions.map((f) => (
+                  <option key={f} value={f}>{f}</option>
                 ))}
               </select>
             </div>
@@ -520,7 +478,7 @@ export default function FirstTimerPage() {
             </div>
           </div>
 
-          {/* Attend regularly / Join group */}
+          {/* Attend regularly / Preferred contact */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
               <label className={labelClass}>
@@ -539,37 +497,6 @@ export default function FirstTimerPage() {
               </select>
             </div>
             <div>
-              <label className={labelClass}>I would like to join:</label>
-              <select
-                name="joinGroup"
-                value={formData.joinGroup}
-                onChange={handleChange}
-                className={selectClass}
-              >
-                <option value="">Select a group</option>
-                {joinGroups.map((g) => (
-                  <option key={g} value={g}>
-                    {g}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Prayer Request / Preferred Contact */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div>
-              <label className={labelClass}>Prayer Request</label>
-              <textarea
-                name="prayerRequest"
-                value={formData.prayerRequest}
-                onChange={handleChange}
-                placeholder="Enter your prayer request"
-                rows={4}
-                className={inputClass}
-              />
-            </div>
-            <div>
               <label className={labelClass}>Preferred means of contact</label>
               <select
                 name="preferredContact"
@@ -578,22 +505,41 @@ export default function FirstTimerPage() {
                 className={selectClass}
               >
                 <option value="">Select option</option>
-                {contactMethods.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
+                <option value="Call">Call</option>
+                <option value="WhatsApp">WhatsApp</option>
+                <option value="Email">Email</option>
               </select>
             </div>
           </div>
+
+          {/* Prayer Request */}
+          <div>
+            <label className={labelClass}>Prayer Request</label>
+            <textarea
+              name="prayerRequest"
+              value={formData.prayerRequest}
+              onChange={handleChange}
+              placeholder="Enter your prayer request"
+              rows={4}
+              className={inputClass}
+            />
+          </div>
+
+          {/* Error */}
+          {submitError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {submitError}
+            </div>
+          )}
 
           {/* Save Button */}
           <div className="flex justify-end pt-4 pb-10">
             <button
               type="submit"
-              className="rounded-xl bg-[#000080] px-10 py-3 text-sm font-semibold text-white hover:bg-[#000066] transition-colors"
+              disabled={submitting}
+              className="rounded-xl bg-[#000080] px-10 py-3 text-sm font-semibold text-white hover:bg-[#000066] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Save
+              {submitting ? "Submitting…" : "Save"}
             </button>
           </div>
         </form>
