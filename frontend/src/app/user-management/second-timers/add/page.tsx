@@ -60,10 +60,6 @@ export default function AddSecondTimerPage() {
     setError("");
     setLoading(true);
     try {
-      const ratingMap: Record<string, number> = {
-        Excellent: 5, Good: 4, Fair: 3, Poor: 2,
-      };
-
       let profilePictureUrl: string | undefined;
       if (photo) {
         profilePictureUrl = await uploadProfilePicture(photo);
@@ -89,7 +85,7 @@ export default function AddSecondTimerPage() {
         profilePictureUrl,
         isVisiting: isVisiting || undefined,
         mediumOfInvitation: howDidYouHear || undefined,
-        serviceRating: howWasService ? ratingMap[howWasService] : undefined,
+        howWasService: howWasService || undefined,
         favouritePartOfService: favouriteParts || undefined,
         fromOnline: worshippedOnline || undefined,
         eventId: serviceAttended || undefined,
@@ -365,7 +361,9 @@ export default function AddSecondTimerPage() {
                 <option value="">Select Marital Status</option>
                 <option value="SINGLE">Single</option>
                 <option value="MARRIED">Married</option>
+                <option value="SEPARATED">Separated</option>
                 <option value="DIVORCED">Divorced</option>
+                <option value="SINGLE_PARENT">Single Parent</option>
                 <option value="WIDOWED">Widowed</option>
               </select>
               {maritalStatus === "MARRIED" && (
@@ -398,12 +396,13 @@ export default function AddSecondTimerPage() {
                 className={selectStyles}
               >
                 <option value="">Select</option>
+                <option value="Friends & Family">Friends &amp; Family</option>
+                <option value="Billboard">Billboard</option>
+                <option value="Flyer">Flyer</option>
+                <option value="Crusade">Crusade</option>
+                <option value="TV & Radio">TV &amp; Radio</option>
                 <option value="Social Media">Social Media</option>
-                <option value="Friend/Family">Friend/Family</option>
-                <option value="Website">Website</option>
-                <option value="Outreach">Outreach</option>
-                <option value="Walk-in">Walk-in</option>
-                <option value="Other">Other</option>
+                <option value="Others">Others</option>
               </select>
             </div>
             <div>
@@ -414,10 +413,10 @@ export default function AddSecondTimerPage() {
                 className={selectStyles}
               >
                 <option value="">Select</option>
-                <option value="Excellent">Excellent</option>
+                <option value="Average">Average</option>
                 <option value="Good">Good</option>
-                <option value="Fair">Fair</option>
-                <option value="Poor">Poor</option>
+                <option value="Very Good">Very Good</option>
+                <option value="Excellent">Excellent</option>
               </select>
             </div>
             <div>
@@ -430,11 +429,12 @@ export default function AddSecondTimerPage() {
                 className={selectStyles}
               >
                 <option value="">Select</option>
-                <option value="Worship">Worship</option>
+                <option value="Music">Music</option>
+                <option value="Media">Media</option>
                 <option value="Sermon">Sermon</option>
-                <option value="Fellowship">Fellowship</option>
-                <option value="Prayer">Prayer</option>
-                <option value="All">All</option>
+                <option value="Ambience">Ambience</option>
+                <option value="Hospitality">Hospitality</option>
+                <option value="Friendliness">Friendliness</option>
               </select>
             </div>
           </div>
