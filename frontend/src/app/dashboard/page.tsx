@@ -2,18 +2,18 @@
 
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Users, UserPlus, UserCheck, Star, Cake, PhoneCall } from "lucide-react";
+import { Users, UserPlus, UserCheck, Star, Cake, Heart, PhoneCall } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
-  getMembers,
-  getEMembers,
+  getTotalMembersInPeriod,
   getTotalFirstTimersInPeriod,
   getTotalSecondTimersInPeriod,
   getTotalNewConvertsInPeriod,
-  getFirstTimers,
-  getSecondTimers,
-  getCelebrations,
+  getUrgentFollowup,
+  getBirthdays,
+  getWeddingAnniversaries,
   type UserResponse,
+  type UserBasicResponse,
 } from "@/lib/api";
 import { SkeletonCard } from "@/components/ui/Skeleton";
 
@@ -72,26 +72,23 @@ export default function DashboardPage() {
       const endIso     = monthEnd.toISOString();
 
       try {
-        // Use the same API pattern as Church Directory for accurate counts:
-        // - Members + E-Members: totalElements from paginated response
-        // - First/Second timers this month: dedicated period-count endpoints
-        // - New converts this month: dedicated period-count endpoint
-        const [mem, emem, ft, st, nc] = await Promise.allSettled([
-          getMembers(0, 1),
-          getEMembers(0, 1),
+        // Active Members: Members + E-Members created within the period
+        // (per /api/v1/users/total-created-members Swagger).
+        // First/Second timers + New converts: this-month counts.
+        const [active, ft, st, nc] = await Promise.allSettled([
+          getTotalMembersInPeriod(startIso, endIso),
           getTotalFirstTimersInPeriod(startIso, endIso),
           getTotalSecondTimersInPeriod(startIso, endIso),
           getTotalNewConvertsInPeriod(startIso, endIso),
         ]);
 
-        const membersTotal  = mem.status  === "fulfilled" ? (mem.value.totalElements  ?? 0) : 0;
-        const eMembersTotal = emem.status === "fulfilled" ? (emem.value.totalElements ?? 0) : 0;
-        const ftThisMonth   = ft.status   === "fulfilled" ? (ft.value.totalCount  ?? 0) : 0;
-        const stThisMonth   = st.status   === "fulfilled" ? (st.value.totalCount  ?? 0) : 0;
-        const ncThisMonth   = nc.status   === "fulfilled" ? (nc.value.totalCount  ?? 0) : 0;
+        const activeTotal  = active.status === "fulfilled" ? (active.value.totalCount ?? 0) : 0;
+        const ftThisMonth  = ft.status     === "fulfilled" ? (ft.value.totalCount     ?? 0) : 0;
+        const stThisMonth  = st.status     === "fulfilled" ? (st.value.totalCount     ?? 0) : 0;
+        const ncThisMonth  = nc.status     === "fulfilled" ? (nc.value.totalCount     ?? 0) : 0;
 
         setStats({
-          activeMembers:     membersTotal + eMembersTotal,
+          activeMembers:     activeTotal,
           firstTimersMonth:  ftThisMonth,
           secondTimersMonth: stThisMonth,
           newConvertsMonth:  ncThisMonth,
@@ -104,58 +101,62 @@ export default function DashboardPage() {
     loadStats();
   }, []);
 
-  // Load first-timers AND second-timers with noOfCalls === 0 for urgent follow-up
+  // Urgent follow-up — server-backed: /api/v1/users/urgent-followup returns
+  // visitors who need attention without us having to filter locally.
   useEffect(() => {
     setFollowUpsLoading(true);
-    const toItem = (u: UserResponse, category: string): FollowUpItem => {
-      const name = [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ");
-      const af = u.assignedFollowUp;
-      return {
-        id: u.id,
-        name,
-        phone: u.phoneNumber ?? "",
-        category,
-        assignedOfficer: af ? [af.firstName, af.lastName].filter(Boolean).join(" ") : "Unassigned",
-      };
-    };
-    Promise.allSettled([getFirstTimers(0, 20), getSecondTimers(0, 20)])
-      .then(([ft, st]) => {
-        const ftItems = ft.status === "fulfilled"
-          ? (ft.value.content ?? []).filter((u) => (u.noOfCalls ?? 0) === 0).map((u) => toItem(u, "First Timer"))
-          : [];
-        const stItems = st.status === "fulfilled"
-          ? (st.value.content ?? []).filter((u) => (u.noOfCalls ?? 0) === 0).map((u) => toItem(u, "Second Timer"))
-          : [];
-        setTopFollowUps([...ftItems, ...stItems].slice(0, 6));
-      })
+    const toItem = (u: UserBasicResponse): FollowUpItem => ({
+      id: u.id,
+      name: [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" "),
+      phone: u.phoneNumber ?? "",
+      category: "Visitor",
+      assignedOfficer: u.assignedFollowUp || "Unassigned",
+    });
+    getUrgentFollowup(0, 6)
+      .then((res) => setTopFollowUps((res.content ?? []).map(toItem)))
       .catch(() => setTopFollowUps([]))
       .finally(() => setFollowUpsLoading(false));
   }, []);
 
-  // Load birthday celebrations this week
+  // Upcoming birthdays + anniversaries — next 30 days. Both endpoints take
+  // day/month bounds (no year), so the wrap from late Dec into Jan works
+  // naturally — we just pass the two day/month pairs and let the backend
+  // handle it.
   useEffect(() => {
     setCelebrationsLoading(true);
-    getCelebrations(0, 20)
-      .then((res) => {
-        const items: CelebrationItem[] = (res.content ?? [])
-          .filter((c) => c.celebrationType === "BIRTHDAY")
-          .slice(0, 5)
-          .map((c) => {
-            const req = c.requester;
-            const name = req
-              ? [req.firstName, req.lastName].filter(Boolean).join(" ")
-              : "Unknown";
-            const dateStr = c.date
-              ? new Date(c.date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
-              : "—";
-            return {
-              id: c.id,
-              name,
-              type: "Birthday",
-              date: dateStr,
-            };
-          });
-        setUpcomingCelebrations(items);
+    const now    = new Date();
+    const future = new Date(now.getTime() + 30 * 86_400_000);
+    const startDay   = now.getDate();
+    const startMonth = now.getMonth() + 1;
+    const endDay     = future.getDate();
+    const endMonth   = future.getMonth() + 1;
+
+    const fmt = (day?: number, month?: number) => {
+      if (!day || !month) return "—";
+      const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      return `${day} ${MONTHS[month - 1] ?? ""}`;
+    };
+    const toItem = (u: UserResponse, type: "Birthday" | "Anniversary"): CelebrationItem => ({
+      id: `${type}-${u.id}`,
+      name: [u.firstName, u.lastName].filter(Boolean).join(" ") || "Unknown",
+      type,
+      date: type === "Birthday"
+        ? fmt(u.dayOfBirth, u.monthOfBirth)
+        : fmt(u.dayOfWedding, u.monthOfWedding),
+    });
+
+    Promise.allSettled([
+      getBirthdays(startDay, startMonth, endDay, endMonth, 0, 10),
+      getWeddingAnniversaries(startDay, startMonth, endDay, endMonth, 0, 10),
+    ])
+      .then(([bd, wa]) => {
+        const bdItems = bd.status === "fulfilled"
+          ? (bd.value.content ?? []).map((u) => toItem(u, "Birthday"))
+          : [];
+        const waItems = wa.status === "fulfilled"
+          ? (wa.value.content ?? []).map((u) => toItem(u, "Anniversary"))
+          : [];
+        setUpcomingCelebrations([...bdItems, ...waItems].slice(0, 8));
       })
       .catch(() => setUpcomingCelebrations([]))
       .finally(() => setCelebrationsLoading(false));
@@ -193,7 +194,7 @@ export default function DashboardPage() {
     },
     {
       label: "Active Members",
-      sublabel: "Members + E-Members",
+      sublabel: monthLabel,
       value: stats.loading ? "—" : stats.activeMembers.toLocaleString(),
       icon: Users,
       iconBg: "bg-[#EEF2FF] dark:bg-indigo-900/30",
@@ -317,32 +318,41 @@ export default function DashboardPage() {
       <div className="mt-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm dark:shadow-slate-900">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold text-[#111827] dark:text-slate-100">Upcoming Birthdays &amp; Anniversaries</h2>
-          <span className="text-xs font-medium text-[#6B7280] dark:text-slate-400">This week</span>
+          <span className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Next 30 days</span>
         </div>
         <div className="space-y-3">
           {celebrationsLoading ? (
             <p className="text-sm text-[#6B7280] dark:text-slate-400 text-center py-4">Loading…</p>
           ) : upcomingCelebrations.length === 0 ? (
-            <p className="text-sm text-[#6B7280] dark:text-slate-400 text-center py-4">No celebrations found.</p>
+            <p className="text-sm text-[#6B7280] dark:text-slate-400 text-center py-4">No celebrations in the next 30 days.</p>
           ) : (
-            upcomingCelebrations.map((item) => (
-              <div key={item.id} className="flex items-center justify-between gap-3 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800/60 p-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pink-100 dark:bg-pink-900/30">
-                    <Cake className="h-5 w-5 text-pink-600 dark:text-pink-400" />
+            upcomingCelebrations.map((item) => {
+              const isBirthday = item.type === "Birthday";
+              const Icon       = isBirthday ? Cake : Heart;
+              const iconBg     = isBirthday ? "bg-pink-100 dark:bg-pink-900/30"   : "bg-rose-100 dark:bg-rose-900/30";
+              const iconColor  = isBirthday ? "text-pink-600 dark:text-pink-400" : "text-rose-600 dark:text-rose-400";
+              const pillStyle  = isBirthday
+                ? "bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400"
+                : "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400";
+              return (
+                <div key={item.id} className="flex items-center justify-between gap-3 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800/60 p-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${iconBg}`}>
+                      <Icon className={`h-5 w-5 ${iconColor}`} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-[#111827] dark:text-slate-100">{item.name}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-[#111827] dark:text-slate-100">{item.name}</p>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${pillStyle}`}>
+                      {item.type}
+                    </span>
+                    <span className="text-[11px] font-medium text-[#6B7280] dark:text-slate-400">{item.date}</span>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400">
-                    {item.type}
-                  </span>
-                  <span className="text-[11px] font-medium text-[#6B7280] dark:text-slate-400">{item.date}</span>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
