@@ -3,14 +3,18 @@
 import { useState } from "react";
 import Image from "next/image";
 import SearchableSelect from "@/components/ui/SearchableSelect";
+import {
+  createSecondTimer,
+  createPrayerRequest,
+  createSuggestion,
+} from "@/lib/api";
 
-const TITLES = ["Mr", "Mrs", "Miss"];
-const MARITAL_STATUS = ["Single", "Married", "Divorced", "Widowed"];
-const AGE_GROUPS = ["18-25", "25-35", "35-45", "45-55", "55-65", "65+"];
+const MARITAL_STATUS = ["Single", "Married", "Separated", "Divorced", "Single Parent", "Widowed"];
 
 const COUNTRIES = [
   "Nigeria", "Ghana", "Kenya", "Uganda", "South Africa", "Egypt", "Tanzania",
   "Ethiopia", "Rwanda", "Cameroon", "Morocco", "Algeria", "Sudan", "Angola",
+  "United Kingdom", "United States", "Canada", "Germany", "France", "Australia", "Other",
 ];
 
 const STATES = [
@@ -22,23 +26,12 @@ const STATES = [
 ];
 
 const FAVOURITE_PARTS = [
-  "Praise & Worship",
-  "Sermon / Preaching",
-  "Prayer Session",
-  "Fellowship / Community",
-  "Children's Ministry",
-  "Music / Choir",
-  "Welcoming Atmosphere",
-];
-
-const FELLOWSHIP_OPTIONS = [
-  "Hearts of Ezekiel (Men's Fellowship)",
-  "Debra of Righteousness (Women's Fellowship)",
-  "Young Leaders and Professionals (Youth Fellowship)",
-  "Not yet",
+  "Music", "Media", "Sermon", "Ambience", "Hospitality", "Friendliness",
 ];
 
 const ATTEND_REGULARLY = ["Yes", "No", "Maybe"];
+
+const ENJOYED_OPTIONS = ["Hospitality", "First call", "SMS"];
 
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
 const months = [
@@ -50,13 +43,10 @@ const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
 export default function RegisterSecondTimerPage() {
   const [formData, setFormData] = useState({
-    title: "",
     firstName: "",
     lastName: "",
     mobileCountryCode: "+234",
     mobileNumber: "",
-    whatsappCountryCode: "+234",
-    whatsappNumber: "",
     dobDay: "",
     dobMonth: "",
     dobYear: "",
@@ -65,13 +55,24 @@ export default function RegisterSecondTimerPage() {
     state: "",
     country: "",
     maritalStatus: "",
-    ageGroup: "",
-    enjoyedWhatMadeYouComeBack: "",
     favouriteParts: "",
-    fellowship: "",
     attendRegularly: "",
     prayerRequest: "",
+    suggestions: "",
   });
+
+  // Checkboxes for "What did you enjoy"
+  const [enjoyedChecked, setEnjoyedChecked] = useState<Record<string, boolean>>({
+    Hospitality: false,
+    "First call": false,
+    SMS: false,
+    Other: false,
+  });
+  const [enjoyedOther, setEnjoyedOther] = useState("");
+
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -80,17 +81,116 @@ export default function RegisterSecondTimerPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const toggleEnjoyed = (option: string) => {
+    setEnjoyedChecked((prev) => ({ ...prev, [option]: !prev[option] }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Save second timer:", formData);
-    alert("Second timer registration saved successfully!");
+
+    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.mobileNumber.trim()) {
+      setSubmitError("First Name, Last Name, and Mobile Number are required.");
+      return;
+    }
+
+    setSubmitError("");
+    setSubmitting(true);
+
+    try {
+      // Normalise phone: strip non-digits, remove leading 0
+      const normalisePhone = (raw: string) => {
+        let n = raw.trim().replace(/\D/g, "");
+        if (n.startsWith("0")) n = n.slice(1);
+        return n;
+      };
+
+      // Build enjoyed string from checkboxes
+      const enjoyedParts = ENJOYED_OPTIONS.filter((o) => enjoyedChecked[o]);
+      if (enjoyedChecked["Other"] && enjoyedOther.trim()) {
+        enjoyedParts.push(enjoyedOther.trim());
+      }
+      const enjoyedStr = enjoyedParts.join(", ");
+
+      const countryCodeNum = formData.mobileCountryCode.replace(/\D/g, "");
+
+      const body = {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        countryCode: countryCodeNum,
+        phoneNumber: normalisePhone(formData.mobileNumber),
+        dayOfBirth: formData.dobDay ? Number(formData.dobDay) : undefined,
+        monthOfBirth: formData.dobMonth ? Number(formData.dobMonth) : undefined,
+        yearOfBirth: formData.dobYear ? Number(formData.dobYear) : undefined,
+        street: formData.street.trim() || undefined,
+        city: formData.city.trim() || undefined,
+        state: formData.state || undefined,
+        country: formData.country || undefined,
+        maritalStatus: formData.maritalStatus || undefined,
+        mediumOfInvitation: enjoyedStr || undefined,
+        favouritePartOfService: formData.favouriteParts || undefined,
+      };
+
+      const created = await createSecondTimer(body);
+
+      // Submit prayer request if provided
+      if (formData.prayerRequest.trim() && created?.id) {
+        try {
+          await createPrayerRequest({
+            userId: created.id,
+            subject: "Prayer Request",
+            content: formData.prayerRequest.trim(),
+          });
+        } catch {
+          // Non-fatal
+        }
+      }
+
+      // Submit suggestion if provided
+      if (formData.suggestions.trim() && created?.id) {
+        try {
+          await createSuggestion({
+            userId: created.id,
+            subject: "Suggestion",
+            content: formData.suggestions.trim(),
+          });
+        } catch {
+          // Non-fatal
+        }
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to submit. Please try again.";
+      setSubmitError(msg);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const inputStyles =
-    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] focus:border-[#000080] focus:ring-1 focus:ring-[#000080] bg-white dark:bg-slate-800";
   const selectStyles =
-    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+    "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080] bg-white dark:bg-slate-800";
   const labelStyles = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-slate-800 flex flex-col items-center justify-center px-8">
+        <div className="max-w-md w-full text-center">
+          <div className="mb-6 flex justify-center">
+            <Image src="/rccg-logo.svg" alt="RCCG Logo" width={160} height={43} priority />
+          </div>
+          <div className="rounded-2xl border border-green-200 bg-green-50 p-8">
+            <div className="mb-3 text-4xl">🎉</div>
+            <h2 className="text-xl font-bold text-green-800 mb-2">Welcome Back!</h2>
+            <p className="text-sm text-green-700">
+              Thank you for returning. We are so glad you came back and hope to continue seeing you!
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-800">
@@ -122,30 +222,10 @@ export default function RegisterSecondTimerPage() {
             Enter Your Details
           </h2>
 
-          {/* Title Radio Buttons */}
-          <div className="mb-5">
-            <label className={labelStyles}>Title</label>
-            <div className="flex items-center gap-6 pt-1">
-              {TITLES.map((t) => (
-                <label key={t} className="flex items-center gap-2 text-sm text-[#374151] dark:text-slate-300 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="title"
-                    value={t}
-                    checked={formData.title === t}
-                    onChange={handleChange}
-                    className="h-4 w-4 accent-[#000080]"
-                  />
-                  {t}
-                </label>
-              ))}
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
             {/* First Name */}
             <div>
-              <label className={labelStyles}>First Name</label>
+              <label className={labelStyles}>First Name <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 name="firstName"
@@ -159,13 +239,13 @@ export default function RegisterSecondTimerPage() {
 
             {/* Mobile Number */}
             <div>
-              <label className={labelStyles}>Mobile Number</label>
+              <label className={labelStyles}>Mobile Number <span className="text-red-500">*</span></label>
               <div className="flex gap-2">
                 <select
                   name="mobileCountryCode"
                   value={formData.mobileCountryCode}
                   onChange={handleChange}
-                  className="w-[100px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-2 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+                  className="w-[100px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-2 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080] bg-white dark:bg-slate-800"
                 >
                   <option value="+234">+234</option>
                   <option value="+233">+233</option>
@@ -190,7 +270,7 @@ export default function RegisterSecondTimerPage() {
 
             {/* Last Name */}
             <div>
-              <label className={labelStyles}>Last Name</label>
+              <label className={labelStyles}>Last Name <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 name="lastName"
@@ -202,38 +282,8 @@ export default function RegisterSecondTimerPage() {
               />
             </div>
 
-            {/* WhatsApp Number */}
-            <div>
-              <label className={labelStyles}>WhatsApp Number</label>
-              <div className="flex gap-2">
-                <select
-                  name="whatsappCountryCode"
-                  value={formData.whatsappCountryCode}
-                  onChange={handleChange}
-                  className="w-[100px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-2 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
-                >
-                  <option value="+234">+234</option>
-                  <option value="+233">+233</option>
-                  <option value="+254">+254</option>
-                  <option value="+256">+256</option>
-                  <option value="+27">+27</option>
-                  <option value="+20">+20</option>
-                  <option value="+44">+44</option>
-                  <option value="+1">+1</option>
-                </select>
-                <input
-                  type="tel"
-                  name="whatsappNumber"
-                  value={formData.whatsappNumber}
-                  onChange={handleChange}
-                  placeholder="Enter WhatsApp number"
-                  className={inputStyles}
-                />
-              </div>
-            </div>
-
             {/* Date of Birth */}
-            <div className="md:col-span-2">
+            <div>
               <label className={labelStyles}>Date of Birth</label>
               <div className="grid grid-cols-3 gap-2">
                 <select
@@ -343,42 +393,52 @@ export default function RegisterSecondTimerPage() {
                 ))}
               </select>
             </div>
+          </div>
 
-            {/* Age Group */}
-            <div>
-              <label className={labelStyles}>Age Group</label>
-              <select
-                name="ageGroup"
-                value={formData.ageGroup}
-                onChange={handleChange}
-                className={selectStyles}
-              >
-                <option value="">Select</option>
-                {AGE_GROUPS.map((a) => (
-                  <option key={a} value={a}>{a}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* What did you enjoy */}
-            <div>
-              <label className={labelStyles}>
-                What did you enjoy that made you come back?
+          {/* What did you enjoy — checkboxes */}
+          <div className="mt-6">
+            <label className={labelStyles}>
+              What did you enjoy that made you come back?
+            </label>
+            <div className="mt-2 flex flex-wrap gap-x-6 gap-y-3">
+              {ENJOYED_OPTIONS.map((option) => (
+                <label key={option} className="flex items-center gap-2 text-sm text-[#374151] dark:text-slate-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={enjoyedChecked[option]}
+                    onChange={() => toggleEnjoyed(option)}
+                    className="h-4 w-4 accent-[#000080]"
+                  />
+                  {option}
+                </label>
+              ))}
+              <label className="flex items-center gap-2 text-sm text-[#374151] dark:text-slate-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={enjoyedChecked["Other"]}
+                  onChange={() => toggleEnjoyed("Other")}
+                  className="h-4 w-4 accent-[#000080]"
+                />
+                Other
               </label>
-              <textarea
-                name="enjoyedWhatMadeYouComeBack"
-                value={formData.enjoyedWhatMadeYouComeBack}
-                onChange={handleChange}
-                placeholder="Tell us what you enjoyed..."
-                rows={4}
-                className={inputStyles + " resize-none"}
-              />
             </div>
+            {enjoyedChecked["Other"] && (
+              <input
+                type="text"
+                value={enjoyedOther}
+                onChange={(e) => setEnjoyedOther(e.target.value)}
+                placeholder="Please specify…"
+                className={"mt-2 " + inputStyles}
+              />
+            )}
+          </div>
 
+          {/* Favourite parts & Attend regularly */}
+          <div className="mt-6 grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
             {/* Favourite parts */}
             <div>
               <label className={labelStyles}>
-                What were your favourite parts of the service? Tick all that apply.
+                What were your favourite parts of the service?
               </label>
               <select
                 name="favouriteParts"
@@ -389,26 +449,6 @@ export default function RegisterSecondTimerPage() {
                 <option value="">Select</option>
                 {FAVOURITE_PARTS.map((p) => (
                   <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Fellowship */}
-            <div>
-              <label className={labelStyles}>
-                Have you joined the Hearts of Ezekiel (Men&apos;s Fellowship), Debra
-                of Righteousness (Women&apos;s Fellowship) or Young Leaders and
-                Professionals (Youth Fellowship)?
-              </label>
-              <select
-                name="fellowship"
-                value={formData.fellowship}
-                onChange={handleChange}
-                className={selectStyles}
-              >
-                <option value="">Select</option>
-                {FELLOWSHIP_OPTIONS.map((f) => (
-                  <option key={f} value={f}>{f}</option>
                 ))}
               </select>
             </div>
@@ -431,6 +471,19 @@ export default function RegisterSecondTimerPage() {
               </select>
             </div>
 
+            {/* Suggestions */}
+            <div className="md:col-span-2">
+              <label className={labelStyles}>Any suggestions for us?</label>
+              <textarea
+                name="suggestions"
+                value={formData.suggestions}
+                onChange={handleChange}
+                placeholder="Share your suggestions…"
+                rows={4}
+                className={inputStyles + " resize-none"}
+              />
+            </div>
+
             {/* Prayer Request */}
             <div className="md:col-span-2">
               <label className={labelStyles}>Prayer Request</label>
@@ -438,20 +491,28 @@ export default function RegisterSecondTimerPage() {
                 name="prayerRequest"
                 value={formData.prayerRequest}
                 onChange={handleChange}
-                placeholder="Enter your prayer request..."
+                placeholder="Enter your prayer request…"
                 rows={4}
                 className={inputStyles + " resize-none"}
               />
             </div>
           </div>
 
+          {/* Error */}
+          {submitError && (
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {submitError}
+            </div>
+          )}
+
           {/* Submit */}
-          <div className="mt-10">
+          <div className="mt-10 mb-10">
             <button
               type="submit"
-              className="rounded-xl bg-[#000080] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[#000066]"
+              disabled={submitting}
+              className="rounded-xl bg-[#000080] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[#000066] disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Save
+              {submitting ? "Submitting…" : "Save"}
             </button>
           </div>
         </form>

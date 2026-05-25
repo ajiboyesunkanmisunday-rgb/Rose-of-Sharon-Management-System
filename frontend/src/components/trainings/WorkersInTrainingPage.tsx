@@ -263,13 +263,14 @@ export default function WorkersInTrainingPage() {
   const [graduating,    setGraduating]    = useState(false);
   const [remarkWorker,  setRemarkWorker]  = useState<WorkersInTrainingResponse | null>(null);
   const [successMsg,    setSuccessMsg]    = useState("");
+  const [witSet,        setWitSet]        = useState(String(new Date().getFullYear()));
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (activeSet?: string) => {
     setLoading(true);
     setError("");
     try {
       // Fetch up to 500 records (paginated fetchAll)
-      const first = await getWorkersInTraining(0, 200);
+      const first = await getWorkersInTraining(0, 200, activeSet);
       // Log the raw response so we can confirm what the backend is actually returning.
       // Open browser console (F12 → Console) and look for "[WIT LIST]" to see this.
       console.log("[WIT LIST] GET /api/v1/workers-in-training response:", first);
@@ -277,7 +278,7 @@ export default function WorkersInTrainingPage() {
       const total = Math.min(first.totalPages ?? 1, 10);
       if (total > 1) {
         const rest = await Promise.all(
-          Array.from({ length: total - 1 }, (_, i) => getWorkersInTraining(i + 1, 200))
+          Array.from({ length: total - 1 }, (_, i) => getWorkersInTraining(i + 1, 200, activeSet))
         );
         rest.forEach((r) => rows.push(...(r.content ?? [])));
       }
@@ -289,7 +290,7 @@ export default function WorkersInTrainingPage() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(witSet); }, [load, witSet]);
 
   // Distinct sets for filter dropdown
   const availableSets = useMemo(() => {
@@ -342,7 +343,7 @@ export default function WorkersInTrainingPage() {
       setSelected(new Set());
       setSuccessMsg(`${selected.size} worker${selected.size > 1 ? "s" : ""} marked as graduated.`);
       setTimeout(() => setSuccessMsg(""), 4000);
-      await load();
+      await load(witSet);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to mark as graduated.");
     } finally {
@@ -355,12 +356,12 @@ export default function WorkersInTrainingPage() {
     await giveOfficialRemark(id, text);
     setSuccessMsg("Official remark saved.");
     setTimeout(() => setSuccessMsg(""), 4000);
-    await load();
+    await load(witSet);
   };
 
   // Search with backend
   const handleSearch = async () => {
-    if (!search.trim()) { await load(); return; }
+    if (!search.trim()) { await load(witSet); return; }
     setLoading(true);
     setError("");
     try {
@@ -408,7 +409,7 @@ export default function WorkersInTrainingPage() {
             Download Blank Form
           </button>
           <button
-            onClick={load}
+            onClick={() => load(witSet)}
             disabled={loading}
             className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 hover:border-[#7C3AED] hover:text-[#7C3AED] dark:text-purple-400 disabled:opacity-50"
           >
@@ -450,7 +451,7 @@ export default function WorkersInTrainingPage() {
       {error && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error}{" "}
-          <button onClick={load} className="font-medium underline">Retry</button>
+          <button onClick={() => load(witSet)} className="font-medium underline">Retry</button>
         </div>
       )}
 
@@ -463,6 +464,23 @@ export default function WorkersInTrainingPage() {
             onSearch={handleSearch}
             placeholder="Search by name, phone, ministry…"
           />
+        </div>
+
+        {/* Set year dropdown */}
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-medium text-[#6B7280] dark:text-slate-400 whitespace-nowrap">Set:</label>
+          <div className="relative">
+            <select
+              value={witSet}
+              onChange={(e) => { setWitSet(e.target.value); setPage(1); }}
+              className="appearance-none rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 pl-3 pr-7 py-2 text-sm text-[#374151] dark:text-slate-300 focus:border-[#7C3AED] focus:outline-none cursor-pointer"
+            >
+              {Array.from({ length: 8 }, (_, i) => String(new Date().getFullYear() - 5 + i)).map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9CA3AF] dark:text-slate-400" />
+          </div>
         </div>
 
         {/* Set filter */}

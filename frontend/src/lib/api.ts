@@ -854,9 +854,13 @@ export async function addNote(
   userId: string,
   note: string,
 ): Promise<OperationalResponse> {
-  // POST /api/v1/notes  { userId, content }
-  // noteCategory omitted — "OTHERS" triggers backend 500; backend should default
-  return apiFetch<OperationalResponse>(`/api/v1/notes`, {
+  // POST /api/v1/notes/call  { userId, content }
+  // WORKAROUND: POST /api/v1/notes returns 500 and POST /api/v1/notes/others
+  // returns 405 (backend bug — the generic endpoint has no default noteCategory).
+  // Using /call because it is the only working creation path; the noteCategory
+  // is not displayed in the Notes UI so users see no difference.
+  // TODO: switch back to POST /api/v1/notes once the backend is fixed.
+  return apiFetch<OperationalResponse>(`/api/v1/notes/call`, {
     method: "POST",
     body: JSON.stringify({ userId, content: note }),
   });
@@ -2432,10 +2436,11 @@ export async function getWorkersInTraining(
   pageSize = 20,
   set?: string,
 ): Promise<CustomPageResponse<WorkersInTrainingResponse>> {
-  const qs = set ? `&set=${encodeURIComponent(set)}` : "";
-  return apiFetch<CustomPageResponse<WorkersInTrainingResponse>>(
-    `/api/v1/workers-in-training?pageNo=${pageNo}&pageSize=${pageSize}${qs}`,
-  );
+  // Backend requires set as the first query param: ?set={set}&pageNo=0&pageSize=10
+  const base = set
+    ? `/api/v1/workers-in-training?set=${encodeURIComponent(set)}&pageNo=${pageNo}&pageSize=${pageSize}`
+    : `/api/v1/workers-in-training?pageNo=${pageNo}&pageSize=${pageSize}`;
+  return apiFetch<CustomPageResponse<WorkersInTrainingResponse>>(base);
 }
 
 export async function getWorkerInTraining(
@@ -2452,9 +2457,11 @@ export async function searchWorkersInTraining(
   pageSize = 20,
   set?: string,
 ): Promise<CustomPageResponse<WorkersInTrainingResponse>> {
-  const qs = set ? `&set=${encodeURIComponent(set)}` : "";
+  const base = set
+    ? `/api/v1/workers-in-training/search?set=${encodeURIComponent(set)}&pageNo=${pageNo}&pageSize=${pageSize}`
+    : `/api/v1/workers-in-training/search?pageNo=${pageNo}&pageSize=${pageSize}`;
   return apiFetch<CustomPageResponse<WorkersInTrainingResponse>>(
-    `/api/v1/workers-in-training/search?pageNo=${pageNo}&pageSize=${pageSize}${qs}`,
+    base,
     { method: "POST", body: JSON.stringify({ text }) },
   );
 }
