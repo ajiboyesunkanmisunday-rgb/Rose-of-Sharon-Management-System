@@ -264,33 +264,32 @@ function MediaCard({ item, onNavigate }: { item: MediaResponse; onNavigate: () =
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+/**
+ * Maps each tab key to the exact category string the backend expects on
+ * GET /api/v1/media/category?category=X.
+ */
+const TAB_CATEGORY: Record<string, string> = {
+  SERMONS:  "SERMON",
+  PODCASTS: "PODCAST",
+  VIDEOS:   "VIDEO",
+  PICTURES: "PICTURE",
+};
+
 export default function MediaPage() {
   const router = useRouter();
-  const [items,       setItems]       = useState<MediaResponse[]>([]);
-  const [totalPages,  setTotalPages]  = useState(1);
-  const [totalItems,  setTotalItems]  = useState(0);
-  const [loading,     setLoading]     = useState(true);
-  const [apiError,    setApiError]    = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [search,      setSearch]      = useState("");
-  const [activeTab,   setActiveTab]   = useState("ALL");
+  const [items,          setItems]          = useState<MediaResponse[]>([]);
+  const [totalPages,     setTotalPages]     = useState(1);
+  const [totalItems,     setTotalItems]     = useState(0);
+  const [loading,        setLoading]        = useState(true);
+  const [apiError,       setApiError]       = useState("");
+  const [currentPage,    setCurrentPage]    = useState(1);
+  const [search,         setSearch]         = useState("");
+  const [activeSearch,   setActiveSearch]   = useState("");
+  const [activeTab,      setActiveTab]      = useState("ALL");
 
-  /**
-   * Maps each tab key to the exact category string the backend expects on
-   * GET /api/v1/media/category?category=X.  When a specific tab is active we
-   * call the category endpoint directly — the backend never returns
-   * PROFILE_PICTURE items from those categories, so no client-side filtering
-   * is needed and server-side pagination stays accurate.
-   *
-   * For the ALL tab we still use the main /api/v1/media endpoint and apply a
-   * lightweight client-side guard for the PROFILE_PICTURE category.
-   */
-  const TAB_CATEGORY: Record<string, string> = {
-    SERMONS:  "SERMON",
-    PODCASTS: "PODCAST",
-    VIDEOS:   "VIDEO",
-    PICTURES: "PICTURE",
-  };
+  // Cross-page search state — null means "not searching"
+  const [searchMatches,  setSearchMatches]  = useState<MediaResponse[] | null>(null);
+  const [searchLoading,  setSearchLoading]  = useState(false);
 
   const fetchMedia = useCallback(async (page: number, tab: string) => {
     setLoading(true);
@@ -308,26 +307,69 @@ export default function MediaPage() {
     } finally {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { fetchMedia(currentPage, activeTab); }, [currentPage, activeTab, fetchMedia]);
 
+  // ── Cross-page search ────────────────────────────────────────────────────────
+  // When the user submits a search query, fetch ALL pages (up to 20 × 200 items)
+  // for the active tab and filter client-side. This ensures results from every
+  // page are included, not just the currently visible page.
+  useEffect(() => {
+    const q = activeSearch.trim();
+    if (!q) {
+      setSearchMatches(null);
+      return;
+    }
+    let cancelled = false;
+    setSearchLoading(true);
+    (async () => {
+      try {
+        const all: MediaResponse[] = [];
+        let pg = 0;
+        let totalPg = 1;
+        const categoryKey = TAB_CATEGORY[activeTab];
+        while (pg < totalPg && pg < 20) {
+          const res = categoryKey
+            ? await getMediaByCategory(categoryKey, pg, 200)
+            : await getMedia(pg, 200);
+          all.push(...(res.content ?? []));
+          totalPg = res.totalPages ?? 1;
+          pg++;
+        }
+        if (!cancelled) {
+          const lower = q.toLowerCase();
+          setSearchMatches(
+            all.filter((item) => {
+              const cat = item.mediaCategory ?? item.type ?? item.category ?? "";
+              // Skip profile pictures in ALL tab
+              if (activeTab === "ALL" && cat.toUpperCase() === "PROFILE_PICTURE") return false;
+              return (
+                (item.title ?? "").toLowerCase().includes(lower) ||
+                (item.description ?? "").toLowerCase().includes(lower) ||
+                cat.toLowerCase().includes(lower)
+              );
+            }),
+          );
+        }
+      } catch {
+        if (!cancelled) setSearchMatches([]);
+      } finally {
+        if (!cancelled) setSearchLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [activeSearch, activeTab]);
+
   // For the ALL tab: lightly filter out any PROFILE_PICTURE items that slip
   // through. For category tabs the backend already guarantees the right items.
-  const displayed = items.filter((item) => {
-    const cat = item.mediaCategory ?? item.type ?? item.category;
-    if (activeTab === "ALL" && cat && cat.toUpperCase() === "PROFILE_PICTURE") return false;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      return (
-        (item.title ?? "").toLowerCase().includes(q) ||
-        (item.description ?? "").toLowerCase().includes(q) ||
-        (cat ?? "").toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
+  const displayed = searchMatches !== null
+    ? searchMatches
+    : items.filter((item) => {
+        const cat = item.mediaCategory ?? item.type ?? item.category;
+        if (activeTab === "ALL" && cat && cat.toUpperCase() === "PROFILE_PICTURE") return false;
+        return true;
+      });
 
   return (
     <DashboardLayout>
@@ -345,8 +387,14 @@ export default function MediaPage() {
         <div className="w-full sm:w-72">
           <SearchBar
             value={search}
-            onChange={setSearch}
-            onSearch={() => setCurrentPage(1)}
+            onChange={(v) => {
+              setSearch(v);
+              if (!v.trim()) {
+                setActiveSearch("");
+                setSearchMatches(null);
+              }
+            }}
+            onSearch={() => { setActiveSearch(search); setCurrentPage(1); }}
             placeholder="Search media..."
           />
         </div>
@@ -370,7 +418,7 @@ export default function MediaPage() {
         {tabs.map((tab) => (
           <button
             key={tab.key}
-            onClick={() => { setActiveTab(tab.key); setCurrentPage(1); }}
+            onClick={() => { setActiveTab(tab.key); setCurrentPage(1); setActiveSearch(""); setSearch(""); setSearchMatches(null); }}
             className={`whitespace-nowrap pb-3 text-sm font-medium transition-colors ${
               activeTab === tab.key
                 ? "border-b-2 border-[#000080] text-[#000080] dark:text-indigo-400"
@@ -388,11 +436,13 @@ export default function MediaPage() {
         </div>
       )}
 
-      {loading ? (
+      {searchLoading ? (
+        <div className="py-12 text-center text-gray-400 dark:text-slate-500">Searching across all records…</div>
+      ) : loading ? (
         <div className="py-12 text-center text-gray-400 dark:text-slate-500">Loading…</div>
       ) : displayed.length === 0 ? (
         <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-12 text-center text-sm text-gray-400 dark:text-slate-500">
-          No media found.
+          {activeSearch.trim() ? `No media found matching "${activeSearch}".` : "No media found."}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -406,9 +456,11 @@ export default function MediaPage() {
         </div>
       )}
 
-      <div className="mt-6">
-        <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} onPageChange={setCurrentPage} />
-      </div>
+      {searchMatches === null && (
+        <div className="mt-6">
+          <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} onPageChange={setCurrentPage} />
+        </div>
+      )}
     </DashboardLayout>
   );
 }
