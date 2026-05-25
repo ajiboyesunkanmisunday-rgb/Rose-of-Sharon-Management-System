@@ -1,12 +1,10 @@
-import TrainingGroupPage from "@/components/trainings/TrainingGroupPage";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import BaptismalClassPage from "@/components/trainings/BaptismalClassPage";
 
-export default function BaptismalClassPage() {
+export default function BaptismalPage() {
   return (
-    <TrainingGroupPage
-      groupKeywords={["Baptismal", "Baptism"]}
-      title="Baptismal Class"
-      description="Members enrolled in baptismal preparation classes"
-      accentColor="#0891B2"
-    />
+    <DashboardLayout>
+      <BaptismalClassPage />
+    </DashboardLayout>
   );
 }
