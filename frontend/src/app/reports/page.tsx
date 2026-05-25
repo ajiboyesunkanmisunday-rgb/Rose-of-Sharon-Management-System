@@ -43,16 +43,23 @@ interface CategoryDef { title: string; description: string; icon: React.ReactNod
 
 /** Normalised row used by every membership report table */
 interface ReportRow {
-  id:          string;
-  fullName:    string;
-  email:       string;
-  phone:       string;
-  gender:      string;
-  dobDisplay:  string;     // date of birth or celebration date
-  joinedDate:  string;     // createdOn formatted
-  group:       string;
-  userType:    string;
-  extra:       string;     // type-specific extra field
+  id:            string;
+  fullName:      string;
+  email:         string;
+  phone:         string;
+  gender:        string;
+  dobDisplay:    string;     // date of birth or celebration date
+  joinedDate:    string;     // createdOn formatted
+  group:         string;
+  userType:      string;
+  extra:         string;     // type-specific extra field
+  // Extended export-only fields
+  occupation:    string;
+  maritalStatus: string;
+  address:       string;
+  city:          string;
+  state:         string;
+  country:       string;
   // Raw birthday values for filtering (not shown in table)
   bdayDay?:   number;
   bdayMonth?: number;
@@ -173,33 +180,45 @@ function daysInMonth(month: number) { return new Date(2024, month, 0).getDate();
 // ─── Normalisers ─────────────────────────────────────────────────────────────
 function userToRow(u: UserResponse, type: string): ReportRow {
   return {
-    id:         u.id,
-    fullName:   [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—",
-    email:      u.email ?? "—",
-    phone:      fmtPhone(u.countryCode, u.phoneNumber),
-    gender:     u.sex ?? "—",
-    dobDisplay: fmtDOB(u.dayOfBirth, u.monthOfBirth, u.yearOfBirth),
-    joinedDate: fmtDate(u.createdOn),
-    group:      u.groups?.map((g) => g.name).join(", ") || "—",
-    userType:   type,
-    extra:      u.maritalStatus ?? "",
-    bdayDay:    u.dayOfBirth,
-    bdayMonth:  u.monthOfBirth,
+    id:            u.id,
+    fullName:      [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—",
+    email:         u.email ?? "—",
+    phone:         fmtPhone(u.countryCode, u.phoneNumber),
+    gender:        u.sex ?? "—",
+    dobDisplay:    fmtDOB(u.dayOfBirth, u.monthOfBirth, u.yearOfBirth),
+    joinedDate:    fmtDate(u.createdOn),
+    group:         u.groups?.map((g) => g.name).join(", ") || "—",
+    userType:      type,
+    extra:         u.maritalStatus ?? "",
+    occupation:    u.occupation ?? "—",
+    maritalStatus: u.maritalStatus ?? "—",
+    address:       u.street ?? "—",
+    city:          u.city ?? "—",
+    state:         u.state ?? "—",
+    country:       u.country ?? "—",
+    bdayDay:       u.dayOfBirth,
+    bdayMonth:     u.monthOfBirth,
   };
 }
 
 function convertToRow(u: NewConvertResponse): ReportRow {
   return {
-    id:         u.id,
-    fullName:   [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—",
-    email:      u.email ?? "—",
-    phone:      fmtPhone(u.countryCode, u.phoneNumber),
-    gender:     u.sex ?? "—",
-    dobDisplay: "—",
-    joinedDate: fmtDate(u.createdOn),
-    group:      "—",
-    userType:   "New Convert",
-    extra:      u.believerClassStage ?? "",
+    id:            u.id,
+    fullName:      [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—",
+    email:         u.email ?? "—",
+    phone:         fmtPhone(u.countryCode, u.phoneNumber),
+    gender:        u.sex ?? "—",
+    dobDisplay:    "—",
+    joinedDate:    fmtDate(u.createdOn),
+    group:         "—",
+    userType:      "New Convert",
+    extra:         u.believerClassStage ?? "",
+    occupation:    "—",
+    maritalStatus: "—",
+    address:       "—",
+    city:          "—",
+    state:         "—",
+    country:       "—",
   };
 }
 
@@ -338,6 +357,54 @@ const CELEB_COLS: ColDef[] = [
   { key: "group",      label: "Group"      },
 ];
 
+const MEMBER_EXPORT_COLS: ColDef[] = [
+  { key: "fullName",      label: "Full Name"      },
+  { key: "email",         label: "Email"          },
+  { key: "phone",         label: "Phone"          },
+  { key: "gender",        label: "Gender"         },
+  { key: "dobDisplay",    label: "Date of Birth"  },
+  { key: "maritalStatus", label: "Marital Status" },
+  { key: "occupation",    label: "Occupation"     },
+  { key: "address",       label: "Street Address" },
+  { key: "city",          label: "City"           },
+  { key: "state",         label: "State"          },
+  { key: "country",       label: "Country"        },
+  { key: "group",         label: "Group"          },
+  { key: "joinedDate",    label: "Date Joined"    },
+];
+const VISITOR_EXPORT_COLS: ColDef[] = [
+  { key: "fullName",      label: "Full Name"      },
+  { key: "email",         label: "Email"          },
+  { key: "phone",         label: "Phone"          },
+  { key: "gender",        label: "Gender"         },
+  { key: "dobDisplay",    label: "Date of Birth"  },
+  { key: "maritalStatus", label: "Marital Status" },
+  { key: "occupation",    label: "Occupation"     },
+  { key: "address",       label: "Street Address" },
+  { key: "city",          label: "City"           },
+  { key: "state",         label: "State"          },
+  { key: "country",       label: "Country"        },
+  { key: "joinedDate",    label: "Date"           },
+];
+const CONVERT_EXPORT_COLS: ColDef[] = [
+  { key: "fullName",      label: "Full Name"      },
+  { key: "email",         label: "Email"          },
+  { key: "phone",         label: "Phone"          },
+  { key: "gender",        label: "Gender"         },
+  { key: "dobDisplay",    label: "Date of Birth"  },
+  { key: "maritalStatus", label: "Marital Status" },
+  { key: "occupation",    label: "Occupation"     },
+  { key: "extra",         label: "Believer Class" },
+  { key: "joinedDate",    label: "Date"           },
+];
+
+function exportColsForReport(id: ReportId): ColDef[] {
+  if (id === "members" || id === "e-members") return MEMBER_EXPORT_COLS;
+  if (id === "new-converts")                  return CONVERT_EXPORT_COLS;
+  if (id === "birthdays" || id === "weddings") return CELEB_COLS;
+  return VISITOR_EXPORT_COLS;
+}
+
 function colsForReport(id: ReportId): ColDef[] {
   if (id === "members" || id === "e-members") return MEMBER_COLS;
   if (id === "new-converts")                  return CONVERT_COLS;
@@ -369,11 +436,12 @@ function nextMonthRange(): DateRange {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function ExportBar({ rows, title, cols, onPDF }: {
-  rows: ReportRow[]; title: string; cols: ColDef[]; onPDF: () => void;
+function ExportBar({ rows, title, cols, exportCols, onPDF }: {
+  rows: ReportRow[]; title: string; cols: ColDef[]; exportCols?: ColDef[]; onPDF: () => void;
 }) {
-  const keys    = cols.map((c) => c.key);
-  const headers = cols.map((c) => c.label);
+  const eCols   = exportCols ?? cols;
+  const keys    = eCols.map((c) => c.key);
+  const headers = eCols.map((c) => c.label);
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
       <p className="text-sm font-medium text-[#374151] dark:text-slate-300">
@@ -799,6 +867,7 @@ export default function ReportsPage() {
     ? CATALOGUE[activeTab].flatMap((c: CategoryDef) => c.reports).find((r: ReportDef) => r.id === selectedReport)
     : undefined;
   const cols        = selectedReport ? colsForReport(selectedReport) : MEMBER_COLS;
+  const exportCols  = selectedReport ? exportColsForReport(selectedReport) : MEMBER_EXPORT_COLS;
 
   const isMembership  = selectedReport !== null && MEMBERSHIP_REPORT_IDS.includes(selectedReport);
   const isCelebration = selectedReport === "birthdays" || selectedReport === "weddings";
@@ -990,6 +1059,7 @@ export default function ReportsPage() {
                   rows={filteredRows}
                   title={currentDef?.title ?? ""}
                   cols={cols}
+                  exportCols={exportCols}
                   onPDF={() => exportPDF(currentDef?.title ?? "")}
                 />
                 <ReportTable rows={filteredRows} cols={cols} title={currentDef?.title ?? ""} />
@@ -1035,6 +1105,7 @@ export default function ReportsPage() {
                   rows={filteredRows}
                   title={currentDef?.title ?? ""}
                   cols={cols}
+                  exportCols={exportCols}
                   onPDF={() => exportPDF(currentDef?.title ?? "")}
                 />
                 <ReportTable rows={filteredRows} cols={cols} title={currentDef?.title ?? ""} />
