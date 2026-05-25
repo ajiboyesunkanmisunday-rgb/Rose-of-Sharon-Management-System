@@ -5,12 +5,12 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
-import { getUser, getUserRequests, markUserAsInactive, type UserResponse, type RequestResponse } from "@/lib/api";
+import { getUser, getUserRequests, markUserAsInactive, getNotes, addNote, deleteNote, type UserResponse, type RequestResponse, type NoteResponse } from "@/lib/api";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import { useToast } from "@/context/ToastContext";
 import { SkeletonProfile } from "@/components/ui/Skeleton";
 
-type Tab = "details" | "requests";
+type Tab = "details" | "requests" | "notes";
 
 function fullName(u?: { firstName?: string; middleName?: string; lastName?: string } | null) {
   if (!u) return "—";
@@ -77,6 +77,13 @@ export default function ViewMemberProfilePage() {
   const [activeTab, setActiveTab] = useState<Tab>("details");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  const [notes,        setNotes]        = useState<NoteResponse[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [notesError,   setNotesError]   = useState("");
+  const [noteInput,    setNoteInput]    = useState("");
+  const [addingNote,   setAddingNote]   = useState(false);
+  const [deletingNote, setDeletingNote] = useState<string | null>(null);
+
   const fetchUser = useCallback(async () => {
     if (!id || id.startsWith("m-")) return;
     setLoading(true);
@@ -104,8 +111,49 @@ export default function ViewMemberProfilePage() {
     }
   }, [id]);
 
+  const fetchNotes = useCallback(async () => {
+    if (!id || id.startsWith("m-")) return;
+    setNotesLoading(true);
+    setNotesError("");
+    try {
+      const data = await getNotes(id);
+      setNotes(data);
+    } catch {
+      setNotesError("Failed to load notes.");
+    } finally {
+      setNotesLoading(false);
+    }
+  }, [id]);
+
+  const handleAddNote = async () => {
+    if (!noteInput.trim() || !id) return;
+    setAddingNote(true);
+    try {
+      await addNote(id, noteInput.trim());
+      setNoteInput("");
+      await fetchNotes();
+    } catch {
+      setNotesError("Failed to add note.");
+    } finally {
+      setAddingNote(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    setDeletingNote(noteId);
+    try {
+      await deleteNote(noteId);
+      await fetchNotes();
+    } catch {
+      setNotesError("Failed to delete note.");
+    } finally {
+      setDeletingNote(null);
+    }
+  };
+
   useEffect(() => { fetchUser(); }, [fetchUser]);
   useEffect(() => { if (activeTab === "requests") fetchRequests(); }, [activeTab, fetchRequests]);
+  useEffect(() => { if (activeTab === "notes") fetchNotes(); }, [activeTab, fetchNotes]);
 
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState("");
@@ -152,6 +200,7 @@ export default function ViewMemberProfilePage() {
   const tabs: { key: Tab; label: string }[] = [
     { key: "details",  label: "Details"  },
     { key: "requests", label: "Requests" },
+    { key: "notes",    label: "Notes"    },
   ];
 
   return (
@@ -294,6 +343,70 @@ export default function ViewMemberProfilePage() {
                 </div>
               )}
             </>
+          )}
+
+          {activeTab === "notes" && (
+            <div className="space-y-4">
+              {/* Add note */}
+              <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+                <h3 className="mb-3 text-sm font-bold text-[#111827] dark:text-slate-100">Add Note</h3>
+                <textarea
+                  value={noteInput}
+                  onChange={(e) => setNoteInput(e.target.value)}
+                  placeholder="Write a note about this member…"
+                  rows={3}
+                  className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-[#111827] dark:text-slate-100 placeholder-[#9CA3AF] outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500 resize-none"
+                />
+                <div className="mt-2 flex items-center justify-between">
+                  {notesError && <p className="text-xs text-red-600">{notesError}</p>}
+                  <div className="ml-auto">
+                    <Button variant="primary" onClick={handleAddNote} disabled={addingNote || !noteInput.trim()}>
+                      {addingNote ? "Adding…" : "Add Note"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes list */}
+              {notesLoading ? (
+                <div className="py-8 text-center text-gray-400 dark:text-slate-500 text-sm">Loading notes…</div>
+              ) : notes.length === 0 ? (
+                <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-8 text-center text-sm text-gray-400 dark:text-slate-500">
+                  No notes yet. Add one above.
+                </div>
+              ) : (
+                notes.map((note) => {
+                  const author = note.createdBy
+                    ? typeof note.createdBy === "string"
+                      ? note.createdBy
+                      : [note.createdBy.firstName, note.createdBy.lastName].filter(Boolean).join(" ") || note.officerName || "Staff"
+                    : note.officerName || "Staff";
+                  return (
+                    <div key={note.id} className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <p className="flex-1 text-sm text-[#374151] dark:text-slate-300 whitespace-pre-wrap">{note.content}</p>
+                        <button
+                          onClick={() => handleDeleteNote(note.id)}
+                          disabled={deletingNote === note.id}
+                          className="shrink-0 rounded-lg p-1.5 text-[#9CA3AF] hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
+                          title="Delete note"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                            <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                          </svg>
+                        </button>
+                      </div>
+                      <div className="mt-2 flex items-center gap-2 text-[11px] text-[#9CA3AF] dark:text-slate-500">
+                        <span>{author}</span>
+                        <span>·</span>
+                        <span>{fmtDate(note.createdOn)}</span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           )}
 
           {activeTab === "details" && user && (

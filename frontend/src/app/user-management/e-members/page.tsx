@@ -57,6 +57,7 @@ export default function EMembersPage() {
   const [showFilter, setShowFilter] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
 
   const fetchEMembers = useCallback(async (page: number, q = "") => {
     setLoading(true);
@@ -89,7 +90,12 @@ export default function EMembersPage() {
     return () => clearTimeout(timer);
   }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const displayedEMembers = eMembers;
+  const displayedEMembers = locationFilter.trim()
+    ? eMembers.filter((m) => {
+        const loc = [m.street, m.city, m.state, m.country].filter(Boolean).join(" ").toLowerCase();
+        return loc.includes(locationFilter.trim().toLowerCase());
+      })
+    : eMembers;
 
   const handleSelectAll = (checked: boolean) => {
     const next = new Set(selectedRows);
@@ -268,11 +274,21 @@ export default function EMembersPage() {
               className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             />
           </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">Location</label>
+            <input
+              type="text"
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+              placeholder="State, city, street…"
+              className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            />
+          </div>
           <Button onClick={() => setShowFilter(false)}>Apply</Button>
-          {(startDate || endDate) && (
+          {(startDate || endDate || locationFilter) && (
             <button
               type="button"
-              onClick={() => { setStartDate(""); setEndDate(""); }}
+              onClick={() => { setStartDate(""); setEndDate(""); setLocationFilter(""); }}
               className="text-sm font-medium text-[#000080] dark:text-indigo-400 underline hover:text-[#000066]"
             >
               Clear
