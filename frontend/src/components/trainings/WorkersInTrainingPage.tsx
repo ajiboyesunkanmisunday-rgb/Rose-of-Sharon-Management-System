@@ -466,16 +466,21 @@ export default function WorkersInTrainingPage() {
           />
         </div>
 
-        {/* Set input */}
+        {/* Set year dropdown */}
         <div className="flex items-center gap-2">
           <label className="text-xs font-medium text-[#6B7280] dark:text-slate-400 whitespace-nowrap">Set:</label>
-          <input
-            type="text"
-            value={witSet}
-            onChange={(e) => { setWitSet(e.target.value); setPage(1); }}
-            placeholder={String(new Date().getFullYear())}
-            className="w-20 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 py-2 text-sm text-[#374151] dark:text-slate-300 focus:border-[#7C3AED] focus:outline-none"
-          />
+          <div className="relative">
+            <select
+              value={witSet}
+              onChange={(e) => { setWitSet(e.target.value); setPage(1); }}
+              className="appearance-none rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 pl-3 pr-7 py-2 text-sm text-[#374151] dark:text-slate-300 focus:border-[#7C3AED] focus:outline-none cursor-pointer"
+            >
+              {Array.from({ length: 8 }, (_, i) => String(new Date().getFullYear() - 5 + i)).map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9CA3AF] dark:text-slate-400" />
+          </div>
         </div>
 
         {/* Set filter */}
