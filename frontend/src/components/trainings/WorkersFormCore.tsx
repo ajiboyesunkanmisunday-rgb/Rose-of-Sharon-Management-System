@@ -608,7 +608,7 @@ export default function WorkersFormCore({
         </div>
       )}
 
-      <div className="wit-wrapper" style={{ background: "#F3F4F6", padding: "24px 16px" }}>
+      <div className="wit-wrapper" style={{ background: "#F3F4F6", padding: "24px 16px", overflowX: "auto" }}>
 
         {/* ══════════════════════════════════════════════════════════════════
             PAGE 1
