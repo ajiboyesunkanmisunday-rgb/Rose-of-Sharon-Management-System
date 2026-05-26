@@ -73,12 +73,15 @@ export default function SecondTimersPage() {
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
 
-  const fetchTimers = useCallback(async (page: number, q = "") => {
+  const fetchTimers = useCallback(async (page: number, q = "", svc = "") => {
     setLoading(true);
     setApiError("");
     try {
-      const res = q.trim()
-        ? await searchSecondTimers(q.trim(), page - 1, ITEMS_PER_PAGE)
+      // Combine text search + service filter into a single backend query so
+      // filtering applies across ALL pages, not just the 10 currently loaded.
+      const combined = [svc.trim(), q.trim()].filter(Boolean).join(" ");
+      const res = combined
+        ? await searchSecondTimers(combined, page - 1, ITEMS_PER_PAGE)
         : await getSecondTimers(page - 1, ITEMS_PER_PAGE);
       setTimers(res.content ?? []);
       setTotalPages(res.totalPages || 1);
@@ -92,8 +95,8 @@ export default function SecondTimersPage() {
   }, []);
 
   useEffect(() => {
-    fetchTimers(currentPage, activeSearch);
-  }, [currentPage, activeSearch, fetchTimers]);
+    fetchTimers(currentPage, activeSearch, filterService);
+  }, [currentPage, activeSearch, filterService, fetchTimers]);
 
   // Live search — update activeSearch 400ms after user stops typing
   useEffect(() => {
@@ -104,8 +107,9 @@ export default function SecondTimersPage() {
     return () => clearTimeout(timer);
   }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Service filter is now handled server-side (search query). Only date
+  // filters remain client-side since the backend has no date-range param.
   const displayedTimers = timers.filter((st) => {
-    if (filterService && st.serviceAttended !== filterService) return false;
     if (filterDateFrom || filterDateTo) {
       const d = st.secondTimeService?.date ?? st.createdOn ?? "";
       if (filterDateFrom && d < filterDateFrom) return false;
@@ -138,7 +142,7 @@ export default function SecondTimersPage() {
       setCallReport("");
       setShowCallReportModal(false);
       setSelectedTimerId(null);
-      fetchTimers(currentPage);
+      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to save call report.");
     } finally {
@@ -155,7 +159,7 @@ export default function SecondTimersPage() {
       setVisitReport("");
       setShowVisitReportModal(false);
       setSelectedTimerId(null);
-      fetchTimers(currentPage);
+      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to save visit report.");
     } finally {
@@ -169,7 +173,7 @@ export default function SecondTimersPage() {
       await deleteSecondTimersBulk(Array.from(selectedRows));
       setSelectedRows(new Set());
       setShowBulkDeleteModal(false);
-      fetchTimers(currentPage);
+      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to delete.");
       setShowBulkDeleteModal(false);
@@ -186,7 +190,7 @@ export default function SecondTimersPage() {
       );
       setSelectedRows(new Set());
       setShowBulkAssignModal(false);
-      fetchTimers(currentPage);
+      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to assign follow-up.");
       setShowBulkAssignModal(false);
@@ -202,7 +206,7 @@ export default function SecondTimersPage() {
       await assignFollowUp(selectedTimerId, officerId, note);
       setShowSingleAssignModal(false);
       setSelectedTimerId(null);
-      fetchTimers(currentPage);
+      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to assign follow-up.");
       setShowSingleAssignModal(false);
@@ -219,7 +223,7 @@ export default function SecondTimersPage() {
       await markUserAsInactive(selectedTimerId, reason);
       setShowInactiveSingleModal(false);
       setSelectedTimerId(null);
-      fetchTimers(currentPage);
+      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to mark as inactive.");
       setShowInactiveSingleModal(false);
@@ -237,7 +241,7 @@ export default function SecondTimersPage() {
       );
       setSelectedRows(new Set());
       setShowInactiveBulkModal(false);
-      fetchTimers(currentPage);
+      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to mark as inactive.");
       setShowInactiveBulkModal(false);
@@ -251,7 +255,7 @@ export default function SecondTimersPage() {
     setActionError("");
     try {
       await convertToFullMember(id);
-      fetchTimers(currentPage);
+      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to convert to member.");
     } finally {
