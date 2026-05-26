@@ -54,6 +54,8 @@ export default function SecondTimersPage() {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState("");
+  const [convertConfirmId, setConvertConfirmId] = useState<string | null>(null);
+  const [convertName,      setConvertName]      = useState("");
 
   // Modal states
   const [showCallReportModal, setShowCallReportModal] = useState(false);
@@ -250,16 +252,25 @@ export default function SecondTimersPage() {
     }
   };
 
-  const handleConvertToMember = async (id: string) => {
+  const handleConvertToMember = (id: string, name: string) => {
+    setConvertConfirmId(id);
+    setConvertName(name);
+  };
+
+  const doConvert = async () => {
+    if (!convertConfirmId) return;
+    setConvertConfirmId(null);
     setActionLoading(true);
     setActionError("");
     try {
-      await convertToFullMember(id);
+      await convertToFullMember(convertConfirmId);
       fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to convert to member.");
     } finally {
       setActionLoading(false);
+      setConvertConfirmId(null);
+      setConvertName("");
     }
   };
 
@@ -542,7 +553,7 @@ export default function SecondTimersPage() {
                         },
                         {
                           label: "Convert to Member",
-                          onClick: () => handleConvertToMember(st.id),
+                          onClick: () => handleConvertToMember(st.id, fullName(st)),
                         },
                         {
                           label: "Mark as Inactive",
@@ -672,6 +683,31 @@ export default function SecondTimersPage() {
         onConfirm={handleBulkMarkInactive}
         count={selectedRows.size}
       />
+
+      {convertConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-xl">
+            <h3 className="mb-2 text-lg font-bold text-[#111827] dark:text-slate-100">Convert to Full Member?</h3>
+            <p className="mb-6 text-sm text-[#374151] dark:text-slate-300">
+              <strong>{convertName}</strong> will be moved to the Members list. This cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => { setConvertConfirmId(null); setConvertName(""); }}
+                className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-2 text-sm font-medium text-[#374151] dark:text-slate-300 hover:bg-[#F9FAFB]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={doConvert}
+                className="rounded-lg bg-[#000080] px-4 py-2 text-sm font-medium text-white hover:bg-[#000066]"
+              >
+                Yes, Convert
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

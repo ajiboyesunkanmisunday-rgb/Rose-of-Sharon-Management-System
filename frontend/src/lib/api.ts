@@ -908,6 +908,7 @@ export async function convertToSecondTimer(
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
     `/api/v1/users/${userId}/convert-to-second-timer`,
+    { method: "PUT" },
   );
 }
 
@@ -916,6 +917,7 @@ export async function convertToFullMember(
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
     `/api/v1/users/${userId}/convert-to-full-member`,
+    { method: "PUT" },
   );
 }
 
