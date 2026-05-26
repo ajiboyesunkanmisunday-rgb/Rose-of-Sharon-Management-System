@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Modal from "@/components/ui/Modal";
 
+const MAX_NOTE = 500;
+
 interface AddNotesModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -13,6 +15,9 @@ export default function AddNotesModal({ isOpen, onClose, onSave }: AddNotesModal
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+
+  const remaining = MAX_NOTE - note.length;
+  const nearLimit = remaining <= Math.floor(MAX_NOTE * 0.15); // amber when ≤85 chars left
 
   const handleSave = async () => {
     if (!note.trim()) return;
@@ -36,15 +41,22 @@ export default function AddNotesModal({ isOpen, onClose, onSave }: AddNotesModal
     <Modal isOpen={isOpen} onClose={onClose} title="Add Notes">
       <div className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">
-            Note
-          </label>
+          {/* ③ Character count label row */}
+          <div className="mb-1 flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-300">
+              Note <span className="text-red-500">*</span>
+            </label>
+            <span className={`text-xs tabular-nums ${nearLimit ? "text-amber-500 font-medium" : "text-[#9CA3AF] dark:text-slate-500"}`}>
+              {note.length}/{MAX_NOTE}
+            </span>
+          </div>
           <textarea
             value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Enter Note"
+            onChange={(e) => setNote(e.target.value.slice(0, MAX_NOTE))}
+            placeholder="Enter note…"
             rows={5}
-            className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-gray-400 dark:text-slate-500 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
+            maxLength={MAX_NOTE}
+            className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-gray-400 dark:text-slate-500 focus:border-[#000080] focus:ring-1 focus:ring-[#000080] transition-colors"
           />
         </div>
         {saveError && (
@@ -52,12 +64,13 @@ export default function AddNotesModal({ isOpen, onClose, onSave }: AddNotesModal
             {saveError}
           </div>
         )}
+        {/* ① Submit disabled while empty */}
         <button
           onClick={handleSave}
           disabled={saving || !note.trim()}
-          className="w-full rounded-lg bg-[#000080] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#000066] disabled:opacity-50"
+          className="w-full rounded-lg bg-[#000080] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#000066] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {saving ? "Saving…" : "Save"}
+          {saving ? "Saving…" : "Save Note"}
         </button>
       </div>
     </Modal>
