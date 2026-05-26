@@ -853,14 +853,13 @@ export async function getNotes(
 export async function addNote(
   userId: string,
   note: string,
+  category: "CALL" | "VISIT" | "OTHERS" = "CALL",
 ): Promise<OperationalResponse> {
-  // POST /api/v1/notes/call  { userId, content }
-  // WORKAROUND: POST /api/v1/notes returns 500 and POST /api/v1/notes/others
-  // returns 405 (backend bug — the generic endpoint has no default noteCategory).
-  // Using /call because it is the only working creation path; the noteCategory
-  // is not displayed in the Notes UI so users see no difference.
-  // TODO: switch back to POST /api/v1/notes once the backend is fixed.
-  return apiFetch<OperationalResponse>(`/api/v1/notes/call`, {
+  const endpoint =
+    category === "VISIT"  ? "/api/v1/notes/visit"  :
+    category === "OTHERS" ? "/api/v1/notes/others"  :
+                            "/api/v1/notes/call";
+  return apiFetch<OperationalResponse>(endpoint, {
     method: "POST",
     body: JSON.stringify({ userId, content: note }),
   });
