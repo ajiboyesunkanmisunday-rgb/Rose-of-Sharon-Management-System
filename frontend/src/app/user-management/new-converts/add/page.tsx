@@ -33,6 +33,18 @@ export default function AddNewConvertPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // ② Inline validation: touched state
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const fieldErrors = {
+    firstName: !firstName.trim() ? "First name is required" : "",
+    lastName:  !lastName.trim()  ? "Last name is required"  : "",
+    email:     email && !EMAIL_RE.test(email) ? "Enter a valid email address" : "",
+  };
+  // ① Submit disabled until required fields filled
+  const isFormValid = !!firstName.trim() && !!lastName.trim() && (!email || EMAIL_RE.test(email));
+
   useEffect(() => {
     setIsPublic(!isAuthenticated());
   }, []);
@@ -118,15 +130,18 @@ export default function AddNewConvertPage() {
 
         <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
           <div>
-            <label className={labelStyles}>First Name</label>
+            <label className={labelStyles}>First Name <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
+              onBlur={() => touch("firstName")}
               placeholder="Enter First Name"
-              className={inputStyles}
-              required
+              className={`${inputStyles} ${touched.firstName && fieldErrors.firstName ? "border-red-400" : ""}`}
             />
+            {touched.firstName && fieldErrors.firstName && (
+              <p className="mt-1 text-xs text-red-500">{fieldErrors.firstName}</p>
+            )}
           </div>
           <div>
             <label className={labelStyles}>Middle Name</label>
@@ -139,15 +154,18 @@ export default function AddNewConvertPage() {
             />
           </div>
           <div>
-            <label className={labelStyles}>Last Name</label>
+            <label className={labelStyles}>Last Name <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
+              onBlur={() => touch("lastName")}
               placeholder="Enter Last Name"
-              className={inputStyles}
-              required
+              className={`${inputStyles} ${touched.lastName && fieldErrors.lastName ? "border-red-400" : ""}`}
             />
+            {touched.lastName && fieldErrors.lastName && (
+              <p className="mt-1 text-xs text-red-500">{fieldErrors.lastName}</p>
+            )}
           </div>
           <PhoneInput
             label="Phone Number"
@@ -164,9 +182,13 @@ export default function AddNewConvertPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onBlur={() => touch("email")}
               placeholder="Enter Email"
-              className={inputStyles}
+              className={`${inputStyles} ${touched.email && fieldErrors.email ? "border-red-400" : ""}`}
             />
+            {touched.email && fieldErrors.email && (
+              <p className="mt-1 text-xs text-red-500">{fieldErrors.email}</p>
+            )}
           </div>
 
           <div>
@@ -241,7 +263,7 @@ export default function AddNewConvertPage() {
       )}
 
       <div className="flex justify-end">
-        <Button type="submit" variant="primary" disabled={loading} className="w-full sm:w-auto">
+        <Button type="submit" variant="primary" disabled={loading || !isFormValid} className="w-full sm:w-auto">
           {loading ? "Saving…" : "Save"}
         </Button>
       </div>
