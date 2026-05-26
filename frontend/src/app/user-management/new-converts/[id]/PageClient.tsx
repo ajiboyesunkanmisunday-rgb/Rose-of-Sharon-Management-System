@@ -123,11 +123,15 @@ export default function ViewNewConvertPage() {
       if (type === "visit") await addVisitReport(id, text.trim());
       if (type === "call")  setCallText("");
       if (type === "visit") setVisitText("");
-      addToast("Saved successfully.", "success");
+      setSaveMsg("");
+      addToast("Saved successfully. View the entry in Activity History below.", "success");
       fetchNotes();
     } catch (err) {
       setSaveFailed(true);
-      const msg = err instanceof Error ? err.message : "Failed to save.";
+      const raw = err instanceof Error ? err.message : "";
+      const msg = raw.includes("not found") || raw.includes("404") || raw.includes("not yet supported")
+        ? `${type === "call" ? "Call" : "Visit"} reports are not yet available on the server. Please contact your administrator.`
+        : raw || "Failed to save.";
       setSaveMsg(msg);
       addToast(msg, "error");
     } finally {
@@ -267,7 +271,8 @@ export default function ViewNewConvertPage() {
 
               {/* Log Call */}
               <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
-                <h3 className="mb-3 text-sm font-bold text-[#111827] dark:text-slate-100">Log Call Report</h3>
+                <h3 className="mb-1 text-sm font-bold text-[#111827] dark:text-slate-100">Log Call Report</h3>
+                <p className="mb-3 text-xs text-[#6B7280] dark:text-slate-400">Saved entries appear in Activity History below.</p>
                 <textarea
                   value={callText}
                   onChange={(e) => setCallText(e.target.value)}
@@ -284,7 +289,8 @@ export default function ViewNewConvertPage() {
 
               {/* Log Visit */}
               <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
-                <h3 className="mb-3 text-sm font-bold text-[#111827] dark:text-slate-100">Log Visit Report</h3>
+                <h3 className="mb-1 text-sm font-bold text-[#111827] dark:text-slate-100">Log Visit Report</h3>
+                <p className="mb-3 text-xs text-[#6B7280] dark:text-slate-400">Saved entries appear in Activity History below.</p>
                 <textarea
                   value={visitText}
                   onChange={(e) => setVisitText(e.target.value)}

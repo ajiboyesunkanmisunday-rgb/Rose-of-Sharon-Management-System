@@ -8,7 +8,7 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { getUser, updateEMember, uploadProfilePicture } from "@/lib/api";
+import { getUser, updateEMember, uploadProfilePicture, linkSpouse } from "@/lib/api";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { useEventServices } from "@/hooks/useEventServices";
 
@@ -110,6 +110,14 @@ export default function EditEMemberPage() {
         occupation: storedOccupation || undefined,
         profilePictureUrl,
       });
+      // Link spouse if one was selected in the modal
+      if (spouse?.memberId) {
+        try {
+          await linkSpouse(id, spouse.memberId);
+        } catch {
+          // Non-fatal: member is updated, spouse link failed silently
+        }
+      }
       router.push(`/user-management/e-members/${id}`);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Failed to update e-member.");
@@ -238,7 +246,7 @@ export default function EditEMemberPage() {
                 <option value="WIDOWED">Widowed</option>
                 <option value="DIVORCED">Divorced</option>
               </select>
-              {maritalStatus === "MARRIED" && (
+              {maritalStatus.toUpperCase() === "MARRIED" && (
                 <button
                   type="button"
                   onClick={() => setShowSpouseModal(true)}
