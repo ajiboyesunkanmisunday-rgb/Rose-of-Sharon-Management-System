@@ -7,7 +7,7 @@ import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { getUser, getUserRequests, markUserAsInactive, getNotes, addNote, deleteNote, type UserResponse, type RequestResponse, type NoteResponse } from "@/lib/api";
 
-type NoteCategory = "CALL" | "VISIT" | "OTHERS";
+type NoteCategory = "CALL" | "VISIT";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import { useToast } from "@/context/ToastContext";
 import { SkeletonProfile } from "@/components/ui/Skeleton";
@@ -357,9 +357,9 @@ export default function ViewMemberProfilePage() {
 
                 {/* Category selector */}
                 <div className="mb-3 flex gap-2">
-                  {(["CALL", "VISIT", "OTHERS"] as NoteCategory[]).map((cat) => {
+                  {(["CALL", "VISIT"] as NoteCategory[]).map((cat) => {
                     const active = noteCategory === cat;
-                    const label  = cat === "CALL" ? "📞 Call" : cat === "VISIT" ? "🏠 Visit" : "📝 Others";
+                    const label  = cat === "CALL" ? "📞 Call" : "🏠 Visit";
                     return (
                       <button
                         key={cat}
@@ -381,11 +381,9 @@ export default function ViewMemberProfilePage() {
                   value={noteInput}
                   onChange={(e) => setNoteInput(e.target.value)}
                   placeholder={
-                    noteCategory === "CALL"
-                      ? "Describe the call with this member…"
-                      : noteCategory === "VISIT"
+                    noteCategory === "VISIT"
                       ? "Describe the visit to this member…"
-                      : "Write a note about this member…"
+                      : "Describe the call with this member…"
                   }
                   rows={3}
                   className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-[#111827] dark:text-slate-100 placeholder-[#9CA3AF] outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500 resize-none"
@@ -394,7 +392,7 @@ export default function ViewMemberProfilePage() {
                   {notesError && <p className="text-xs text-red-600">{notesError}</p>}
                   <div className="ml-auto">
                     <Button variant="primary" onClick={handleAddNote} disabled={addingNote || !noteInput.trim()}>
-                      {addingNote ? "Saving…" : `Save ${noteCategory === "CALL" ? "Call" : noteCategory === "VISIT" ? "Visit" : "Note"}`}
+                      {addingNote ? "Saving…" : `Save ${noteCategory === "VISIT" ? "Visit" : "Call"}`}
                     </Button>
                   </div>
                 </div>

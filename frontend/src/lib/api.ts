@@ -853,15 +853,12 @@ export async function getNotes(
 export async function addNote(
   userId: string,
   note: string,
-  category: "CALL" | "VISIT" | "OTHERS" = "CALL",
+  category: "CALL" | "VISIT" = "CALL",
 ): Promise<OperationalResponse> {
-  // CALL   → POST /api/v1/notes/call
-  // VISIT  → POST /api/v1/notes/visit
-  // OTHERS → POST /api/v1/notes  (the base endpoint; /notes/others does not exist)
-  const endpoint =
-    category === "VISIT" ? "/api/v1/notes/visit" :
-    category === "CALL"  ? "/api/v1/notes/call"  :
-                           "/api/v1/notes";
+  // POST /api/v1/notes (base) returns 500 on the backend — not usable.
+  // POST /api/v1/notes/others does not exist.
+  // Only CALL and VISIT endpoints are working.
+  const endpoint = category === "VISIT" ? "/api/v1/notes/visit" : "/api/v1/notes/call";
   return apiFetch<OperationalResponse>(endpoint, {
     method: "POST",
     body: JSON.stringify({ userId, content: note }),
