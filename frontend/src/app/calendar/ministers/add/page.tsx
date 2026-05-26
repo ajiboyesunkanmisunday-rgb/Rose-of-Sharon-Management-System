@@ -83,6 +83,8 @@ export default function AddMinisterPage() {
     return () => clearTimeout(timer);
   }, [preacherQuery, selectedPreacher]);
 
+  const isFormValid = !!selectedPreacher && (isNewEvent ? !!formData.title.trim() : !!selectedEvent) && !!formData.date;
+
   const timeToTimestamp = (time: string, dateStr: string) => {
     const [y, m, d] = dateStr.split("-").map(Number);
     const [hh, mm] = time.split(":").map(Number);
@@ -311,7 +313,7 @@ export default function AddMinisterPage() {
 
         <div className="mt-8 flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>Cancel</Button>
-          <Button type="submit" variant="primary" loading={loading}>Assign Minister</Button>
+          <Button type="submit" variant="primary" loading={loading} disabled={loading || !isFormValid}>Assign Minister</Button>
         </div>
       </form>
     </DashboardLayout>

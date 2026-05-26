@@ -69,6 +69,16 @@ export default function AddEventPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    title: !formData.title.trim() ? "Event title is required" : "",
+    date: !formData.date ? "Date is required" : "",
+  };
+
+  const isFormValid = !!formData.title.trim() && !!formData.date;
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -147,8 +157,10 @@ export default function AddEventPage() {
               name="title"
               value={formData.title}
               onChange={handleChange}
+              onBlur={() => touch("title")}
               placeholder="Enter event title"
               required
+              error={touched.title ? fieldErrors.title : undefined}
             />
             <FormField
               label="Preacher / Speaker"
@@ -182,7 +194,9 @@ export default function AddEventPage() {
               name="date"
               value={formData.date}
               onChange={handleChange}
+              onBlur={() => touch("date")}
               required
+              error={touched.date ? fieldErrors.date : undefined}
             />
             <FormField
               label="Start Time"
@@ -299,7 +313,7 @@ export default function AddEventPage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={loading}>
+            <Button variant="primary" type="submit" disabled={loading || !isFormValid}>
               {loading ? "Creating…" : "Create Event"}
             </Button>
           </div>

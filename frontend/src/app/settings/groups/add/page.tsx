@@ -15,6 +15,15 @@ export default function AddGroupPage() {
     leader: "",
   });
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    name: !formData.name.trim() ? "Group name is required" : "",
+  };
+
+  const isFormValid = !!formData.name.trim();
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -43,8 +52,10 @@ export default function AddGroupPage() {
             name="name"
             value={formData.name}
             onChange={handleChange}
+            onBlur={() => touch("name")}
             placeholder="e.g. Prayer Warriors"
             required
+            error={touched.name ? fieldErrors.name : undefined}
           />
           <TextAreaField
             label="Description"
@@ -71,7 +82,7 @@ export default function AddGroupPage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
+            <Button variant="primary" type="submit" disabled={!isFormValid}>
               Save Group
             </Button>
           </div>

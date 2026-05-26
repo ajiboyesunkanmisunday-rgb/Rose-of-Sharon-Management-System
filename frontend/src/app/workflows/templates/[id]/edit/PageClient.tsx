@@ -40,6 +40,15 @@ export default function EditWorkflowTemplateClient() {
   });
   const [steps, setSteps] = useState<string[]>(existing.steps.map((s) => s.label));
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    name: !formData.name.trim() ? "Template name is required" : "",
+  };
+
+  const isFormValid = !!formData.name.trim();
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -76,7 +85,7 @@ export default function EditWorkflowTemplateClient() {
 
       <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
-          <FormField label="Template Name" name="name" value={formData.name} onChange={handleChange} required />
+          <FormField label="Template Name" name="name" value={formData.name} onChange={handleChange} onBlur={() => touch("name")} required error={touched.name ? fieldErrors.name : undefined} />
           <TextAreaField label="Description" name="description" value={formData.description} onChange={handleChange} rows={3} required />
           <SelectField label="Trigger" name="trigger" value={formData.trigger} onChange={handleChange} options={TRIGGER_OPTIONS} required />
 
@@ -138,7 +147,7 @@ export default function EditWorkflowTemplateClient() {
             <Button variant="secondary" type="button" onClick={() => router.push("/workflows/templates")}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
+            <Button variant="primary" type="submit" disabled={!isFormValid}>
               Save Changes
             </Button>
           </div>

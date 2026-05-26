@@ -40,6 +40,11 @@ export default function SpouseLinkModal({
   const [weddingDate, setWeddingDate] = useState(initial.weddingDate || "");
   const [photo, setPhoto] = useState<File | null>(initial.anniversaryPhoto || null);
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const isFormValid = !!name.trim() && !!weddingDate;
+
   // Load members when modal opens or search changes
   useEffect(() => {
     if (!isOpen || mode !== "search") return;
@@ -189,7 +194,7 @@ export default function SpouseLinkModal({
           <Button
             variant="primary"
             onClick={handleSubmit}
-            disabled={!name || !weddingDate}
+            disabled={!isFormValid}
           >
             Save Spouse
           </Button>
