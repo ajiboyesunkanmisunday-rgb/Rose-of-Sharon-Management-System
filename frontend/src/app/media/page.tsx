@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
-import { getMedia, getMediaByCategory, type MediaResponse } from "@/lib/api";
+import { getMedia, type MediaResponse } from "@/lib/api";
 import { Film } from "lucide-react";
 
 const ITEMS_PER_PAGE = 12;
@@ -82,6 +82,19 @@ function getYoutubeThumbnail(url?: string | null): string | null {
 function cleanDescription(description?: string | null): string | null {
   if (!description) return null;
   return description.replace(/\[External Link\]:\s*https?:\/\/[^\s]+\n?/gi, "").trim() || null;
+}
+
+/**
+ * Returns true for items that are system-generated profile pictures and should
+ * never appear in the public media library. Backend uses type=IMAGES for both
+ * real pictures and profile photos — profile photos are identified by their
+ * auto-generated title pattern "profile-<digits>".
+ */
+function isProfilePicture(item: MediaResponse): boolean {
+  const cat = (item.mediaCategory ?? item.type ?? item.category ?? "").toUpperCase();
+  if (cat === "PROFILE_PICTURE" || cat === "THUMBNAIL") return true;
+  // Profile picture uploads use the title "profile-<timestamp>"
+  return /^profile-\d+$/i.test((item.title ?? "").trim());
 }
 
 const categoryColors: Record<string, string> = {
@@ -265,44 +278,51 @@ function MediaCard({ item, onNavigate }: { item: MediaResponse; onNavigate: () =
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 /**
- * Maps each tab key to the exact category enum the backend expects on
- * GET /api/v1/media/category?category=X.
- * Backend enum values: SERMON, PODCAST, VIDEOS, IMAGES, THUMBNAIL
+ * Maps each tab key to the backend type/mediaCategory enum value stored on
+ * each media item. Used for client-side filtering.
+ *
+ * NOTE: The backend /api/v1/media/category endpoint returns 0 results even when
+ * items exist (confirmed via HAR). All tab filtering is done client-side from
+ * the main /api/v1/media endpoint.
  */
-const TAB_CATEGORY: Record<string, string> = {
+const TAB_TYPE: Record<string, string> = {
   SERMONS:  "SERMON",
   PODCASTS: "PODCAST",
-  VIDEOS:   "VIDEOS",   // backend enum is "VIDEOS" not "VIDEO"
-  PICTURES: "IMAGES",   // backend enum is "IMAGES" not "PICTURE"
+  VIDEOS:   "VIDEOS",
+  PICTURES: "IMAGES",
 };
 
 export default function MediaPage() {
   const router = useRouter();
-  const [items,          setItems]          = useState<MediaResponse[]>([]);
-  const [totalPages,     setTotalPages]     = useState(1);
-  const [totalItems,     setTotalItems]     = useState(0);
-  const [loading,        setLoading]        = useState(true);
-  const [apiError,       setApiError]       = useState("");
-  const [currentPage,    setCurrentPage]    = useState(1);
-  const [search,         setSearch]         = useState("");
-  const [activeSearch,   setActiveSearch]   = useState("");
-  const [activeTab,      setActiveTab]      = useState("ALL");
 
-  // Cross-page search state — null means "not searching"
-  const [searchMatches,  setSearchMatches]  = useState<MediaResponse[] | null>(null);
-  const [searchLoading,  setSearchLoading]  = useState(false);
+  // All non-profile-picture media items (loaded once across all pages)
+  const [allItems,    setAllItems]    = useState<MediaResponse[]>([]);
+  const [loading,     setLoading]     = useState(true);
+  const [apiError,    setApiError]    = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search,      setSearch]      = useState("");
+  const [activeSearch,setActiveSearch]= useState("");
+  const [activeTab,   setActiveTab]   = useState("ALL");
 
-  const fetchMedia = useCallback(async (page: number, tab: string) => {
+  // ── Load ALL media pages once on mount ──────────────────────────────────────
+  // The backend's /api/v1/media/category filter endpoint returns 0 results for
+  // all categories (backend bug confirmed via HAR). We fetch everything from the
+  // main endpoint and filter client-side for reliable tab filtering.
+  const loadAll = useCallback(async () => {
     setLoading(true);
     setApiError("");
     try {
-      const categoryKey = TAB_CATEGORY[tab];
-      const res = categoryKey
-        ? await getMediaByCategory(categoryKey, page - 1, ITEMS_PER_PAGE)
-        : await getMedia(page - 1, ITEMS_PER_PAGE);
-      setItems(res.content ?? []);
-      setTotalPages(res.totalPages ?? 1);
-      setTotalItems(res.totalElements ?? 0);
+      const all: MediaResponse[] = [];
+      let pg = 0, totalPg = 1;
+      while (pg < totalPg && pg < 20) {
+        const res = await getMedia(pg, 200);
+        all.push(...(res.content ?? []));
+        totalPg = res.totalPages ?? 1;
+        pg++;
+      }
+      // Strip system-generated profile pictures — they share type=IMAGES with
+      // real uploaded pictures but are identified by their auto-title pattern.
+      setAllItems(all.filter((item) => !isProfilePicture(item)));
     } catch (err) {
       setApiError(err instanceof Error ? err.message : "Failed to load media.");
     } finally {
@@ -310,67 +330,37 @@ export default function MediaPage() {
     }
   }, []);
 
-  useEffect(() => { fetchMedia(currentPage, activeTab); }, [currentPage, activeTab, fetchMedia]);
+  useEffect(() => { loadAll(); }, [loadAll]);
 
-  // ── Cross-page search ────────────────────────────────────────────────────────
-  // When the user submits a search query, fetch ALL pages (up to 20 × 200 items)
-  // for the active tab and filter client-side. This ensures results from every
-  // page are included, not just the currently visible page.
-  useEffect(() => {
-    const q = activeSearch.trim();
-    if (!q) {
-      setSearchMatches(null);
-      return;
-    }
-    let cancelled = false;
-    setSearchLoading(true);
-    (async () => {
-      try {
-        const all: MediaResponse[] = [];
-        let pg = 0;
-        let totalPg = 1;
-        const categoryKey = TAB_CATEGORY[activeTab];
-        while (pg < totalPg && pg < 20) {
-          const res = categoryKey
-            ? await getMediaByCategory(categoryKey, pg, 200)
-            : await getMedia(pg, 200);
-          all.push(...(res.content ?? []));
-          totalPg = res.totalPages ?? 1;
-          pg++;
-        }
-        if (!cancelled) {
-          const lower = q.toLowerCase();
-          setSearchMatches(
-            all.filter((item) => {
-              const cat = item.mediaCategory ?? item.type ?? item.category ?? "";
-              // Skip profile pictures in ALL tab
-              if (activeTab === "ALL" && cat.toUpperCase() === "PROFILE_PICTURE") return false;
-              return (
-                (item.title ?? "").toLowerCase().includes(lower) ||
-                (item.description ?? "").toLowerCase().includes(lower) ||
-                cat.toLowerCase().includes(lower)
-              );
-            }),
-          );
-        }
-      } catch {
-        if (!cancelled) setSearchMatches([]);
-      } finally {
-        if (!cancelled) setSearchLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [activeSearch, activeTab]);
+  // ── Tab filtering (client-side, instant) ────────────────────────────────────
+  const tabFiltered = useMemo(() => {
+    if (activeTab === "ALL") return allItems;
+    const expectedType = TAB_TYPE[activeTab];
+    return allItems.filter((item) => {
+      const t = (item.mediaCategory ?? item.type ?? item.category ?? "").toUpperCase();
+      return t === expectedType;
+    });
+  }, [allItems, activeTab]);
 
-  // For the ALL tab: lightly filter out any PROFILE_PICTURE items that slip
-  // through. For category tabs the backend already guarantees the right items.
-  const displayed = searchMatches !== null
-    ? searchMatches
-    : items.filter((item) => {
-        const cat = item.mediaCategory ?? item.type ?? item.category;
-        if (activeTab === "ALL" && cat && cat.toUpperCase() === "PROFILE_PICTURE") return false;
-        return true;
-      });
+  // ── Search filtering (client-side, across current tab) ──────────────────────
+  const searchFiltered = useMemo(() => {
+    const q = activeSearch.trim().toLowerCase();
+    if (!q) return tabFiltered;
+    return tabFiltered.filter((item) => {
+      const cat = item.mediaCategory ?? item.type ?? item.category ?? "";
+      return (
+        (item.title ?? "").toLowerCase().includes(q) ||
+        (item.description ?? "").toLowerCase().includes(q) ||
+        cat.toLowerCase().includes(q)
+      );
+    });
+  }, [tabFiltered, activeSearch]);
+
+  // ── Client-side pagination over the filtered list ───────────────────────────
+  const totalItems = searchFiltered.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+  const safePage   = Math.min(currentPage, totalPages);
+  const displayed  = searchFiltered.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
 
   return (
     <DashboardLayout>
@@ -390,10 +380,7 @@ export default function MediaPage() {
             value={search}
             onChange={(v) => {
               setSearch(v);
-              if (!v.trim()) {
-                setActiveSearch("");
-                setSearchMatches(null);
-              }
+              if (!v.trim()) setActiveSearch("");
             }}
             onSearch={() => { setActiveSearch(search); setCurrentPage(1); }}
             placeholder="Search media..."
@@ -419,7 +406,7 @@ export default function MediaPage() {
         {tabs.map((tab) => (
           <button
             key={tab.key}
-            onClick={() => { setActiveTab(tab.key); setCurrentPage(1); setActiveSearch(""); setSearch(""); setSearchMatches(null); }}
+            onClick={() => { setActiveTab(tab.key); setCurrentPage(1); setActiveSearch(""); setSearch(""); }}
             className={`whitespace-nowrap pb-3 text-sm font-medium transition-colors ${
               activeTab === tab.key
                 ? "border-b-2 border-[#000080] text-[#000080] dark:text-indigo-400"
@@ -433,13 +420,11 @@ export default function MediaPage() {
 
       {apiError && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
-          {apiError} — <button className="font-medium underline" onClick={() => fetchMedia(currentPage, activeTab)}>Retry</button>
+          {apiError} — <button className="font-medium underline" onClick={loadAll}>Retry</button>
         </div>
       )}
 
-      {searchLoading ? (
-        <div className="py-12 text-center text-gray-400 dark:text-slate-500">Searching across all records…</div>
-      ) : loading ? (
+      {loading ? (
         <div className="py-12 text-center text-gray-400 dark:text-slate-500">Loading…</div>
       ) : displayed.length === 0 ? (
         <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-12 text-center text-sm text-gray-400 dark:text-slate-500">
@@ -457,11 +442,9 @@ export default function MediaPage() {
         </div>
       )}
 
-      {searchMatches === null && (
-        <div className="mt-6">
-          <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} onPageChange={setCurrentPage} />
-        </div>
-      )}
+      <div className="mt-6">
+        <Pagination currentPage={safePage} totalPages={totalPages} totalItems={totalItems} onPageChange={setCurrentPage} />
+      </div>
     </DashboardLayout>
   );
 }
