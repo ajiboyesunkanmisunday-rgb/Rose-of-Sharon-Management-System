@@ -724,7 +724,10 @@ export default function WorkersFormCore({
                 <td style={TD}><CI value={sex} onChange={setSex} readOnly={ro} placeholder="Male / Female" /></td>
               </tr>
               <tr>
-                <td style={TDL}>Date of Birth{REQ}</td>
+                <td style={{ ...TDL, whiteSpace: "normal" }}>
+                  Date of Birth{REQ}
+                  <div style={{ fontSize: 9, fontWeight: 400, color: "#6B7280" }}>DD/MM/YYYY</div>
+                </td>
                 <td style={TD}><CI value={dob} onChange={setDob} readOnly={ro} placeholder="DD/MM/YYYY" /></td>
                 <td style={TDL}>Marital Status{REQ}</td>
                 <td style={TD}><CI value={marital} onChange={setMarital} readOnly={ro} placeholder="Single / Married / Divorced / Widowed" /></td>
@@ -857,13 +860,19 @@ export default function WorkersFormCore({
           <table style={{ ...TABLE, marginBottom: 10 }}>
             <tbody>
               <tr>
-                <td style={TDL}>Date of Salvation{REQ}</td>
+                <td style={{ ...TDL, whiteSpace: "normal" }}>
+                  Date of Salvation{REQ}
+                  <div style={{ fontSize: 9, fontWeight: 400, color: "#6B7280" }}>e.g. March 2005</div>
+                </td>
                 <td style={TD}><CI value={salvDate} onChange={setSalvDate} readOnly={ro} placeholder="e.g. March 2005" /></td>
                 <td style={TDL}>Where{REQ}</td>
                 <td style={TD}><CI value={salvWhere} onChange={setSalvWhere} readOnly={ro} placeholder="e.g. RCCG Redemption Camp" /></td>
               </tr>
               <tr>
-                <td style={TDL}>Date of Water Baptism by Immersion{REQ}</td>
+                <td style={{ ...TDL, whiteSpace: "normal" }}>
+                  Date of Water Baptism by Immersion{REQ}
+                  <div style={{ fontSize: 9, fontWeight: 400, color: "#6B7280" }}>e.g. June 2006</div>
+                </td>
                 <td style={TD}><CI value={waterDate} onChange={setWaterDate} readOnly={ro} placeholder="e.g. June 2006" /></td>
                 <td style={TDL}>Church{REQ}</td>
                 <td style={TD}><CI value={waterChurch} onChange={setWaterChurch} readOnly={ro} placeholder="e.g. RCCG Rose of Sharon" /></td>
@@ -872,6 +881,7 @@ export default function WorkersFormCore({
                 <td style={{ ...TDL, whiteSpace: "normal" }}>
                   Date of Baptism of the Holy Ghost{REQ}<br />
                   <span style={{ fontWeight: 400, fontSize: 10 }}>(with evidence of speaking in tongues)</span>
+                  <div style={{ fontSize: 9, fontWeight: 400, color: "#6B7280" }}>e.g. December 2006</div>
                 </td>
                 <td style={TD}><CI value={hgDate} onChange={setHgDate} readOnly={ro} placeholder="e.g. December 2006" /></td>
                 <td style={TDL}>Where{REQ}</td>
@@ -1030,6 +1040,7 @@ export default function WorkersFormCore({
               <div style={{ fontSize: 11, textAlign: "center" }}>Signature</div>
             </div>
             <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 9, color: "#6B7280", marginBottom: 2 }}>DD/MM/YYYY</div>
               <CI value={signDate} onChange={setSignDate} readOnly={ro}
                 style={{ borderBottom: "1px solid #000", width: "100%", display: "block" }}
                 placeholder="DD/MM/YYYY" />

@@ -231,6 +231,10 @@ export default function SomFormCore({
   const updateOtherInfo = (i: number, v: string) =>
     setOtherInfoLines((prev) => prev.map((r, idx) => idx === i ? v : r));
 
+  /* ── Section J — Applicant Signature & Date ────────────────────────────── */
+  const [signatureJ, setSignatureJ] = useState("");
+  const [signDateJ,  setSignDateJ]  = useState("");
+
   /* ── Section K — Official Remarks (3 lines) ─────────────────────────────── */
   const [remarksLines, setRemarksLines] = useState<string[]>(() => {
     const raw = initialData?.officialRemarks ?? "";
@@ -240,6 +244,10 @@ export default function SomFormCore({
   });
   const updateRemark = (i: number, v: string) =>
     setRemarksLines((prev) => prev.map((r, idx) => idx === i ? v : r));
+
+  /* ── Section K — Admin Signature & Date ────────────────────────────────── */
+  const [signatureK, setSignatureK] = useState("");
+  const [signDateK,  setSignDateK]  = useState("");
 
   /* ── Photo ──────────────────────────────────────────────────────────────── */
   const [photo,        setPhoto]        = useState<File | null>(null);
@@ -771,13 +779,37 @@ export default function SomFormCore({
             </tbody>
           </table>
 
-          {/* ══ SECTION J — SIGNATURE ════════════════════════════════════ */}
+          {/* ══ SECTION J — APPLICANT SIGNATURE ═════════════════════════ */}
           <div style={{ fontWeight: 700, fontSize: 12, marginTop: 16, marginBottom: 6 }}>J:</div>
           <table style={T}>
             <tbody>
               <tr>
-                <td style={{ ...LBL, width: "50%", height: 32, fontWeight: 700 }}>SIGNATURE:</td>
-                <td style={{ ...LBL, fontWeight: 700 }}>DATE:</td>
+                <td style={{ ...LBL, width: "50%", fontWeight: 700, verticalAlign: "top", paddingBottom: 8 }}>
+                  <div style={{ marginBottom: 6 }}>
+                    SIGNATURE:
+                    {!ro && <span style={{ fontSize: 9, fontWeight: 400, color: "#888", marginLeft: 4 }}>(type full name)</span>}
+                  </div>
+                  <CI
+                    value={signatureJ}
+                    onChange={setSignatureJ}
+                    readOnly={ro}
+                    placeholder="Type your full name"
+                    style={{ borderBottom: "1px solid #000", paddingBottom: 2 }}
+                  />
+                </td>
+                <td style={{ ...LBL, fontWeight: 700, verticalAlign: "top", paddingBottom: 8 }}>
+                  <div style={{ marginBottom: 6 }}>
+                    DATE:
+                    {!ro && <span style={{ fontSize: 9, fontWeight: 400, color: "#888", marginLeft: 4 }}>(DD/MM/YYYY)</span>}
+                  </div>
+                  <CI
+                    value={signDateJ}
+                    onChange={setSignDateJ}
+                    readOnly={ro}
+                    placeholder="DD/MM/YYYY"
+                    style={{ borderBottom: "1px solid #000", paddingBottom: 2 }}
+                  />
+                </td>
               </tr>
             </tbody>
           </table>
@@ -798,6 +830,40 @@ export default function SomFormCore({
                   </td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+
+          {/* Admin Signature + Date (editable in view/admin mode only) */}
+          <table style={{ ...T, marginTop: 0 }}>
+            <tbody>
+              <tr>
+                <td style={{ ...LBL, width: "50%", fontWeight: 700, verticalAlign: "top", paddingBottom: 8 }}>
+                  <div style={{ marginBottom: 6 }}>
+                    SIGNATURE (Admin):
+                    {mode === "view" && <span style={{ fontSize: 9, fontWeight: 400, color: "#888", marginLeft: 4 }}>(type full name)</span>}
+                  </div>
+                  <CI
+                    value={signatureK}
+                    onChange={mode === "view" ? setSignatureK : undefined}
+                    readOnly={mode !== "view"}
+                    placeholder="Admin full name"
+                    style={{ borderBottom: "1px solid #000", paddingBottom: 2 }}
+                  />
+                </td>
+                <td style={{ ...LBL, fontWeight: 700, verticalAlign: "top", paddingBottom: 8 }}>
+                  <div style={{ marginBottom: 6 }}>
+                    DATE:
+                    {mode === "view" && <span style={{ fontSize: 9, fontWeight: 400, color: "#888", marginLeft: 4 }}>(DD/MM/YYYY)</span>}
+                  </div>
+                  <CI
+                    value={signDateK}
+                    onChange={mode === "view" ? setSignDateK : undefined}
+                    readOnly={mode !== "view"}
+                    placeholder="DD/MM/YYYY"
+                    style={{ borderBottom: "1px solid #000", paddingBottom: 2 }}
+                  />
+                </td>
+              </tr>
             </tbody>
           </table>
 
