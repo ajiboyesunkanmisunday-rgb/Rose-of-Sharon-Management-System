@@ -855,10 +855,13 @@ export async function addNote(
   note: string,
   category: "CALL" | "VISIT" | "OTHERS" = "CALL",
 ): Promise<OperationalResponse> {
+  // CALL   → POST /api/v1/notes/call
+  // VISIT  → POST /api/v1/notes/visit
+  // OTHERS → POST /api/v1/notes  (the base endpoint; /notes/others does not exist)
   const endpoint =
-    category === "VISIT"  ? "/api/v1/notes/visit"  :
-    category === "OTHERS" ? "/api/v1/notes/others"  :
-                            "/api/v1/notes/call";
+    category === "VISIT" ? "/api/v1/notes/visit" :
+    category === "CALL"  ? "/api/v1/notes/call"  :
+                           "/api/v1/notes";
   return apiFetch<OperationalResponse>(endpoint, {
     method: "POST",
     body: JSON.stringify({ userId, content: note }),
@@ -894,14 +897,12 @@ export async function deleteNote(noteId: string): Promise<OperationalResponse> {
 export async function assignFollowUp(
   userId: string,
   officerId: string,
-  note?: string,
+  note?: string, // kept for call-site compat; Swagger endpoint has no body
 ): Promise<OperationalResponse> {
+  void note; // intentionally unused — PUT /api/v1/users/{id}/assign-followup/{followUpMemberId}
   return apiFetch<OperationalResponse>(
-    `/api/v1/users/${userId}/assign-follow-up`,
-    {
-      method: "POST",
-      body: JSON.stringify({ officerId, note }),
-    },
+    `/api/v1/users/${userId}/assign-followup/${officerId}`,
+    { method: "PUT" },
   );
 }
 
@@ -3173,7 +3174,8 @@ export interface StudentAttendance {
   lastName?: string;
   admissionNo?: string;
   profilePictureUrl?: string;
-  attendances?: { date?: string; present?: boolean }[];
+  /** Swagger: { attendanceId, trainingEventName } per AttendanceSheetResponse schema */
+  attendances?: { attendanceId?: string; trainingEventName?: string }[];
 }
 
 export interface AttendanceSheetResponse {
