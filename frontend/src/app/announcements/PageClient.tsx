@@ -628,7 +628,7 @@ function ReadModal({
             <p className="mb-1 text-xs font-medium text-[#6B7280] dark:text-slate-400">
               {index} of {total}
             </p>
-            <h2 className="text-base font-bold text-[#111827] dark:text-slate-100 leading-snug">
+            <h2 className="break-words text-base font-bold text-[#111827] dark:text-slate-100 leading-snug">
               {item.subject || "Untitled"}
             </h2>
           </div>
@@ -661,7 +661,7 @@ function ReadModal({
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
-          <p className="whitespace-pre-wrap text-sm leading-7 text-[#374151] dark:text-slate-300">
+          <p className="whitespace-pre-wrap break-words text-sm leading-7 text-[#374151] dark:text-slate-300">
             {item.content || "No content."}
           </p>
           {item.announcementStatus === "DECLINED" && item.reasonForDecline && (
@@ -799,14 +799,14 @@ function AnnouncementCard({
         </button>
 
         <div className="flex-1 min-w-0 pl-7">
-          <h3 className="text-sm font-bold text-[#111827] dark:text-slate-100">{item.subject}</h3>
-          <p className="mt-0.5 text-xs text-[#6B7280] dark:text-slate-400">
+          <h3 className="break-words text-sm font-bold text-[#111827] dark:text-slate-100">{item.subject}</h3>
+          <p className="mt-0.5 break-words text-xs text-[#6B7280] dark:text-slate-400">
             Submitted by {name}
             {item.startDate ? ` · Starts: ${fmtDate(item.startDate)}` : ""}
             {item.endDate ? ` · Ends: ${fmtDate(item.endDate)}` : ""}
             {item.createdOn ? ` · Submitted: ${fmtDate(item.createdOn)}` : ""}
           </p>
-          <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[#374151] dark:text-slate-300">
+          <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-[#374151] dark:text-slate-300">
             <ExpandableText text={item.content} max={250} />
           </p>
           {item.announcementStatus === "DECLINED" && item.reasonForDecline && (
