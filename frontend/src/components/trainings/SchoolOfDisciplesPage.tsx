@@ -628,15 +628,15 @@ export default function SchoolOfDisciplesPage() {
       )}
 
       {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-6 flex flex-wrap items-start gap-3 sm:flex-nowrap sm:items-center">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: ACCENT10 }}>
           <BookOpen className="h-6 w-6" style={{ color: ACCENT }} />
         </div>
-        <div>
-          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">School of Disciples</h1>
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-[28px] font-bold text-[#000000] dark:text-slate-100">School of Disciples</h1>
           <p className="text-sm text-[#6B7280] dark:text-slate-400">Members enrolled in the SOD programme</p>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
           <button
             onClick={() => router.push("/trainings/sod/form")}
             className="flex items-center gap-2 rounded-lg bg-[#000080] px-4 py-2 text-xs font-semibold text-white hover:bg-[#000066]"

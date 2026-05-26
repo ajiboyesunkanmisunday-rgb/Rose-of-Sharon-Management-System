@@ -485,7 +485,7 @@ export default function SomFormCore({
         minHeight: "100vh", background: "#b0bec5",
         paddingTop: submitError || submitSuccess ? 110 : 72, paddingBottom: 48,
         display: "flex", flexDirection: "column", gap: 32,
-        transition: "padding-top 0.2s",
+        transition: "padding-top 0.2s", overflowX: "auto",
       }}>
 
         {/* ══════════════════ PAGE 1 ══════════════════════════════════════ */}

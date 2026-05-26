@@ -585,15 +585,15 @@ export default function WorkersInTrainingPage() {
       )}
 
       {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-6 flex flex-wrap items-start gap-3 sm:flex-nowrap sm:items-center">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#7C3AED]/10">
           <GraduationCap className="h-6 w-6 text-[#7C3AED] dark:text-purple-400" />
         </div>
-        <div>
-          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Workers-in-Training</h1>
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-[28px] font-bold text-[#000000] dark:text-slate-100">Workers-in-Training</h1>
           <p className="text-sm text-[#6B7280] dark:text-slate-400">Members enrolled in the WIT programme</p>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
           <button
             onClick={() => router.push("/trainings/workers/form")}
             className="flex items-center gap-2 rounded-lg bg-[#000080] px-4 py-2 text-xs font-semibold text-white hover:bg-[#000066]"

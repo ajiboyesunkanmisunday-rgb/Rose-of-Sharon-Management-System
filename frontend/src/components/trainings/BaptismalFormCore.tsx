@@ -635,6 +635,7 @@ export default function BaptismalFormCore({
           flexDirection: "column",
           gap: 32,
           transition: "padding-top 0.2s",
+          overflowX: "auto",
         }}
       >
         {/* ══════════════════ PAGE 1 ══════════════════════════════════════ */}
