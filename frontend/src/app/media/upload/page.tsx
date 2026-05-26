@@ -86,6 +86,13 @@ export default function UploadMediaPage() {
   const [saving,       setSaving]       = useState(false);
   const [error,        setError]        = useState("");
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    title: !title.trim() ? "Title is required" : "",
+  };
+
   // Ref used to programmatically reset the file input when switching to YouTube
   // mode — without this the browser keeps showing the old filename even though
   // mediaFile state has been cleared, causing the submit button to stay disabled.
@@ -209,10 +216,14 @@ export default function UploadMediaPage() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              onBlur={() => touch("title")}
               placeholder="Sermon / podcast / video title"
-              className={inputClass}
+              className={`${inputClass} ${touched.title && fieldErrors.title ? "border-red-400" : ""}`}
               required
             />
+            {touched.title && fieldErrors.title && (
+              <p className="mt-1 text-xs text-red-500">{fieldErrors.title}</p>
+            )}
           </div>
 
           {/* Category */}

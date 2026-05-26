@@ -32,6 +32,17 @@ export default function AddContactPage() {
     department: "",
   });
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const fieldErrors = {
+    name: !formData.name.trim() ? "Full name is required" : "",
+    email: formData.email && !EMAIL_RE.test(formData.email) ? "Enter a valid email address" : "",
+  };
+
+  const isFormValid = !!formData.name.trim() && (!formData.email || EMAIL_RE.test(formData.email));
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -61,8 +72,10 @@ export default function AddContactPage() {
               name="name"
               value={formData.name}
               onChange={handleChange}
+              onBlur={() => touch("name")}
               placeholder="Enter full name"
               required
+              error={touched.name ? fieldErrors.name : undefined}
             />
             <FormField
               label="Role / Title"
@@ -103,8 +116,10 @@ export default function AddContactPage() {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              onBlur={() => touch("email")}
               placeholder="name@example.com"
               required
+              error={touched.email ? fieldErrors.email : undefined}
             />
             <FormField
               label="Address"
@@ -124,7 +139,7 @@ export default function AddContactPage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
+            <Button variant="primary" type="submit" disabled={!isFormValid}>
               Save Contact
             </Button>
           </div>

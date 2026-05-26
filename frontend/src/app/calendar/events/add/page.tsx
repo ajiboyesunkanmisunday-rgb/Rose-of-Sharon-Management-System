@@ -52,6 +52,16 @@ export default function AddCalendarEventPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    title: !formData.title.trim() ? "Event title is required" : "",
+    date: !formData.date ? "Date is required" : "",
+  };
+
+  const isFormValid = !!formData.title.trim() && !!formData.date;
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -115,8 +125,10 @@ export default function AddCalendarEventPage() {
             name="title"
             value={formData.title}
             onChange={handleChange}
+            onBlur={() => touch("title")}
             placeholder="Enter event title"
             required
+            error={touched.title ? fieldErrors.title : undefined}
           />
 
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-3">
@@ -126,7 +138,9 @@ export default function AddCalendarEventPage() {
               name="date"
               value={formData.date}
               onChange={handleChange}
+              onBlur={() => touch("date")}
               required
+              error={touched.date ? fieldErrors.date : undefined}
             />
             <FormField
               label="Start Time"
@@ -224,7 +238,7 @@ export default function AddCalendarEventPage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={loading}>
+            <Button variant="primary" type="submit" disabled={loading || !isFormValid}>
               {loading ? "Saving…" : "Save Event"}
             </Button>
           </div>

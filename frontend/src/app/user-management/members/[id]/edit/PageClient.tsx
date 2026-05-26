@@ -43,6 +43,16 @@ export default function EditMemberPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    firstName: !firstName.trim() ? "First name is required" : "",
+    lastName: !lastName.trim() ? "Last name is required" : "",
+  };
+
+  const isFormValid = !!firstName.trim() && !!lastName.trim();
+
   const populate = useCallback(async () => {
     if (!id || id.startsWith("m-")) return;
     try {
@@ -188,26 +198,34 @@ export default function EditMemberPage() {
               <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
                 {/* First Name */}
                 <div>
-                  <label className={labelStyles}>First Name</label>
+                  <label className={labelStyles}>First Name <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
+                    onBlur={() => touch("firstName")}
                     placeholder="Enter First Name"
-                    className={inputStyles}
+                    className={`${inputStyles} ${touched.firstName && fieldErrors.firstName ? "border-red-400" : ""}`}
                   />
+                  {touched.firstName && fieldErrors.firstName && (
+                    <p className="mt-1 text-xs text-red-500">{fieldErrors.firstName}</p>
+                  )}
                 </div>
 
                 {/* Last Name */}
                 <div>
-                  <label className={labelStyles}>Last Name</label>
+                  <label className={labelStyles}>Last Name <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
+                    onBlur={() => touch("lastName")}
                     placeholder="Enter Last Name"
-                    className={inputStyles}
+                    className={`${inputStyles} ${touched.lastName && fieldErrors.lastName ? "border-red-400" : ""}`}
                   />
+                  {touched.lastName && fieldErrors.lastName && (
+                    <p className="mt-1 text-xs text-red-500">{fieldErrors.lastName}</p>
+                  )}
                 </div>
 
                 {/* Email — display only, not sent on update */}
@@ -368,7 +386,7 @@ export default function EditMemberPage() {
                 <div className="mt-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{submitError}</div>
               )}
               <div className="mt-6 flex justify-end">
-                <Button type="submit" variant="primary" disabled={submitting}>
+                <Button type="submit" variant="primary" disabled={submitting || !isFormValid}>
                   {submitting ? "Saving…" : "Update Member"}
                 </Button>
               </div>

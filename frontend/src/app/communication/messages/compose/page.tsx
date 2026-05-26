@@ -66,6 +66,21 @@ export default function ComposeMessagePage() {
   };
 
   const isEmail = formData.type === "Email";
+
+  const MAX_CONTENT = 1000;
+  const MAX_SUBJECT = 150;
+
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    recipient: !formData.recipient ? "Recipient is required" : "",
+    subject: isEmail && !formData.subject.trim() ? "Subject is required" : "",
+    content: !formData.content.trim() ? "Message body is required" : "",
+  };
+
+  const isFormValid = !!formData.recipient && !!formData.content.trim() && (!isEmail || !!formData.subject.trim());
+
   const templateOptions = communicationTemplates
     .filter((t) => t.type === formData.type)
     .map((t) => ({ label: t.name, value: t.id }));
@@ -82,7 +97,7 @@ export default function ComposeMessagePage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
             <SelectField label="Type" name="type" value={formData.type} onChange={handleChange} options={TYPE_OPTIONS} required />
-            <SelectField label="Recipient(s)" name="recipient" value={formData.recipient} onChange={handleChange} options={RECIPIENT_OPTIONS} required />
+            <SelectField label="Recipient(s)" name="recipient" value={formData.recipient} onChange={(e) => { handleChange(e); touch("recipient"); }} options={RECIPIENT_OPTIONS} required error={touched.recipient ? fieldErrors.recipient : undefined} />
           </div>
 
           {formData.recipient === "Custom" && (
@@ -112,9 +127,13 @@ export default function ComposeMessagePage() {
               label="Subject"
               name="subject"
               value={formData.subject}
-              onChange={handleChange}
+              onChange={(e) => setFormData((prev) => ({ ...prev, subject: e.target.value.slice(0, MAX_SUBJECT) }))}
+              onBlur={() => touch("subject")}
               placeholder="Email subject"
               required
+              error={touched.subject ? fieldErrors.subject : undefined}
+              showCount
+              maxLength={MAX_SUBJECT}
             />
           )}
 
@@ -122,10 +141,14 @@ export default function ComposeMessagePage() {
             label="Message Body"
             name="content"
             value={formData.content}
-            onChange={handleChange}
+            onChange={(e) => setFormData((prev) => ({ ...prev, content: e.target.value.slice(0, MAX_CONTENT) }))}
+            onBlur={() => touch("content")}
             placeholder={`Compose your ${formData.type.toLowerCase()}...`}
             rows={8}
             required
+            error={touched.content ? fieldErrors.content : undefined}
+            showCount
+            maxLength={MAX_CONTENT}
           />
 
           <div className="flex items-center gap-2 pt-2">
@@ -156,7 +179,7 @@ export default function ComposeMessagePage() {
             <Button variant="secondary" type="button" onClick={() => router.push("/communication/messages")}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
+            <Button variant="primary" type="submit" disabled={!isFormValid}>
               {formData.sendNow ? "Send Now" : "Schedule"}
             </Button>
           </div>
