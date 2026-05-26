@@ -10,12 +10,15 @@ import {
   searchWorkersInTraining,
   markWorkersAsGraduated,
   giveOfficialRemark,
+  getTrainingEvents,
+  createAttendanceRecord,
   type WorkersInTrainingResponse,
+  type TrainingEventResponse,
 } from "@/lib/api";
 import {
   GraduationCap, Phone, Mail, RefreshCw, Award, Users,
   CheckCircle, Clock, Star, ChevronDown, X, MessageSquare, PlusCircle,
-  FileText, Eye,
+  FileText, Eye, CalendarCheck,
 } from "lucide-react";
 
 const ITEMS_PER_PAGE = 12;
@@ -42,6 +45,169 @@ function fullName(u: WorkersInTrainingResponse) {
 function fmtDate(s?: string) {
   if (!s) return "—";
   return new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+// ─── Attendance Modal ─────────────────────────────────────────────────────────
+function AttendanceModal({
+  worker,
+  onClose,
+  onSave,
+}: {
+  worker: WorkersInTrainingResponse;
+  onClose: () => void;
+  onSave: (trainingEventId: string, admissionNo: string) => Promise<void>;
+}) {
+  const [events, setEvents]                     = useState<TrainingEventResponse[]>([]);
+  const [eventsLoading, setEventsLoading]       = useState(false);
+  const [eventsError, setEventsError]           = useState("");
+  const [selectedEventId, setSelectedEventId]   = useState("");
+  const [saving, setSaving]                     = useState(false);
+  const [error, setError]                       = useState("");
+
+  // Load training events for the worker's set on mount
+  useEffect(() => {
+    if (!worker.set) {
+      setEventsError("Worker has no set assigned — cannot load training events.");
+      return;
+    }
+    setEventsLoading(true);
+    getTrainingEvents("WORKERS_IN_TRAINING", worker.set)
+      .then((evts) => {
+        setEvents(evts);
+        if (evts.length > 0) setSelectedEventId(evts[0].id ?? "");
+      })
+      .catch(() => setEventsError("Failed to load training events."))
+      .finally(() => setEventsLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [worker.set]);
+
+  const handleSave = async () => {
+    if (!selectedEventId) { setError("Please select a training event."); return; }
+    if (!worker.admissionNo) { setError("Worker has no admission number on record."); return; }
+    setSaving(true);
+    setError("");
+    try {
+      await onSave(selectedEventId, worker.admissionNo);
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to mark attendance.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const selectedEvent = events.find((ev) => ev.id === selectedEventId);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-800 shadow-xl">
+
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[#E5E7EB] dark:border-slate-700 px-5 py-4">
+          <div className="flex items-center gap-2">
+            <CalendarCheck className="h-5 w-5 text-[#7C3AED] dark:text-purple-400" />
+            <div>
+              <h2 className="text-base font-bold text-[#111827] dark:text-slate-100">Mark Attendance</h2>
+              <p className="text-xs text-[#6B7280] dark:text-slate-400">{fullName(worker)}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-[#F3F4F6] dark:bg-slate-700/30">
+            <X className="h-4 w-4 text-[#6B7280] dark:text-slate-400" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-5">
+
+          {/* Worker identifiers */}
+          <div className="flex items-center gap-4 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] px-4 py-3">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-slate-400">Admission No</p>
+              <p className="text-sm font-semibold text-[#111827] dark:text-slate-100">{worker.admissionNo ?? "—"}</p>
+            </div>
+            <div className="h-8 w-px bg-[#E5E7EB] dark:bg-slate-700" />
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-slate-400">Set</p>
+              <p className="text-sm font-semibold text-[#111827] dark:text-slate-100">{worker.set ?? "—"}</p>
+            </div>
+          </div>
+
+          {/* Training event selector */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-slate-400">
+              Select Training Event
+            </p>
+
+            {eventsLoading ? (
+              <div className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2.5 text-sm text-[#9CA3AF] dark:text-slate-400">
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                Loading events…
+              </div>
+            ) : eventsError ? (
+              <p className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-xs text-red-700">
+                {eventsError}
+              </p>
+            ) : events.length === 0 ? (
+              <p className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] px-3 py-2.5 text-sm text-[#9CA3AF] dark:text-slate-400">
+                No training events found for set &quot;{worker.set}&quot;.
+              </p>
+            ) : (
+              <div className="relative">
+                <select
+                  value={selectedEventId}
+                  onChange={(e) => { setSelectedEventId(e.target.value); setError(""); }}
+                  className="w-full appearance-none rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 pr-8 text-sm text-[#111827] dark:text-slate-100 outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED]"
+                >
+                  <option value="">— Select an event —</option>
+                  {events.map((ev) => (
+                    <option key={ev.id} value={ev.id ?? ""}>
+                      {ev.name ?? ev.id}
+                      {ev.isExam ? " (Exam)" : ""}
+                      {ev.date ? ` · ${ev.date}` : ""}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF] dark:text-slate-400" />
+              </div>
+            )}
+
+            {/* Selected event details */}
+            {selectedEvent && (
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 rounded-lg bg-purple-50 dark:bg-purple-900/20 px-3 py-2.5 text-xs text-[#5B21B6]">
+                {selectedEvent.teacher && <span><span className="font-semibold">Teacher:</span> {selectedEvent.teacher}</span>}
+                {selectedEvent.location && <span><span className="font-semibold">Location:</span> {selectedEvent.location}</span>}
+                {selectedEvent.isExam && (
+                  <span className="rounded-full bg-purple-200 dark:bg-purple-800 px-2 py-0.5 font-semibold">Exam</span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {error && (
+            <p className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-xs text-red-700">
+              {error}
+            </p>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-2 border-t border-[#E5E7EB] dark:border-slate-700 px-5 py-4">
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-2 text-sm font-medium text-[#374151] dark:text-slate-300 hover:bg-[#F9FAFB]"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving || !selectedEventId || eventsLoading}
+            className="rounded-lg bg-[#7C3AED] px-4 py-2 text-sm font-medium text-white hover:bg-[#6D28D9] disabled:opacity-50"
+          >
+            {saving ? "Saving…" : "Mark Attendance"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ─── Official Remark Modal ────────────────────────────────────────────────────
@@ -114,12 +280,14 @@ function WorkerCard({
   worker,
   selected,
   onToggleSelect,
+  onAttendance,
   onRemark,
   onViewForm,
 }: {
   worker: WorkersInTrainingResponse;
   selected: boolean;
   onToggleSelect: (id: string) => void;
+  onAttendance: (w: WorkersInTrainingResponse) => void;
   onRemark: (w: WorkersInTrainingResponse) => void;
   onViewForm: (id: string) => void;
 }) {
@@ -152,7 +320,7 @@ function WorkerCard({
       )}
 
       {/* Avatar */}
-      <div className={`mt-4 mb-3 ${isGraduated ? "mt-6" : ""}`}>
+      <div className={`mb-3 ${isGraduated ? "mt-6" : "mt-4"}`}>
         {worker.profilePictureUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -175,6 +343,11 @@ function WorkerCard({
         <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-[#7C3AED]/10 px-2.5 py-0.5 text-[10px] font-semibold text-[#7C3AED] dark:text-purple-400">
           <Star className="h-2.5 w-2.5" />
           Set {worker.set}
+        </span>
+      )}
+      {worker.admissionNo && (
+        <span className="mt-1 text-[10px] text-[#9CA3AF] dark:text-slate-400">
+          Adm No: {worker.admissionNo}
         </span>
       )}
       {worker.occupation && (
@@ -222,30 +395,40 @@ function WorkerCard({
         )}
       </div>
 
-      {/* Date enrolled */}
+      {/* Date enrolled / graduated */}
       {worker.createdOn && (
         <p className="mt-2 text-[10px] text-[#9CA3AF] dark:text-slate-400">
           Enrolled {fmtDate(worker.createdOn)}
         </p>
       )}
+      {worker.graduationDate && (
+        <p className="mt-0.5 text-[10px] font-medium text-green-600">Graduated {fmtDate(worker.graduationDate)}</p>
+      )}
 
       {/* Action buttons */}
-      <div className="mt-3 flex flex-col gap-2">
+      <div className="mt-3 flex gap-2">
+        <button
+          onClick={() => onAttendance(worker)}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-[#374151] dark:text-slate-300 hover:border-[#7C3AED] hover:text-[#7C3AED] dark:hover:text-purple-400 transition-colors"
+        >
+          <CalendarCheck className="h-3 w-3" />
+          Attendance
+        </button>
         <button
           onClick={() => onRemark(worker)}
-          className="flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-[#374151] dark:text-slate-300 hover:border-[#7C3AED] hover:text-[#7C3AED] dark:text-purple-400 transition-colors"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-[#374151] dark:text-slate-300 hover:border-[#7C3AED] hover:text-[#7C3AED] dark:hover:text-purple-400 transition-colors"
         >
           <MessageSquare className="h-3 w-3" />
-          {worker.officialRemarks ? "Edit Remark" : "Give Remark"}
-        </button>
-        <button
-          onClick={() => onViewForm(worker.id)}
-          className="flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-[#374151] dark:text-slate-300 hover:border-[#000080] hover:text-[#000080] dark:text-indigo-400 transition-colors"
-        >
-          <Eye className="h-3 w-3" />
-          View Form
+          {worker.officialRemarks ? "Edit Remark" : "Remark"}
         </button>
       </div>
+      <button
+        onClick={() => onViewForm(worker.id)}
+        className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-[#374151] dark:text-slate-300 hover:border-[#000080] hover:text-[#000080] dark:hover:text-indigo-400 transition-colors"
+      >
+        <Eye className="h-3 w-3" />
+        View Form
+      </button>
     </div>
   );
 }
@@ -253,16 +436,17 @@ function WorkerCard({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function WorkersInTrainingPage() {
   const router = useRouter();
-  const [allWorkers,    setAllWorkers]    = useState<WorkersInTrainingResponse[]>([]);
-  const [loading,       setLoading]       = useState(true);
-  const [error,         setError]         = useState("");
-  const [search,        setSearch]        = useState("");
-  const [page,          setPage]          = useState(1);
-  const [selected,      setSelected]      = useState<Set<string>>(new Set());
-  const [graduating,    setGraduating]    = useState(false);
-  const [remarkWorker,  setRemarkWorker]  = useState<WorkersInTrainingResponse | null>(null);
-  const [successMsg,    setSuccessMsg]    = useState("");
-  const [witSet,        setWitSet]        = useState(String(new Date().getFullYear()));
+  const [allWorkers,       setAllWorkers]       = useState<WorkersInTrainingResponse[]>([]);
+  const [loading,          setLoading]          = useState(true);
+  const [error,            setError]            = useState("");
+  const [search,           setSearch]           = useState("");
+  const [page,             setPage]             = useState(1);
+  const [selected,         setSelected]         = useState<Set<string>>(new Set());
+  const [graduating,       setGraduating]       = useState(false);
+  const [remarkWorker,     setRemarkWorker]     = useState<WorkersInTrainingResponse | null>(null);
+  const [attendanceWorker, setAttendanceWorker] = useState<WorkersInTrainingResponse | null>(null);
+  const [successMsg,       setSuccessMsg]       = useState("");
+  const [witSet,           setWitSet]           = useState(String(new Date().getFullYear()));
 
   const load = useCallback(async (activeSet?: string) => {
     setLoading(true);
@@ -307,7 +491,8 @@ export default function WorkersInTrainingPage() {
         fullName(w).toLowerCase().includes(q) ||
         (w.email ?? "").toLowerCase().includes(q) ||
         (w.phoneNumber ?? "").toLowerCase().includes(q) ||
-        (w.yourMinistry ?? "").toLowerCase().includes(q)
+        (w.yourMinistry ?? "").toLowerCase().includes(q) ||
+        (w.admissionNo ?? "").toLowerCase().includes(q)
     );
   }, [allWorkers, search]);
 
@@ -328,6 +513,11 @@ export default function WorkersInTrainingPage() {
         : new Set(paginated.map((w) => w.id))
     );
 
+  const flash = (msg: string) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(""), 4000);
+  };
+
   // Graduate action
   const handleGraduate = async () => {
     if (selected.size === 0) return;
@@ -335,8 +525,7 @@ export default function WorkersInTrainingPage() {
     try {
       await markWorkersAsGraduated([...selected]);
       setSelected(new Set());
-      setSuccessMsg(`${selected.size} worker${selected.size > 1 ? "s" : ""} marked as graduated.`);
-      setTimeout(() => setSuccessMsg(""), 4000);
+      flash(`${selected.size} worker${selected.size > 1 ? "s" : ""} marked as graduated.`);
       await load(witSet);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to mark as graduated.");
@@ -348,8 +537,18 @@ export default function WorkersInTrainingPage() {
   // Remark save
   const handleSaveRemark = async (id: string, text: string) => {
     await giveOfficialRemark(id, text);
-    setSuccessMsg("Official remark saved.");
-    setTimeout(() => setSuccessMsg(""), 4000);
+    flash("Official remark saved.");
+    await load(witSet);
+  };
+
+  // Attendance save
+  const handleSaveAttendance = async (trainingEventId: string, admissionNo: string) => {
+    await createAttendanceRecord({
+      trainingEventId,
+      admissionNumber: admissionNo,
+      category: "WORKERS_IN_TRAINING",
+    });
+    flash("Attendance marked successfully.");
     await load(witSet);
   };
 
@@ -375,6 +574,13 @@ export default function WorkersInTrainingPage() {
           worker={remarkWorker}
           onClose={() => setRemarkWorker(null)}
           onSave={handleSaveRemark}
+        />
+      )}
+      {attendanceWorker && (
+        <AttendanceModal
+          worker={attendanceWorker}
+          onClose={() => setAttendanceWorker(null)}
+          onSave={handleSaveAttendance}
         />
       )}
 
@@ -405,7 +611,7 @@ export default function WorkersInTrainingPage() {
           <button
             onClick={() => load(witSet)}
             disabled={loading}
-            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 hover:border-[#7C3AED] hover:text-[#7C3AED] dark:text-purple-400 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 hover:border-[#7C3AED] hover:text-[#7C3AED] dark:hover:text-purple-400 disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
             Refresh
@@ -469,7 +675,14 @@ export default function WorkersInTrainingPage() {
               onChange={(e) => { setWitSet(e.target.value); setPage(1); }}
               className="appearance-none rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 pl-3 pr-7 py-2 text-sm text-[#374151] dark:text-slate-300 focus:border-[#7C3AED] focus:outline-none cursor-pointer"
             >
-              {Array.from({ length: 8 }, (_, i) => String(new Date().getFullYear() - 5 + i)).map((y) => (
+              {Array.from(
+                new Set([
+                  ...availableSets,
+                  String(new Date().getFullYear() - 1),
+                  String(new Date().getFullYear()),
+                  String(new Date().getFullYear() + 1),
+                ])
+              ).sort().map((y) => (
                 <option key={y} value={y}>{y}</option>
               ))}
             </select>
@@ -509,7 +722,7 @@ export default function WorkersInTrainingPage() {
           {selected.size > 0 && (
             <button
               onClick={() => setSelected(new Set())}
-              className="text-xs text-[#6B7280] dark:text-slate-400 underline hover:text-[#374151] dark:text-slate-300"
+              className="text-xs text-[#6B7280] dark:text-slate-400 underline hover:text-[#374151] dark:hover:text-slate-300"
             >
               Clear selection
             </button>
@@ -527,6 +740,7 @@ export default function WorkersInTrainingPage() {
         <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-12 text-center">
           <Users className="mx-auto mb-3 h-10 w-10 text-[#E5E7EB]" />
           <p className="text-sm font-medium text-[#374151] dark:text-slate-300">No workers enrolled yet</p>
+          <p className="mt-1 text-xs text-[#9CA3AF] dark:text-slate-400">Workers added to the WIT programme will appear here.</p>
         </div>
       ) : paginated.length === 0 ? (
         <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-10 text-center text-sm text-[#9CA3AF] dark:text-slate-400">
@@ -540,6 +754,7 @@ export default function WorkersInTrainingPage() {
               worker={w}
               selected={selected.has(w.id)}
               onToggleSelect={toggleSelect}
+              onAttendance={setAttendanceWorker}
               onRemark={setRemarkWorker}
               onViewForm={(id) => router.push(`/trainings/workers/form?mode=view&id=${id}`)}
             />

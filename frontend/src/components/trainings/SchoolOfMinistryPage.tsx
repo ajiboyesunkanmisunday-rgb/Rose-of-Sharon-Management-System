@@ -56,12 +56,7 @@ export default function SchoolOfMinistryPage() {
       setTotal(res.totalElements ?? 0);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to load records.";
-      // 404 means the backend endpoint is not yet deployed for this module
-      if (msg.includes("404") || msg.toLowerCase().includes("not found")) {
-        setError("The School of Ministry module is not yet active on the server. Please check back later or contact the backend team.");
-      } else {
-        setError(msg);
-      }
+      setError(msg);
     } finally {
       setLoading(false);
     }

@@ -2318,6 +2318,7 @@ export interface WorkersInTrainingResponse {
   id: string;
   userId?: string;
   set?: string;
+  admissionNo?: string;
   firstName: string;
   middleName?: string;
   lastName: string;
