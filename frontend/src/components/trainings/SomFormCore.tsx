@@ -154,19 +154,21 @@ export default function SomFormCore({
   const [spouseName,  setSpouseName]  = useState(initialData?.spouseName ?? "");
 
   /* ── Section B — Address ────────────────────────────────────────────────── */
-  const [homeAddress,   setHomeAddress]   = useState(initialData?.homeAddress    ?? "");
+  const [homeAddress,   setHomeAddress]   = useState(
+    [initialData?.street, initialData?.city, initialData?.state, initialData?.country].filter(Boolean).join(", ") ?? ""
+  );
   const [countryCode,   setCountryCode]   = useState(initialData?.countryCode    ?? "234");
   const [phone,         setPhone]         = useState(initialData?.phoneNumber     ?? "");
   const [occupation,    setOccupation]    = useState(initialData?.occupation     ?? "");
   const [placeOfWork,   setPlaceOfWork]   = useState(initialData?.placeOfWork    ?? "");
-  const [workPhone,     setWorkPhone]     = useState(initialData?.workPhoneNumber ?? "");
-  const [officeAddress, setOfficeAddress] = useState(initialData?.officeAddress  ?? "");
+  const [workPhone,     setWorkPhone]     = useState(initialData?.officePhoneNumber ?? "");
+  const [officeAddress, setOfficeAddress] = useState(initialData?.officeFullAddress  ?? "");
 
   /* ── Section C — Educational Qualifications (4 rows) ───────────────────── */
   const [quals, setQuals] = useState(() => {
     const fromData = (initialData?.qualifications ?? []).map((q) => ({
-      schoolAttended:        q.schoolAttended        ?? "",
-      dates:                 q.dates                 ?? "",
+      schoolAttended:        q.institution           ?? "",
+      dates:                 q.date                  ?? "",
       qualificationReceived: q.qualificationReceived ?? "",
     }));
     while (fromData.length < 4) fromData.push({ schoolAttended: "", dates: "", qualificationReceived: "" });
@@ -177,7 +179,7 @@ export default function SomFormCore({
 
   /* ── Section D — Christian History ─────────────────────────────────────── */
   const [worshipPlaces, setWorshipPlaces] = useState(() => {
-    const fromData = (initialData?.recentWorshipPlaces ?? []).map((w) => w.name ?? "");
+    const fromData = (initialData?.pastPlaceOfWorships ?? []).map((w) => w.name ?? "");
     while (fromData.length < 2) fromData.push("");
     return fromData.slice(0, 2);
   });
@@ -187,13 +189,13 @@ export default function SomFormCore({
   const [salvationDate,      setSalvationDate]      = useState(initialData?.salvationDate          ?? "");
   const [salvationWhere,     setSalvationWhere]      = useState(initialData?.salvationLocation       ?? "");
   const [waterBaptismDate,   setWaterBaptismDate]    = useState(initialData?.waterBaptismDate        ?? "");
-  const [waterBaptismChurch, setWaterBaptismChurch]  = useState(initialData?.waterBaptismChurch      ?? "");
-  const [holySpiritDate,     setHolySpiritDate]      = useState(initialData?.holySpiritBaptismDate   ?? "");
-  const [holySpiritChurch,   setHolySpiritChurch]    = useState(initialData?.holySpiritBaptismChurch ?? "");
+  const [waterBaptismChurch, setWaterBaptismChurch]  = useState(initialData?.waterBaptismLocation      ?? "");
+  const [holySpiritDate,     setHolySpiritDate]      = useState(initialData?.holySpiritBaptismDate     ?? "");
+  const [holySpiritChurch,   setHolySpiritChurch]    = useState(initialData?.holySpiritBaptismLocation ?? "");
 
   /* ── Section E — Departments (3 rows with dates) ────────────────────────── */
   const [depts, setDepts] = useState(() => {
-    const fromData = (initialData?.churchDepartments ?? []).map((d) => ({
+    const fromData = (initialData?.studentDepartments ?? []).map((d) => ({
       name: d.name ?? "",
       date: d.date ?? "",
     }));
@@ -205,21 +207,17 @@ export default function SomFormCore({
 
   /* ── Section F — New Converts Class (free text matching physical form) ─── */
   const [newConvertsText, setNewConvertsText] = useState(() => {
-    if (initialData?.hasGoneThroughNewConvertsClass === true)  return "Yes";
-    if (initialData?.hasGoneThroughNewConvertsClass === false) return "No";
+    if (initialData?.goneThroughNewConverts === true)  return "Yes";
+    if (initialData?.goneThroughNewConverts === false) return "No";
     return "";
   });
 
   /* ── Section G — Water Baptismal Class ─────────────────────────────────── */
-  const [waterClassText, setWaterClassText] = useState(() => {
-    if (initialData?.hasGoneThroughWaterBaptismalClass === true)  return "Yes";
-    if (initialData?.hasGoneThroughWaterBaptismalClass === false) return "No";
-    return "";
-  });
+  const [waterClassText, setWaterClassText] = useState("");
 
   /* ── Section H — Reasons for attending (5 lines) ───────────────────────── */
   const [reasons, setReasons] = useState<string[]>(() => {
-    const fromData = [...(initialData?.reasonsForAttending ?? [])];
+    const fromData = [...(initialData?.reasonsForApplying ?? [])];
     while (fromData.length < 5) fromData.push("");
     return fromData.slice(0, 5);
   });
@@ -300,8 +298,8 @@ export default function SomFormCore({
     const qualItems = quals
       .filter((q) => q.schoolAttended.trim())
       .map((q) => ({
-        schoolAttended:        q.schoolAttended.trim(),
-        dates:                 q.dates.trim()                 || undefined,
+        institution:           q.schoolAttended.trim(),
+        date:                  q.dates.trim()                 || undefined,
         qualificationReceived: q.qualificationReceived.trim() || undefined,
       }));
 
@@ -348,27 +346,26 @@ export default function SomFormCore({
         spouseName:   spouseName.trim()  || undefined,
         countryCode:  countryCode.trim().replace(/^\+/, ""),
         phoneNumber:  normalisePhone(phone, countryCode),
-        homeAddress:  homeAddress.trim()   || undefined,
+        street:       homeAddress.trim()   || undefined,
         occupation:   occupation.trim()    || undefined,
         placeOfWork:  placeOfWork.trim()   || undefined,
-        workPhoneNumber: workPhone.trim()
+        officePhoneNumber: workPhone.trim()
           ? normalisePhone(workPhone, countryCode)
           : undefined,
-        officeAddress: officeAddress.trim() || undefined,
+        officeFullAddress: officeAddress.trim() || undefined,
         profilePictureUrl,
-        salvationDate:           salvationDate.trim()      || undefined,
-        salvationLocation:       salvationWhere.trim()     || undefined,
-        waterBaptismDate:        waterBaptismDate.trim()   || undefined,
-        waterBaptismChurch:      waterBaptismChurch.trim() || undefined,
-        holySpiritBaptismDate:   holySpiritDate.trim()     || undefined,
-        holySpiritBaptismChurch: holySpiritChurch.trim()   || undefined,
-        hasGoneThroughNewConvertsClass:    parseYesNo(newConvertsText),
-        hasGoneThroughWaterBaptismalClass: parseYesNo(waterClassText),
+        salvationDate:          salvationDate.trim()      || undefined,
+        salvationLocation:      salvationWhere.trim()     || undefined,
+        waterBaptismDate:       waterBaptismDate.trim()   || undefined,
+        waterBaptismLocation:   waterBaptismChurch.trim() || undefined,
+        holySpiritBaptismDate:  holySpiritDate.trim()     || undefined,
+        holySpiritBaptismLocation: holySpiritChurch.trim() || undefined,
+        goneThroughNewConverts: parseYesNo(newConvertsText),
         otherInformation: otherInfoStr,
-        ...(qualItems.length   ? { qualificationRequests: qualItems }  : {}),
-        ...(wpItems.length     ? { recentWorshipPlaces:   wpItems }    : {}),
-        ...(deptItems.length   ? { churchDepartments:     deptItems }  : {}),
-        ...(reasonItems.length ? { reasonsForAttending:   reasonItems } : {}),
+        ...(qualItems.length   ? { qualificationRequests:           qualItems }  : {}),
+        ...(wpItems.length     ? { createPastPlaceOfWorshipRequests: wpItems }   : {}),
+        ...(deptItems.length   ? { createStudentDepartmentRequests:  deptItems } : {}),
+        ...(reasonItems.length ? { reasonsForApplying:               reasonItems } : {}),
       });
 
       const savedId = (created as { id?: string })?.id;

@@ -3488,30 +3488,34 @@ export interface SchoolOfMinistryResponse {
   spouseName?: string;
   countryCode?: string;
   phoneNumber?: string;
-  homeAddress?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
   occupation?: string;
   placeOfWork?: string;
-  workPhoneNumber?: string;
-  officeAddress?: string;
+  officePhoneNumber?: string;
+  officeFullAddress?: string;
   profilePictureUrl?: string;
   salvationDate?: string;
   salvationLocation?: string;
   waterBaptismDate?: string;
-  waterBaptismChurch?: string;
+  waterBaptismLocation?: string;
   holySpiritBaptismDate?: string;
-  holySpiritBaptismChurch?: string;
-  hasGoneThroughNewConvertsClass?: boolean;
-  hasGoneThroughWaterBaptismalClass?: boolean;
+  holySpiritBaptismLocation?: string;
+  goneThroughNewConverts?: boolean;
   otherInformation?: string;
   officialRemarks?: string;
+  reasonsForApplying?: string[];
+  feesPaid?: number;
+  graduationDate?: string;
   createdOn?: string;
 }
 
 export interface SchoolOfMinistryFullResponse extends SchoolOfMinistryResponse {
-  qualifications?: { schoolAttended?: string; dates?: string; qualificationReceived?: string }[];
-  recentWorshipPlaces?: { name?: string }[];
-  churchDepartments?: { name?: string; date?: string }[];
-  reasonsForAttending?: string[];
+  qualifications?: { id?: string; institution?: string; date?: string; qualificationReceived?: string }[];
+  pastPlaceOfWorships?: { id?: string; name?: string; address?: string; date?: string }[];
+  studentDepartments?: { id?: string; name?: string; date?: string }[];
 }
 
 export interface CreateSchoolOfMinistryRequest {
@@ -3526,25 +3530,25 @@ export interface CreateSchoolOfMinistryRequest {
   spouseName?: string;
   countryCode: string;
   phoneNumber: string;
-  homeAddress?: string;
+  street?: string;
   occupation?: string;
   placeOfWork?: string;
-  workPhoneNumber?: string;
-  officeAddress?: string;
+  officePhoneNumber?: string;
+  officeFullAddress?: string;
   profilePictureUrl?: string;
   salvationDate?: string;
   salvationLocation?: string;
   waterBaptismDate?: string;
-  waterBaptismChurch?: string;
+  waterBaptismLocation?: string;
   holySpiritBaptismDate?: string;
-  holySpiritBaptismChurch?: string;
-  hasGoneThroughNewConvertsClass?: boolean;
-  hasGoneThroughWaterBaptismalClass?: boolean;
+  holySpiritBaptismLocation?: string;
+  goneThroughNewConverts?: boolean;
   otherInformation?: string;
-  qualificationRequests?: { schoolAttended?: string; dates?: string; qualificationReceived?: string }[];
-  recentWorshipPlaces?: { name?: string }[];
-  churchDepartments?: { name?: string; date?: string }[];
-  reasonsForAttending?: string[];
+  consent?: boolean;
+  qualificationRequests?: { institution?: string; date?: string; qualificationReceived?: string }[];
+  createPastPlaceOfWorshipRequests?: { name?: string; address?: string; date?: string }[];
+  createStudentDepartmentRequests?: { name?: string; date?: string }[];
+  reasonsForApplying?: string[];
 }
 
 export async function getSchoolOfMinistries(
