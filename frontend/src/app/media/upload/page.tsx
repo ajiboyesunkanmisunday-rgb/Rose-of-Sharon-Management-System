@@ -80,6 +80,9 @@ export default function UploadMediaPage() {
   const [title,        setTitle]        = useState("");
   const [category,     setCategory]     = useState("");
   const [description,  setDescription]  = useState("");
+  const [speaker,      setSpeaker]      = useState("");
+  const [date,         setDate]         = useState("");
+  const [tagsInput,    setTagsInput]    = useState(""); // comma-separated
   const [mediaFile,    setMediaFile]     = useState<File | null>(null);
   const [useYoutube,   setUseYoutube]   = useState(false);
   const [youtubeLink,  setYoutubeLink]  = useState("");
@@ -164,11 +167,15 @@ export default function UploadMediaPage() {
     setSaving(true);
     setError("");
     try {
+      const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
       await uploadMedia({
         title:       title.trim(),
         description: description.trim() || undefined,
         category,
         file:        fileToUpload,
+        speaker:     speaker.trim() || undefined,
+        date:        date || undefined,
+        tags:        tags.length > 0 ? tags : undefined,
         youtubeLink: useYoutube ? youtubeLink.trim() : undefined,
       });
       router.push("/media");
@@ -242,6 +249,46 @@ export default function UploadMediaPage() {
                 ))}
               </select>
             </div>
+
+            {/* Date — shown for all categories */}
+            <div>
+              <label className={labelClass}>Date</label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          {/* Speaker — shown for Sermon / Podcast */}
+          {(category === "SERMON" || category === "PODCAST") && (
+            <div>
+              <label className={labelClass}>Speaker / Host</label>
+              <input
+                type="text"
+                value={speaker}
+                onChange={(e) => setSpeaker(e.target.value)}
+                placeholder="e.g. Pastor John Adeyemi"
+                className={inputClass}
+              />
+            </div>
+          )}
+
+          {/* Tags */}
+          <div>
+            <label className={labelClass}>
+              Tags
+              <span className="ml-1 text-xs font-normal text-[#6B7280] dark:text-slate-400">(comma-separated)</span>
+            </label>
+            <input
+              type="text"
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
+              placeholder="e.g. faith, healing, prayer"
+              className={inputClass}
+            />
           </div>
 
           {/* Description with character counter */}

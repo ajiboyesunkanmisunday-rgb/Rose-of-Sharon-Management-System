@@ -2053,6 +2053,9 @@ export async function uploadMedia(fields: {
   description?: string;
   category: string;
   file: File;
+  speaker?: string;
+  date?: string;       // ISO date string e.g. "2024-11-03"
+  tags?: string[];
   youtubeLink?: string; // optional external link stored in description
 }): Promise<MediaResponse> {
   const token = getToken();
@@ -2080,6 +2083,9 @@ export async function uploadMedia(fields: {
     isFromMedia: "true",
   });
   if (description) params.set("description", description);
+  if (fields.speaker) params.set("speaker", fields.speaker);
+  if (fields.date)    params.set("date", fields.date);
+  if (fields.tags && fields.tags.length > 0) params.set("tags", fields.tags.join(","));
 
   // Only the binary file goes in the FormData body
   const form = new FormData();
@@ -3878,6 +3884,7 @@ export async function uploadLargeMedia(fields: {
   duration?: number;
   speaker?: string;
   date?: string;
+  tags?: string[];
 }): Promise<MediaResponse> {
   const token = getToken();
   if (token && isTokenExpired(token)) {
@@ -3896,7 +3903,8 @@ export async function uploadLargeMedia(fields: {
   if (fields.description) params.set("description", fields.description);
   if (fields.duration != null) params.set("duration", String(fields.duration));
   if (fields.speaker) params.set("speaker", fields.speaker);
-  if (fields.date) params.set("date", fields.date);
+  if (fields.date)    params.set("date", fields.date);
+  if (fields.tags && fields.tags.length > 0) params.set("tags", fields.tags.join(","));
 
   const form = new FormData();
   form.append("multipartFile", fields.file);
