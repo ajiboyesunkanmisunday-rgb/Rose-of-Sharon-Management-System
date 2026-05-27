@@ -220,6 +220,14 @@
   status = 200
   force  = true
 
+# Prevent Netlify Edge from caching 404s for marketplace dynamic paths.
+# Without this, a 404 for /marketplace/<uuid> gets cached and served even
+# after redirect rules are added.
+[[headers]]
+  for = "/marketplace/:splat"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate"
+
 [[redirects]]
   from   = "/trainings/courses/:id/"
   to     = "/trainings/courses/course-1/"
