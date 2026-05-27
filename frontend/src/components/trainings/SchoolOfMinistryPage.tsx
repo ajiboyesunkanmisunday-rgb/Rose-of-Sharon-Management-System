@@ -55,12 +55,7 @@ export default function SchoolOfMinistryPage() {
       setRecords(res.content ?? []);
       setTotal(res.totalElements ?? 0);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed to load records.";
-      if (msg.includes("404") || msg.toLowerCase().includes("not found")) {
-        setError("The School of Ministry module is not yet available on the server. Please contact the backend team to activate it.");
-      } else {
-        setError(msg);
-      }
+      setError(e instanceof Error ? e.message : "Failed to load records.");
     } finally {
       setLoading(false);
     }
@@ -78,12 +73,7 @@ export default function SchoolOfMinistryPage() {
       setTotal(res.totalElements ?? 0);
       setPage(1);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Search failed.";
-      if (msg.includes("404") || msg.toLowerCase().includes("not found")) {
-        setError("The School of Ministry module is not yet available on the server. Please contact the backend team to activate it.");
-      } else {
-        setError(msg);
-      }
+      setError(e instanceof Error ? e.message : "Search failed.");
     } finally {
       setLoading(false);
     }
@@ -137,16 +127,10 @@ export default function SchoolOfMinistryPage() {
 
       {/* Error */}
       {error && (
-        error.includes("not yet available") ? (
-          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
-            ⚠️ {error}
-          </div>
-        ) : (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
-            {error}{" "}
-            <button onClick={() => load(page)} className="font-medium underline">Retry</button>
-          </div>
-        )
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
+          {error}{" "}
+          <button onClick={() => load(page)} className="font-medium underline">Retry</button>
+        </div>
       )}
 
       {/* Search + count */}
