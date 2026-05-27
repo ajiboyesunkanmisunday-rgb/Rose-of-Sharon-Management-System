@@ -27,8 +27,6 @@ export default function AddFirstTimerPage() {
   const [email, setEmail] = useState("");
   const [countryCode, setCountryCode] = useState("+234");
   const [phone, setPhone] = useState("");
-  const [whatsappCode, setWhatsappCode] = useState("+234");
-  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [dobDay, setDobDay] = useState("");
   const [dobMonth, setDobMonth] = useState("");
   const [dobYear, setDobYear] = useState("");
@@ -147,7 +145,7 @@ export default function AddFirstTimerPage() {
             onClick={() => {
               setSubmitted(false);
               setFirstName(""); setMiddleName(""); setLastName(""); setGender(""); setEmail("");
-              setPhone(""); setWhatsappNumber(""); setDobDay(""); setDobMonth(""); setDobYear("");
+              setPhone(""); setDobDay(""); setDobMonth(""); setDobYear("");
               setStreet(""); setCity(""); setState(""); setCountry(""); setMaritalStatus("");
               setOccupation(""); setServiceAttended(""); setIsVisiting(false);
               setHowDidYouHear(""); setHowWasService(""); setFavouriteParts(""); setWorshippedOnline(false);
@@ -300,15 +298,6 @@ export default function AddFirstTimerPage() {
               </div>
             </div>
 
-            {/* WhatsApp Number */}
-            <PhoneInput
-              label="WhatsApp Number"
-              code={whatsappCode}
-              number={whatsappNumber}
-              onCodeChange={setWhatsappCode}
-              onNumberChange={setWhatsappNumber}
-              placeholder="Enter WhatsApp Number"
-            />
           </div>
 
           {/* Photo Upload */}

@@ -32,7 +32,7 @@ export default function AddProductPage() {
   const [formData, setFormData] = useState({
     name:             "",
     description:      "",
-    price:            "",
+    price:            "",   // display string with commas, e.g. "5,000"
     category:         "",
     quantityLeft:     "",
     otherInformation: "",
@@ -60,7 +60,7 @@ export default function AddProductPage() {
   const fieldErrors = {
     name:  !formData.name.trim() ? "Product name is required" : "",
     owner: !selectedOwner ? "Please select an owner (member)" : "",
-    price: formData.price && isNaN(Number(formData.price)) ? "Price must be a number" : "",
+    price: formData.price && isNaN(Number(formData.price.replace(/,/g, ""))) ? "Price must be a number" : "",
     qty:   formData.quantityLeft && isNaN(Number(formData.quantityLeft)) ? "Quantity must be a number" : "",
   };
 
@@ -131,9 +131,9 @@ export default function AddProductPage() {
       await createProduct({
         name:             formData.name.trim(),
         description:      formData.description.trim() || undefined,
-        price:            formData.price ? Number(formData.price) : undefined,
+        price:            formData.price ? Number(formData.price.replace(/,/g, "")) : undefined,
         category:         formData.category || undefined,
-        quantityLeft:     formData.quantityLeft ? Number(formData.quantityLeft) : undefined,
+        quantityLeft:     formData.quantityLeft ? parseInt(formData.quantityLeft, 10) : undefined,
         otherInformation: formData.otherInformation.trim() || undefined,
         tags:             tags.length ? tags : undefined,
         images,
@@ -193,14 +193,22 @@ export default function AddProductPage() {
               label="Price (₦)"
               name="price"
               value={formData.price}
-              onChange={(e) => setFormData((p) => ({ ...p, price: e.target.value }))}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/[^0-9]/g, "");
+                const formatted = raw === "" ? "" : Number(raw).toLocaleString("en-NG");
+                setFormData((p) => ({ ...p, price: formatted }));
+              }}
               onBlur={() => touch("price")}
-              placeholder="e.g. 5000"
+              placeholder="e.g. 5,000"
               error={touched.price ? fieldErrors.price : undefined}
             />
             <FormField
               label="Quantity Available"
               name="quantityLeft"
+              type="number"
+              inputMode="numeric"
+              min="0"
+              step="1"
               value={formData.quantityLeft}
               onChange={(e) => setFormData((p) => ({ ...p, quantityLeft: e.target.value }))}
               onBlur={() => touch("qty")}

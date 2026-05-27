@@ -11,9 +11,10 @@ import {
   searchProducts,
   deleteProduct,
   approveProducts,
+  updateProductQuantity,
   type ProductResponse,
 } from "@/lib/api";
-import { ShoppingBag, Plus, RefreshCw, Package, CheckCircle } from "lucide-react";
+import { ShoppingBag, Plus, RefreshCw, Package, CheckCircle, Pencil, Check, X } from "lucide-react";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -55,6 +56,11 @@ export default function MarketplacePage() {
   // delete confirmation
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [deleting, setDeleting]           = useState(false);
+
+  // inline qty edit state
+  const [editingQtyId,  setEditingQtyId]  = useState<string | null>(null);
+  const [editingQtyVal, setEditingQtyVal] = useState<string>("");
+  const [savingQty,     setSavingQty]     = useState(false);
 
   const load = useCallback(async (pg: number) => {
     setLoading(true);
@@ -112,6 +118,21 @@ export default function MarketplacePage() {
       setError(e instanceof Error ? e.message : "Failed to delete product.");
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleUpdateQty = async (id: string) => {
+    const newQty = parseInt(editingQtyVal, 10);
+    if (isNaN(newQty) || newQty < 0) return;
+    setSavingQty(true);
+    try {
+      await updateProductQuantity(id, newQty);
+      setProducts((prev) => prev.map((p) => p.id === id ? { ...p, quantityLeft: newQty } : p));
+      setEditingQtyId(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update quantity.");
+    } finally {
+      setSavingQty(false);
     }
   };
 
@@ -273,7 +294,46 @@ export default function MarketplacePage() {
 
                   {/* Qty Left */}
                   <td className="px-4 py-3 text-[#374151] dark:text-slate-300">
-                    {product.quantityLeft ?? "—"}
+                    {editingQtyId === product.id ? (
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={editingQtyVal}
+                          onChange={(e) => setEditingQtyVal(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") handleUpdateQty(product.id); if (e.key === "Escape") setEditingQtyId(null); }}
+                          className="w-16 rounded border border-[#000080] px-1.5 py-1 text-xs outline-none focus:ring-1 focus:ring-[#000080] dark:bg-slate-700 dark:text-slate-100"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleUpdateQty(product.id)}
+                          disabled={savingQty}
+                          className="rounded p-0.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 disabled:opacity-50"
+                          title="Confirm"
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setEditingQtyId(null)}
+                          className="rounded p-0.5 text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          title="Cancel"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <span>{product.quantityLeft ?? "—"}</span>
+                        <button
+                          onClick={() => { setEditingQtyId(product.id); setEditingQtyVal(String(product.quantityLeft ?? 0)); }}
+                          className="rounded p-0.5 text-[#9CA3AF] hover:text-[#000080] dark:hover:text-indigo-400"
+                          title="Edit quantity"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
                   </td>
 
                   {/* Owner */}
