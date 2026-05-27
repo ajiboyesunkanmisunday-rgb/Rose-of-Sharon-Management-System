@@ -101,6 +101,9 @@ function CI({
   );
 }
 
+/* ── Required-field asterisk ────────────────────────────────────────────── */
+const REQ = <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>;
+
 /* ── Section heading ────────────────────────────────────────────────────── */
 function SH({ letter, title }: { letter: string; title: string }) {
   return (
@@ -295,8 +298,10 @@ export default function BaptismalFormCore({
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const handleSubmit = async () => {
+    setSubmitAttempted(true);
     const missing: string[] = [];
     if (!firstName.trim()) missing.push("First Name");
     if (!surname.trim()) missing.push("Surname");
@@ -304,6 +309,8 @@ export default function BaptismalFormCore({
     if (!phone.trim()) missing.push("Phone Number");
     if (phone.trim() && !/\d/.test(phone))
       missing.push("Phone Number (must contain digits)");
+    if (!city.trim())       missing.push("City");
+    if (!addrState.trim())  missing.push("State");
     if (missing.length > 0) {
       setSubmitError(`Please fill in: ${missing.join(", ")}.`);
       return;
@@ -822,17 +829,24 @@ export default function BaptismalFormCore({
             </div>
           )}
 
+          {/* Required-field legend — fill mode only */}
+          {!ro && (
+            <p className="bap-no-print" style={{ fontSize: 11, color: "#555", marginBottom: 4 }}>
+              Fields marked <span style={{ color: "red" }}>*</span> are required.
+            </p>
+          )}
+
           {/* ══ SECTION A — BIOGRAPHICAL DATA ═══════════════════════════ */}
           <SH letter="A" title="Biographical Data" />
           <table style={T}>
             <tbody>
               <tr>
-                <td style={LBL}>SURNAME:</td>
-                <td style={CEL}>
+                <td style={LBL}>SURNAME:{!ro && REQ}</td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && !surname.trim() ? "#FEE2E2" : undefined }}>
                   <CI value={surname} onChange={setSurname} readOnly={ro} />
                 </td>
-                <td style={LBL}>FIRST NAME:</td>
-                <td style={CEL}>
+                <td style={LBL}>FIRST NAME:{!ro && REQ}</td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && !firstName.trim() ? "#FEE2E2" : undefined }}>
                   <CI
                     value={firstName}
                     onChange={setFirstName}
@@ -933,8 +947,8 @@ export default function BaptismalFormCore({
                     readOnly={ro}
                   />
                 </td>
-                <td style={LBL}>PHONE:</td>
-                <td style={CEL}>
+                <td style={LBL}>PHONE:{!ro && REQ}</td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && (!phone.trim() || !countryCode.trim()) ? "#FEE2E2" : undefined }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     {!ro && (
                       <>
@@ -959,12 +973,12 @@ export default function BaptismalFormCore({
                 </td>
               </tr>
               <tr>
-                <td style={LBL}>CITY</td>
-                <td style={CEL}>
+                <td style={LBL}>CITY{!ro && REQ}</td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && !city.trim() ? "#FEE2E2" : undefined }}>
                   <CI value={city} onChange={setCity} readOnly={ro} placeholder="City" />
                 </td>
-                <td style={LBL}>STATE:</td>
-                <td style={CEL}>
+                <td style={LBL}>STATE:{!ro && REQ}</td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && !addrState.trim() ? "#FEE2E2" : undefined }}>
                   <CI value={addrState} onChange={setAddrState} readOnly={ro} placeholder="State" />
                 </td>
               </tr>

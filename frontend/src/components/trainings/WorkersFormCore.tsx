@@ -325,8 +325,12 @@ export default function WorkersFormCore({
     // The "Phone:" field is in Section B (Addresses), but users often fill the
     // Next-of-Kin phone first — we use whichever phone is available.
     const effectivePhone = homePhone.trim() || mobile.trim() || nokPhone.trim();
-    if (!firstName.trim() || !surname.trim() || !effectivePhone) {
-      setSubmitError("First Name, Surname, and at least one Phone Number are required. (Fill the Phone field in Section B — Addresses — or the Mobile / Next-of-Kin phone.)");
+    const missing: string[] = [];
+    if (!firstName.trim())  missing.push("First Name");
+    if (!surname.trim())    missing.push("Surname");
+    if (!effectivePhone)    missing.push("Phone Number");
+    if (missing.length > 0) {
+      setSubmitError(`Please fill in: ${missing.join(", ")}. (Fill the Phone field in Section B — Addresses — or the Mobile / Next-of-Kin phone.)`);
       return;
     }
     setSubmitError("");

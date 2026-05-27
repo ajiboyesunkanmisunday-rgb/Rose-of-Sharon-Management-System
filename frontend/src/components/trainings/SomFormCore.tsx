@@ -278,6 +278,8 @@ export default function SomFormCore({
     if (!countryCode.trim()) missing.push("Country Code");
     if (!phone.trim())       missing.push("Phone Number");
     if (phone.trim() && !/\d/.test(phone)) missing.push("Phone Number (must contain digits)");
+    if (!city.trim())        missing.push("City");
+    if (!addrState.trim())   missing.push("State");
     if (missing.length > 0) {
       setSubmitError(`Please fill in: ${missing.join(", ")}.`);
       return;
@@ -677,10 +679,14 @@ export default function SomFormCore({
                 </td>
               </tr>
               <tr>
-                <td style={LBL}>City:</td>
-                <td style={CEL}><CI value={city} onChange={setCity} readOnly={ro} placeholder="City" /></td>
-                <td style={LBL}>State:</td>
-                <td style={CEL}><CI value={addrState} onChange={setAddrState} readOnly={ro} placeholder="State" /></td>
+                <td style={LBL}>City:{!ro && <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>}</td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && !city.trim() ? "#FEE2E2" : undefined }}>
+                  <CI value={city} onChange={setCity} readOnly={ro} placeholder="City" />
+                </td>
+                <td style={LBL}>State:{!ro && <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>}</td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && !addrState.trim() ? "#FEE2E2" : undefined }}>
+                  <CI value={addrState} onChange={setAddrState} readOnly={ro} placeholder="State" />
+                </td>
               </tr>
               <tr>
                 <td style={LBL}>Country:</td>
