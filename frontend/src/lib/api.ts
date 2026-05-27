@@ -1625,9 +1625,15 @@ export interface TestimonyResponse {
 export async function getTestimonies(
   pageNo = 0,
   pageSize = 10,
+  status?: string,
 ): Promise<CustomPageResponse<TestimonyResponse>> {
+  const params = new URLSearchParams({
+    pageNo: String(pageNo),
+    pageSize: String(pageSize),
+  });
+  if (status) params.set("status", status);
   return apiFetch<CustomPageResponse<TestimonyResponse>>(
-    `/api/v1/testimonies?pageNo=${pageNo}&pageSize=${pageSize}`,
+    `/api/v1/testimonies?${params.toString()}`,
   );
 }
 

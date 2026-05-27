@@ -47,11 +47,13 @@ export default function TestimoniesPage() {
   const [viewing,      setViewing]      = useState<TestimonyResponse | null>(null);
   const [saving,       setSaving]       = useState(false);
 
-  const fetchTestimonies = useCallback(async (page: number) => {
+  const fetchTestimonies = useCallback(async (page: number, status: "ALL" | "READ" | "UNREAD") => {
     setLoading(true);
     setApiError("");
     try {
-      const res = await getTestimonies(page - 1, ITEMS_PER_PAGE);
+      // Map frontend label to backend enum value
+      const apiStatus = status === "ALL" ? undefined : status === "UNREAD" ? "NOT_READ" : "READ";
+      const res = await getTestimonies(page - 1, ITEMS_PER_PAGE, apiStatus);
       setList(res.content ?? []);
       setTotalPages(res.totalPages ?? 1);
       setTotalItems(res.totalElements ?? 0);
@@ -63,16 +65,11 @@ export default function TestimoniesPage() {
   }, []);
 
   useEffect(() => {
-    fetchTestimonies(currentPage);
-  }, [currentPage, fetchTestimonies]);
+    fetchTestimonies(currentPage, statusFilter);
+  }, [currentPage, statusFilter, fetchTestimonies]);
 
-  // Client-side filter (status + search)
+  // Client-side search filter only (status is now server-side)
   const displayed = list.filter((t) => {
-    if (statusFilter !== "ALL") {
-      const s = t.testimonyStatus ?? "NOT_READ";
-      if (statusFilter === "READ"   && s !== "READ")  return false;
-      if (statusFilter === "UNREAD" && s === "READ")  return false;
-    }
     if (search.trim()) {
       const q = search.toLowerCase();
       return (
@@ -105,7 +102,7 @@ export default function TestimoniesPage() {
     try {
       await markTestimonyAsRead(Array.from(selectedRows));
       setSelectedRows(new Set());
-      fetchTestimonies(currentPage);
+      fetchTestimonies(currentPage, statusFilter);
     } catch (err) {
       console.error("Mark as read failed:", err);
     } finally {
@@ -118,7 +115,7 @@ export default function TestimoniesPage() {
     try {
       await markTestimonyAsFeatured(Array.from(selectedRows));
       setSelectedRows(new Set());
-      fetchTestimonies(currentPage);
+      fetchTestimonies(currentPage, statusFilter);
     } catch (err) {
       console.error("Mark as featured failed:", err);
     } finally {
@@ -131,7 +128,7 @@ export default function TestimoniesPage() {
     try {
       await markTestimonyAsNotFeatured(Array.from(selectedRows));
       setSelectedRows(new Set());
-      fetchTestimonies(currentPage);
+      fetchTestimonies(currentPage, statusFilter);
     } catch (err) {
       console.error("Unmark as featured failed:", err);
     } finally {
@@ -142,7 +139,7 @@ export default function TestimoniesPage() {
   const rowMarkRead = async (id: string) => {
     try {
       await markTestimonyAsRead([id]);
-      fetchTestimonies(currentPage);
+      fetchTestimonies(currentPage, statusFilter);
     } catch (err) {
       console.error(err);
     }
@@ -152,7 +149,7 @@ export default function TestimoniesPage() {
     try {
       if (t.isFeatured) await markTestimonyAsNotFeatured([t.id]);
       else await markTestimonyAsFeatured([t.id]);
-      fetchTestimonies(currentPage);
+      fetchTestimonies(currentPage, statusFilter);
     } catch (err) {
       console.error(err);
     }
@@ -181,11 +178,11 @@ export default function TestimoniesPage() {
         </div>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
         {(["ALL", "READ", "UNREAD"] as const).map((f) => (
           <button
             key={f}
-            onClick={() => { setStatusFilter(f); setCurrentPage(1); }}
+            onClick={() => { setStatusFilter(f); setCurrentPage(1); setSelectedRows(new Set()); }}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               statusFilter === f
                 ? "bg-[#000080] text-white"
@@ -196,6 +193,12 @@ export default function TestimoniesPage() {
           </button>
         ))}
       </div>
+
+      {selectedRows.size === 0 && (
+        <p className="mb-3 text-xs text-[#9CA3AF] dark:text-slate-500">
+          Check the boxes next to testimonies to select them, then use bulk actions (Mark as Read, etc.)
+        </p>
+      )}
 
       <BulkActionsBar
         count={selectedRows.size}
@@ -211,7 +214,7 @@ export default function TestimoniesPage() {
 
       {apiError && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
-          {apiError} — <button className="font-medium underline" onClick={() => fetchTestimonies(currentPage)}>Retry</button>
+          {apiError} — <button className="font-medium underline" onClick={() => fetchTestimonies(currentPage, statusFilter)}>Retry</button>
         </div>
       )}
 

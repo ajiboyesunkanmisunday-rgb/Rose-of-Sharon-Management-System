@@ -45,6 +45,10 @@ export default function ActivityLogsPage() {
       setDateError("Start date cannot be in the future");
       return;
     }
+    if (toDate && toDate > today) {
+      setDateError("End date cannot be in the future");
+      return;
+    }
     if (fromDate && toDate && toDate < fromDate) {
       setDateError("End date cannot be before start date");
       return;
