@@ -209,9 +209,16 @@
   status = 200
 
 [[redirects]]
-  from   = "/marketplace/:id/"
-  to     = "/marketplace/product-1/"
+  from   = "/marketplace/:id"
+  to     = "/marketplace/product-1/index.html"
   status = 200
+  force  = true
+
+[[redirects]]
+  from   = "/marketplace/:id/"
+  to     = "/marketplace/product-1/index.html"
+  status = 200
+  force  = true
 
 [[redirects]]
   from   = "/trainings/courses/:id/"
