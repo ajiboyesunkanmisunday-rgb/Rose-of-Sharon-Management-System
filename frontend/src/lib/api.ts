@@ -927,9 +927,11 @@ export const convertToMember = convertToFullMember;
 export async function linkSpouse(
   userId: string,
   spouseId: string,
+  couplePictureUrl?: string,
 ): Promise<UserResponse> {
+  const qs = couplePictureUrl ? `?couplePictureUrl=${encodeURIComponent(couplePictureUrl)}` : "";
   return apiFetch<UserResponse>(
-    `/api/v1/users/${userId}/link-spouse/${spouseId}`,
+    `/api/v1/users/${userId}/link-spouse/${spouseId}${qs}`,
     { method: "PUT" },
   );
 }
@@ -2075,6 +2077,7 @@ export async function uploadMedia(fields: {
     type: fields.category,
     category: fields.category,
     size: String(fields.file.size),
+    isFromMedia: "true",
   });
   if (description) params.set("description", description);
 
@@ -3541,7 +3544,7 @@ export async function getSchoolOfMinistries(
   pageSize = 20,
 ): Promise<CustomPageResponse<SchoolOfMinistryResponse>> {
   return apiFetch<CustomPageResponse<SchoolOfMinistryResponse>>(
-    `/api/v1/school-of-ministry?pageNo=${pageNo}&pageSize=${pageSize}`,
+    `/api/v1/school-of-ministries?pageNo=${pageNo}&pageSize=${pageSize}`,
   );
 }
 
@@ -3549,7 +3552,7 @@ export async function getSchoolOfMinistry(
   id: string,
 ): Promise<SchoolOfMinistryFullResponse> {
   return apiFetch<SchoolOfMinistryFullResponse>(
-    `/api/v1/school-of-ministry/${id}`,
+    `/api/v1/school-of-ministries/${id}`,
   );
 }
 
@@ -3559,7 +3562,7 @@ export async function searchSchoolOfMinistries(
   pageSize = 20,
 ): Promise<CustomPageResponse<SchoolOfMinistryResponse>> {
   return apiFetch<CustomPageResponse<SchoolOfMinistryResponse>>(
-    `/api/v1/school-of-ministry/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    `/api/v1/school-of-ministries/search?pageNo=${pageNo}&pageSize=${pageSize}`,
     { method: "POST", body: JSON.stringify({ text }) },
   );
 }
@@ -3567,7 +3570,7 @@ export async function searchSchoolOfMinistries(
 export async function createSchoolOfMinistry(
   body: CreateSchoolOfMinistryRequest,
 ): Promise<SchoolOfMinistryResponse> {
-  return apiFetch<SchoolOfMinistryResponse>("/api/v1/school-of-ministry", {
+  return apiFetch<SchoolOfMinistryResponse>("/api/v1/school-of-ministries", {
     method: "POST",
     body: JSON.stringify(body),
   });
@@ -3578,7 +3581,115 @@ export async function giveSomOfficialRemark(
   text: string,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
-    `/api/v1/school-of-ministry/${id}/official-remark`,
+    `/api/v1/school-of-ministries/${id}/official-remark`,
     { method: "PATCH", body: JSON.stringify({ text }) },
   );
+}
+
+// ─── Marketplace (Products) ───────────────────────────────────────────────────
+
+export type ProductCategory = "BOOK" | "ELECTRONICS" | "COOKING_UTENSILS" | "AUTOMOBILE" | "WEARS";
+
+export interface ProductResponse {
+  id: string;
+  name: string;
+  price?: number;
+  quantityLeft?: number;
+  owner?: {
+    id: string;
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+    email?: string;
+    phoneNumber?: string;
+    profilePictureUrl?: string;
+  };
+  isApproved?: boolean;
+  images?: string[];
+  description?: string;
+  otherInformation?: string;
+  tags?: string[];
+  productCategory?: ProductCategory;
+  averageRating?: number;
+  createdOn?: string;
+  updatedOn?: string;
+}
+
+export interface CreateProductRequest {
+  name: string;
+  description?: string;
+  owner?: string;
+  price?: number;
+  images?: string[];
+  quantityLeft?: number;
+  otherInformation?: string;
+  tags?: string[];
+  category?: string;
+}
+
+export interface UpdateProductRequest {
+  name?: string;
+  description?: string;
+  owner?: string;
+  price?: number;
+  otherInformation?: string;
+  tags?: string[];
+  category?: string;
+}
+
+export async function getProducts(
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<ProductResponse>> {
+  return apiFetch<CustomPageResponse<ProductResponse>>(
+    `/api/v1/products?pageNo=${pageNo}&pageSize=${pageSize}`,
+  );
+}
+
+export async function getProduct(id: string): Promise<ProductResponse> {
+  return apiFetch<ProductResponse>(`/api/v1/products/${id}`);
+}
+
+export async function createProduct(
+  body: CreateProductRequest,
+): Promise<ProductResponse> {
+  return apiFetch<ProductResponse>("/api/v1/products", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateProduct(
+  id: string,
+  body: UpdateProductRequest,
+): Promise<ProductResponse> {
+  return apiFetch<ProductResponse>(`/api/v1/products/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteProduct(id: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/products", {
+    method: "DELETE",
+    body: JSON.stringify({ ids: [id] }),
+  });
+}
+
+export async function searchProducts(
+  query: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<ProductResponse>> {
+  return apiFetch<CustomPageResponse<ProductResponse>>(
+    `/api/v1/products/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ text: query }) },
+  );
+}
+
+export async function approveProducts(ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/products/approve", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
 }

@@ -125,7 +125,7 @@ export default function EditEMemberPage() {
       // Link spouse if one was selected in the modal
       if (spouse?.memberId) {
         try {
-          await linkSpouse(id, spouse.memberId);
+          await linkSpouse(id, spouse.memberId, spouse.couplePictureUrl);
         } catch {
           // Non-fatal: member is updated, spouse link failed silently
         }

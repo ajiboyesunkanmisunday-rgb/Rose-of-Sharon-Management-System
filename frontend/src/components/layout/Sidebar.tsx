@@ -25,6 +25,7 @@ import {
   ChevronRight,
   ChevronDown,
   Megaphone,
+  ShoppingBag,
 } from "lucide-react";
 
 interface SubItem {
@@ -79,6 +80,7 @@ const navItems: NavItem[] = [
       { label: "RILA",                href: "/trainings/rila" },
     ],
   },
+  { label: "Marketplace",          icon: ShoppingBag,   href: "/marketplace" },
   { label: "Media",                icon: SquarePlay,    href: "/media" },
   { label: "Altar Announcements",  icon: Megaphone,     href: "/announcements" },
   { label: "Event Management",     icon: CalendarClock, href: "/event-management" },
