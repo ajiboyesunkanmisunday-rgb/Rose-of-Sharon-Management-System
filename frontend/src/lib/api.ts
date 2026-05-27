@@ -3250,13 +3250,13 @@ export async function uploadScoreSheet(body: {
   });
 }
 
+/** Swagger: PUT /api/v1/score-sheets/{id}?score=X  — score is a query param, not body */
 export async function updateScoreSheet(
   id: string,
-  body: Partial<CreateScoreRequest>,
+  score: number,
 ): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/score-sheets/${id}`, {
+  return apiFetch<OperationalResponse>(`/api/v1/score-sheets/${id}?score=${score}`, {
     method: "PUT",
-    body: JSON.stringify(body),
   });
 }
 
@@ -3583,7 +3583,7 @@ export async function giveSomOfficialRemark(
   text: string,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
-    `/api/v1/school-of-ministries/${id}/official-remark`,
+    `/api/v1/school-of-ministries/${id}/give-official-remark`,
     { method: "PATCH", body: JSON.stringify({ text }) },
   );
 }
@@ -3648,8 +3648,26 @@ export async function getProducts(
   );
 }
 
+/**
+ * There is no GET /api/v1/products/{id} endpoint in Swagger
+ * (the backend only accepts PUT and PATCH on that path).
+ * Strategy:
+ *  1. Check sessionStorage for a previously-cached copy (set by the listing page).
+ *  2. Fallback: search by fetching all products (up to 200) and find by ID.
+ */
 export async function getProduct(id: string): Promise<ProductResponse> {
-  return apiFetch<ProductResponse>(`/api/v1/products/${id}`);
+  if (typeof window !== "undefined") {
+    const cached = sessionStorage.getItem(`product_${id}`);
+    if (cached) {
+      try { return JSON.parse(cached) as ProductResponse; } catch {}
+    }
+  }
+  const page = await apiFetch<CustomPageResponse<ProductResponse>>(
+    `/api/v1/products?pageNo=0&pageSize=200`,
+  );
+  const found = (page.content ?? []).find((p) => p.id === id);
+  if (!found) throw new Error("Product not found.");
+  return found;
 }
 
 export async function createProduct(
@@ -3694,4 +3712,218 @@ export async function approveProducts(ids: string[]): Promise<OperationalRespons
     method: "POST",
     body: JSON.stringify({ ids }),
   });
+}
+
+export interface FilterRequest {
+  text?: string;
+  fromQuantity?: number;
+  toQuantity?: number;
+  fromAmount?: number;
+  toAmount?: number;
+  ownerId?: string;
+  category?: string;
+}
+
+export async function filterApprovedProducts(
+  filter: FilterRequest,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<ProductResponse>> {
+  return apiFetch<CustomPageResponse<ProductResponse>>(
+    `/api/v1/products/filter-approved?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify(filter) },
+  );
+}
+
+/** PATCH /api/v1/products/{id}?quantity=X — update product quantity */
+export async function updateProductQuantity(
+  id: string,
+  quantity: number,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/products/${id}?quantity=${quantity}`,
+    { method: "PATCH" },
+  );
+}
+
+export interface GiveProductFeedbackRequest {
+  comment?: string;
+  rating?: number;
+}
+
+export async function giveProductFeedback(
+  id: string,
+  body: GiveProductFeedbackRequest,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/products/${id}/feedback`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+// ─── School of Ministry — extra endpoints ────────────────────────────────────
+
+/** PUT /api/v1/school-of-ministries/{id}/fees-paid?feesPaid=X */
+export async function updateSomFeesPaid(
+  id: string,
+  feesPaid: number,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/school-of-ministries/${id}/fees-paid?feesPaid=${feesPaid}`,
+    { method: "PUT" },
+  );
+}
+
+/** POST /api/v1/school-of-ministries/mark-as-graduated */
+export async function markSomAsGraduated(
+  ids: string[],
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    "/api/v1/school-of-ministries/mark-as-graduated",
+    { method: "POST", body: JSON.stringify({ ids }) },
+  );
+}
+
+/** DELETE /api/v1/school-of-ministries/{id} */
+export async function deleteSom(id: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/school-of-ministries/${id}`, {
+    method: "DELETE",
+  });
+}
+
+// ─── Requests — search sub-types ─────────────────────────────────────────────
+
+export async function searchPrayerRequests(
+  text: string,
+  status?: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<RequestResponse>> {
+  const params = new URLSearchParams({ pageNo: String(pageNo), pageSize: String(pageSize) });
+  if (status) params.set("status", status);
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests/prayer/search?${params}`,
+    { method: "POST", body: JSON.stringify({ text }) },
+  );
+}
+
+export async function searchCounselingRequests(
+  text: string,
+  status?: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<RequestResponse>> {
+  const params = new URLSearchParams({ pageNo: String(pageNo), pageSize: String(pageSize) });
+  if (status) params.set("status", status);
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests/counseling/search?${params}`,
+    { method: "POST", body: JSON.stringify({ text }) },
+  );
+}
+
+export async function searchSuggestions(
+  text: string,
+  status?: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<RequestResponse>> {
+  const params = new URLSearchParams({ pageNo: String(pageNo), pageSize: String(pageSize) });
+  if (status) params.set("status", status);
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests/suggestion/search?${params}`,
+    { method: "POST", body: JSON.stringify({ text }) },
+  );
+}
+
+// ─── Testimonies — search ─────────────────────────────────────────────────────
+
+export async function searchTestimonies(
+  text: string,
+  status?: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<TestimonyResponse>> {
+  const params = new URLSearchParams({ pageNo: String(pageNo), pageSize: String(pageSize) });
+  if (status) params.set("status", status);
+  return apiFetch<CustomPageResponse<TestimonyResponse>>(
+    `/api/v1/testimonies/search?${params}`,
+    { method: "POST", body: JSON.stringify({ text }) },
+  );
+}
+
+// ─── User statistics — missing endpoints ─────────────────────────────────────
+
+/** GET /api/v1/users/followup-attention-rate */
+export async function getFollowupAttentionRate(
+  startTime: string,
+  endTime: string,
+): Promise<PercentStatisticsResponse> {
+  return apiFetch<PercentStatisticsResponse>(
+    `/api/v1/users/followup-attention-rate?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`,
+  );
+}
+
+// ─── Media — large file upload ────────────────────────────────────────────────
+
+/**
+ * POST /api/v1/media/large — upload large media (e.g. videos with thumbnails).
+ * Same multipart pattern as uploadMedia but targets the /large endpoint.
+ */
+export async function uploadLargeMedia(fields: {
+  title: string;
+  description?: string;
+  category: string;
+  file: File;
+  thumbnail?: File;
+  duration?: number;
+  speaker?: string;
+  date?: string;
+}): Promise<MediaResponse> {
+  const token = getToken();
+  if (token && isTokenExpired(token)) {
+    removeToken();
+    if (typeof window !== "undefined") window.location.href = "/login";
+    throw new Error("Session expired. Please log in again.");
+  }
+
+  const params = new URLSearchParams({
+    title: fields.title,
+    type: fields.category,
+    category: fields.category,
+    size: String(fields.file.size),
+    isFromMedia: "true",
+  });
+  if (fields.description) params.set("description", fields.description);
+  if (fields.duration != null) params.set("duration", String(fields.duration));
+  if (fields.speaker) params.set("speaker", fields.speaker);
+  if (fields.date) params.set("date", fields.date);
+
+  const form = new FormData();
+  form.append("multipartFile", fields.file);
+  if (fields.thumbnail) form.append("thumbnailMultipartFile", fields.thumbnail);
+
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const response = await fetch(`/api/v1/media/large?${params.toString()}`, {
+    method: "POST",
+    headers,
+    body: form,
+  });
+
+  if (response.status === 401) {
+    removeToken();
+    if (typeof window !== "undefined") window.location.href = "/login";
+    throw new Error("Session expired. Please log in again.");
+  }
+  if (!response.ok) {
+    let msg = `Upload failed (${response.status})`;
+    try {
+      const raw = await response.text();
+      if (raw) { try { const b = JSON.parse(raw); msg = b?.message ?? raw; } catch { msg = raw; } }
+    } catch {}
+    throw new Error(msg);
+  }
+  const text = await response.text();
+  return text ? (JSON.parse(text) as MediaResponse) : ({} as MediaResponse);
 }
