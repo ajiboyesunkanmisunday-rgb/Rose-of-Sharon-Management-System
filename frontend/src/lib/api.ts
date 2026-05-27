@@ -3477,6 +3477,7 @@ export async function searchAnnouncements(
 
 export interface SchoolOfMinistryResponse {
   id: string;
+  set?: string;
   firstName?: string;
   middleName?: string;
   lastName?: string;
