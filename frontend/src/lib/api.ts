@@ -3542,9 +3542,11 @@ export interface CreateSchoolOfMinistryRequest {
 export async function getSchoolOfMinistries(
   pageNo = 0,
   pageSize = 20,
+  set?: number,
 ): Promise<CustomPageResponse<SchoolOfMinistryResponse>> {
+  const setParam = set != null ? `&set=${set}` : "";
   return apiFetch<CustomPageResponse<SchoolOfMinistryResponse>>(
-    `/api/v1/school-of-ministries?pageNo=${pageNo}&pageSize=${pageSize}`,
+    `/api/v1/school-of-ministries?pageNo=${pageNo}&pageSize=${pageSize}${setParam}`,
   );
 }
 

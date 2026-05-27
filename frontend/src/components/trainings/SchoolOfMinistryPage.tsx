@@ -46,12 +46,13 @@ export default function SchoolOfMinistryPage() {
   const [error,    setError]    = useState("");
   const [search,   setSearch]   = useState("");
   const [page,     setPage]     = useState(1);
+  const [somSet,   setSomSet]   = useState(1);
 
-  const load = useCallback(async (pg: number) => {
+  const load = useCallback(async (pg: number, set?: number) => {
     setLoading(true);
     setError("");
     try {
-      const res = await getSchoolOfMinistries(pg - 1, ITEMS_PER_PAGE);
+      const res = await getSchoolOfMinistries(pg - 1, ITEMS_PER_PAGE, set);
       setRecords(res.content ?? []);
       setTotal(res.totalElements ?? 0);
     } catch (e) {
@@ -61,10 +62,10 @@ export default function SchoolOfMinistryPage() {
     }
   }, []);
 
-  useEffect(() => { load(page); }, [load, page]);
+  useEffect(() => { load(page, somSet); }, [load, page, somSet]);
 
   const handleSearch = async () => {
-    if (!search.trim()) { load(page); return; }
+    if (!search.trim()) { load(page, somSet); return; }
     setLoading(true);
     setError("");
     try {
@@ -115,7 +116,7 @@ export default function SchoolOfMinistryPage() {
             Download Blank Form
           </button>
           <button
-            onClick={() => load(page)}
+            onClick={() => load(page, somSet)}
             disabled={loading}
             className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 hover:border-[#059669] hover:text-[#059669] disabled:opacity-50"
           >
@@ -133,12 +134,35 @@ export default function SchoolOfMinistryPage() {
         </div>
       )}
 
+      {/* Set selector */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <span className="text-sm font-medium text-[#374151] dark:text-slate-300">Set:</span>
+        {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+          <button
+            key={n}
+            onClick={() => {
+              setSomSet(n);
+              setPage(1);
+              setSearch("");
+            }}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+              somSet === n
+                ? "text-white"
+                : "border border-[#E5E7EB] dark:border-slate-600 text-[#6B7280] dark:text-slate-400"
+            }`}
+            style={somSet === n ? { backgroundColor: ACCENT } : undefined}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+
       {/* Search + count */}
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <div className="w-full sm:w-72">
           <SearchBar
             value={search}
-            onChange={(v) => { setSearch(v); if (!v.trim()) load(1); }}
+            onChange={(v) => { setSearch(v); if (!v.trim()) load(1, somSet); }}
             onSearch={handleSearch}
             placeholder="Search by name, phone, occupation…"
           />
@@ -227,7 +251,7 @@ export default function SchoolOfMinistryPage() {
           currentPage={page}
           totalPages={totalPages}
           totalItems={total}
-          onPageChange={(p) => { setPage(p); load(p); }}
+          onPageChange={(p) => { setPage(p); load(p, somSet); }}
         />
       </div>
     </div>
