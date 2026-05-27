@@ -261,11 +261,13 @@ export default function SomFormCore({
   };
 
   /* ── Submit ─────────────────────────────────────────────────────────────── */
-  const [submitting,    setSubmitting]    = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [submitError,   setSubmitError]   = useState("");
+  const [submitting,      setSubmitting]      = useState(false);
+  const [submitSuccess,   setSubmitSuccess]   = useState(false);
+  const [submitError,     setSubmitError]     = useState("");
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const handleSubmit = async () => {
+    setSubmitAttempted(true);
     const missing: string[] = [];
     if (!firstName.trim())   missing.push("First Name");
     if (!surname.trim())     missing.push("Surname");
@@ -480,6 +482,22 @@ export default function SomFormCore({
         )}
       </div>
 
+      {/* Required-field legend — fill mode only, hidden on print */}
+      {mode === "fill" && (
+        <div
+          className="som-no-print"
+          style={{
+            position: "fixed", bottom: 16, right: 16, zIndex: 200,
+            background: "#fff", border: "1px solid #E5E7EB",
+            borderRadius: 8, padding: "6px 14px",
+            fontSize: 11, color: "#374151",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.10)",
+          }}
+        >
+          <span style={{ color: "#DC2626", fontWeight: 700 }}>*</span> Required field
+        </div>
+      )}
+
       {/* ── Gray wrapper ──────────────────────────────────────────────────── */}
       <div className="som-wrapper" style={{
         minHeight: "100vh", background: "#b0bec5",
@@ -566,10 +584,18 @@ export default function SomFormCore({
           <table style={T}>
             <tbody>
               <tr>
-                <td style={LBL}>Surname:</td>
-                <td style={CEL}><CI value={surname} onChange={setSurname} readOnly={ro} /></td>
-                <td style={LBL}>First name:</td>
-                <td style={CEL}><CI value={firstName} onChange={setFirstName} readOnly={ro} /></td>
+                <td style={LBL}>
+                  Surname:{!ro && <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>}
+                </td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && !surname.trim() ? "#FEE2E2" : undefined }}>
+                  <CI value={surname} onChange={setSurname} readOnly={ro} />
+                </td>
+                <td style={LBL}>
+                  First name:{!ro && <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>}
+                </td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && !firstName.trim() ? "#FEE2E2" : undefined }}>
+                  <CI value={firstName} onChange={setFirstName} readOnly={ro} />
+                </td>
               </tr>
               <tr>
                 <td style={LBL}>Other Names:</td>
@@ -603,8 +629,10 @@ export default function SomFormCore({
               <tr>
                 <td style={LBL}>Home Address:</td>
                 <td style={{ ...CEL, width: "46%" }}><CI value={homeAddress} onChange={setHomeAddress} readOnly={ro} /></td>
-                <td style={LBL}>Phone no.:</td>
-                <td style={CEL}>
+                <td style={LBL}>
+                  Phone no.:{!ro && <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>}
+                </td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && (!phone.trim() || !countryCode.trim()) ? "#FEE2E2" : undefined }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     {!ro && (
                       <>
