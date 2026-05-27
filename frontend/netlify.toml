@@ -209,6 +209,11 @@
   status = 200
 
 [[redirects]]
+  from   = "/marketplace/:id/"
+  to     = "/marketplace/product-1/"
+  status = 200
+
+[[redirects]]
   from   = "/trainings/courses/:id/"
   to     = "/trainings/courses/course-1/"
   status = 200
@@ -329,6 +334,16 @@
 [[redirects]]
   from   = "/reports/"
   to     = "/reports/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/marketplace/"
+  to     = "/marketplace/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/marketplace/add/"
+  to     = "/marketplace/add/index.html"
   status = 200
 
 [[redirects]]
