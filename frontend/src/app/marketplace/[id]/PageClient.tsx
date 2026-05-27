@@ -46,7 +46,20 @@ function fmtCategory(c?: string) {
 export default function ProductDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const id = params.id as string;
+  const paramId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
+  const [id, setId] = useState(paramId);
+
+  // When Netlify serves the pre-built placeholder HTML for a real UUID path,
+  // useParams() may return the placeholder ID (e.g. "product-1") during hydration.
+  // Read the actual ID from the browser URL to fix the mismatch.
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const parts = window.location.pathname.replace(/\/$/, "").split("/");
+      const urlId = parts[parts.length - 1] ?? "";
+      if (urlId && urlId !== id) setId(urlId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [product,  setProduct]  = useState<ProductResponse | null>(null);
   const [loading,  setLoading]  = useState(true);
