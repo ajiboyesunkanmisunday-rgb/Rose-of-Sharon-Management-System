@@ -352,6 +352,11 @@
   status = 200
 
 [[redirects]]
+  from   = "/marketplace/view/"
+  to     = "/marketplace/view/index.html"
+  status = 200
+
+[[redirects]]
   from   = "/marketplace/"
   to     = "/marketplace/index.html"
   status = 200
