@@ -246,7 +246,7 @@ export default function MarketplacePage() {
                       )}
                       <div className="min-w-0">
                         <button
-                          onClick={() => router.push(`/marketplace/${product.id}`)}
+                          onClick={() => router.push(`/marketplace/view?id=${product.id}`)}
                           className="block truncate max-w-[200px] font-medium text-[#111827] dark:text-slate-100 hover:text-[#000080] dark:hover:text-indigo-400 text-left"
                         >
                           {product.name}
@@ -312,7 +312,7 @@ export default function MarketplacePage() {
 
                       {/* View/Edit */}
                       <button
-                        onClick={() => router.push(`/marketplace/${product.id}`)}
+                        onClick={() => router.push(`/marketplace/view?id=${product.id}`)}
                         className="rounded-lg border border-[#E5E7EB] dark:border-slate-600 px-2.5 py-1.5 text-xs text-[#374151] dark:text-slate-300 hover:border-[#000080] hover:text-[#000080]"
                       >
                         View
