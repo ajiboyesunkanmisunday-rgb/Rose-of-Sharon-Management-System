@@ -3514,6 +3514,7 @@ export interface SchoolOfMinistryFullResponse extends SchoolOfMinistryResponse {
 }
 
 export interface CreateSchoolOfMinistryRequest {
+  set?: string;
   firstName: string;
   middleName?: string;
   lastName: string;

@@ -127,6 +127,11 @@ export default function SomFormCore({
   const ro = mode === "blank" || mode === "view";
   const router = useRouter();
 
+  /* ── Set / cohort ─────────────────────────────────────────────────────── */
+  const currentYear = new Date().getFullYear();
+  const setYears = Array.from({ length: 8 }, (_, i) => String(currentYear - 5 + i));
+  const [set, setSet] = useState(initialData?.set ?? String(currentYear));
+
   /* ── Section A — Biographical Data ─────────────────────────────────────── */
   const [surname,     setSurname]     = useState(initialData?.lastName   ?? "");
   const [firstName,   setFirstName]   = useState(initialData?.firstName  ?? "");
@@ -330,6 +335,7 @@ export default function SomFormCore({
       }
 
       const created = await createSchoolOfMinistry({
+        set:          set.trim() || undefined,
         firstName:    firstName.trim(),
         lastName:     surname.trim(),
         middleName:   middleName.trim()   || undefined,
@@ -421,6 +427,31 @@ export default function SomFormCore({
               : mode === "view" ? "SOM Application Form — View Record"
               : "SOM Application Form — Fill & Submit"}
           </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {/* Set year selector — shown in fill and view modes */}
+            {mode !== "blank" && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <label style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, fontFamily: "Arial, sans-serif", whiteSpace: "nowrap" }}>
+                  Set:
+                </label>
+                <select
+                  value={set}
+                  onChange={(e) => setSet(e.target.value)}
+                  disabled={mode === "view"}
+                  style={{
+                    background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.4)",
+                    color: "#fff", borderRadius: 5, padding: "4px 8px",
+                    fontSize: 13, fontFamily: "Arial, sans-serif", cursor: mode === "view" ? "default" : "pointer",
+                    outline: "none", minWidth: 72,
+                  }}
+                >
+                  {setYears.map((y) => (
+                    <option key={y} value={y} style={{ background: "#000080", color: "#fff" }}>{y}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
           <div style={{ display: "flex", gap: 10 }}>
             {mode === "fill" && (
               <button
