@@ -62,7 +62,6 @@ export default function RequestDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
-  const [showAssignDropdown, setShowAssignDropdown] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("Received");
   const [currentAssignee, setCurrentAssignee] = useState("");
   const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -118,18 +117,6 @@ export default function RequestDetailPage() {
     } finally {
       setUpdatingStatus(false);
     }
-  };
-
-  const assignees = [
-    "Pastor David",
-    "Pastor Grace",
-    "Deacon Samuel",
-    "Deaconess Ruth",
-  ];
-
-  const handleAssignChange = (assignee: string) => {
-    setCurrentAssignee(assignee);
-    setShowAssignDropdown(false);
   };
 
   const category = request.requestType ?? "";
@@ -249,36 +236,9 @@ export default function RequestDetailPage() {
       {/* Assigned To Section */}
       <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <h4 className="mb-4 text-sm font-bold text-[#111827] dark:text-slate-100">Assigned To</h4>
-        <div className="flex flex-wrap items-center gap-4">
-          <span className="text-sm text-[#374151] dark:text-slate-300">
-            {currentAssignee || "Unassigned"}
-          </span>
-          <div className="relative">
-            <button
-              onClick={() => setShowAssignDropdown(!showAssignDropdown)}
-              className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 px-4 py-2 text-sm text-[#374151] dark:text-slate-300 transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50"
-            >
-              Reassign
-            </button>
-            {showAssignDropdown && (
-              <div className="absolute left-0 z-10 mt-1 min-w-[200px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 py-1 shadow-lg">
-                {assignees.map((assignee) => (
-                  <button
-                    key={assignee}
-                    onClick={() => handleAssignChange(assignee)}
-                    className={`block w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 ${
-                      currentAssignee === assignee
-                        ? "font-medium text-[#000080] dark:text-indigo-400"
-                        : "text-gray-700 dark:text-slate-300"
-                    }`}
-                  >
-                    {assignee}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <span className="text-sm text-[#374151] dark:text-slate-300">
+          {currentAssignee && currentAssignee !== "—" ? currentAssignee : "Unassigned"}
+        </span>
       </div>
 
       {/* Action Buttons */}
