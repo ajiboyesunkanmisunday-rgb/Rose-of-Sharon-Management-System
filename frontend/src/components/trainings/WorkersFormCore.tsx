@@ -702,6 +702,15 @@ export default function WorkersFormCore({
             <input ref={photoInputRef} type="file" accept="image/*" hidden onChange={handlePhotoChange} />
           </div>
 
+          {/* Admission No. — only shown in view mode (table ID from backend) */}
+          {mode === "view" && initialData?.id && (
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "Arial, sans-serif", border: "1px solid #000", padding: "2px 10px" }}>
+                Admission No:&nbsp;<span style={{ fontWeight: 400 }}>{initialData.id}</span>
+              </span>
+            </div>
+          )}
+
           {/* ══ A. BIOGRAPHICAL DATA ══════════════════════════════════════ */}
           <SH>A.&nbsp;&nbsp;BIOGRAPHICAL DATA</SH>
           {!ro && (
