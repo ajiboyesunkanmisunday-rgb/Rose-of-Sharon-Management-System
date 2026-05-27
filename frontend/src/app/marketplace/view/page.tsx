@@ -85,7 +85,7 @@ function ProductDetailView() {
       setFormData({
         name:             data.name ?? "",
         description:      data.description ?? "",
-        price:            data.price != null ? String(data.price) : "",
+        price:            data.price != null ? data.price.toLocaleString("en-NG") : "",
         category:         data.productCategory ?? "",
         quantityLeft:     data.quantityLeft != null ? String(data.quantityLeft) : "",
         otherInformation: data.otherInformation ?? "",
@@ -128,14 +128,14 @@ function ProductDetailView() {
       const updated = await updateProduct(id, {
         name:             formData.name.trim(),
         description:      formData.description.trim() || undefined,
-        price:            formData.price ? Number(formData.price) : undefined,
+        price:            formData.price ? Number(formData.price.replace(/,/g, "")) : undefined,
         category:         formData.category || undefined,
         otherInformation: formData.otherInformation.trim() || undefined,
         tags:             tags.length ? tags : undefined,
         owner:            product?.owner?.id,
       });
 
-      setProduct({ ...updated, images: images ?? product?.images, quantityLeft: formData.quantityLeft ? Number(formData.quantityLeft) : product?.quantityLeft });
+      setProduct({ ...updated, images: images ?? product?.images, quantityLeft: formData.quantityLeft ? parseInt(formData.quantityLeft, 10) : product?.quantityLeft });
       setEditing(false);
       setImageFile(null);
     } catch (e) {
@@ -403,12 +403,20 @@ function ProductDetailView() {
                 label="Price (₦)"
                 name="price"
                 value={formData.price}
-                onChange={(e) => setFormData((p) => ({ ...p, price: e.target.value }))}
-                placeholder="e.g. 5000"
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^0-9]/g, "");
+                  const formatted = raw === "" ? "" : Number(raw).toLocaleString("en-NG");
+                  setFormData((p) => ({ ...p, price: formatted }));
+                }}
+                placeholder="e.g. 5,000"
               />
               <FormField
                 label="Quantity Available"
                 name="quantityLeft"
+                type="number"
+                inputMode="numeric"
+                min="0"
+                step="1"
                 value={formData.quantityLeft}
                 onChange={(e) => setFormData((p) => ({ ...p, quantityLeft: e.target.value }))}
                 placeholder="e.g. 1"
