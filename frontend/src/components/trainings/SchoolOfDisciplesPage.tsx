@@ -581,18 +581,27 @@ export default function SchoolOfDisciplesPage() {
   };
 
   const handleSaveRemark = async (id: string, text: string) => {
-    await giveSodOfficialRemark(id, text);
-    flash("Official remark saved.");
-    await load(setFilter);
+    try {
+      await giveSodOfficialRemark(id, text);
+      flash("Official remark saved.");
+      await load(setFilter);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save remark.");
+    }
   };
 
   const handleSaveAttendance = async (trainingEventId: string, admissionNo: string) => {
-    await createAttendanceRecord({
-      trainingEventId,
-      admissionNumber: admissionNo,
-      category: "SCHOOL_OF_DISCIPLES",
-    });
-    flash("Attendance marked successfully.");
+    try {
+      await createAttendanceRecord({
+        trainingEventId,
+        admissionNumber: admissionNo,
+        category: "SCHOOL_OF_DISCIPLES",
+      });
+      flash("Attendance marked successfully.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to mark attendance.");
+      return;
+    }
     await load(setFilter);
   };
 
