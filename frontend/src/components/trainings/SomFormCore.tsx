@@ -154,9 +154,10 @@ export default function SomFormCore({
   const [spouseName,  setSpouseName]  = useState(initialData?.spouseName ?? "");
 
   /* ── Section B — Address ────────────────────────────────────────────────── */
-  const [homeAddress,   setHomeAddress]   = useState(
-    [initialData?.street, initialData?.city, initialData?.state, initialData?.country].filter(Boolean).join(", ") ?? ""
-  );
+  const [homeAddress,   setHomeAddress]   = useState(initialData?.street   ?? "");
+  const [city,          setCity]          = useState(initialData?.city     ?? "");
+  const [addrState,     setAddrState]     = useState(initialData?.state    ?? "");
+  const [addrCountry,   setAddrCountry]   = useState(initialData?.country  ?? "");
   const [countryCode,   setCountryCode]   = useState(initialData?.countryCode    ?? "234");
   const [phone,         setPhone]         = useState(initialData?.phoneNumber     ?? "");
   const [occupation,    setOccupation]    = useState(initialData?.occupation     ?? "");
@@ -346,7 +347,10 @@ export default function SomFormCore({
         spouseName:   spouseName.trim()  || undefined,
         countryCode:  countryCode.trim().replace(/^\+/, ""),
         phoneNumber:  normalisePhone(phone, countryCode),
-        street:       homeAddress.trim()   || undefined,
+        street:  homeAddress.trim() || undefined,
+        city:    city.trim()        || undefined,
+        state:   addrState.trim()   || undefined,
+        country: addrCountry.trim() || undefined,
         occupation:   occupation.trim()    || undefined,
         placeOfWork:  placeOfWork.trim()   || undefined,
         officePhoneNumber: workPhone.trim()
@@ -656,7 +660,7 @@ export default function SomFormCore({
             <tbody>
               <tr>
                 <td style={LBL}>Home Address:</td>
-                <td style={{ ...CEL, width: "46%" }}><CI value={homeAddress} onChange={setHomeAddress} readOnly={ro} /></td>
+                <td style={{ ...CEL, width: "46%" }}><CI value={homeAddress} onChange={setHomeAddress} readOnly={ro} placeholder="Street" /></td>
                 <td style={LBL}>
                   Phone no.:{!ro && <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>}
                 </td>
@@ -671,6 +675,16 @@ export default function SomFormCore({
                     <CI value={phone} onChange={setPhone} readOnly={ro} placeholder="08012345678" style={{ flex: 1 }} />
                   </div>
                 </td>
+              </tr>
+              <tr>
+                <td style={LBL}>City:</td>
+                <td style={CEL}><CI value={city} onChange={setCity} readOnly={ro} placeholder="City" /></td>
+                <td style={LBL}>State:</td>
+                <td style={CEL}><CI value={addrState} onChange={setAddrState} readOnly={ro} placeholder="State" /></td>
+              </tr>
+              <tr>
+                <td style={LBL}>Country:</td>
+                <td style={CEL} colSpan={3}><CI value={addrCountry} onChange={setAddrCountry} readOnly={ro} placeholder="Country" /></td>
               </tr>
               <tr>
                 <td style={LBL}>Occupation:</td>

@@ -157,9 +157,10 @@ export default function BaptismalFormCore({
   const [formalReligion, setFormalReligion] = useState("");
 
   /* ── Section B (Addresses) ──────────────────────────────────────────────── */
-  const [homeAddress, setHomeAddress] = useState(
-    [initialData?.street, initialData?.city, initialData?.state, initialData?.country].filter(Boolean).join(", ") ?? ""
-  );
+  const [homeAddress, setHomeAddress] = useState(initialData?.street  ?? "");
+  const [city,        setCity]        = useState(initialData?.city    ?? "");
+  const [addrState,   setAddrState]   = useState(initialData?.state   ?? "");
+  const [addrCountry, setAddrCountry] = useState(initialData?.country ?? "");
   const [countryCode, setCountryCode] = useState(
     initialData?.countryCode ?? "234"
   );
@@ -386,7 +387,10 @@ export default function BaptismalFormCore({
         spouseName: spouseName.trim() || undefined,
         countryCode: countryCode.trim().replace(/^\+/, ""),
         phoneNumber: normalisePhone(phone, countryCode),
-        street: homeAddress.trim() || undefined,
+        street:  homeAddress.trim() || undefined,
+        city:    city.trim()        || undefined,
+        state:   addrState.trim()   || undefined,
+        country: addrCountry.trim() || undefined,
         occupation: occupation.trim() || undefined,
         placeOfWork: placeOfWork.trim() || undefined,
         officePhoneNumber: workPhone.trim()
@@ -952,6 +956,22 @@ export default function BaptismalFormCore({
                       style={{ flex: 1 }}
                     />
                   </div>
+                </td>
+              </tr>
+              <tr>
+                <td style={LBL}>CITY</td>
+                <td style={CEL}>
+                  <CI value={city} onChange={setCity} readOnly={ro} placeholder="City" />
+                </td>
+                <td style={LBL}>STATE:</td>
+                <td style={CEL}>
+                  <CI value={addrState} onChange={setAddrState} readOnly={ro} placeholder="State" />
+                </td>
+              </tr>
+              <tr>
+                <td style={LBL}>COUNTRY</td>
+                <td style={CEL} colSpan={3}>
+                  <CI value={addrCountry} onChange={setAddrCountry} readOnly={ro} placeholder="Country" />
                 </td>
               </tr>
               <tr>

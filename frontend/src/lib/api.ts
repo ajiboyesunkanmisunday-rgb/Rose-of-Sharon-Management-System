@@ -3531,6 +3531,9 @@ export interface CreateSchoolOfMinistryRequest {
   countryCode: string;
   phoneNumber: string;
   street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
   occupation?: string;
   placeOfWork?: string;
   officePhoneNumber?: string;
