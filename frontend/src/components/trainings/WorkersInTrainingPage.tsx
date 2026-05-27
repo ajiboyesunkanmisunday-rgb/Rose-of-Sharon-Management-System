@@ -536,19 +536,28 @@ export default function WorkersInTrainingPage() {
 
   // Remark save
   const handleSaveRemark = async (id: string, text: string) => {
-    await giveOfficialRemark(id, text);
-    flash("Official remark saved.");
-    await load(witSet);
+    try {
+      await giveOfficialRemark(id, text);
+      flash("Official remark saved.");
+      await load(witSet);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save remark.");
+    }
   };
 
   // Attendance save
   const handleSaveAttendance = async (trainingEventId: string, admissionNo: string) => {
-    await createAttendanceRecord({
-      trainingEventId,
-      admissionNumber: admissionNo,
-      category: "WORKERS_IN_TRAINING",
-    });
-    flash("Attendance marked successfully.");
+    try {
+      await createAttendanceRecord({
+        trainingEventId,
+        admissionNumber: admissionNo,
+        category: "WORKERS_IN_TRAINING",
+      });
+      flash("Attendance marked successfully.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to mark attendance.");
+      return;
+    }
     await load(witSet);
   };
 
