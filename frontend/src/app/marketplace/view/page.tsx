@@ -11,10 +11,10 @@ import {
   updateProduct,
   deleteProduct,
   approveProducts,
-  uploadProfilePicture,
+  uploadMedia,
   type ProductResponse,
 } from "@/lib/api";
-import { Package, Pencil, Trash2, CheckCircle } from "lucide-react";
+import { Package, Pencil, Trash2, CheckCircle, ImagePlus, Video, X, Play } from "lucide-react";
 
 const CATEGORY_OPTIONS = [
   { label: "Select category…", value: "" },
@@ -25,36 +25,51 @@ const CATEGORY_OPTIONS = [
   { label: "Wears",            value: "WEARS" },
 ];
 
-const MAX_NAME = 120;
-const MAX_DESC = 1000;
-const MAX_INFO = 1000;
+const MAX_NAME  = 120;
+const MAX_DESC  = 1000;
+const MAX_INFO  = 1000;
+const MAX_MEDIA = 6;
 
 function fullName(u?: { firstName?: string; middleName?: string; lastName?: string } | null) {
   if (!u) return "—";
   return [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—";
 }
-
 function fmtDate(s?: string) {
   if (!s) return "—";
   return new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
-
 function fmtCategory(c?: string) {
   if (!c) return "—";
   return c.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 }
+function isVideoUrl(url: string) {
+  return /\.(mp4|mov|webm|avi|mkv|m4v|ogv)(\?|$)/i.test(url) || url.includes("/VIDEOS/");
+}
+
+/** Upload a single file and return its public URL. */
+async function uploadOneFile(file: File): Promise<string> {
+  const isVideo = file.type.startsWith("video/");
+  const result = await uploadMedia({
+    title: `product-${Date.now()}-${file.name.replace(/\s+/g, "_")}`,
+    category: isVideo ? "VIDEOS" : "IMAGES",
+    file,
+  });
+  const url = result.displayUrl ?? result.url;
+  if (!url) throw new Error(`Uploaded "${file.name}" but no URL was returned.`);
+  return url;
+}
 
 function ProductDetailView() {
-  const router = useRouter();
+  const router       = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get("id") ?? "";
 
-  const [product,  setProduct]  = useState<ProductResponse | null>(null);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState("");
-  const [editing,  setEditing]  = useState(false);
-  const [saving,   setSaving]   = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [product,   setProduct]   = useState<ProductResponse | null>(null);
+  const [loading,   setLoading]   = useState(true);
+  const [error,     setError]     = useState("");
+  const [editing,   setEditing]   = useState(false);
+  const [saving,    setSaving]    = useState(false);
+  const [deleting,  setDeleting]  = useState(false);
   const [approving, setApproving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -69,11 +84,17 @@ function ProductDetailView() {
     tagsRaw:          "",
   });
 
-  // Image upload
-  const [imageFile,    setImageFile]    = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [uploading,    setUploading]    = useState(false);
-  const imageInputRef = useRef<HTMLInputElement>(null);
+  // Existing media URLs (from the saved product) — can be removed
+  const [existingMedia, setExistingMedia] = useState<string[]>([]);
+  // New files staged for upload
+  const [newMediaFiles, setNewMediaFiles] = useState<File[]>([]);
+  const [uploading,     setUploading]     = useState(false);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
+
+  // Lightbox
+  const [lightbox, setLightbox] = useState<string | null>(null);
+
+  const totalMediaCount = existingMedia.length + newMediaFiles.length;
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -91,7 +112,8 @@ function ProductDetailView() {
         otherInformation: data.otherInformation ?? "",
         tagsRaw:          (data.tags ?? []).join(", "),
       });
-      setImagePreview(data.images?.[0] ?? null);
+      setExistingMedia(data.images ?? []);
+      setNewMediaFiles([]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load product.");
     } finally {
@@ -101,10 +123,15 @@ function ProductDetailView() {
 
   useEffect(() => { load(); }, [load]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    setImageFile(file);
-    setImagePreview(file ? URL.createObjectURL(file) : (product?.images?.[0] ?? null));
+  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const incoming = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (!incoming.length) return;
+    setNewMediaFiles((prev) => {
+      const slots = MAX_MEDIA - existingMedia.length - prev.length;
+      if (slots <= 0) return prev;
+      return [...prev, ...incoming.slice(0, slots)];
+    });
   };
 
   const handleSave = async () => {
@@ -112,18 +139,18 @@ function ProductDetailView() {
     setSaving(true);
     setError("");
     try {
-      let images: string[] | undefined = product?.images;
-      if (imageFile) {
+      let newUrls: string[] = [];
+      if (newMediaFiles.length > 0) {
         setUploading(true);
-        const url = await uploadProfilePicture(imageFile);
+        newUrls = await Promise.all(newMediaFiles.map(uploadOneFile));
         setUploading(false);
-        images = [url];
       }
 
-      const tags = formData.tagsRaw
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean);
+      const images = existingMedia.length > 0 || newUrls.length > 0
+        ? [...existingMedia, ...newUrls]
+        : undefined;
+
+      const tags = formData.tagsRaw.split(",").map((t) => t.trim()).filter(Boolean);
 
       const updated = await updateProduct(id, {
         name:             formData.name.trim(),
@@ -133,11 +160,18 @@ function ProductDetailView() {
         otherInformation: formData.otherInformation.trim() || undefined,
         tags:             tags.length ? tags : undefined,
         owner:            product?.owner?.id,
+        images,
       });
 
-      setProduct({ ...updated, images: images ?? product?.images, quantityLeft: formData.quantityLeft ? parseInt(formData.quantityLeft, 10) : product?.quantityLeft });
+      const finalImages = images ?? product?.images;
+      const finalQty    = formData.quantityLeft
+        ? parseInt(formData.quantityLeft, 10)
+        : product?.quantityLeft;
+
+      setProduct({ ...updated, images: finalImages, quantityLeft: finalQty });
+      setExistingMedia(finalImages ?? []);
+      setNewMediaFiles([]);
       setEditing(false);
-      setImageFile(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save product.");
     } finally {
@@ -153,9 +187,7 @@ function ProductDetailView() {
       setProduct((p) => p ? { ...p, isApproved: true } : p);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to approve product.");
-    } finally {
-      setApproving(false);
-    }
+    } finally { setApproving(false); }
   };
 
   const handleDelete = async () => {
@@ -203,6 +235,38 @@ function ProductDetailView() {
 
   return (
     <DashboardLayout>
+      {/* Lightbox */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            className="absolute right-4 top-4 rounded-full bg-white/20 p-2 text-white hover:bg-white/30"
+            onClick={() => setLightbox(null)}
+          >
+            <X className="h-5 w-5" />
+          </button>
+          {isVideoUrl(lightbox) ? (
+            <video
+              src={lightbox}
+              controls
+              autoPlay
+              className="max-h-[80vh] max-w-full rounded-xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={lightbox}
+              alt="Product media"
+              className="max-h-[80vh] max-w-full rounded-xl object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
+        </div>
+      )}
+
       {/* Page header */}
       <div className="mb-6">
         <div className="flex items-center gap-2">
@@ -228,86 +292,126 @@ function ProductDetailView() {
         <>
           {/* View mode */}
           <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
-            <div className="flex flex-wrap items-start gap-6">
-              {/* Image */}
-              <div className="flex-shrink-0">
-                {product.images?.[0] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={product.images[0]}
-                    alt={product.name}
-                    className="h-40 w-40 rounded-xl object-cover border border-[#E5E7EB] dark:border-slate-700"
-                  />
-                ) : (
-                  <div className="flex h-40 w-40 items-center justify-center rounded-xl bg-[#F3F4F6] dark:bg-slate-700">
-                    <Package className="h-16 w-16 text-[#D1D5DB] dark:text-slate-500" />
-                  </div>
-                )}
-              </div>
-
-              {/* Details */}
-              <div className="flex-1 min-w-0">
-                <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <h3 className="text-xl font-bold text-[#111827] dark:text-slate-100">{product.name}</h3>
-                  {product.isApproved ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:text-green-300">
-                      <CheckCircle className="h-3 w-3" /> Approved
-                    </span>
+            {/* Media gallery */}
+            {(product.images ?? []).length > 0 && (
+              <div className="mb-5">
+                {/* Primary display */}
+                <div
+                  className="mb-2 cursor-pointer overflow-hidden rounded-xl"
+                  onClick={() => setLightbox(product.images![0])}
+                >
+                  {isVideoUrl(product.images![0]) ? (
+                    <div className="relative flex h-56 items-center justify-center rounded-xl bg-black">
+                      <video src={product.images![0]} className="max-h-56 rounded-xl" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="rounded-full bg-white/30 p-4">
+                          <Play className="h-8 w-8 text-white" />
+                        </div>
+                      </div>
+                    </div>
                   ) : (
-                    <span className="rounded-full bg-yellow-100 dark:bg-yellow-900/30 px-2.5 py-0.5 text-xs font-medium text-yellow-700 dark:text-yellow-300">
-                      Pending Approval
-                    </span>
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={product.images![0]}
+                      alt={product.name}
+                      className="h-56 w-full rounded-xl object-cover"
+                    />
                   )}
                 </div>
-
-                {product.description && (
-                  <p className="mb-4 text-sm text-[#374151] dark:text-slate-300 leading-relaxed">{product.description}</p>
-                )}
-
-                <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-cols-3">
-                  <div>
-                    <dt className="font-medium text-[#6B7280] dark:text-slate-400">Price</dt>
-                    <dd className="font-bold text-[#111827] dark:text-slate-100">
-                      {product.price != null ? `₦${product.price.toLocaleString("en-NG")}` : "—"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="font-medium text-[#6B7280] dark:text-slate-400">Category</dt>
-                    <dd className="text-[#374151] dark:text-slate-300">{fmtCategory(product.productCategory)}</dd>
-                  </div>
-                  <div>
-                    <dt className="font-medium text-[#6B7280] dark:text-slate-400">Qty Available</dt>
-                    <dd className="text-[#374151] dark:text-slate-300">{product.quantityLeft ?? "—"}</dd>
-                  </div>
-                  {product.averageRating != null && (
-                    <div>
-                      <dt className="font-medium text-[#6B7280] dark:text-slate-400">Avg. Rating</dt>
-                      <dd className="text-[#374151] dark:text-slate-300">{product.averageRating.toFixed(1)} / 5</dd>
-                    </div>
-                  )}
-                  <div>
-                    <dt className="font-medium text-[#6B7280] dark:text-slate-400">Listed</dt>
-                    <dd className="text-[#374151] dark:text-slate-300">{fmtDate(product.createdOn)}</dd>
-                  </div>
-                </dl>
-
-                {product.tags && product.tags.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {product.tags.map((tag) => (
-                      <span key={tag} className="rounded-full bg-[#F3F4F6] dark:bg-slate-700 px-2.5 py-0.5 text-xs text-[#374151] dark:text-slate-300">
-                        {tag}
-                      </span>
+                {/* Thumbnails strip */}
+                {product.images!.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {product.images!.map((url, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setLightbox(url)}
+                        className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border-2 border-[#E5E7EB] dark:border-slate-700 hover:border-[#000080] transition-colors"
+                      >
+                        {isVideoUrl(url) ? (
+                          <div className="flex h-full w-full items-center justify-center bg-[#1a1a2e]">
+                            <Video className="h-5 w-5 text-white" />
+                          </div>
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={url} alt="" className="h-full w-full object-cover" />
+                        )}
+                      </button>
                     ))}
                   </div>
                 )}
+              </div>
+            )}
 
-                {product.otherInformation && (
-                  <div className="mt-4">
-                    <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Other Information</p>
-                    <p className="mt-1 text-sm text-[#374151] dark:text-slate-300">{product.otherInformation}</p>
-                  </div>
+            {/* If no media */}
+            {!(product.images ?? []).length && (
+              <div className="mb-5 flex h-40 items-center justify-center rounded-xl bg-[#F3F4F6] dark:bg-slate-700">
+                <Package className="h-16 w-16 text-[#D1D5DB] dark:text-slate-500" />
+              </div>
+            )}
+
+            {/* Product details */}
+            <div className="flex-1 min-w-0">
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <h3 className="text-xl font-bold text-[#111827] dark:text-slate-100">{product.name}</h3>
+                {product.isApproved ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:text-green-300">
+                    <CheckCircle className="h-3 w-3" /> Approved
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-yellow-100 dark:bg-yellow-900/30 px-2.5 py-0.5 text-xs font-medium text-yellow-700 dark:text-yellow-300">
+                    Pending Approval
+                  </span>
                 )}
               </div>
+
+              {product.description && (
+                <p className="mb-4 text-sm text-[#374151] dark:text-slate-300 leading-relaxed">{product.description}</p>
+              )}
+
+              <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-cols-3">
+                <div>
+                  <dt className="font-medium text-[#6B7280] dark:text-slate-400">Price</dt>
+                  <dd className="font-bold text-[#111827] dark:text-slate-100">
+                    {product.price != null ? `₦${product.price.toLocaleString("en-NG")}` : "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="font-medium text-[#6B7280] dark:text-slate-400">Category</dt>
+                  <dd className="text-[#374151] dark:text-slate-300">{fmtCategory(product.productCategory)}</dd>
+                </div>
+                <div>
+                  <dt className="font-medium text-[#6B7280] dark:text-slate-400">Qty Available</dt>
+                  <dd className="text-[#374151] dark:text-slate-300">{product.quantityLeft ?? "—"}</dd>
+                </div>
+                {product.averageRating != null && (
+                  <div>
+                    <dt className="font-medium text-[#6B7280] dark:text-slate-400">Avg. Rating</dt>
+                    <dd className="text-[#374151] dark:text-slate-300">{product.averageRating.toFixed(1)} / 5</dd>
+                  </div>
+                )}
+                <div>
+                  <dt className="font-medium text-[#6B7280] dark:text-slate-400">Listed</dt>
+                  <dd className="text-[#374151] dark:text-slate-300">{fmtDate(product.createdOn)}</dd>
+                </div>
+              </dl>
+
+              {product.tags && product.tags.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-1.5">
+                  {product.tags.map((tag) => (
+                    <span key={tag} className="rounded-full bg-[#F3F4F6] dark:bg-slate-700 px-2.5 py-0.5 text-xs text-[#374151] dark:text-slate-300">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {product.otherInformation && (
+                <div className="mt-4">
+                  <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Other Information</p>
+                  <p className="mt-1 text-sm text-[#374151] dark:text-slate-300">{product.otherInformation}</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -326,12 +430,8 @@ function ProductDetailView() {
                 )}
                 <div>
                   <p className="text-sm font-medium text-[#111827] dark:text-slate-100">{fullName(product.owner)}</p>
-                  {product.owner.email && (
-                    <p className="text-xs text-[#6B7280] dark:text-slate-400">{product.owner.email}</p>
-                  )}
-                  {product.owner.phoneNumber && (
-                    <p className="text-xs text-[#6B7280] dark:text-slate-400">{product.owner.phoneNumber}</p>
-                  )}
+                  {product.owner.email && <p className="text-xs text-[#6B7280] dark:text-slate-400">{product.owner.email}</p>}
+                  {product.owner.phoneNumber && <p className="text-xs text-[#6B7280] dark:text-slate-400">{product.owner.phoneNumber}</p>}
                 </div>
               </div>
             </div>
@@ -358,7 +458,7 @@ function ProductDetailView() {
         </>
       )}
 
-      {/* Edit mode */}
+      {/* ── Edit mode ── */}
       {product && editing && (
         <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
           <div className="mb-5 flex items-center justify-between">
@@ -366,8 +466,8 @@ function ProductDetailView() {
             <button
               onClick={() => {
                 setEditing(false);
-                setImageFile(null);
-                setImagePreview(product.images?.[0] ?? null);
+                setNewMediaFiles([]);
+                setExistingMedia(product.images ?? []);
               }}
               className="text-sm text-[#6B7280] hover:underline"
             >
@@ -450,29 +550,111 @@ function ProductDetailView() {
               maxLength={MAX_INFO}
             />
 
-            {/* Image */}
+            {/* ── Media management ── */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-[#374151] dark:text-slate-300">Product Image</label>
-              <div
-                onClick={() => imageInputRef.current?.click()}
-                className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#E5E7EB] dark:border-slate-600 p-6 hover:border-[#000080]"
-              >
-                {imagePreview ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={imagePreview} alt="Preview" className="max-h-40 rounded-lg object-contain" />
-                ) : (
-                  <p className="text-sm text-[#9CA3AF]">Click to upload a new image</p>
-                )}
-              </div>
-              <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+              <label className="mb-2 block text-sm font-medium text-[#374151] dark:text-slate-300">
+                Product Images &amp; Video
+                <span className="ml-1 text-xs font-normal text-[#6B7280] dark:text-slate-400">
+                  (up to {MAX_MEDIA} files)
+                </span>
+              </label>
+
+              {/* Combined grid: existing URLs + new files */}
+              {(existingMedia.length > 0 || newMediaFiles.length > 0) && (
+                <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
+                  {/* Existing URLs */}
+                  {existingMedia.map((url, idx) => (
+                    <div key={`existing-${idx}`} className="group relative aspect-square overflow-hidden rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F3F4F6] dark:bg-slate-700">
+                      {isVideoUrl(url) ? (
+                        <div className="flex h-full w-full items-center justify-center bg-[#1a1a2e]">
+                          <Video className="h-6 w-6 text-white/70" />
+                        </div>
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={url} alt="" className="h-full w-full object-cover" />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setExistingMedia((prev) => prev.filter((_, i) => i !== idx))}
+                        className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 opacity-0 transition-opacity group-hover:opacity-100"
+                      >
+                        <X className="h-3 w-3 text-white" />
+                      </button>
+                      <span className="absolute bottom-0.5 left-0.5 rounded bg-black/50 px-1 py-0.5 text-[8px] font-medium text-white uppercase">
+                        {isVideoUrl(url) ? "video" : "img"}
+                      </span>
+                    </div>
+                  ))}
+
+                  {/* New staged files */}
+                  {newMediaFiles.map((file, idx) => (
+                    <div key={`new-${idx}`} className="group relative aspect-square overflow-hidden rounded-lg border border-[#000080]/40 dark:border-indigo-500/40 bg-[#F3F4F6] dark:bg-slate-700">
+                      {file.type.startsWith("image/") ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={URL.createObjectURL(file)} alt={file.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-1 text-center">
+                          <Video className="h-6 w-6 text-[#6B7280] dark:text-slate-400" />
+                          <span className="line-clamp-2 text-[9px] text-[#6B7280] dark:text-slate-400 break-all">{file.name}</span>
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setNewMediaFiles((prev) => prev.filter((_, i) => i !== idx))}
+                        className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 opacity-0 transition-opacity group-hover:opacity-100"
+                      >
+                        <X className="h-3 w-3 text-white" />
+                      </button>
+                      {/* "New" badge */}
+                      <span className="absolute bottom-0.5 left-0.5 rounded bg-[#000080]/80 px-1 py-0.5 text-[8px] font-medium text-white uppercase">
+                        new
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add-more button */}
+              {totalMediaCount < MAX_MEDIA ? (
+                <button
+                  type="button"
+                  onClick={() => mediaInputRef.current?.click()}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#E5E7EB] dark:border-slate-600 py-4 text-sm font-medium text-[#6B7280] dark:text-slate-400 hover:border-[#000080] dark:hover:border-indigo-500 hover:text-[#000080] dark:hover:text-indigo-400 transition-colors"
+                >
+                  <ImagePlus className="h-4 w-4" />
+                  {totalMediaCount === 0 ? "Add images or video" : `Add more (${totalMediaCount}/${MAX_MEDIA})`}
+                </button>
+              ) : (
+                <p className="text-center text-xs text-[#6B7280] dark:text-slate-400">
+                  Maximum {MAX_MEDIA} files reached.
+                </p>
+              )}
+
+              <input
+                ref={mediaInputRef}
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                onChange={handleMediaChange}
+                className="hidden"
+              />
+              {newMediaFiles.length > 0 && (
+                <p className="mt-1.5 text-xs text-[#9CA3AF] dark:text-slate-400">
+                  Blue-bordered thumbnails are new and will be uploaded on save.
+                </p>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
-              <Button variant="secondary" type="button" onClick={() => { setEditing(false); setImageFile(null); }}>
+              <Button variant="secondary" type="button" onClick={() => {
+                setEditing(false);
+                setNewMediaFiles([]);
+                setExistingMedia(product.images ?? []);
+              }}>
                 Cancel
               </Button>
               <Button variant="primary" onClick={handleSave} disabled={saving || uploading || !formData.name.trim()}>
-                {uploading ? "Uploading…" : saving ? "Saving…" : "Save Changes"}
+                {uploading ? "Uploading media…" : saving ? "Saving…" : "Save Changes"}
               </Button>
             </div>
           </div>

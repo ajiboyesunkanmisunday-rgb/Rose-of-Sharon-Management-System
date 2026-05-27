@@ -3654,6 +3654,7 @@ export interface UpdateProductRequest {
   description?: string;
   owner?: string;
   price?: number;
+  images?: string[];
   otherInformation?: string;
   tags?: string[];
   category?: string;
