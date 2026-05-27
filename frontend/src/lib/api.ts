@@ -3477,6 +3477,7 @@ export async function searchAnnouncements(
 
 export interface SchoolOfMinistryResponse {
   id: string;
+  userId?: string;
   set?: string;
   firstName?: string;
   middleName?: string;
@@ -3496,6 +3497,7 @@ export interface SchoolOfMinistryResponse {
   placeOfWork?: string;
   officePhoneNumber?: string;
   officeFullAddress?: string;
+  /** Not in Swagger schema — backend does not currently store this field */
   profilePictureUrl?: string;
   salvationDate?: string;
   salvationLocation?: string;
@@ -3505,6 +3507,7 @@ export interface SchoolOfMinistryResponse {
   holySpiritBaptismLocation?: string;
   goneThroughNewConverts?: boolean;
   otherInformation?: string;
+  consent?: boolean;
   officialRemarks?: string;
   reasonsForApplying?: string[];
   feesPaid?: number;
@@ -3520,6 +3523,7 @@ export interface SchoolOfMinistryFullResponse extends SchoolOfMinistryResponse {
 
 export interface CreateSchoolOfMinistryRequest {
   set?: string;
+  userId?: string;
   firstName: string;
   middleName?: string;
   lastName: string;
@@ -3538,6 +3542,7 @@ export interface CreateSchoolOfMinistryRequest {
   placeOfWork?: string;
   officePhoneNumber?: string;
   officeFullAddress?: string;
+  /** Not in Swagger schema — backend ignores this field; kept for future backend support */
   profilePictureUrl?: string;
   salvationDate?: string;
   salvationLocation?: string;
