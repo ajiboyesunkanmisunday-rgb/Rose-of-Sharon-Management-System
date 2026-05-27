@@ -158,7 +158,7 @@ export default function BaptismalFormCore({
 
   /* ── Section B (Addresses) ──────────────────────────────────────────────── */
   const [homeAddress, setHomeAddress] = useState(
-    initialData?.homeAddress ?? ""
+    [initialData?.street, initialData?.city, initialData?.state, initialData?.country].filter(Boolean).join(", ") ?? ""
   );
   const [countryCode, setCountryCode] = useState(
     initialData?.countryCode ?? "234"
@@ -171,17 +171,17 @@ export default function BaptismalFormCore({
   );
   const [socialMedia, setSocialMedia] = useState("");
   const [officeAddress, setOfficeAddress] = useState(
-    initialData?.officeAddress ?? ""
+    initialData?.officeFullAddress ?? ""
   );
   const [workPhone, setWorkPhone] = useState(
-    initialData?.workPhoneNumber ?? ""
+    initialData?.officePhoneNumber ?? ""
   );
 
   /* ── Section B (Qualifications) ─────────────────────────────────────────── */
   const [quals, setQuals] = useState(() => {
     const fromData = (initialData?.qualifications ?? []).map((q) => ({
-      schoolAttended: q.schoolAttended ?? "",
-      dates: q.dates ?? "",
+      schoolAttended: q.institution ?? "",
+      dates: q.date ?? "",
       qualificationReceived: q.qualificationReceived ?? "",
     }));
     while (fromData.length < 3)
@@ -200,7 +200,7 @@ export default function BaptismalFormCore({
 
   /* ── Section C — Christian History ─────────────────────────────────────── */
   const [worshipPlaces, setWorshipPlaces] = useState(() => {
-    const fromData = (initialData?.recentWorshipPlaces ?? []).map(
+    const fromData = (initialData?.pastPlaceOfWorships ?? []).map(
       (w) => w.name ?? ""
     );
     while (fromData.length < 2) fromData.push("");
@@ -216,9 +216,7 @@ export default function BaptismalFormCore({
     initialData?.salvationLocation ?? ""
   );
   const [holySpiritAnswer, setHolySpiritAnswer] = useState(
-    initialData?.holySpiritBaptismChurch
-      ? initialData.holySpiritBaptismChurch
-      : ""
+    initialData?.holySpiritBaptismLocation ?? ""
   );
   const [holySpiritWhere, setHolySpiritWhere] = useState(
     initialData?.holySpiritBaptismDate ?? ""
@@ -226,7 +224,7 @@ export default function BaptismalFormCore({
 
   /* ── Section D — Departments ─────────────────────────────────────────────── */
   const [depts, setDepts] = useState(() => {
-    const fromData = (initialData?.churchDepartments ?? []).map((d) => ({
+    const fromData = (initialData?.studentDepartments ?? []).map((d) => ({
       name: d.name ?? "",
       date: d.date ?? "",
     }));
@@ -241,8 +239,8 @@ export default function BaptismalFormCore({
 
   /* ── Section F — New Converts Class ─────────────────────────────────────── */
   const [newConvertsText, setNewConvertsText] = useState(() => {
-    if (initialData?.hasGoneThroughNewConvertsClass === true) return "Yes";
-    if (initialData?.hasGoneThroughNewConvertsClass === false) return "No";
+    if (initialData?.goneThroughNewConverts === true) return "Yes";
+    if (initialData?.goneThroughNewConverts === false) return "No";
     return "";
   });
 
@@ -251,7 +249,7 @@ export default function BaptismalFormCore({
 
   /* ── Section H — Reasons for attending (3 boxes) ────────────────────────── */
   const [reasons, setReasons] = useState<string[]>(() => {
-    const fromData = [...(initialData?.reasonsForAttending ?? [])];
+    const fromData = [...(initialData?.reasonsForApplying ?? [])];
     while (fromData.length < 3) fromData.push("");
     return fromData.slice(0, 3);
   });
@@ -326,8 +324,8 @@ export default function BaptismalFormCore({
     const qualItems = quals
       .filter((q) => q.schoolAttended.trim())
       .map((q) => ({
-        schoolAttended: q.schoolAttended.trim(),
-        dates: q.dates.trim() || undefined,
+        institution:           q.schoolAttended.trim(),
+        date:                  q.dates.trim() || undefined,
         qualificationReceived: q.qualificationReceived.trim() || undefined,
       }));
 
@@ -388,24 +386,24 @@ export default function BaptismalFormCore({
         spouseName: spouseName.trim() || undefined,
         countryCode: countryCode.trim().replace(/^\+/, ""),
         phoneNumber: normalisePhone(phone, countryCode),
-        homeAddress: homeAddress.trim() || undefined,
+        street: homeAddress.trim() || undefined,
         occupation: occupation.trim() || undefined,
         placeOfWork: placeOfWork.trim() || undefined,
-        workPhoneNumber: workPhone.trim()
+        officePhoneNumber: workPhone.trim()
           ? normalisePhone(workPhone, countryCode)
           : undefined,
-        officeAddress: officeAddress.trim() || undefined,
+        officeFullAddress: officeAddress.trim() || undefined,
         profilePictureUrl,
         salvationDate: salvationDate.trim() || undefined,
         salvationLocation: salvationWhere.trim() || undefined,
         holySpiritBaptismDate: holySpiritWhere.trim() || undefined,
-        holySpiritBaptismChurch: holySpiritAnswer.trim() || undefined,
-        hasGoneThroughNewConvertsClass: parseYesNo(newConvertsText),
+        holySpiritBaptismLocation: holySpiritAnswer.trim() || undefined,
+        goneThroughNewConverts: parseYesNo(newConvertsText),
         otherInformation: otherInfoStr,
-        ...(qualItems.length ? { qualificationRequests: qualItems } : {}),
-        ...(wpItems.length ? { recentWorshipPlaces: wpItems } : {}),
-        ...(deptItems.length ? { churchDepartments: deptItems } : {}),
-        ...(reasonItems.length ? { reasonsForAttending: reasonItems } : {}),
+        ...(qualItems.length ? { qualificationRequests:            qualItems }  : {}),
+        ...(wpItems.length   ? { createPastPlaceOfWorshipRequests: wpItems }    : {}),
+        ...(deptItems.length ? { createStudentDepartmentRequests:  deptItems }  : {}),
+        ...(reasonItems.length ? { reasonsForApplying:             reasonItems } : {}),
       });
 
       const savedId = (created as { id?: string })?.id;
