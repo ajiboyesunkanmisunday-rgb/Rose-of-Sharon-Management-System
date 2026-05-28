@@ -647,6 +647,8 @@ export interface CreateFirstTimerRequest {
   fromOnline?: boolean; // worshipped online before
   whatsappNumber?: string; // WhatsApp contact number
   howWasService?: string; // service quality feedback ("Excellent", "Good", etc.)
+  attendRegularly?: string;      // "Yes" | "No" | "Maybe"
+  preferredContact?: string;     // preferred means of contact
 }
 
 export async function getFirstTimers(
