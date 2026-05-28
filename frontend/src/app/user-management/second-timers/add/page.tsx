@@ -9,7 +9,7 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { createSecondTimer, uploadProfilePicture, isAuthenticated } from "@/lib/api";
+import { createSecondTimer, createSuggestion, uploadProfilePicture, isAuthenticated } from "@/lib/api";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import CountryStateSelect from "@/components/ui/CountryStateSelect";
 import { useEventServices } from "@/hooks/useEventServices";
@@ -27,8 +27,7 @@ export default function AddSecondTimerPage() {
   const [email, setEmail] = useState("");
   const [countryCode, setCountryCode] = useState("+234");
   const [phone, setPhone] = useState("");
-  const [whatsappCode, setWhatsappCode] = useState("+234");
-  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [suggestion, setSuggestion] = useState("");
   const [dobDay, setDobDay] = useState("");
   const [dobMonth, setDobMonth] = useState("");
   const [dobYear, setDobYear] = useState("");
@@ -72,7 +71,7 @@ export default function AddSecondTimerPage() {
         profilePictureUrl = await uploadProfilePicture(photo);
       }
 
-      await createSecondTimer({
+      const created = await createSecondTimer({
         firstName,
         middleName: middleName || undefined,
         lastName,
@@ -97,6 +96,20 @@ export default function AddSecondTimerPage() {
         fromOnline: worshippedOnline || undefined,
         eventId: serviceAttended || undefined,
       });
+
+      // If a suggestion was provided, submit it via the suggestions endpoint
+      if (suggestion.trim() && created?.id) {
+        try {
+          await createSuggestion({
+            userId: created.id,
+            subject: "Suggestion",
+            content: suggestion.trim(),
+          });
+        } catch {
+          // Non-fatal — second timer was still saved
+        }
+      }
+
       if (!isAuthenticated()) {
         setSubmitted(true);
       } else {
@@ -147,11 +160,11 @@ export default function AddSecondTimerPage() {
             onClick={() => {
               setSubmitted(false);
               setFirstName(""); setMiddleName(""); setLastName(""); setGender(""); setEmail("");
-              setPhone(""); setWhatsappNumber(""); setDobDay(""); setDobMonth(""); setDobYear("");
+              setPhone(""); setDobDay(""); setDobMonth(""); setDobYear("");
               setStreet(""); setCity(""); setState(""); setCountry(""); setMaritalStatus("");
               setOccupation(""); setServiceAttended(""); setIsVisiting(false);
               setHowDidYouHear(""); setHowWasService(""); setFavouriteParts(""); setWorshippedOnline(false);
-              setPhoto(null); setSpouse(null);
+              setSuggestion(""); setPhoto(null); setSpouse(null);
             }}
             className="mt-6 rounded-lg bg-[#000080] px-6 py-3 text-white font-medium"
           >
@@ -286,15 +299,6 @@ export default function AddSecondTimerPage() {
                 />
               </div>
             </div>
-            <PhoneInput
-              label="WhatsApp Number"
-              code={whatsappCode}
-              number={whatsappNumber}
-              onCodeChange={setWhatsappCode}
-              onNumberChange={setWhatsappNumber}
-              placeholder="Enter WhatsApp Number"
-            />
-
             {/* Select Service */}
             <div>
               <label className={labelStyles}>Select Service</label>
@@ -458,6 +462,21 @@ export default function AddSecondTimerPage() {
               />
               Have you worshipped with us online before?
             </label>
+          </div>
+
+          {/* Suggestions */}
+          <div className="mt-4">
+            <label className={labelStyles}>Any suggestions for us?</label>
+            <textarea
+              value={suggestion}
+              onChange={(e) => setSuggestion(e.target.value)}
+              placeholder="Share any suggestions (optional)"
+              rows={3}
+              className={`${inputStyles} resize-none`}
+            />
+            <p className="mt-1 text-xs text-[#9CA3AF] dark:text-slate-500">
+              If provided, this will be submitted as a suggestion after saving.
+            </p>
           </div>
         </div>
 

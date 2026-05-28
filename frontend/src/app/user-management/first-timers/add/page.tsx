@@ -9,7 +9,7 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { createFirstTimer, uploadProfilePicture, isAuthenticated } from "@/lib/api";
+import { createFirstTimer, createPrayerRequest, uploadProfilePicture, isAuthenticated } from "@/lib/api";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import CountryStateSelect from "@/components/ui/CountryStateSelect";
 import { useEventServices } from "@/hooks/useEventServices";
@@ -43,6 +43,9 @@ export default function AddFirstTimerPage() {
   const [howWasService, setHowWasService] = useState("");
   const [favouriteParts, setFavouriteParts] = useState("");
   const [worshippedOnline, setWorshippedOnline] = useState(false);
+  const [attendRegularly, setAttendRegularly] = useState("");
+  const [preferredContact, setPreferredContact] = useState("");
+  const [prayerRequest, setPrayerRequest] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
   const [spouse, setSpouse] = useState<SpouseData | null>(null);
   const [showSpouseModal, setShowSpouseModal] = useState(false);
@@ -70,7 +73,7 @@ export default function AddFirstTimerPage() {
         profilePictureUrl = await uploadProfilePicture(photo);
       }
 
-      await createFirstTimer({
+      const created = await createFirstTimer({
         firstName,
         middleName: middleName || undefined,
         lastName,
@@ -94,7 +97,23 @@ export default function AddFirstTimerPage() {
         howWasService: howWasService || undefined,
         favouritePartOfService: favouriteParts || undefined,
         fromOnline: worshippedOnline || undefined,
+        attendRegularly: attendRegularly || undefined,
+        preferredContact: preferredContact || undefined,
       });
+
+      // If a prayer request was provided, submit it as a separate request
+      if (prayerRequest.trim() && created?.id) {
+        try {
+          await createPrayerRequest({
+            userId: created.id,
+            subject: "Prayer Request",
+            content: prayerRequest.trim(),
+          });
+        } catch {
+          // Prayer request failure is non-fatal — first timer was still saved
+        }
+      }
+
       if (!isAuthenticated()) {
         setSubmitted(true);
       } else {
@@ -149,6 +168,7 @@ export default function AddFirstTimerPage() {
               setStreet(""); setCity(""); setState(""); setCountry(""); setMaritalStatus("");
               setOccupation(""); setServiceAttended(""); setIsVisiting(false);
               setHowDidYouHear(""); setHowWasService(""); setFavouriteParts(""); setWorshippedOnline(false);
+              setAttendRegularly(""); setPreferredContact(""); setPrayerRequest("");
               setPhoto(null); setSpouse(null);
             }}
             className="mt-6 rounded-lg bg-[#000080] px-6 py-3 text-white font-medium"
@@ -473,6 +493,51 @@ export default function AddFirstTimerPage() {
               />
               Have you worshipped with us online before?
             </label>
+          </div>
+
+          {/* Attend regularly + Preferred contact */}
+          <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
+            <div>
+              <label className={labelStyles}>
+                Would you consider attending RCCG Rose of Sharon regularly?
+              </label>
+              <select
+                value={attendRegularly}
+                onChange={(e) => setAttendRegularly(e.target.value)}
+                className={selectStyles}
+              >
+                <option value="">Select option</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="Maybe">Maybe</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelStyles}>Preferred means of contact</label>
+              <select
+                value={preferredContact}
+                onChange={(e) => setPreferredContact(e.target.value)}
+                className={selectStyles}
+              >
+                <option value="">Select option</option>
+                <option value="Call">Call</option>
+                <option value="WhatsApp">WhatsApp</option>
+                <option value="Email">Email</option>
+                <option value="SMS">SMS</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Prayer Request */}
+          <div className="mt-4">
+            <label className={labelStyles}>Prayer Request</label>
+            <textarea
+              value={prayerRequest}
+              onChange={(e) => setPrayerRequest(e.target.value)}
+              placeholder="Enter prayer request (optional)"
+              rows={3}
+              className={`${inputStyles} resize-none`}
+            />
           </div>
         </div>
 

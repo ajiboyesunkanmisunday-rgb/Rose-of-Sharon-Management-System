@@ -130,6 +130,8 @@ export default function FirstTimerPage() {
         howWasService: formData.serviceRating || undefined,
         favouritePartOfService: formData.favouriteParts || undefined,
         fromOnline: formData.worshippedOnline === "Yes" ? true : formData.worshippedOnline === "No" ? false : undefined,
+        attendRegularly: formData.attendRegularly || undefined,
+        preferredContact: formData.preferredContact || undefined,
       };
 
       const created = await createFirstTimer(body);
