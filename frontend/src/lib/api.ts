@@ -1182,6 +1182,21 @@ export async function getEventForms(id: string): Promise<unknown> {
   return apiFetch<unknown>(`/api/v1/events/${id}/forms`);
 }
 
+export interface PastServiceAttendanceColumn {
+  feature: string;
+  totalCount: number;
+}
+
+export interface PastServicesAttendanceResponse {
+  columns: PastServiceAttendanceColumn[];
+}
+
+export async function getPastServicesAttendance(): Promise<PastServicesAttendanceResponse> {
+  return apiFetch<PastServicesAttendanceResponse>(
+    "/api/v1/events/past-services-attendance",
+  );
+}
+
 // ─── Event Attendees ─────────────────────────────────────────────────────────
 
 const EMPTY_PAGE = <T>(): CustomPageResponse<T> => ({
