@@ -50,6 +50,10 @@ function CI({
   rows = 2,
   style,
   placeholder,
+  maxLength,
+  onlyAlpha,
+  onlyNumeric,
+  onlyDateRange,
 }: {
   value: string;
   onChange?: (v: string) => void;
@@ -58,7 +62,25 @@ function CI({
   rows?: number;
   style?: React.CSSProperties;
   placeholder?: string;
+  /** Hard character cap */
+  maxLength?: number;
+  /** Strip anything that isn't a letter, space, hyphen, apostrophe or dot */
+  onlyAlpha?: boolean;
+  /** Strip anything that isn't a digit */
+  onlyNumeric?: boolean;
+  /** Allow only digits, hyphens, slashes and spaces (for year-range inputs) */
+  onlyDateRange?: boolean;
 }) {
+  const handleChange = (raw: string) => {
+    if (!onChange) return;
+    let v = raw;
+    if (onlyAlpha)     v = v.replace(/[^a-zA-Z\s\-'.]/g, "");
+    if (onlyNumeric)   v = v.replace(/\D/g, "");
+    if (onlyDateRange) v = v.replace(/[^0-9\-/–\s]/g, "");
+    if (maxLength !== undefined) v = v.slice(0, maxLength);
+    onChange(v);
+  };
+
   const base: React.CSSProperties = {
     border: "none",
     outline: "none",
@@ -69,6 +91,8 @@ function CI({
     width: "100%",
     padding: "1px 2px",
     resize: "none",
+    wordBreak: "break-word",
+    overflowWrap: "break-word",
     ...style,
   };
   if (multiline) {
@@ -76,8 +100,9 @@ function CI({
       <textarea
         readOnly={readOnly}
         value={value}
-        onChange={(e) => onChange?.(e.target.value)}
+        onChange={(e) => handleChange(e.target.value)}
         rows={rows}
+        maxLength={maxLength}
         style={base}
         placeholder={readOnly ? undefined : placeholder}
       />
@@ -88,7 +113,8 @@ function CI({
       type="text"
       readOnly={readOnly}
       value={value}
-      onChange={(e) => onChange?.(e.target.value)}
+      onChange={(e) => handleChange(e.target.value)}
+      maxLength={maxLength}
       style={base}
       placeholder={readOnly ? undefined : placeholder}
     />
@@ -303,6 +329,10 @@ export default function WorkersFormCore({
   const [whyWorker,   setWhyWorker]   = useState(initialData?.reasonForApplying ?? "");
   const [officialRem, setOfficialRem] = useState(initialData?.officialRemarks   ?? "");
   const [signDate,    setSignDate]    = useState("");
+
+  /* ── Marital-status derived flags ───────────────────────────────────── */
+  // Spouse name and maiden name should be locked when marital status is Single
+  const isSingle = !ro && marital.toLowerCase() === "single";
 
   /* ── Submit state ────────────────────────────────────────────────────── */
   const [submitting,    setSubmitting]    = useState(false);
@@ -726,15 +756,15 @@ export default function WorkersFormCore({
             <tbody>
               <tr>
                 <td style={TDL}>Surname{REQ}</td>
-                <td style={TD}><CI value={surname} onChange={setSurname} readOnly={ro} placeholder="e.g. Adeyemi" /></td>
+                <td style={TD}><CI value={surname} onChange={setSurname} readOnly={ro} placeholder="e.g. Adeyemi" maxLength={50} onlyAlpha={!ro} /></td>
                 <td style={TDL}>First Name{REQ}</td>
-                <td style={TD}><CI value={firstName} onChange={setFirstName} readOnly={ro} placeholder="e.g. Samuel" /></td>
+                <td style={TD}><CI value={firstName} onChange={setFirstName} readOnly={ro} placeholder="e.g. Samuel" maxLength={50} onlyAlpha={!ro} /></td>
               </tr>
               <tr>
                 <td style={TDL}>Other Names</td>
-                <td style={TD}><CI value={otherNames} onChange={setOtherNames} readOnly={ro} placeholder="e.g. Praise" /></td>
+                <td style={TD}><CI value={otherNames} onChange={setOtherNames} readOnly={ro} placeholder="e.g. Praise" maxLength={50} onlyAlpha={!ro} /></td>
                 <td style={TDL}>Sex{REQ}</td>
-                <td style={TD}><CI value={sex} onChange={setSex} readOnly={ro} placeholder="Male / Female" /></td>
+                <td style={TD}><CI value={sex} onChange={setSex} readOnly={ro} placeholder="Male / Female" maxLength={10} onlyAlpha={!ro} /></td>
               </tr>
               <tr>
                 <td style={{ ...TDL, whiteSpace: "normal" }}>
@@ -747,13 +777,25 @@ export default function WorkersFormCore({
               </tr>
               <tr>
                 <td style={TDL}>No. Of Children</td>
-                <td style={TD}><CI value={numChildren} onChange={setNumChildren} readOnly={ro} placeholder="e.g. 2" /></td>
+                <td style={TD}><CI value={numChildren} onChange={setNumChildren} readOnly={ro} placeholder="e.g. 2" maxLength={3} onlyNumeric={!ro} /></td>
                 <td style={{ ...TDL, whiteSpace: "normal" }}>Name of Spouse:<br /><span style={{ fontWeight: 400 }}>(if ever Married)</span></td>
-                <td style={TD}><CI value={spouseName} onChange={setSpouseName} readOnly={ro} placeholder="e.g. Mrs. Funke Adeyemi" /></td>
+                <td style={{ ...TD, background: isSingle ? "#F3F4F6" : undefined, position: "relative" }}>
+                  {isSingle ? (
+                    <span style={{ fontSize: 10, color: "#9CA3AF", fontStyle: "italic" }}>N/A — Single</span>
+                  ) : (
+                    <CI value={spouseName} onChange={setSpouseName} readOnly={ro} placeholder="e.g. Mrs. Funke Adeyemi" maxLength={100} />
+                  )}
+                </td>
               </tr>
               <tr>
                 <td style={{ ...TDL, whiteSpace: "normal" }}>Maiden Name:<br /><span style={{ fontWeight: 400 }}>(for Married Female)</span></td>
-                <td style={TD} colSpan={3}><CI value={maidenName} onChange={setMaidenName} readOnly={ro} placeholder="e.g. Okonkwo" /></td>
+                <td style={{ ...TD, background: isSingle ? "#F3F4F6" : undefined }} colSpan={3}>
+                  {isSingle ? (
+                    <span style={{ fontSize: 10, color: "#9CA3AF", fontStyle: "italic" }}>N/A — Single</span>
+                  ) : (
+                    <CI value={maidenName} onChange={setMaidenName} readOnly={ro} placeholder="e.g. Okonkwo" maxLength={100} />
+                  )}
+                </td>
               </tr>
               <tr>
                 <td style={TDL}>Adult Next of Kin (excl. Spouse)</td>
@@ -763,7 +805,7 @@ export default function WorkersFormCore({
                 <td style={TDL}>Relationship:</td>
                 <td style={TD}><CI value={nokRel} onChange={setNokRel} readOnly={ro} placeholder="e.g. Brother" /></td>
                 <td style={TDL}>Contact Phone Number:</td>
-                <td style={TD}><CI value={nokPhone} onChange={setNokPhone} readOnly={ro} placeholder="e.g. 08012345678" /></td>
+                <td style={TD}><CI value={nokPhone} onChange={setNokPhone} readOnly={ro} placeholder="e.g. 08012345678" maxLength={11} onlyNumeric={!ro} /></td>
               </tr>
               <tr>
                 <td style={TDL}>Contact address:</td>
@@ -786,7 +828,7 @@ export default function WorkersFormCore({
                 <td style={TDL}>State{REQ}</td>
                 <td style={TD}><CI value={homeState} onChange={setHomeState} readOnly={ro} placeholder="e.g. Lagos State" /></td>
                 <td style={TDL}>Country{REQ}</td>
-                <td style={TD}><CI value={homeCountry} onChange={setHomeCountry} readOnly={ro} placeholder="e.g. Nigeria" /></td>
+                <td style={TD}><CI value={homeCountry} onChange={setHomeCountry} readOnly={ro} placeholder="e.g. Nigeria" maxLength={60} onlyAlpha={!ro} /></td>
               </tr>
               <tr>
                 <td style={TDL}>Phone{REQ}</td>
@@ -836,10 +878,10 @@ export default function WorkersFormCore({
                 <tr key={i}>
                   <td style={TD}>
                     <span style={{ fontWeight: 700, marginRight: 4 }}>{i + 1}.</span>
-                    <CI value={quals[i].institution} onChange={(v) => updateQual(i, "institution", v)} readOnly={ro} placeholder="e.g. University of Lagos" />
+                    <CI value={quals[i].institution} onChange={(v) => updateQual(i, "institution", v)} readOnly={ro} placeholder="e.g. University of Lagos" maxLength={150} onlyAlpha={!ro} multiline rows={2} />
                   </td>
-                  <td style={TD}><CI value={quals[i].dates} onChange={(v) => updateQual(i, "dates", v)} readOnly={ro} placeholder="e.g. 2014–2018" /></td>
-                  <td style={TD}><CI value={quals[i].qualification} onChange={(v) => updateQual(i, "qualification", v)} readOnly={ro} placeholder="e.g. B.Sc. Computer Science" /></td>
+                  <td style={TD}><CI value={quals[i].dates} onChange={(v) => updateQual(i, "dates", v)} readOnly={ro} placeholder="e.g. 2014–2018" maxLength={20} onlyDateRange={!ro} /></td>
+                  <td style={TD}><CI value={quals[i].qualification} onChange={(v) => updateQual(i, "qualification", v)} readOnly={ro} placeholder="e.g. B.Sc. Computer Science" maxLength={150} onlyAlpha={!ro} multiline rows={2} /></td>
                 </tr>
               ))}
             </tbody>
@@ -859,10 +901,10 @@ export default function WorkersFormCore({
                 <tr key={i}>
                   <td style={TD}>
                     <span style={{ fontWeight: 700, marginRight: 4 }}>{i + 1}.</span>
-                    <CI value={quals[i].institution} onChange={(v) => updateQual(i, "institution", v)} readOnly={ro} placeholder="e.g. Yaba College of Technology" />
+                    <CI value={quals[i].institution} onChange={(v) => updateQual(i, "institution", v)} readOnly={ro} placeholder="e.g. Yaba College of Technology" maxLength={150} onlyAlpha={!ro} multiline rows={2} />
                   </td>
-                  <td style={{ ...TD, width: 90 }}><CI value={quals[i].dates} onChange={(v) => updateQual(i, "dates", v)} readOnly={ro} placeholder="e.g. 2010–2014" /></td>
-                  <td style={TD}><CI value={quals[i].qualification} onChange={(v) => updateQual(i, "qualification", v)} readOnly={ro} placeholder="e.g. HND Accounting" /></td>
+                  <td style={{ ...TD, width: 90 }}><CI value={quals[i].dates} onChange={(v) => updateQual(i, "dates", v)} readOnly={ro} placeholder="e.g. 2010–2014" maxLength={20} onlyDateRange={!ro} /></td>
+                  <td style={TD}><CI value={quals[i].qualification} onChange={(v) => updateQual(i, "qualification", v)} readOnly={ro} placeholder="e.g. HND Accounting" maxLength={150} onlyAlpha={!ro} multiline rows={2} /></td>
                 </tr>
               ))}
             </tbody>
