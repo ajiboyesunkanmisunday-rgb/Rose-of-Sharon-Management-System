@@ -25,6 +25,9 @@ import {
   type UserBasicResponse,
 } from "@/lib/api";
 import { SkeletonCard } from "@/components/ui/Skeleton";
+import AttendanceChart, {
+  type AttendanceItem,
+} from "@/components/dashboard/AttendanceChart";
 
 interface KpiStats {
   activeMembers: number;
@@ -49,16 +52,10 @@ interface CelebrationItem {
   date: string;
 }
 
-interface AttendanceItem {
-  day: string;
-  value: number;
-}
-
 export default function DashboardPage() {
   const router = useRouter();
   const [attendanceData, setAttendanceData] = useState<AttendanceItem[]>([]);
   const [attendanceLoading, setAttendanceLoading] = useState(true);
-  const maxAttendance = Math.max(1, ...attendanceData.map((d) => d.value));
 
   const [stats, setStats] = useState<KpiStats>({
     activeMembers: 0,
@@ -391,61 +388,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Attendance Overview */}
-        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm dark:shadow-slate-900">
-          <div className="mb-4 flex items-start justify-between gap-2">
-            <h2 className="text-base font-semibold text-[#111827] dark:text-slate-100">
-              Past 6 Services Attendance
-            </h2>
-            {(attendanceLoading || attendanceData.length === 0) && (
-              <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-medium text-amber-700">
-                Loading
-              </span>
-            )}
-          </div>
-          {attendanceLoading ? (
-            <div className="flex h-56 items-center justify-center text-sm text-[#6B7280] dark:text-slate-400">
-              Loading attendance...
-            </div>
-          ) : attendanceData.length === 0 ? (
-            <div className="flex h-56 items-end justify-between gap-2 px-1">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="flex flex-1 flex-col items-center gap-1.5"
-                >
-                  <span className="skeleton h-3 w-10" />
-                  <div
-                    className="skeleton w-full rounded-t-md"
-                    style={{ height: "120px" }}
-                  />
-                  <span className="skeleton h-3 w-12" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex h-56 items-end justify-between gap-2 px-1">
-              {attendanceData.map((item, index) => (
-                <div
-                  key={`${item.day}-${index}`}
-                  className="flex flex-1 flex-col items-center gap-1.5"
-                >
-                  <span className="text-[11px] font-medium text-[#374151] dark:text-slate-300">
-                    {item.value}
-                  </span>
-                  <div
-                    className="w-full rounded-t-md bg-[#000080] dark:bg-indigo-600 transition-all"
-                    style={{
-                      height: `${(item.value / maxAttendance) * 180}px`,
-                    }}
-                  />
-                  <span className="text-[10px] text-[#6B7280] dark:text-slate-400 text-center">
-                    {item.day}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <AttendanceChart data={attendanceData} loading={attendanceLoading} />
       </div>
 
       {/* Birthdays & Anniversaries Widget */}
