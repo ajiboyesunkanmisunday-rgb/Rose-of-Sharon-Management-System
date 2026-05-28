@@ -26,6 +26,15 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* ── Global text wrapping ───────────────────────────────────────────────────── */
+/* Prevent long unbroken strings (URLs, random chars, etc.) from overflowing   */
+/* their container. overflow-wrap only activates when a word exceeds the width  */
+/* of the container; normal spaced text is completely unaffected.               */
+* {
+  overflow-wrap: break-word;
+  min-width: 0; /* allow flex/grid children to shrink below intrinsic width */
+}
+
 /* ── Smooth theme transitions (only while toggling) ────────────────────────── */
 html.theme-transitioning,
 html.theme-transitioning *,

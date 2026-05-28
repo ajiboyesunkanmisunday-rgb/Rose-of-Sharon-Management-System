@@ -114,51 +114,6 @@ const MailIcon = () => (
   </svg>
 );
 
-// ── Image fetch helpers for export ──────────────────────────────────────────
-
-/**
- * Fetch an image and return it as a base64 data-URL.
- * Routes through the Netlify img-proxy function first (server-to-server,
- * no CORS restrictions), then falls back to a direct browser fetch for
- * local dev where the proxy is not running.
- */
-async function fetchBase64(url: string): Promise<string | null> {
-  if (!url) return null;
-  const candidates = [
-    `/.netlify/functions/img-proxy?url=${encodeURIComponent(url)}`,
-    url,
-  ];
-  for (const u of candidates) {
-    try {
-      const r = await fetch(u);
-      if (!r.ok) continue;
-      const buf = await r.arrayBuffer();
-      const bytes = new Uint8Array(buf);
-      let bin = "";
-      bytes.forEach((b) => (bin += String.fromCharCode(b)));
-      const mime = r.headers.get("content-type") ?? "image/jpeg";
-      return `data:${mime};base64,${btoa(bin)}`;
-    } catch { continue; }
-  }
-  return null;
-}
-
-async function fetchBuffer(url: string): Promise<ArrayBuffer | null> {
-  if (!url) return null;
-  const candidates = [
-    `/.netlify/functions/img-proxy?url=${encodeURIComponent(url)}`,
-    url,
-  ];
-  for (const u of candidates) {
-    try {
-      const r = await fetch(u);
-      if (!r.ok) continue;
-      return r.arrayBuffer();
-    } catch { continue; }
-  }
-  return null;
-}
-
 // ── Export row type ──────────────────────────────────────────────────────────
 
 type ExportRow = Record<string, string>;
@@ -183,6 +138,83 @@ function buildAnniversaryRows(users: UserResponse[]): ExportRow[] {
   }));
 }
 
+// ── Image fetch helper with extension detection ───────────────────────────────
+
+async function fetchImageData(url: string): Promise<{ buffer: ArrayBuffer; ext: string } | null> {
+  if (!url) return null;
+  const candidates = [
+    `/.netlify/functions/img-proxy?url=${encodeURIComponent(url)}`,
+    url,
+  ];
+  for (const u of candidates) {
+    try {
+      const r = await fetch(u);
+      if (!r.ok) continue;
+      const buf = await r.arrayBuffer();
+      const ct = r.headers.get("content-type") ?? "";
+      let ext = "jpg";
+      if (ct.includes("png")) ext = "png";
+      else if (ct.includes("gif")) ext = "gif";
+      else if (ct.includes("webp")) ext = "webp";
+      else {
+        const urlPath = url.split("?")[0].toLowerCase();
+        if (urlPath.endsWith(".png")) ext = "png";
+        else if (urlPath.endsWith(".gif")) ext = "gif";
+        else if (urlPath.endsWith(".webp")) ext = "webp";
+        else ext = "jpg";
+      }
+      return { buffer: buf, ext };
+    } catch { continue; }
+  }
+  return null;
+}
+
+/** Convert a celebrant's full name to a safe filename stem, e.g. "Mr John Doe" → "Mr_John_Doe" */
+function nameToFileStem(name: string): string {
+  return name.replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "_") || "Celebrant";
+}
+
+/** Download the document blob (and any photos) as a ZIP archive. */
+async function downloadAsZip(
+  docBlob: Blob,
+  docFilename: string,
+  photos: Array<{ name: string; buffer: ArrayBuffer; ext: string }>,
+) {
+  const JSZip = (await import("jszip")).default;
+  const zip = new JSZip();
+
+  zip.file(docFilename, docBlob);
+
+  const photoFolder = zip.folder("photos");
+  if (photoFolder) {
+    for (const p of photos) {
+      photoFolder.file(`${p.name}.${p.ext}`, p.buffer);
+    }
+  }
+
+  const zipBlob = await zip.generateAsync({ type: "blob" });
+  const url = URL.createObjectURL(zipBlob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${docFilename.replace(/\.[^.]+$/, "")}.zip`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/** Collect photos for all rows that have a _photoUrl. */
+async function collectPhotos(rows: ExportRow[]): Promise<Array<{ name: string; buffer: ArrayBuffer; ext: string }>> {
+  const results = await Promise.all(
+    rows.map(async (r) => {
+      const photoUrl = r["_photoUrl"];
+      if (!photoUrl) return null;
+      const data = await fetchImageData(photoUrl);
+      if (!data) return null;
+      return { name: nameToFileStem(r["Full Name"] ?? "Celebrant"), buffer: data.buffer, ext: data.ext };
+    })
+  );
+  return results.filter((x): x is NonNullable<typeof x> => x !== null);
+}
+
 // ── Core export function ─────────────────────────────────────────────────────
 
 async function exportData(
@@ -198,39 +230,51 @@ async function exportData(
   // ── CSV ──────────────────────────────────────────────────────────────────
   if (format === "csv") {
     const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
-    const csvCols = ["Photo URL", ...columns];
-    const header = csvCols.map(escape).join(",");
+    const header = columns.map(escape).join(",");
     const body = rows
-      .map((r) =>
-        [escape(r["_photoUrl"] ?? ""), ...columns.map((c) => escape(r[c] ?? ""))].join(",")
-      )
+      .map((r) => columns.map((c) => escape(r[c] ?? "")).join(","))
       .join("\n");
-    const blob = new Blob([`${header}\n${body}`], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${filename}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const docBlob = new Blob([`${header}\n${body}`], { type: "text/csv;charset=utf-8;" });
+    const photos = await collectPhotos(rows);
+
+    if (photos.length > 0) {
+      await downloadAsZip(docBlob, `${filename}.csv`, photos);
+    } else {
+      const url = URL.createObjectURL(docBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${filename}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
     return;
   }
 
   // ── Excel ────────────────────────────────────────────────────────────────
   if (format === "excel") {
-    const { utils, writeFile } = await import("xlsx");
-    const xlCols = ["Photo URL", ...columns];
+    const { utils, write } = await import("xlsx");
     const ws = utils.json_to_sheet(
       rows.map((r) =>
-        xlCols.reduce<Record<string, string>>((acc, c) => {
-          acc[c] = c === "Photo URL" ? (r["_photoUrl"] ?? "") : (r[c] ?? "");
-          return acc;
-        }, {})
+        columns.reduce<Record<string, string>>((acc, c) => { acc[c] = r[c] ?? ""; return acc; }, {})
       ),
-      { header: xlCols }
+      { header: columns }
     );
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, "Celebrants");
-    writeFile(wb, `${filename}.xlsx`);
+    const xlsxBuf = write(wb, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
+    const docBlob = new Blob([xlsxBuf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const photos = await collectPhotos(rows);
+
+    if (photos.length > 0) {
+      await downloadAsZip(docBlob, `${filename}.xlsx`, photos);
+    } else {
+      const url = URL.createObjectURL(docBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${filename}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
     return;
   }
 
@@ -240,66 +284,28 @@ async function exportData(
     const autoTable = (await import("jspdf-autotable")).default;
     const doc = new jsPDF({ orientation: "landscape" });
 
-    // Pre-fetch images
-    const imgMap: Record<number, string> = {};
-    await Promise.all(
-      rows.map(async (r, i) => {
-        if (r["_photoUrl"]) {
-          const b64 = await fetchBase64(r["_photoUrl"]);
-          if (b64) imgMap[i] = b64;
-        }
-      })
-    );
-
-    const hasImages = Object.keys(imgMap).length > 0;
-
     doc.setFontSize(16);
     doc.setTextColor(0, 0, 128);
     doc.text(filename.replace(/_/g, " "), 14, 16);
     doc.setTextColor(0, 0, 0);
 
-    // 40 mm wide photo column — large enough for a clear portrait thumbnail
-    const imgCellW = hasImages ? 40 : 0;
-    // Row height must accommodate the image (jsPDF-autotable unit = mm)
-    const imgRowH  = hasImages ? 42 : 0;
-
     autoTable(doc, {
       startY: 24,
-      head: [hasImages ? ["Photo", ...columns] : columns],
-      body: rows.map((r) =>
-        hasImages
-          ? ["", ...columns.map((c) => r[c] ?? "")]
-          : columns.map((c) => r[c] ?? "")
-      ),
+      head: [columns],
+      body: rows.map((r) => columns.map((c) => r[c] ?? "")),
       styles: { fontSize: 10, cellPadding: 4, valign: "middle" },
       headStyles: { fillColor: [0, 0, 128], textColor: 255, fontStyle: "bold", fontSize: 11 },
-      bodyStyles: hasImages ? { minCellHeight: imgRowH } : {},
-      columnStyles: hasImages ? { 0: { cellWidth: imgCellW, halign: "center" } } : {},
       rowPageBreak: "avoid",
-      didDrawCell: (data) => {
-        if (!hasImages) return;
-        if (data.section === "body" && data.column.index === 0) {
-          const b64 = imgMap[data.row.index];
-          if (b64) {
-            // Detect format from the data-URL prefix
-            const fmt = b64.startsWith("data:image/png") ? "PNG"
-                      : b64.startsWith("data:image/gif") ? "GIF"
-                      : "JPEG";
-            // Centre the image within the cell
-            const drawSize = Math.min(data.cell.height - 4, imgCellW - 4);
-            const x = data.cell.x + (imgCellW - drawSize) / 2;
-            const y = data.cell.y + (data.cell.height - drawSize) / 2;
-            try {
-              doc.addImage(b64, fmt, x, y, drawSize, drawSize);
-            } catch {
-              // skip if format not supported
-            }
-          }
-        }
-      },
     });
 
-    doc.save(`${filename}.pdf`);
+    const photos = await collectPhotos(rows);
+
+    if (photos.length > 0) {
+      const pdfOutput = doc.output("blob");
+      await downloadAsZip(pdfOutput, `${filename}.pdf`, photos);
+    } else {
+      doc.save(`${filename}.pdf`);
+    }
     return;
   }
 
@@ -307,23 +313,8 @@ async function exportData(
   if (format === "word") {
     const {
       Document, Packer, Paragraph, Table, TableRow, TableCell,
-      TextRun, WidthType, AlignmentType, BorderStyle, ImageRun,
+      TextRun, WidthType, AlignmentType, BorderStyle,
     } = await import("docx");
-    const { saveAs } = await import("file-saver");
-
-    // Pre-fetch image buffers
-    const bufMap: Record<number, ArrayBuffer> = {};
-    await Promise.all(
-      rows.map(async (r, i) => {
-        if (r["_photoUrl"]) {
-          const buf = await fetchBuffer(r["_photoUrl"]);
-          if (buf) bufMap[i] = buf;
-        }
-      })
-    );
-
-    const hasImages = Object.keys(bufMap).length > 0;
-    const allColumns = hasImages ? ["Photo", ...columns] : columns;
 
     const borderStyle = { style: BorderStyle.SINGLE, size: 4, color: "E5E7EB" };
     const tableBorders = {
@@ -332,7 +323,7 @@ async function exportData(
       insideHorizontal: borderStyle, insideVertical: borderStyle,
     };
 
-    const headerCells = allColumns.map(
+    const headerCells = columns.map(
       (col) =>
         new TableCell({
           shading: { fill: "000080" },
@@ -344,54 +335,18 @@ async function exportData(
         })
     );
 
-    const dataRows = await Promise.all(
-      rows.map(async (r, i) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const cells: any[] = [];
-
-        if (hasImages) {
-          const buf = bufMap[i];
-          const photoUrl = r["_photoUrl"] ?? "";
-          const imgType: "jpg" | "png" | "gif" =
-            photoUrl.toLowerCase().includes(".png") ? "png"
-            : photoUrl.toLowerCase().includes(".gif") ? "gif"
-            : "jpg";
-          cells.push(
-            new TableCell({
-              width: { size: 1200, type: WidthType.DXA },
-              children: [
-                new Paragraph({
-                  alignment: AlignmentType.CENTER,
-                  children: buf
-                    ? [
-                        new ImageRun({
-                          data: buf,
-                          transformation: { width: 90, height: 90 },
-                          type: imgType,
-                        }),
-                      ]
-                    : [new TextRun("—")],
-                }),
-              ],
-            })
-          );
-        }
-
-        columns.forEach((c) => {
-          cells.push(
-            new TableCell({
-              children: [
-                new Paragraph({
-                  children: [new TextRun({ text: r[c] ?? "—", size: 18 })],
-                }),
-              ],
-            })
-          );
-        });
-
-        return new TableRow({ children: cells });
-      })
-    );
+    const dataRows = rows.map((r) => {
+      const cells = columns.map((c) =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [new TextRun({ text: r[c] ?? "—", size: 18 })],
+            }),
+          ],
+        })
+      );
+      return new TableRow({ children: cells });
+    });
 
     const table = new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
@@ -416,8 +371,15 @@ async function exportData(
       ],
     });
 
-    const blob = await Packer.toBlob(wordDoc);
-    saveAs(blob, `${filename}.docx`);
+    const docBlob = await Packer.toBlob(wordDoc);
+    const photos = await collectPhotos(rows);
+
+    if (photos.length > 0) {
+      await downloadAsZip(docBlob, `${filename}.docx`, photos);
+    } else {
+      const { saveAs } = await import("file-saver");
+      saveAs(docBlob, `${filename}.docx`);
+    }
     return;
   }
 }

@@ -51,6 +51,15 @@ export default function EditRoleClient() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    name: !formData.name.trim() ? "Role name is required" : "",
+  };
+
+  const isFormValid = !!formData.name.trim();
+
   const populate = useCallback(async () => {
     if (!id || id.startsWith("r-")) return;
     try {
@@ -115,7 +124,9 @@ export default function EditRoleClient() {
             name="name"
             value={formData.name}
             onChange={handleChange}
+            onBlur={() => touch("name")}
             required
+            error={touched.name ? fieldErrors.name : undefined}
           />
           <TextAreaField
             label="Description"
@@ -172,7 +183,7 @@ export default function EditRoleClient() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={submitting}>
+            <Button variant="primary" type="submit" disabled={submitting || !isFormValid}>
               {submitting ? "Saving…" : "Save Changes"}
             </Button>
           </div>

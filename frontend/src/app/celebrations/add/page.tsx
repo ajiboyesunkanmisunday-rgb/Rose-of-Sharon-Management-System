@@ -43,6 +43,17 @@ export default function AddCelebrationPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    member: !selectedUserId ? "Please select a church member" : "",
+    type: !formData.type ? "Celebration type is required" : "",
+    date: !formData.date ? "Date is required" : "",
+  };
+
+  const isFormValid = !!selectedUserId && !!formData.type && !!formData.date;
+
   // Load members once for search
   useEffect(() => {
     async function loadMembers() {
@@ -149,9 +160,13 @@ export default function AddCelebrationPage() {
                   setSelectedUserName("");
                 }
               }}
+              onBlur={() => touch("member")}
               placeholder={membersLoading ? "Loading members…" : "Search by name or phone…"}
-              className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2.5 text-sm text-[#111827] dark:text-slate-100 placeholder-[#9CA3AF] focus:border-[#000080] focus:outline-none"
+              className={`w-full rounded-lg border px-3 py-2.5 text-sm text-[#111827] dark:text-slate-100 placeholder-[#9CA3AF] focus:border-[#000080] focus:outline-none ${touched.member && fieldErrors.member && !selectedUserId ? "border-red-400" : "border-[#E5E7EB] dark:border-slate-700"}`}
             />
+            {touched.member && fieldErrors.member && !selectedUserId && (
+              <p className="mt-1 text-xs text-red-500">{fieldErrors.member}</p>
+            )}
             {selectedUserId && (
               <span className="absolute right-3 top-9 text-xs text-green-600 font-medium">✓ Selected</span>
             )}
@@ -204,7 +219,7 @@ export default function AddCelebrationPage() {
             <Button variant="secondary" type="button" onClick={() => router.push("/celebrations")}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={loading}>
+            <Button variant="primary" type="submit" disabled={loading || !isFormValid}>
               {loading ? "Saving…" : "Save Celebration"}
             </Button>
           </div>

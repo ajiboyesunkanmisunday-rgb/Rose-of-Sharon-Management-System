@@ -5,13 +5,14 @@ import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import PhotoUpload from "@/components/ui/PhotoUpload";
-import { getMembers, type UserResponse } from "@/lib/api";
+import { getMembers, uploadProfilePicture, type UserResponse } from "@/lib/api";
 
 interface SpouseData {
   memberId?: string;
   name: string;
   weddingDate: string;
   anniversaryPhoto?: File | null;
+  couplePictureUrl?: string;
 }
 
 interface SpouseLinkModalProps {
@@ -39,6 +40,12 @@ export default function SpouseLinkModal({
   const [name, setName] = useState(initial.name || "");
   const [weddingDate, setWeddingDate] = useState(initial.weddingDate || "");
   const [photo, setPhoto] = useState<File | null>(initial.anniversaryPhoto || null);
+
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+  const [uploading, setUploading] = useState(false);
+
+  const isFormValid = !!name.trim() && !!weddingDate;
 
   // Load members when modal opens or search changes
   useEffect(() => {
@@ -74,13 +81,25 @@ export default function SpouseLinkModal({
     setName(full);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!name || !weddingDate) return;
+    let couplePictureUrl: string | undefined;
+    if (photo) {
+      setUploading(true);
+      try {
+        couplePictureUrl = await uploadProfilePicture(photo);
+      } catch {
+        // non-fatal — proceed without the photo URL
+      } finally {
+        setUploading(false);
+      }
+    }
     onSave({
       memberId: selectedMember?.id,
       name,
       weddingDate,
       anniversaryPhoto: photo,
+      couplePictureUrl,
     });
     onClose();
   };
@@ -189,9 +208,9 @@ export default function SpouseLinkModal({
           <Button
             variant="primary"
             onClick={handleSubmit}
-            disabled={!name || !weddingDate}
+            disabled={!isFormValid || uploading}
           >
-            Save Spouse
+            {uploading ? "Uploading photo…" : "Save Spouse"}
           </Button>
         </div>
       </div>

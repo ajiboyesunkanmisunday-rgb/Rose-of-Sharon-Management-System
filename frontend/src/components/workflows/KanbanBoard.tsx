@@ -178,6 +178,10 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
     const card = cards[fromCol]?.find((c) => c.id === cardId);
     if (!card) return;
 
+    // Snapshot the state BEFORE the optimistic update so we can revert accurately.
+    const snapshotFromCol = cards[fromCol];
+    const snapshotToCol   = cards[toCol] ?? [];
+
     setCards((prev) => {
       const next = { ...prev };
       next[fromCol] = prev[fromCol].filter((c) => c.id !== cardId);
@@ -204,14 +208,16 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
     try {
       await changeRequestStatus(cardId, toCol);
       showToast(`Moved to "${columns.find((c) => c.status === toCol)?.label ?? toCol}"`);
-    } catch {
-      setCards((prev) => {
-        const next = { ...prev };
-        next[toCol]   = prev[toCol].filter((c) => c.id !== cardId);
-        next[fromCol] = [...(prev[fromCol] ?? []), card];
-        return next;
-      });
-      showToast("Failed to move card — please try again.");
+    } catch (err) {
+      // Revert to the pre-move snapshot to avoid any stale-closure issues.
+      setCards((prev) => ({
+        ...prev,
+        [fromCol]: snapshotFromCol,
+        [toCol]:   snapshotToCol,
+      }));
+      const msg = err instanceof Error ? err.message : "Failed to move card.";
+      showToast(`Move failed: ${msg}`);
+      console.error("[KanbanBoard] changeRequestStatus error:", err);
     } finally {
       setMoving(null);
     }
@@ -220,6 +226,11 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
   // ── Status change from modal ──
   const handleStatusChange = async (card: RequestResponse, fromStatus: string, toStatus: string) => {
     if (fromStatus === toStatus) return;
+
+    // Snapshot before optimistic update.
+    const snapshotFrom = cards[fromStatus] ?? [];
+    const snapshotTo   = cards[toStatus]   ?? [];
+
     setCards((prev) => {
       const next = { ...prev };
       next[fromStatus] = (prev[fromStatus] ?? []).filter((c) => c.id !== card.id);
@@ -233,15 +244,16 @@ export default function KanbanBoard({ columns, boardData, onRefresh, loading }: 
     try {
       await changeRequestStatus(card.id, toStatus);
       showToast(`Status updated to "${columns.find((c) => c.status === toStatus)?.label ?? toStatus}"`);
-    } catch {
-      setCards((prev) => {
-        const next = { ...prev };
-        next[toStatus]   = (prev[toStatus] ?? []).filter((c) => c.id !== card.id);
-        next[fromStatus] = [...(prev[fromStatus] ?? []), card];
-        return next;
-      });
+    } catch (err) {
+      setCards((prev) => ({
+        ...prev,
+        [fromStatus]: snapshotFrom,
+        [toStatus]:   snapshotTo,
+      }));
       setEditCard((prev) => prev ? { ...prev, card, fromStatus } : null);
-      showToast("Failed to update status.");
+      const msg = err instanceof Error ? err.message : "Failed to update status.";
+      showToast(`Update failed: ${msg}`);
+      console.error("[KanbanBoard] handleStatusChange error:", err);
     }
   };
 

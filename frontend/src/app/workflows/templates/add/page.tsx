@@ -25,6 +25,15 @@ export default function AddWorkflowTemplatePage() {
   });
   const [steps, setSteps] = useState<string[]>(["", "", ""]);
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    name: !formData.name.trim() ? "Template name is required" : "",
+  };
+
+  const isFormValid = !!formData.name.trim();
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -66,8 +75,10 @@ export default function AddWorkflowTemplatePage() {
             name="name"
             value={formData.name}
             onChange={handleChange}
+            onBlur={() => touch("name")}
             placeholder="e.g. Member Onboarding"
             required
+            error={touched.name ? fieldErrors.name : undefined}
           />
 
           <TextAreaField
@@ -153,7 +164,7 @@ export default function AddWorkflowTemplatePage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
+            <Button variant="primary" type="submit" disabled={!isFormValid}>
               Save Template
             </Button>
           </div>

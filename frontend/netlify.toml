@@ -209,6 +209,26 @@
   status = 200
 
 [[redirects]]
+  from   = "/marketplace/:id"
+  to     = "/marketplace/product-1/index.html"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from   = "/marketplace/:id/"
+  to     = "/marketplace/product-1/index.html"
+  status = 200
+  force  = true
+
+# Prevent Netlify Edge from caching 404s for marketplace dynamic paths.
+# Without this, a 404 for /marketplace/<uuid> gets cached and served even
+# after redirect rules are added.
+[[headers]]
+  for = "/marketplace/:splat"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate"
+
+[[redirects]]
   from   = "/trainings/courses/:id/"
   to     = "/trainings/courses/course-1/"
   status = 200
@@ -329,6 +349,21 @@
 [[redirects]]
   from   = "/reports/"
   to     = "/reports/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/marketplace/view/"
+  to     = "/marketplace/view/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/marketplace/"
+  to     = "/marketplace/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/marketplace/add/"
+  to     = "/marketplace/add/index.html"
   status = 200
 
 [[redirects]]

@@ -347,10 +347,27 @@ interface PhoneInputProps {
   numberName?: string;
   placeholder?: string;
   className?: string;
+  error?: string;
+  onBlur?: () => void;
 }
 
 const sharedStyles =
   "h-[46px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
+
+/** Strip all formatting chars and leading zero from a phone string */
+function normalisePhone(raw: string, countryCode: string): string {
+  // Remove spaces, dashes, dots, parens, plus sign
+  let digits = raw.replace(/[\s\-.()+]/g, "").replace(/\D/g, "");
+  // Strip country-code prefix if user pasted the full international number
+  const bare = countryCode.replace(/^\+/, "");
+  if (digits.startsWith(bare) && digits.length > bare.length) {
+    digits = digits.slice(bare.length);
+  }
+  // Strip leading 0
+  if (digits.startsWith("0")) digits = digits.slice(1);
+  const maxDigits = countryCode === "+234" ? 10 : 15;
+  return digits.slice(0, maxDigits);
+}
 
 export default function PhoneInput({
   label,
@@ -363,6 +380,8 @@ export default function PhoneInput({
   numberName = "phone",
   placeholder = "Enter phone number",
   className = "",
+  error,
+  onBlur,
 }: PhoneInputProps) {
   return (
     <div className={className}>
@@ -387,21 +406,29 @@ export default function PhoneInput({
           name={numberName}
           value={number}
           onChange={(e) => {
-            let digits = e.target.value.replace(/\D/g, "");
-            if (digits.startsWith("0")) digits = digits.slice(1);
-            const maxDigits = code === "+234" ? 10 : 15;
-            digits = digits.slice(0, maxDigits);
-            onNumberChange(digits);
+            onNumberChange(normalisePhone(e.target.value, code));
           }}
+          onPaste={(e) => {
+            e.preventDefault();
+            const pasted = e.clipboardData.getData("text");
+            onNumberChange(normalisePhone(pasted, code));
+          }}
+          onBlur={onBlur}
           placeholder={placeholder}
           required={required}
           maxLength={code === "+234" ? 10 : 15}
-          className={`${sharedStyles} w-full px-4 bg-white dark:bg-slate-800`}
+          className={`${sharedStyles} w-full px-4 bg-white dark:bg-slate-800 ${
+            error ? "border-red-400 dark:border-red-400" : ""
+          }`}
         />
 
-        <p className="col-span-full mt-1 text-xs text-[#9CA3AF] dark:text-slate-400">
-          Do not include the leading 0 (e.g. enter 8132577456 not 08132577456)
-        </p>
+        {error ? (
+          <p className="col-span-full mt-1 text-xs text-red-500">{error}</p>
+        ) : (
+          <p className="col-span-full mt-1 text-xs text-[#9CA3AF] dark:text-slate-400">
+            Digits only — dashes, spaces &amp; leading 0 are stripped automatically
+          </p>
+        )}
       </div>
     </div>
   );

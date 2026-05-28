@@ -16,6 +16,7 @@ import {
   getPrayerRequests,
   getSuggestions,
   changeRequestStatus,
+  getStoredUser,
   type RequestResponse,
 } from "@/lib/api";
 import { Inbox } from "lucide-react";
@@ -68,6 +69,7 @@ const selectStyles =
 
 export default function RequestsPage() {
   const router = useRouter();
+  const currentUser = getStoredUser();
 
   const [requests,     setRequests]     = useState<RequestResponse[]>([]);
   const [totalPages,   setTotalPages]   = useState(1);
@@ -272,7 +274,11 @@ export default function RequestsPage() {
                       {(r.requestStatus ?? "—").replace(/_/g, " ")}
                     </span>
                   </td>
-                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[160px]"><span className="block truncate">{fullName(r.assignedTo)}</span></td>
+                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[160px]">
+                    <span className="block truncate">
+                      {r.assignedTo && r.assignedTo.id !== currentUser?.id ? fullName(r.assignedTo) : "—"}
+                    </span>
+                  </td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <ActionDropdown
                       actions={[

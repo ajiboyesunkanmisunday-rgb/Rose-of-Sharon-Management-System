@@ -6,6 +6,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import { getUser, getUserRequests, markUserAsInactive, getNotes, addNote, deleteNote, type UserResponse, type RequestResponse, type NoteResponse } from "@/lib/api";
+
+type NoteCategory = "CALL" | "VISIT";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import { useToast } from "@/context/ToastContext";
 import { SkeletonProfile } from "@/components/ui/Skeleton";
@@ -81,6 +83,7 @@ export default function ViewMemberProfilePage() {
   const [notesLoading, setNotesLoading] = useState(false);
   const [notesError,   setNotesError]   = useState("");
   const [noteInput,    setNoteInput]    = useState("");
+  const [noteCategory, setNoteCategory] = useState<NoteCategory>("CALL");
   const [addingNote,   setAddingNote]   = useState(false);
   const [deletingNote, setDeletingNote] = useState<string | null>(null);
 
@@ -128,12 +131,13 @@ export default function ViewMemberProfilePage() {
   const handleAddNote = async () => {
     if (!noteInput.trim() || !id) return;
     setAddingNote(true);
+    setNotesError("");
     try {
-      await addNote(id, noteInput.trim());
+      await addNote(id, noteInput.trim(), noteCategory);
       setNoteInput("");
       await fetchNotes();
-    } catch {
-      setNotesError("Failed to add note.");
+    } catch (err) {
+      setNotesError(err instanceof Error ? err.message : "Failed to add note.");
     } finally {
       setAddingNote(false);
     }
@@ -350,18 +354,45 @@ export default function ViewMemberProfilePage() {
               {/* Add note */}
               <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
                 <h3 className="mb-3 text-sm font-bold text-[#111827] dark:text-slate-100">Add Note</h3>
+
+                {/* Category selector */}
+                <div className="mb-3 flex gap-2">
+                  {(["CALL", "VISIT"] as NoteCategory[]).map((cat) => {
+                    const active = noteCategory === cat;
+                    const label  = cat === "CALL" ? "📞 Call" : "🏠 Visit";
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setNoteCategory(cat)}
+                        className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                          active
+                            ? "border-[#000080] bg-[#000080] text-white"
+                            : "border-[#E5E7EB] dark:border-slate-700 text-[#6B7280] dark:text-slate-400 hover:border-[#000080] hover:text-[#000080] dark:hover:text-indigo-400"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <textarea
                   value={noteInput}
                   onChange={(e) => setNoteInput(e.target.value)}
-                  placeholder="Write a note about this member…"
+                  placeholder={
+                    noteCategory === "VISIT"
+                      ? "Describe the visit to this member…"
+                      : "Describe the call with this member…"
+                  }
                   rows={3}
                   className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-[#111827] dark:text-slate-100 placeholder-[#9CA3AF] outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500 resize-none"
                 />
-                <div className="mt-2 flex items-center justify-between">
+                <div className="mt-2 flex items-center justify-between gap-3">
                   {notesError && <p className="text-xs text-red-600">{notesError}</p>}
                   <div className="ml-auto">
                     <Button variant="primary" onClick={handleAddNote} disabled={addingNote || !noteInput.trim()}>
-                      {addingNote ? "Adding…" : "Add Note"}
+                      {addingNote ? "Saving…" : `Save ${noteCategory === "VISIT" ? "Visit" : "Call"}`}
                     </Button>
                   </div>
                 </div>
@@ -375,36 +406,55 @@ export default function ViewMemberProfilePage() {
                   No notes yet. Add one above.
                 </div>
               ) : (
-                notes.map((note) => {
-                  const author = note.createdBy
-                    ? typeof note.createdBy === "string"
-                      ? note.createdBy
-                      : [note.createdBy.firstName, note.createdBy.lastName].filter(Boolean).join(" ") || note.officerName || "Staff"
-                    : note.officerName || "Staff";
-                  return (
-                    <div key={note.id} className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
-                      <div className="flex items-start justify-between gap-4">
-                        <p className="flex-1 text-sm text-[#374151] dark:text-slate-300 whitespace-pre-wrap">{note.content}</p>
-                        <button
-                          onClick={() => handleDeleteNote(note.id)}
-                          disabled={deletingNote === note.id}
-                          className="shrink-0 rounded-lg p-1.5 text-[#9CA3AF] hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
-                          title="Delete note"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                            <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
-                          </svg>
-                        </button>
-                      </div>
-                      <div className="mt-2 flex items-center gap-2 text-[11px] text-[#9CA3AF] dark:text-slate-500">
-                        <span>{author}</span>
-                        <span>·</span>
-                        <span>{fmtDate(note.createdOn)}</span>
-                      </div>
-                    </div>
-                  );
-                })
+                <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+                  <h3 className="mb-3 text-sm font-bold text-[#111827] dark:text-slate-100">Note History</h3>
+                  <ul className="space-y-3">
+                    {notes.map((note) => {
+                      const cat = (note.noteCategory ?? note.type ?? "").toUpperCase();
+                      const catLabel = cat.includes("CALL")  ? "Call"  :
+                                       cat.includes("VISIT") ? "Visit" : "Note";
+                      const catStyle = cat.includes("CALL")
+                        ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+                        : cat.includes("VISIT")
+                        ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
+                        : "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#374151] dark:text-slate-300";
+                      const author = note.createdBy
+                        ? typeof note.createdBy === "string"
+                          ? note.createdBy
+                          : [note.createdBy.firstName, note.createdBy.lastName].filter(Boolean).join(" ") || note.officerName || "Staff"
+                        : note.officerName || "Staff";
+                      return (
+                        <li key={note.id} className="rounded-lg border border-[#F3F4F6] dark:border-slate-700 bg-[#FAFAFA] dark:bg-slate-700/20 px-4 py-3">
+                          <div className="mb-1.5 flex items-center justify-between gap-2">
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${catStyle}`}>{catLabel}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-[#9CA3AF] dark:text-slate-400">
+                                {note.createdOn
+                                  ? new Date(note.createdOn).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                                  : "—"}
+                              </span>
+                              <button
+                                onClick={() => handleDeleteNote(note.id)}
+                                disabled={deletingNote === note.id}
+                                className="rounded p-0.5 text-[#9CA3AF] dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 disabled:opacity-50 transition-colors"
+                                title="Delete note"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+                                  <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          <p className="text-sm text-[#374151] dark:text-slate-300 whitespace-pre-wrap">{note.content ?? "—"}</p>
+                          {author && (
+                            <p className="mt-1 text-xs text-[#9CA3AF] dark:text-slate-400">By {author}</p>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               )}
             </div>
           )}

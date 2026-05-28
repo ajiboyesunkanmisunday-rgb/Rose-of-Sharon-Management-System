@@ -92,7 +92,7 @@ export default function BaptismalClassPage() {
       {/* Page header */}
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: "#000", margin: 0 }}>Trainings</h1>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4, flexWrap: "wrap", gap: 8 }}>
           <h2 style={{ fontSize: 22, fontWeight: 700, color: ACCENT, margin: 0 }}>Baptismal Class</h2>
           <div style={{ display: "flex", gap: 10 }}>
             <button
@@ -161,7 +161,7 @@ export default function BaptismalClassPage() {
       {/* Table */}
       <div style={{
         background: "#fff", borderRadius: 12,
-        border: "1px solid #E5E7EB", overflow: "hidden",
+        border: "1px solid #E5E7EB", overflowX: "auto",
       }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>

@@ -34,6 +34,19 @@ export default function AddPrayerRequestPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const MAX_REQUEST = 1000;
+  const requestNear = form.request.length >= Math.floor(MAX_REQUEST * 0.85);
+
+  const fieldErrors = {
+    member: !selectedMember ? "Please select a member" : "",
+    request: !form.request.trim() ? "Prayer request details are required" : "",
+  };
+
+  const isFormValid = !!selectedMember && !!form.request.trim();
+
   const set = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -202,17 +215,27 @@ export default function AddPrayerRequestPage() {
 
           {/* Prayer request text */}
           <div className="mt-5">
-            <label className="mb-1.5 block text-sm font-medium text-[#374151] dark:text-slate-300">
-              Prayer Request <span className="text-red-500">*</span>
-            </label>
+            <div className="mb-1.5 flex items-center justify-between">
+              <label className="block text-sm font-medium text-[#374151] dark:text-slate-300">
+                Prayer Request <span className="text-red-500">*</span>
+              </label>
+              <span className={`text-xs tabular-nums ${requestNear ? "text-amber-500 font-medium" : "text-[#9CA3AF] dark:text-slate-500"}`}>
+                {form.request.length}/{MAX_REQUEST}
+              </span>
+            </div>
             <textarea
               rows={5}
-              className={inputClass}
+              className={`${inputClass} ${touched.request && fieldErrors.request ? "border-red-400" : ""}`}
               placeholder="Describe the prayer request in detail..."
               value={form.request}
-              onChange={(e) => set("request", e.target.value)}
+              onChange={(e) => set("request", e.target.value.slice(0, MAX_REQUEST))}
+              onBlur={() => touch("request")}
+              maxLength={MAX_REQUEST}
               required
             />
+            {touched.request && fieldErrors.request && (
+              <p className="mt-1 text-xs text-red-500">{fieldErrors.request}</p>
+            )}
           </div>
         </div>
 
@@ -224,7 +247,7 @@ export default function AddPrayerRequestPage() {
           >
             Cancel
           </Button>
-          <Button variant="primary" type="submit" disabled={submitting}>
+          <Button variant="primary" type="submit" disabled={submitting || !isFormValid}>
             {submitting ? "Submitting…" : "Submit Request"}
           </Button>
         </div>

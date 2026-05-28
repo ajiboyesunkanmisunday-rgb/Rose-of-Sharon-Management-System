@@ -46,31 +46,26 @@ export default function SchoolOfMinistryPage() {
   const [error,    setError]    = useState("");
   const [search,   setSearch]   = useState("");
   const [page,     setPage]     = useState(1);
+  const [somSet,   setSomSet]   = useState(1);
 
-  const load = useCallback(async (pg: number) => {
+  const load = useCallback(async (pg: number, set?: number) => {
     setLoading(true);
     setError("");
     try {
-      const res = await getSchoolOfMinistries(pg - 1, ITEMS_PER_PAGE);
+      const res = await getSchoolOfMinistries(pg - 1, ITEMS_PER_PAGE, set);
       setRecords(res.content ?? []);
       setTotal(res.totalElements ?? 0);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed to load records.";
-      // 404 means the backend endpoint is not yet deployed for this module
-      if (msg.includes("404") || msg.toLowerCase().includes("not found")) {
-        setError("The School of Ministry module is not yet active on the server. Please check back later or contact the backend team.");
-      } else {
-        setError(msg);
-      }
+      setError(e instanceof Error ? e.message : "Failed to load records.");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { load(page); }, [load, page]);
+  useEffect(() => { load(page, somSet); }, [load, page, somSet]);
 
   const handleSearch = async () => {
-    if (!search.trim()) { load(page); return; }
+    if (!search.trim()) { load(page, somSet); return; }
     setLoading(true);
     setError("");
     try {
@@ -90,18 +85,18 @@ export default function SchoolOfMinistryPage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-6 flex flex-wrap items-start gap-3 sm:flex-nowrap sm:items-center">
         <div
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
           style={{ backgroundColor: ACCENT10 }}
         >
           <BookOpen className="h-6 w-6" style={{ color: ACCENT }} />
         </div>
-        <div>
-          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">School of Ministry</h1>
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-[28px] font-bold text-[#000000] dark:text-slate-100">School of Ministry</h1>
           <p className="text-sm text-[#6B7280] dark:text-slate-400">Members enrolled in the SOM programme</p>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
           <button
             onClick={() => router.push("/trainings/som/form")}
             className="flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold text-white hover:opacity-90"
@@ -121,7 +116,7 @@ export default function SchoolOfMinistryPage() {
             Download Blank Form
           </button>
           <button
-            onClick={() => load(page)}
+            onClick={() => load(page, somSet)}
             disabled={loading}
             className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 hover:border-[#059669] hover:text-[#059669] disabled:opacity-50"
           >
@@ -139,12 +134,35 @@ export default function SchoolOfMinistryPage() {
         </div>
       )}
 
+      {/* Set selector */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <span className="text-sm font-medium text-[#374151] dark:text-slate-300">Set:</span>
+        {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+          <button
+            key={n}
+            onClick={() => {
+              setSomSet(n);
+              setPage(1);
+              setSearch("");
+            }}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+              somSet === n
+                ? "text-white"
+                : "border border-[#E5E7EB] dark:border-slate-600 text-[#6B7280] dark:text-slate-400"
+            }`}
+            style={somSet === n ? { backgroundColor: ACCENT } : undefined}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+
       {/* Search + count */}
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <div className="w-full sm:w-72">
           <SearchBar
             value={search}
-            onChange={(v) => { setSearch(v); if (!v.trim()) load(1); }}
+            onChange={(v) => { setSearch(v); if (!v.trim()) load(1, somSet); }}
             onSearch={handleSearch}
             placeholder="Search by name, phone, occupation…"
           />
@@ -155,7 +173,7 @@ export default function SchoolOfMinistryPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "#F9FAFB" }}>
@@ -233,7 +251,7 @@ export default function SchoolOfMinistryPage() {
           currentPage={page}
           totalPages={totalPages}
           totalItems={total}
-          onPageChange={(p) => { setPage(p); load(p); }}
+          onPageChange={(p) => { setPage(p); load(p, somSet); }}
         />
       </div>
     </div>

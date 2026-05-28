@@ -33,6 +33,15 @@ export default function EditGroupClient() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    name: !formData.name.trim() ? "Group name is required" : "",
+  };
+
+  const isFormValid = !!formData.name.trim();
+
   const populate = useCallback(async () => {
     if (!id || id.startsWith("grp-")) return;
     try {
@@ -90,7 +99,7 @@ export default function EditGroupClient() {
 
       <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
-          <FormField label="Group Name" name="name" value={formData.name} onChange={handleChange} required />
+          <FormField label="Group Name" name="name" value={formData.name} onChange={handleChange} onBlur={() => touch("name")} required error={touched.name ? fieldErrors.name : undefined} />
           <TextAreaField label="Description" name="description" value={formData.description} onChange={handleChange} rows={3} />
           <FormField label="WhatsApp Link" name="whatsAppLink" value={formData.whatsAppLink} onChange={handleChange} placeholder="https://chat.whatsapp.com/..." />
 
@@ -98,7 +107,7 @@ export default function EditGroupClient() {
             <Button variant="secondary" type="button" onClick={() => router.push(`/settings/groups/grp-1/?id=${encodeURIComponent(id)}`)}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={submitting}>
+            <Button variant="primary" type="submit" disabled={submitting || !isFormValid}>
               {submitting ? "Saving…" : "Save Changes"}
             </Button>
           </div>

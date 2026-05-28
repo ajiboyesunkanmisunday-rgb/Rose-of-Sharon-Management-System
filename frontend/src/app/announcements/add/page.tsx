@@ -19,6 +19,23 @@ export default function AddAnnouncementPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const MAX_CONTENT = 1000;
+  const MAX_SUBJECT = 150;
+  const contentNear = formData.content.length >= Math.floor(MAX_CONTENT * 0.85);
+  const subjectNear = formData.subject.length >= Math.floor(MAX_SUBJECT * 0.85);
+
+  const fieldErrors = {
+    subject: !formData.subject.trim() ? "Title is required" : "",
+    content: !formData.content.trim() ? "Details are required" : "",
+    startDate: !formData.startDate ? "Start date is required" : "",
+    endDate: !formData.endDate ? "End date is required" : "",
+  };
+
+  const isFormValid = !!formData.subject.trim() && !!formData.content.trim() && !!formData.startDate && !!formData.endDate;
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -64,19 +81,27 @@ export default function AddAnnouncementPage() {
             label="Title"
             name="subject"
             value={formData.subject}
-            onChange={handleChange}
+            onChange={(e) => setFormData((prev) => ({ ...prev, subject: e.target.value.slice(0, MAX_SUBJECT) }))}
+            onBlur={() => touch("subject")}
             placeholder="Enter announcement title"
             required
+            error={touched.subject ? fieldErrors.subject : undefined}
+            showCount
+            maxLength={MAX_SUBJECT}
           />
 
           <TextAreaField
             label="Details"
             name="content"
             value={formData.content}
-            onChange={handleChange}
+            onChange={(e) => setFormData((prev) => ({ ...prev, content: e.target.value.slice(0, MAX_CONTENT) }))}
+            onBlur={() => touch("content")}
             placeholder="Enter announcement details"
             rows={6}
             required
+            error={touched.content ? fieldErrors.content : undefined}
+            showCount
+            maxLength={MAX_CONTENT}
           />
 
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
@@ -86,7 +111,9 @@ export default function AddAnnouncementPage() {
               name="startDate"
               value={formData.startDate}
               onChange={handleChange}
+              onBlur={() => touch("startDate")}
               required
+              error={touched.startDate ? fieldErrors.startDate : undefined}
             />
             <FormField
               label="End Date"
@@ -94,7 +121,9 @@ export default function AddAnnouncementPage() {
               name="endDate"
               value={formData.endDate}
               onChange={handleChange}
+              onBlur={() => touch("endDate")}
               required
+              error={touched.endDate ? fieldErrors.endDate : undefined}
             />
           </div>
 
@@ -106,7 +135,7 @@ export default function AddAnnouncementPage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={loading}>
+            <Button variant="primary" type="submit" disabled={loading || !isFormValid}>
               {loading ? "Saving..." : "Save Announcement"}
             </Button>
           </div>

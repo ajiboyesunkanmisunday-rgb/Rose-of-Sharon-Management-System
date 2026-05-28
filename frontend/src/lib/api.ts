@@ -853,14 +853,13 @@ export async function getNotes(
 export async function addNote(
   userId: string,
   note: string,
+  category: "CALL" | "VISIT" = "CALL",
 ): Promise<OperationalResponse> {
-  // POST /api/v1/notes/call  { userId, content }
-  // WORKAROUND: POST /api/v1/notes returns 500 and POST /api/v1/notes/others
-  // returns 405 (backend bug — the generic endpoint has no default noteCategory).
-  // Using /call because it is the only working creation path; the noteCategory
-  // is not displayed in the Notes UI so users see no difference.
-  // TODO: switch back to POST /api/v1/notes once the backend is fixed.
-  return apiFetch<OperationalResponse>(`/api/v1/notes/call`, {
+  // POST /api/v1/notes (base) returns 500 on the backend — not usable.
+  // POST /api/v1/notes/others does not exist.
+  // Only CALL and VISIT endpoints are working.
+  const endpoint = category === "VISIT" ? "/api/v1/notes/visit" : "/api/v1/notes/call";
+  return apiFetch<OperationalResponse>(endpoint, {
     method: "POST",
     body: JSON.stringify({ userId, content: note }),
   });
@@ -895,14 +894,12 @@ export async function deleteNote(noteId: string): Promise<OperationalResponse> {
 export async function assignFollowUp(
   userId: string,
   officerId: string,
-  note?: string,
+  note?: string, // kept for call-site compat; Swagger endpoint has no body
 ): Promise<OperationalResponse> {
+  void note; // intentionally unused — PUT /api/v1/users/{id}/assign-followup/{followUpMemberId}
   return apiFetch<OperationalResponse>(
-    `/api/v1/users/${userId}/assign-follow-up`,
-    {
-      method: "POST",
-      body: JSON.stringify({ officerId, note }),
-    },
+    `/api/v1/users/${userId}/assign-followup/${officerId}`,
+    { method: "PUT" },
   );
 }
 
@@ -911,6 +908,7 @@ export async function convertToSecondTimer(
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
     `/api/v1/users/${userId}/convert-to-second-timer`,
+    { method: "PUT" },
   );
 }
 
@@ -919,6 +917,7 @@ export async function convertToFullMember(
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
     `/api/v1/users/${userId}/convert-to-full-member`,
+    { method: "PUT" },
   );
 }
 
@@ -928,9 +927,11 @@ export const convertToMember = convertToFullMember;
 export async function linkSpouse(
   userId: string,
   spouseId: string,
+  couplePictureUrl?: string,
 ): Promise<UserResponse> {
+  const qs = couplePictureUrl ? `?couplePictureUrl=${encodeURIComponent(couplePictureUrl)}` : "";
   return apiFetch<UserResponse>(
-    `/api/v1/users/${userId}/link-spouse/${spouseId}`,
+    `/api/v1/users/${userId}/link-spouse/${spouseId}${qs}`,
     { method: "PUT" },
   );
 }
@@ -1639,9 +1640,15 @@ export interface TestimonyResponse {
 export async function getTestimonies(
   pageNo = 0,
   pageSize = 10,
+  status?: string,
 ): Promise<CustomPageResponse<TestimonyResponse>> {
+  const params = new URLSearchParams({
+    pageNo: String(pageNo),
+    pageSize: String(pageSize),
+  });
+  if (status) params.set("status", status);
   return apiFetch<CustomPageResponse<TestimonyResponse>>(
-    `/api/v1/testimonies?pageNo=${pageNo}&pageSize=${pageSize}`,
+    `/api/v1/testimonies?${params.toString()}`,
   );
 }
 
@@ -2067,6 +2074,9 @@ export async function uploadMedia(fields: {
   description?: string;
   category: string;
   file: File;
+  speaker?: string;
+  date?: string;       // ISO date string e.g. "2024-11-03"
+  tags?: string[];
   youtubeLink?: string; // optional external link stored in description
 }): Promise<MediaResponse> {
   const token = getToken();
@@ -2091,8 +2101,12 @@ export async function uploadMedia(fields: {
     type: fields.category,
     category: fields.category,
     size: String(fields.file.size),
+    isFromMedia: "true",
   });
   if (description) params.set("description", description);
+  if (fields.speaker) params.set("speaker", fields.speaker);
+  if (fields.date)    params.set("date", fields.date);
+  if (fields.tags && fields.tags.length > 0) params.set("tags", fields.tags.join(","));
 
   // Only the binary file goes in the FormData body
   const form = new FormData();
@@ -2333,6 +2347,7 @@ export interface WorkersInTrainingResponse {
   id: string;
   userId?: string;
   set?: string;
+  admissionNo?: string;
   firstName: string;
   middleName?: string;
   lastName: string;
@@ -3188,7 +3203,8 @@ export interface StudentAttendance {
   lastName?: string;
   admissionNo?: string;
   profilePictureUrl?: string;
-  attendances?: { date?: string; present?: boolean }[];
+  /** Swagger: { attendanceId, trainingEventName } per AttendanceSheetResponse schema */
+  attendances?: { attendanceId?: string; trainingEventName?: string }[];
 }
 
 export interface AttendanceSheetResponse {
@@ -3261,13 +3277,13 @@ export async function uploadScoreSheet(body: {
   });
 }
 
+/** Swagger: PUT /api/v1/score-sheets/{id}?score=X  — score is a query param, not body */
 export async function updateScoreSheet(
   id: string,
-  body: Partial<CreateScoreRequest>,
+  score: number,
 ): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/score-sheets/${id}`, {
+  return apiFetch<OperationalResponse>(`/api/v1/score-sheets/${id}?score=${score}`, {
     method: "PUT",
-    body: JSON.stringify(body),
   });
 }
 
@@ -3482,6 +3498,8 @@ export async function searchAnnouncements(
 
 export interface SchoolOfMinistryResponse {
   id: string;
+  userId?: string;
+  set?: string;
   firstName?: string;
   middleName?: string;
   lastName?: string;
@@ -3492,33 +3510,41 @@ export interface SchoolOfMinistryResponse {
   spouseName?: string;
   countryCode?: string;
   phoneNumber?: string;
-  homeAddress?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
   occupation?: string;
   placeOfWork?: string;
-  workPhoneNumber?: string;
-  officeAddress?: string;
+  officePhoneNumber?: string;
+  officeFullAddress?: string;
+  /** Not in Swagger schema — backend does not currently store this field */
   profilePictureUrl?: string;
   salvationDate?: string;
   salvationLocation?: string;
   waterBaptismDate?: string;
-  waterBaptismChurch?: string;
+  waterBaptismLocation?: string;
   holySpiritBaptismDate?: string;
-  holySpiritBaptismChurch?: string;
-  hasGoneThroughNewConvertsClass?: boolean;
-  hasGoneThroughWaterBaptismalClass?: boolean;
+  holySpiritBaptismLocation?: string;
+  goneThroughNewConverts?: boolean;
   otherInformation?: string;
+  consent?: boolean;
   officialRemarks?: string;
+  reasonsForApplying?: string[];
+  feesPaid?: number;
+  graduationDate?: string;
   createdOn?: string;
 }
 
 export interface SchoolOfMinistryFullResponse extends SchoolOfMinistryResponse {
-  qualifications?: { schoolAttended?: string; dates?: string; qualificationReceived?: string }[];
-  recentWorshipPlaces?: { name?: string }[];
-  churchDepartments?: { name?: string; date?: string }[];
-  reasonsForAttending?: string[];
+  qualifications?: { id?: string; institution?: string; date?: string; qualificationReceived?: string }[];
+  pastPlaceOfWorships?: { id?: string; name?: string; address?: string; date?: string }[];
+  studentDepartments?: { id?: string; name?: string; date?: string }[];
 }
 
 export interface CreateSchoolOfMinistryRequest {
+  set?: string;
+  userId?: string;
   firstName: string;
   middleName?: string;
   lastName: string;
@@ -3529,33 +3555,39 @@ export interface CreateSchoolOfMinistryRequest {
   spouseName?: string;
   countryCode: string;
   phoneNumber: string;
-  homeAddress?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
   occupation?: string;
   placeOfWork?: string;
-  workPhoneNumber?: string;
-  officeAddress?: string;
+  officePhoneNumber?: string;
+  officeFullAddress?: string;
+  /** Not in Swagger schema — backend ignores this field; kept for future backend support */
   profilePictureUrl?: string;
   salvationDate?: string;
   salvationLocation?: string;
   waterBaptismDate?: string;
-  waterBaptismChurch?: string;
+  waterBaptismLocation?: string;
   holySpiritBaptismDate?: string;
-  holySpiritBaptismChurch?: string;
-  hasGoneThroughNewConvertsClass?: boolean;
-  hasGoneThroughWaterBaptismalClass?: boolean;
+  holySpiritBaptismLocation?: string;
+  goneThroughNewConverts?: boolean;
   otherInformation?: string;
-  qualificationRequests?: { schoolAttended?: string; dates?: string; qualificationReceived?: string }[];
-  recentWorshipPlaces?: { name?: string }[];
-  churchDepartments?: { name?: string; date?: string }[];
-  reasonsForAttending?: string[];
+  consent?: boolean;
+  qualificationRequests?: { institution?: string; date?: string; qualificationReceived?: string }[];
+  createPastPlaceOfWorshipRequests?: { name?: string; address?: string; date?: string }[];
+  createStudentDepartmentRequests?: { name?: string; date?: string }[];
+  reasonsForApplying?: string[];
 }
 
 export async function getSchoolOfMinistries(
   pageNo = 0,
   pageSize = 20,
+  set?: number,
 ): Promise<CustomPageResponse<SchoolOfMinistryResponse>> {
+  const setParam = set != null ? `&set=${set}` : "";
   return apiFetch<CustomPageResponse<SchoolOfMinistryResponse>>(
-    `/api/v1/school-of-ministry?pageNo=${pageNo}&pageSize=${pageSize}`,
+    `/api/v1/school-of-ministries?pageNo=${pageNo}&pageSize=${pageSize}${setParam}`,
   );
 }
 
@@ -3563,7 +3595,7 @@ export async function getSchoolOfMinistry(
   id: string,
 ): Promise<SchoolOfMinistryFullResponse> {
   return apiFetch<SchoolOfMinistryFullResponse>(
-    `/api/v1/school-of-ministry/${id}`,
+    `/api/v1/school-of-ministries/${id}`,
   );
 }
 
@@ -3573,7 +3605,7 @@ export async function searchSchoolOfMinistries(
   pageSize = 20,
 ): Promise<CustomPageResponse<SchoolOfMinistryResponse>> {
   return apiFetch<CustomPageResponse<SchoolOfMinistryResponse>>(
-    `/api/v1/school-of-ministry/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    `/api/v1/school-of-ministries/search?pageNo=${pageNo}&pageSize=${pageSize}`,
     { method: "POST", body: JSON.stringify({ text }) },
   );
 }
@@ -3581,7 +3613,7 @@ export async function searchSchoolOfMinistries(
 export async function createSchoolOfMinistry(
   body: CreateSchoolOfMinistryRequest,
 ): Promise<SchoolOfMinistryResponse> {
-  return apiFetch<SchoolOfMinistryResponse>("/api/v1/school-of-ministry", {
+  return apiFetch<SchoolOfMinistryResponse>("/api/v1/school-of-ministries", {
     method: "POST",
     body: JSON.stringify(body),
   });
@@ -3592,7 +3624,350 @@ export async function giveSomOfficialRemark(
   text: string,
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
-    `/api/v1/school-of-ministry/${id}/official-remark`,
+    `/api/v1/school-of-ministries/${id}/give-official-remark`,
     { method: "PATCH", body: JSON.stringify({ text }) },
   );
+}
+
+// ─── Marketplace (Products) ───────────────────────────────────────────────────
+
+export type ProductCategory = "BOOK" | "ELECTRONICS" | "COOKING_UTENSILS" | "AUTOMOBILE" | "WEARS";
+
+export interface ProductResponse {
+  id: string;
+  name: string;
+  price?: number;
+  quantityLeft?: number;
+  owner?: {
+    id: string;
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+    email?: string;
+    phoneNumber?: string;
+    profilePictureUrl?: string;
+  };
+  isApproved?: boolean;
+  images?: string[];
+  description?: string;
+  otherInformation?: string;
+  tags?: string[];
+  productCategory?: ProductCategory;
+  averageRating?: number;
+  createdOn?: string;
+  updatedOn?: string;
+}
+
+export interface CreateProductRequest {
+  name: string;
+  description?: string;
+  owner?: string;
+  price?: number;
+  images?: string[];
+  quantityLeft?: number;
+  otherInformation?: string;
+  tags?: string[];
+  category?: string;
+}
+
+export interface UpdateProductRequest {
+  name?: string;
+  description?: string;
+  owner?: string;
+  price?: number;
+  images?: string[];
+  otherInformation?: string;
+  tags?: string[];
+  category?: string;
+}
+
+export async function getProducts(
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<ProductResponse>> {
+  return apiFetch<CustomPageResponse<ProductResponse>>(
+    `/api/v1/products?pageNo=${pageNo}&pageSize=${pageSize}`,
+  );
+}
+
+/**
+ * There is no GET /api/v1/products/{id} endpoint in Swagger
+ * (the backend only accepts PUT and PATCH on that path).
+ * Strategy:
+ *  1. Check sessionStorage for a previously-cached copy (set by the listing page).
+ *  2. Fallback: search by fetching all products (up to 200) and find by ID.
+ */
+export async function getProduct(id: string): Promise<ProductResponse> {
+  if (typeof window !== "undefined") {
+    const cached = sessionStorage.getItem(`product_${id}`);
+    if (cached) {
+      try { return JSON.parse(cached) as ProductResponse; } catch {}
+    }
+  }
+  const page = await apiFetch<CustomPageResponse<ProductResponse>>(
+    `/api/v1/products?pageNo=0&pageSize=200`,
+  );
+  const found = (page.content ?? []).find((p) => p.id === id);
+  if (!found) throw new Error("Product not found.");
+  return found;
+}
+
+export async function createProduct(
+  body: CreateProductRequest,
+): Promise<ProductResponse> {
+  return apiFetch<ProductResponse>("/api/v1/products", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateProduct(
+  id: string,
+  body: UpdateProductRequest,
+): Promise<ProductResponse> {
+  return apiFetch<ProductResponse>(`/api/v1/products/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteProduct(id: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/products", {
+    method: "DELETE",
+    body: JSON.stringify({ ids: [id] }),
+  });
+}
+
+export async function searchProducts(
+  query: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<ProductResponse>> {
+  return apiFetch<CustomPageResponse<ProductResponse>>(
+    `/api/v1/products/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ text: query }) },
+  );
+}
+
+export async function approveProducts(ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/products/approve", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export interface FilterRequest {
+  text?: string;
+  fromQuantity?: number;
+  toQuantity?: number;
+  fromAmount?: number;
+  toAmount?: number;
+  ownerId?: string;
+  category?: string;
+}
+
+export async function filterApprovedProducts(
+  filter: FilterRequest,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<ProductResponse>> {
+  return apiFetch<CustomPageResponse<ProductResponse>>(
+    `/api/v1/products/filter-approved?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify(filter) },
+  );
+}
+
+/** PATCH /api/v1/products/{id}?quantity=X — update product quantity */
+export async function updateProductQuantity(
+  id: string,
+  quantity: number,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/products/${id}?quantity=${quantity}`,
+    { method: "PATCH" },
+  );
+}
+
+export interface GiveProductFeedbackRequest {
+  comment?: string;
+  rating?: number;
+}
+
+export async function giveProductFeedback(
+  id: string,
+  body: GiveProductFeedbackRequest,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/products/${id}/feedback`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+// ─── School of Ministry — extra endpoints ────────────────────────────────────
+
+/** PUT /api/v1/school-of-ministries/{id}/fees-paid?feesPaid=X */
+export async function updateSomFeesPaid(
+  id: string,
+  feesPaid: number,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/school-of-ministries/${id}/fees-paid?feesPaid=${feesPaid}`,
+    { method: "PUT" },
+  );
+}
+
+/** POST /api/v1/school-of-ministries/mark-as-graduated */
+export async function markSomAsGraduated(
+  ids: string[],
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    "/api/v1/school-of-ministries/mark-as-graduated",
+    { method: "POST", body: JSON.stringify({ ids }) },
+  );
+}
+
+/** DELETE /api/v1/school-of-ministries/{id} */
+export async function deleteSom(id: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/school-of-ministries/${id}`, {
+    method: "DELETE",
+  });
+}
+
+// ─── Requests — search sub-types ─────────────────────────────────────────────
+
+export async function searchPrayerRequests(
+  text: string,
+  status?: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<RequestResponse>> {
+  const params = new URLSearchParams({ pageNo: String(pageNo), pageSize: String(pageSize) });
+  if (status) params.set("status", status);
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests/prayer/search?${params}`,
+    { method: "POST", body: JSON.stringify({ text }) },
+  );
+}
+
+export async function searchCounselingRequests(
+  text: string,
+  status?: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<RequestResponse>> {
+  const params = new URLSearchParams({ pageNo: String(pageNo), pageSize: String(pageSize) });
+  if (status) params.set("status", status);
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests/counseling/search?${params}`,
+    { method: "POST", body: JSON.stringify({ text }) },
+  );
+}
+
+export async function searchSuggestions(
+  text: string,
+  status?: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<RequestResponse>> {
+  const params = new URLSearchParams({ pageNo: String(pageNo), pageSize: String(pageSize) });
+  if (status) params.set("status", status);
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests/suggestion/search?${params}`,
+    { method: "POST", body: JSON.stringify({ text }) },
+  );
+}
+
+// ─── Testimonies — search ─────────────────────────────────────────────────────
+
+export async function searchTestimonies(
+  text: string,
+  status?: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<TestimonyResponse>> {
+  const params = new URLSearchParams({ pageNo: String(pageNo), pageSize: String(pageSize) });
+  if (status) params.set("status", status);
+  return apiFetch<CustomPageResponse<TestimonyResponse>>(
+    `/api/v1/testimonies/search?${params}`,
+    { method: "POST", body: JSON.stringify({ text }) },
+  );
+}
+
+// ─── User statistics — missing endpoints ─────────────────────────────────────
+
+/** GET /api/v1/users/followup-attention-rate */
+export async function getFollowupAttentionRate(
+  startTime: string,
+  endTime: string,
+): Promise<PercentStatisticsResponse> {
+  return apiFetch<PercentStatisticsResponse>(
+    `/api/v1/users/followup-attention-rate?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`,
+  );
+}
+
+// ─── Media — large file upload ────────────────────────────────────────────────
+
+/**
+ * POST /api/v1/media/large — upload large media (e.g. videos with thumbnails).
+ * Same multipart pattern as uploadMedia but targets the /large endpoint.
+ */
+export async function uploadLargeMedia(fields: {
+  title: string;
+  description?: string;
+  category: string;
+  file: File;
+  thumbnail?: File;
+  duration?: number;
+  speaker?: string;
+  date?: string;
+  tags?: string[];
+}): Promise<MediaResponse> {
+  const token = getToken();
+  if (token && isTokenExpired(token)) {
+    removeToken();
+    if (typeof window !== "undefined") window.location.href = "/login";
+    throw new Error("Session expired. Please log in again.");
+  }
+
+  const params = new URLSearchParams({
+    title: fields.title,
+    type: fields.category,
+    category: fields.category,
+    size: String(fields.file.size),
+    isFromMedia: "true",
+  });
+  if (fields.description) params.set("description", fields.description);
+  if (fields.duration != null) params.set("duration", String(fields.duration));
+  if (fields.speaker) params.set("speaker", fields.speaker);
+  if (fields.date)    params.set("date", fields.date);
+  if (fields.tags && fields.tags.length > 0) params.set("tags", fields.tags.join(","));
+
+  const form = new FormData();
+  form.append("multipartFile", fields.file);
+  if (fields.thumbnail) form.append("thumbnailMultipartFile", fields.thumbnail);
+
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const response = await fetch(`/api/v1/media/large?${params.toString()}`, {
+    method: "POST",
+    headers,
+    body: form,
+  });
+
+  if (response.status === 401) {
+    removeToken();
+    if (typeof window !== "undefined") window.location.href = "/login";
+    throw new Error("Session expired. Please log in again.");
+  }
+  if (!response.ok) {
+    let msg = `Upload failed (${response.status})`;
+    try {
+      const raw = await response.text();
+      if (raw) { try { const b = JSON.parse(raw); msg = b?.message ?? raw; } catch { msg = raw; } }
+    } catch {}
+    throw new Error(msg);
+  }
+  const text = await response.text();
+  return text ? (JSON.parse(text) as MediaResponse) : ({} as MediaResponse);
 }

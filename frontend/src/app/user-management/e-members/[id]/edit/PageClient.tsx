@@ -8,7 +8,7 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import SpouseLinkModal from "@/components/user-management/SpouseLinkModal";
 import type { SpouseData } from "@/components/user-management/SpouseLinkModal";
-import { getUser, updateEMember, uploadProfilePicture } from "@/lib/api";
+import { getUser, updateEMember, uploadProfilePicture, linkSpouse } from "@/lib/api";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { useEventServices } from "@/hooks/useEventServices";
 
@@ -52,6 +52,18 @@ export default function EditEMemberPage() {
   const [storedOccupation, setStoredOccupation] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const fieldErrors = {
+    firstName: !firstName.trim() ? "First name is required" : "",
+    lastName: !lastName.trim() ? "Last name is required" : "",
+    email: email && !EMAIL_RE.test(email) ? "Enter a valid email address" : "",
+  };
+
+  const isFormValid = !!firstName.trim() && !!lastName.trim();
 
   const populate = useCallback(async () => {
     if (!id || id.startsWith("em-")) return;
@@ -110,6 +122,14 @@ export default function EditEMemberPage() {
         occupation: storedOccupation || undefined,
         profilePictureUrl,
       });
+      // Link spouse if one was selected in the modal
+      if (spouse?.memberId) {
+        try {
+          await linkSpouse(id, spouse.memberId, spouse.couplePictureUrl);
+        } catch {
+          // Non-fatal: member is updated, spouse link failed silently
+        }
+      }
       router.push(`/user-management/e-members/${id}`);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Failed to update e-member.");
@@ -154,15 +174,19 @@ export default function EditEMemberPage() {
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
             {/* First Name */}
             <div>
-              <label className={labelStyles}>First Name</label>
+              <label className={labelStyles}>First Name <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
+                onBlur={() => touch("firstName")}
                 placeholder="Enter first name"
-                className={inputStyles}
+                className={`${inputStyles} ${touched.firstName && fieldErrors.firstName ? "border-red-400" : ""}`}
                 required
               />
+              {touched.firstName && fieldErrors.firstName && (
+                <p className="mt-1 text-xs text-red-500">{fieldErrors.firstName}</p>
+              )}
             </div>
 
             {/* Middle Name */}
@@ -179,15 +203,19 @@ export default function EditEMemberPage() {
 
             {/* Last Name */}
             <div>
-              <label className={labelStyles}>Last Name</label>
+              <label className={labelStyles}>Last Name <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
+                onBlur={() => touch("lastName")}
                 placeholder="Enter last name"
-                className={inputStyles}
+                className={`${inputStyles} ${touched.lastName && fieldErrors.lastName ? "border-red-400" : ""}`}
                 required
               />
+              {touched.lastName && fieldErrors.lastName && (
+                <p className="mt-1 text-xs text-red-500">{fieldErrors.lastName}</p>
+              )}
             </div>
 
             {/* Phone */}
@@ -238,7 +266,7 @@ export default function EditEMemberPage() {
                 <option value="WIDOWED">Widowed</option>
                 <option value="DIVORCED">Divorced</option>
               </select>
-              {maritalStatus === "MARRIED" && (
+              {maritalStatus.toUpperCase() === "MARRIED" && (
                 <button
                   type="button"
                   onClick={() => setShowSpouseModal(true)}
@@ -286,7 +314,7 @@ export default function EditEMemberPage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={submitting}>
+            <Button variant="primary" type="submit" disabled={submitting || !isFormValid}>
               {submitting ? "Saving…" : "Save Changes"}
             </Button>
           </div>

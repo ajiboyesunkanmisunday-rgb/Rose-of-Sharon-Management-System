@@ -83,6 +83,16 @@ export default function EditEventClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    title: !formData.title.trim() ? "Event title is required" : "",
+    date: !formData.date ? "Date is required" : "",
+  };
+
+  const isFormValid = !!formData.title.trim() && !!formData.date;
+
   const populate = useCallback(async () => {
     if (!id || id.startsWith("ev-")) return;
     try {
@@ -179,14 +189,14 @@ export default function EditEventClient() {
       <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
-            <FormField label="Event Title" name="title" value={formData.title} onChange={handleChange} placeholder="Enter event title" required />
+            <FormField label="Event Title" name="title" value={formData.title} onChange={handleChange} onBlur={() => touch("title")} placeholder="Enter event title" required error={touched.title ? fieldErrors.title : undefined} />
             <FormField label="Preacher / Speaker" name="preacher" value={formData.preacher} onChange={handleChange} placeholder="Name of preacher or speaker" />
             <FormField label="Topic / Theme" name="topic" value={formData.topic} onChange={handleChange} placeholder="Message topic or event theme" />
             <SelectField label="Category" name="category" value={formData.category} onChange={handleChange} options={CATEGORY_OPTIONS} required />
           </div>
 
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-3">
-            <FormField label="Event Date" type="date" name="date" value={formData.date} onChange={handleChange} required />
+            <FormField label="Event Date" type="date" name="date" value={formData.date} onChange={handleChange} onBlur={() => touch("date")} required error={touched.date ? fieldErrors.date : undefined} />
             <FormField label="Start Time" type="time" name="startTime" value={formData.startTime} onChange={handleChange} />
             <FormField label="End Time"   type="time" name="endTime"   value={formData.endTime}   onChange={handleChange} />
           </div>
@@ -235,7 +245,7 @@ export default function EditEventClient() {
 
           <div className="flex items-center justify-end gap-3 pt-4">
             <Button variant="secondary" type="button" onClick={() => router.push(`/event-management/${id}`)}>Cancel</Button>
-            <Button variant="primary" type="submit" disabled={loading}>{loading ? "Saving…" : "Save Changes"}</Button>
+            <Button variant="primary" type="submit" disabled={loading || !isFormValid}>{loading ? "Saving…" : "Save Changes"}</Button>
           </div>
         </form>
       </div>
