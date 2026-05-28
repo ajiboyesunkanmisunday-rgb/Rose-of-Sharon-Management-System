@@ -25,6 +25,9 @@ import {
 
 export type WitMode = "blank" | "fill" | "view";
 
+/* ─── Required-field asterisk (matches SOD form convention) ───────────────── */
+const REQ = <span style={{ color: "red", marginLeft: 2 }}>*</span>;
+
 /* ─── helpers ──────────────────────────────────────────────────────────────── */
 function safeDate(s: string): string | undefined {
   if (!s.trim()) return undefined;
@@ -46,6 +49,7 @@ function CI({
   multiline,
   rows = 2,
   style,
+  placeholder,
 }: {
   value: string;
   onChange?: (v: string) => void;
@@ -53,6 +57,7 @@ function CI({
   multiline?: boolean;
   rows?: number;
   style?: React.CSSProperties;
+  placeholder?: string;
 }) {
   const base: React.CSSProperties = {
     border: "none",
@@ -74,6 +79,7 @@ function CI({
         onChange={(e) => onChange?.(e.target.value)}
         rows={rows}
         style={base}
+        placeholder={readOnly ? undefined : placeholder}
       />
     );
   }
@@ -84,6 +90,7 @@ function CI({
       value={value}
       onChange={(e) => onChange?.(e.target.value)}
       style={base}
+      placeholder={readOnly ? undefined : placeholder}
     />
   );
 }
@@ -102,10 +109,12 @@ function DottedLine({
   value,
   onChange,
   readOnly,
+  placeholder,
 }: {
   value: string;
   onChange?: (v: string) => void;
   readOnly?: boolean;
+  placeholder?: string;
 }) {
   return (
     <input
@@ -113,6 +122,7 @@ function DottedLine({
       readOnly={readOnly}
       value={value}
       onChange={(e) => onChange?.(e.target.value)}
+      placeholder={readOnly ? undefined : placeholder}
       style={{
         width: "100%",
         border: "none",
@@ -315,8 +325,12 @@ export default function WorkersFormCore({
     // The "Phone:" field is in Section B (Addresses), but users often fill the
     // Next-of-Kin phone first — we use whichever phone is available.
     const effectivePhone = homePhone.trim() || mobile.trim() || nokPhone.trim();
-    if (!firstName.trim() || !surname.trim() || !effectivePhone) {
-      setSubmitError("First Name, Surname, and at least one Phone Number are required. (Fill the Phone field in Section B — Addresses — or the Mobile / Next-of-Kin phone.)");
+    const missing: string[] = [];
+    if (!firstName.trim())  missing.push("First Name");
+    if (!surname.trim())    missing.push("Surname");
+    if (!effectivePhone)    missing.push("Phone Number");
+    if (missing.length > 0) {
+      setSubmitError(`Please fill in: ${missing.join(", ")}. (Fill the Phone field in Section B — Addresses — or the Mobile / Next-of-Kin phone.)`);
       return;
     }
     setSubmitError("");
@@ -598,7 +612,7 @@ export default function WorkersFormCore({
         </div>
       )}
 
-      <div className="wit-wrapper" style={{ background: "#F3F4F6", padding: "24px 16px" }}>
+      <div className="wit-wrapper" style={{ background: "#F3F4F6", padding: "24px 16px", overflowX: "auto" }}>
 
         {/* ══════════════════════════════════════════════════════════════════
             PAGE 1
@@ -692,51 +706,68 @@ export default function WorkersFormCore({
             <input ref={photoInputRef} type="file" accept="image/*" hidden onChange={handlePhotoChange} />
           </div>
 
+          {/* Admission No. — only shown in view mode (table ID from backend) */}
+          {mode === "view" && initialData?.id && (
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "Arial, sans-serif", border: "1px solid #000", padding: "2px 10px" }}>
+                Admission No:&nbsp;<span style={{ fontWeight: 400 }}>{initialData.id}</span>
+              </span>
+            </div>
+          )}
+
           {/* ══ A. BIOGRAPHICAL DATA ══════════════════════════════════════ */}
           <SH>A.&nbsp;&nbsp;BIOGRAPHICAL DATA</SH>
+          {!ro && (
+            <div style={{ fontSize: 10, color: "#dc2626", marginBottom: 6, fontFamily: "Arial, sans-serif" }}>
+              Fields marked <span style={{ color: "red" }}>*</span> are required.
+            </div>
+          )}
           <table style={TABLE}>
             <tbody>
               <tr>
-                <td style={TDL}>Surname:</td>
-                <td style={TD}><CI value={surname} onChange={setSurname} readOnly={ro} /></td>
-                <td style={TDL}>First Name:</td>
-                <td style={TD}><CI value={firstName} onChange={setFirstName} readOnly={ro} /></td>
+                <td style={TDL}>Surname{REQ}</td>
+                <td style={TD}><CI value={surname} onChange={setSurname} readOnly={ro} placeholder="e.g. Adeyemi" /></td>
+                <td style={TDL}>First Name{REQ}</td>
+                <td style={TD}><CI value={firstName} onChange={setFirstName} readOnly={ro} placeholder="e.g. Samuel" /></td>
               </tr>
               <tr>
-                <td style={TDL}>Other Names:</td>
-                <td style={TD}><CI value={otherNames} onChange={setOtherNames} readOnly={ro} /></td>
-                <td style={TDL}>Sex:</td>
-                <td style={TD}><CI value={sex} onChange={setSex} readOnly={ro} /></td>
+                <td style={TDL}>Other Names</td>
+                <td style={TD}><CI value={otherNames} onChange={setOtherNames} readOnly={ro} placeholder="e.g. Praise" /></td>
+                <td style={TDL}>Sex{REQ}</td>
+                <td style={TD}><CI value={sex} onChange={setSex} readOnly={ro} placeholder="Male / Female" /></td>
               </tr>
               <tr>
-                <td style={TDL}>Date of Birth:</td>
-                <td style={TD}><CI value={dob} onChange={setDob} readOnly={ro} /></td>
-                <td style={TDL}>Marital Status:</td>
-                <td style={TD}><CI value={marital} onChange={setMarital} readOnly={ro} /></td>
+                <td style={{ ...TDL, whiteSpace: "normal" }}>
+                  Date of Birth{REQ}
+                  <div style={{ fontSize: 9, fontWeight: 400, color: "#6B7280" }}>DD/MM/YYYY</div>
+                </td>
+                <td style={TD}><CI value={dob} onChange={setDob} readOnly={ro} placeholder="DD/MM/YYYY" /></td>
+                <td style={TDL}>Marital Status{REQ}</td>
+                <td style={TD}><CI value={marital} onChange={setMarital} readOnly={ro} placeholder="Single / Married / Divorced / Widowed" /></td>
               </tr>
               <tr>
-                <td style={TDL}>No. Of Children:</td>
-                <td style={TD}><CI value={numChildren} onChange={setNumChildren} readOnly={ro} /></td>
+                <td style={TDL}>No. Of Children</td>
+                <td style={TD}><CI value={numChildren} onChange={setNumChildren} readOnly={ro} placeholder="e.g. 2" /></td>
                 <td style={{ ...TDL, whiteSpace: "normal" }}>Name of Spouse:<br /><span style={{ fontWeight: 400 }}>(if ever Married)</span></td>
-                <td style={TD}><CI value={spouseName} onChange={setSpouseName} readOnly={ro} /></td>
+                <td style={TD}><CI value={spouseName} onChange={setSpouseName} readOnly={ro} placeholder="e.g. Mrs. Funke Adeyemi" /></td>
               </tr>
               <tr>
                 <td style={{ ...TDL, whiteSpace: "normal" }}>Maiden Name:<br /><span style={{ fontWeight: 400 }}>(for Married Female)</span></td>
-                <td style={TD} colSpan={3}><CI value={maidenName} onChange={setMaidenName} readOnly={ro} /></td>
+                <td style={TD} colSpan={3}><CI value={maidenName} onChange={setMaidenName} readOnly={ro} placeholder="e.g. Okonkwo" /></td>
               </tr>
               <tr>
                 <td style={TDL}>Adult Next of Kin (excl. Spouse)</td>
-                <td style={TD} colSpan={3}><CI value={nokName} onChange={setNokName} readOnly={ro} /></td>
+                <td style={TD} colSpan={3}><CI value={nokName} onChange={setNokName} readOnly={ro} placeholder="e.g. John Adeyemi" /></td>
               </tr>
               <tr>
                 <td style={TDL}>Relationship:</td>
-                <td style={TD}><CI value={nokRel} onChange={setNokRel} readOnly={ro} /></td>
+                <td style={TD}><CI value={nokRel} onChange={setNokRel} readOnly={ro} placeholder="e.g. Brother" /></td>
                 <td style={TDL}>Contact Phone Number:</td>
-                <td style={TD}><CI value={nokPhone} onChange={setNokPhone} readOnly={ro} /></td>
+                <td style={TD}><CI value={nokPhone} onChange={setNokPhone} readOnly={ro} placeholder="e.g. 08012345678" /></td>
               </tr>
               <tr>
                 <td style={TDL}>Contact address:</td>
-                <td style={TD} colSpan={3}><CI value={nokAddr} onChange={setNokAddr} readOnly={ro} /></td>
+                <td style={TD} colSpan={3}><CI value={nokAddr} onChange={setNokAddr} readOnly={ro} placeholder="e.g. 15 Ola Street, Lagos" /></td>
               </tr>
             </tbody>
           </table>
@@ -746,46 +777,46 @@ export default function WorkersFormCore({
           <table style={TABLE}>
             <tbody>
               <tr>
-                <td style={TDL}>Home Address:</td>
-                <td style={TD} colSpan={5}><CI value={homeAddr} onChange={setHomeAddr} readOnly={ro} /></td>
+                <td style={TDL}>Home Address{REQ}</td>
+                <td style={TD} colSpan={5}><CI value={homeAddr} onChange={setHomeAddr} readOnly={ro} placeholder="e.g. 10 Adeniyi Jones Ave, Ikeja" /></td>
               </tr>
               <tr>
-                <td style={TDL}>City:</td>
-                <td style={TD}><CI value={homeCity} onChange={setHomeCity} readOnly={ro} /></td>
-                <td style={TDL}>State:</td>
-                <td style={TD}><CI value={homeState} onChange={setHomeState} readOnly={ro} /></td>
-                <td style={TDL}>Country:</td>
-                <td style={TD}><CI value={homeCountry} onChange={setHomeCountry} readOnly={ro} /></td>
+                <td style={TDL}>City{REQ}</td>
+                <td style={TD}><CI value={homeCity} onChange={setHomeCity} readOnly={ro} placeholder="e.g. Lagos" /></td>
+                <td style={TDL}>State{REQ}</td>
+                <td style={TD}><CI value={homeState} onChange={setHomeState} readOnly={ro} placeholder="e.g. Lagos State" /></td>
+                <td style={TDL}>Country{REQ}</td>
+                <td style={TD}><CI value={homeCountry} onChange={setHomeCountry} readOnly={ro} placeholder="e.g. Nigeria" /></td>
               </tr>
               <tr>
-                <td style={TDL}>Phone:</td>
-                <td style={TD}><CI value={homePhone} onChange={setHomePhone} readOnly={ro} /></td>
-                <td style={TDL}>Fax:</td>
+                <td style={TDL}>Phone{REQ}</td>
+                <td style={TD}><CI value={homePhone} onChange={setHomePhone} readOnly={ro} placeholder="e.g. 08012345678" /></td>
+                <td style={TDL}>Fax</td>
                 <td style={TD}><CI value={homeFax} onChange={setHomeFax} readOnly={ro} /></td>
-                <td style={TDL}>Mobile:</td>
-                <td style={TD}><CI value={mobile} onChange={setMobile} readOnly={ro} /></td>
+                <td style={TDL}>Mobile</td>
+                <td style={TD}><CI value={mobile} onChange={setMobile} readOnly={ro} placeholder="e.g. 09098765432" /></td>
               </tr>
               <tr>
-                <td style={TDL}>Occupation:</td>
-                <td style={TD} colSpan={5}><CI value={occupation} onChange={setOccupation} readOnly={ro} /></td>
+                <td style={TDL}>Occupation{REQ}</td>
+                <td style={TD} colSpan={5}><CI value={occupation} onChange={setOccupation} readOnly={ro} placeholder="e.g. Civil Servant / Teacher / Engineer" /></td>
               </tr>
               <tr>
-                <td style={TDL}>Employer:</td>
-                <td style={TD} colSpan={5}><CI value={employer} onChange={setEmployer} readOnly={ro} /></td>
+                <td style={TDL}>Employer</td>
+                <td style={TD} colSpan={5}><CI value={employer} onChange={setEmployer} readOnly={ro} placeholder="e.g. Lagos State Government" /></td>
               </tr>
               <tr>
-                <td style={TDL}>Office Address:</td>
-                <td style={TD} colSpan={5}><CI value={officeAddr} onChange={setOfficeAddr} readOnly={ro} /></td>
+                <td style={TDL}>Office Address</td>
+                <td style={TD} colSpan={5}><CI value={officeAddr} onChange={setOfficeAddr} readOnly={ro} placeholder="e.g. 5 Broad Street, Lagos Island" /></td>
               </tr>
               <tr>
-                <td style={TDL}>Phone:</td>
-                <td style={TD}><CI value={officePhone} onChange={setOfficePhone} readOnly={ro} /></td>
-                <td style={TDL}>Fax:</td>
+                <td style={TDL}>Phone (Office)</td>
+                <td style={TD}><CI value={officePhone} onChange={setOfficePhone} readOnly={ro} placeholder="e.g. 01-2345678" /></td>
+                <td style={TDL}>Fax</td>
                 <td style={TD} colSpan={3}><CI value={officeFax} onChange={setOfficeFax} readOnly={ro} /></td>
               </tr>
               <tr>
-                <td style={TDL}>E-mail:</td>
-                <td style={TD} colSpan={5}><CI value={email} onChange={setEmail} readOnly={ro} /></td>
+                <td style={TDL}>E-mail</td>
+                <td style={TD} colSpan={5}><CI value={email} onChange={setEmail} readOnly={ro} placeholder="e.g. samuel@example.com" /></td>
               </tr>
             </tbody>
           </table>
@@ -805,10 +836,10 @@ export default function WorkersFormCore({
                 <tr key={i}>
                   <td style={TD}>
                     <span style={{ fontWeight: 700, marginRight: 4 }}>{i + 1}.</span>
-                    <CI value={quals[i].institution} onChange={(v) => updateQual(i, "institution", v)} readOnly={ro} />
+                    <CI value={quals[i].institution} onChange={(v) => updateQual(i, "institution", v)} readOnly={ro} placeholder="e.g. University of Lagos" />
                   </td>
-                  <td style={TD}><CI value={quals[i].dates} onChange={(v) => updateQual(i, "dates", v)} readOnly={ro} /></td>
-                  <td style={TD}><CI value={quals[i].qualification} onChange={(v) => updateQual(i, "qualification", v)} readOnly={ro} /></td>
+                  <td style={TD}><CI value={quals[i].dates} onChange={(v) => updateQual(i, "dates", v)} readOnly={ro} placeholder="e.g. 2014–2018" /></td>
+                  <td style={TD}><CI value={quals[i].qualification} onChange={(v) => updateQual(i, "qualification", v)} readOnly={ro} placeholder="e.g. B.Sc. Computer Science" /></td>
                 </tr>
               ))}
             </tbody>
@@ -828,10 +859,10 @@ export default function WorkersFormCore({
                 <tr key={i}>
                   <td style={TD}>
                     <span style={{ fontWeight: 700, marginRight: 4 }}>{i + 1}.</span>
-                    <CI value={quals[i].institution} onChange={(v) => updateQual(i, "institution", v)} readOnly={ro} />
+                    <CI value={quals[i].institution} onChange={(v) => updateQual(i, "institution", v)} readOnly={ro} placeholder="e.g. Yaba College of Technology" />
                   </td>
-                  <td style={{ ...TD, width: 90 }}><CI value={quals[i].dates} onChange={(v) => updateQual(i, "dates", v)} readOnly={ro} /></td>
-                  <td style={TD}><CI value={quals[i].qualification} onChange={(v) => updateQual(i, "qualification", v)} readOnly={ro} /></td>
+                  <td style={{ ...TD, width: 90 }}><CI value={quals[i].dates} onChange={(v) => updateQual(i, "dates", v)} readOnly={ro} placeholder="e.g. 2010–2014" /></td>
+                  <td style={TD}><CI value={quals[i].qualification} onChange={(v) => updateQual(i, "qualification", v)} readOnly={ro} placeholder="e.g. HND Accounting" /></td>
                 </tr>
               ))}
             </tbody>
@@ -842,25 +873,32 @@ export default function WorkersFormCore({
           <table style={{ ...TABLE, marginBottom: 10 }}>
             <tbody>
               <tr>
-                <td style={TDL}>Date of Salvation:</td>
-                <td style={TD}><CI value={salvDate} onChange={setSalvDate} readOnly={ro} /></td>
-                <td style={TDL}>Where:</td>
-                <td style={TD}><CI value={salvWhere} onChange={setSalvWhere} readOnly={ro} /></td>
-              </tr>
-              <tr>
-                <td style={TDL}>Date of Water Baptism by Immersion:</td>
-                <td style={TD}><CI value={waterDate} onChange={setWaterDate} readOnly={ro} /></td>
-                <td style={TDL}>Church:</td>
-                <td style={TD}><CI value={waterChurch} onChange={setWaterChurch} readOnly={ro} /></td>
+                <td style={{ ...TDL, whiteSpace: "normal" }}>
+                  Date of Salvation{REQ}
+                  <div style={{ fontSize: 9, fontWeight: 400, color: "#6B7280" }}>e.g. March 2005</div>
+                </td>
+                <td style={TD}><CI value={salvDate} onChange={setSalvDate} readOnly={ro} placeholder="e.g. March 2005" /></td>
+                <td style={TDL}>Where{REQ}</td>
+                <td style={TD}><CI value={salvWhere} onChange={setSalvWhere} readOnly={ro} placeholder="e.g. RCCG Redemption Camp" /></td>
               </tr>
               <tr>
                 <td style={{ ...TDL, whiteSpace: "normal" }}>
-                  Date of Baptism of the Holy Ghost:<br />
-                  <span style={{ fontWeight: 400, fontSize: 10 }}>(with evidence of speaking in tongues)</span>
+                  Date of Water Baptism by Immersion{REQ}
+                  <div style={{ fontSize: 9, fontWeight: 400, color: "#6B7280" }}>e.g. June 2006</div>
                 </td>
-                <td style={TD}><CI value={hgDate} onChange={setHgDate} readOnly={ro} /></td>
-                <td style={TDL}>Where:</td>
-                <td style={TD}><CI value={hgWhere} onChange={setHgWhere} readOnly={ro} /></td>
+                <td style={TD}><CI value={waterDate} onChange={setWaterDate} readOnly={ro} placeholder="e.g. June 2006" /></td>
+                <td style={TDL}>Church{REQ}</td>
+                <td style={TD}><CI value={waterChurch} onChange={setWaterChurch} readOnly={ro} placeholder="e.g. RCCG Rose of Sharon" /></td>
+              </tr>
+              <tr>
+                <td style={{ ...TDL, whiteSpace: "normal" }}>
+                  Date of Baptism of the Holy Ghost{REQ}<br />
+                  <span style={{ fontWeight: 400, fontSize: 10 }}>(with evidence of speaking in tongues)</span>
+                  <div style={{ fontSize: 9, fontWeight: 400, color: "#6B7280" }}>e.g. December 2006</div>
+                </td>
+                <td style={TD}><CI value={hgDate} onChange={setHgDate} readOnly={ro} placeholder="e.g. December 2006" /></td>
+                <td style={TDL}>Where{REQ}</td>
+                <td style={TD}><CI value={hgWhere} onChange={setHgWhere} readOnly={ro} placeholder="e.g. RCCG Rose of Sharon" /></td>
               </tr>
             </tbody>
           </table>
@@ -880,10 +918,10 @@ export default function WorkersFormCore({
                 <tr key={i}>
                   <td style={TD}>
                     <span style={{ fontWeight: 700, marginRight: 4 }}>{i + 1}.</span>
-                    <CI value={r.name} onChange={(v) => updateWp(i, "name", v)} readOnly={ro} />
+                    <CI value={r.name} onChange={(v) => updateWp(i, "name", v)} readOnly={ro} placeholder="e.g. RCCG Redemption Camp" />
                   </td>
-                  <td style={TD}><CI value={r.address} onChange={(v) => updateWp(i, "address", v)} readOnly={ro} /></td>
-                  <td style={TD}><CI value={r.dates} onChange={(v) => updateWp(i, "dates", v)} readOnly={ro} /></td>
+                  <td style={TD}><CI value={r.address} onChange={(v) => updateWp(i, "address", v)} readOnly={ro} placeholder="e.g. KM 46, Lagos–Ibadan Expressway" /></td>
+                  <td style={TD}><CI value={r.dates} onChange={(v) => updateWp(i, "dates", v)} readOnly={ro} placeholder="e.g. 2018–2022" /></td>
                 </tr>
               ))}
             </tbody>
@@ -906,10 +944,10 @@ export default function WorkersFormCore({
                 <tr key={i}>
                   <td style={{ ...TD, width: 22, fontWeight: 700 }}>{i + 1}.</td>
                   <td style={TD}>
-                    <CI value={p.worshipPlace} onChange={(v) => updatePos(i, "worshipPlace", v)} readOnly={ro} />
+                    <CI value={p.worshipPlace} onChange={(v) => updatePos(i, "worshipPlace", v)} readOnly={ro} placeholder="e.g. RCCG Rose of Sharon" />
                   </td>
                   <td style={TD}>
-                    <CI value={p.positionHeld} onChange={(v) => updatePos(i, "positionHeld", v)} readOnly={ro} />
+                    <CI value={p.positionHeld} onChange={(v) => updatePos(i, "positionHeld", v)} readOnly={ro} placeholder="e.g. Choir Member / Usher" />
                   </td>
                 </tr>
               ))}
@@ -922,7 +960,7 @@ export default function WorkersFormCore({
             <tbody>
               <tr>
                 <td style={{ ...TD, height: 52 }}>
-                  <CI value={reasonLeaving} onChange={setReasonLeaving} readOnly={ro} multiline rows={3} />
+                  <CI value={reasonLeaving} onChange={setReasonLeaving} readOnly={ro} multiline rows={3} placeholder="e.g. Transferred by employer to a new location" />
                 </td>
               </tr>
             </tbody>
@@ -932,7 +970,7 @@ export default function WorkersFormCore({
           <div style={{ fontWeight: 700, fontSize: 11, marginBottom: 4 }}>
             E.&nbsp;&nbsp;WHICH LIFE CENTER DO YOU ATTEND?
           </div>
-          <DottedLine value={lifeCenter} onChange={setLifeCenter} readOnly={ro} />
+          <DottedLine value={lifeCenter} onChange={setLifeCenter} readOnly={ro} placeholder="e.g. Life Center 7, Ikeja" />
 
           {/* ══ F. CHRISTIAN GROUPS ═══════════════════════════════════════ */}
           <div style={{ fontWeight: 700, fontSize: 11, marginTop: 10, marginBottom: 4 }}>
@@ -943,13 +981,13 @@ export default function WorkersFormCore({
               <tr>
                 <td style={TD}>
                   <span style={{ fontWeight: 700, marginRight: 4 }}>1.</span>
-                  <CI value={group1} onChange={setGroup1} readOnly={ro} />
+                  <CI value={group1} onChange={setGroup1} readOnly={ro} placeholder="e.g. Full Gospel Business Men's Fellowship" />
                 </td>
               </tr>
               <tr>
                 <td style={TD}>
                   <span style={{ fontWeight: 700, marginRight: 4 }}>2.</span>
-                  <CI value={group2} onChange={setGroup2} readOnly={ro} />
+                  <CI value={group2} onChange={setGroup2} readOnly={ro} placeholder="e.g. CAN Youth Wing" />
                 </td>
               </tr>
             </tbody>
@@ -966,7 +1004,7 @@ export default function WorkersFormCore({
           <div style={{ fontWeight: 700, fontSize: 11, marginBottom: 6 }}>
             G.&nbsp;&nbsp;WHICH MINISTRY DO YOU BELIEVE YOU ARE CALLED TO?
           </div>
-          <DottedLine value={ministry} onChange={setMinistry} readOnly={ro} />
+          <DottedLine value={ministry} onChange={setMinistry} readOnly={ro} placeholder="e.g. Music / Ushering / Media / Welfare / Children's Ministry" />
 
           {/* ══ H. GIFTS ══════════════════════════════════════════════════ */}
           <div style={{ fontWeight: 700, fontSize: 11, marginTop: 14, marginBottom: 2 }}>
@@ -1001,7 +1039,8 @@ export default function WorkersFormCore({
             <tbody>
               <tr>
                 <td style={{ ...TD, height: 80 }}>
-                  <CI value={whyWorker} onChange={setWhyWorker} readOnly={ro} multiline rows={5} />
+                  <CI value={whyWorker} onChange={setWhyWorker} readOnly={ro} multiline rows={5}
+                    placeholder="Explain briefly why you want to serve as a worker in this church…" />
                 </td>
               </tr>
             </tbody>
@@ -1014,8 +1053,10 @@ export default function WorkersFormCore({
               <div style={{ fontSize: 11, textAlign: "center" }}>Signature</div>
             </div>
             <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 9, color: "#6B7280", marginBottom: 2 }}>DD/MM/YYYY</div>
               <CI value={signDate} onChange={setSignDate} readOnly={ro}
-                style={{ borderBottom: "1px solid #000", width: "100%", display: "block" }} />
+                style={{ borderBottom: "1px solid #000", width: "100%", display: "block" }}
+                placeholder="DD/MM/YYYY" />
               <div style={{ fontSize: 11, textAlign: "center", marginTop: 4 }}>Date</div>
             </div>
           </div>

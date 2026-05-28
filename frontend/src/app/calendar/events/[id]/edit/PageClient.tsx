@@ -64,6 +64,16 @@ export default function EditCalendarEventClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    title: !formData.title.trim() ? "Event name is required" : "",
+    date: !formData.date ? "Date is required" : "",
+  };
+
+  const isFormValid = !!formData.title.trim() && !!formData.date;
+
   const populate = useCallback(async () => {
     if (!id || id.startsWith("cal-")) return;
     try {
@@ -141,10 +151,10 @@ export default function EditCalendarEventClient() {
 
       <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
-          <FormField label="Event Name" name="title" value={formData.title} onChange={handleChange} required />
+          <FormField label="Event Name" name="title" value={formData.title} onChange={handleChange} onBlur={() => touch("title")} required error={touched.title ? fieldErrors.title : undefined} />
 
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
-            <FormField id="event-date-input" label="Date" type="date" name="date" value={formData.date} onChange={handleChange} onInput={handleChange as React.FormEventHandler} required />
+            <FormField id="event-date-input" label="Date" type="date" name="date" value={formData.date} onChange={handleChange} onInput={handleChange as React.FormEventHandler} onBlur={() => touch("date")} required error={touched.date ? fieldErrors.date : undefined} />
             <FormField label="Start Time" type="time" name="startTime" value={formData.startTime} onChange={handleChange} />
             <FormField label="End Time" type="time" name="endTime" value={formData.endTime} onChange={handleChange} />
             <SelectField label="Category" name="category" value={formData.category} onChange={handleChange} options={CATEGORY_OPTIONS} required />
@@ -158,7 +168,7 @@ export default function EditCalendarEventClient() {
             <Button variant="secondary" type="button" onClick={() => router.push(`/calendar/events/${id}`)}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={loading}>
+            <Button variant="primary" type="submit" disabled={loading || !isFormValid}>
               {loading ? "Saving…" : "Save Changes"}
             </Button>
           </div>

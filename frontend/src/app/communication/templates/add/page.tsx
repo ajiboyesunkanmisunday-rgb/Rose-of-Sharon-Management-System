@@ -36,6 +36,19 @@ export default function AddTemplatePage() {
   const [saving,       setSaving]       = useState(false);
   const [error,        setError]        = useState("");
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const MAX_CONTENT = 1000;
+  const contentNear = content.length >= Math.floor(MAX_CONTENT * 0.85);
+
+  const fieldErrors = {
+    name: !name.trim() ? "Template name is required" : "",
+    content: !content.trim() ? "Content is required" : "",
+  };
+
+  const isFormValid = !!name.trim() && !!content.trim();
+
   const handleCategoryChange = (val: string) => {
     setCategory(val);
     if (!nameTouched && val) {
@@ -121,10 +134,14 @@ export default function AddTemplatePage() {
                 type="text"
                 value={name}
                 onChange={(e) => { setName(e.target.value); setNameTouched(true); }}
+                onBlur={() => touch("name")}
                 placeholder="Enter template name"
-                className={inputCls}
+                className={`${inputCls} ${touched.name && fieldErrors.name ? "border-red-400" : ""}`}
                 required
               />
+              {touched.name && fieldErrors.name && (
+                <p className="mt-1 text-xs text-red-500">{fieldErrors.name}</p>
+              )}
             </div>
 
             {channel === "EMAIL" && (
@@ -141,15 +158,25 @@ export default function AddTemplatePage() {
             )}
 
             <div className="md:col-span-2">
-              <label className={labelCls}>Content <span className="text-red-500">*</span></label>
+              <div className="mb-1 flex items-center justify-between">
+                <label className={labelCls}>Content <span className="text-red-500">*</span></label>
+                <span className={`text-xs tabular-nums ${contentNear ? "text-amber-500 font-medium" : "text-[#9CA3AF] dark:text-slate-500"}`}>
+                  {content.length}/{MAX_CONTENT}
+                </span>
+              </div>
               <textarea
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => setContent(e.target.value.slice(0, MAX_CONTENT))}
+                onBlur={() => touch("content")}
                 placeholder="Enter template content. Use {firstName} and {name} as placeholders."
                 rows={7}
-                className={inputCls}
+                maxLength={MAX_CONTENT}
+                className={`${inputCls} ${touched.content && fieldErrors.content ? "border-red-400" : ""}`}
                 required
               />
+              {touched.content && fieldErrors.content && (
+                <p className="mt-1 text-xs text-red-500">{fieldErrors.content}</p>
+              )}
               <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">
                Placeholders:{" "}
                 <code className="rounded bg-gray-100 dark:bg-slate-700 px-1">
@@ -164,7 +191,7 @@ export default function AddTemplatePage() {
             <Button variant="secondary" type="button" onClick={() => router.push("/communication/templates")}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={saving}>
+            <Button variant="primary" type="submit" disabled={saving || !isFormValid}>
               {saving ? "Saving…" : "Save Template"}
             </Button>
           </div>

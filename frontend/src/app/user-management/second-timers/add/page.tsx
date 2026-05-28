@@ -51,6 +51,13 @@ export default function AddSecondTimerPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // ② Inline validation: touched state
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailError = touched.email && email && !EMAIL_RE.test(email)
+    ? "Enter a valid email address" : "";
+
   useEffect(() => {
     setIsPublic(!isAuthenticated());
   }, []);
@@ -222,9 +229,11 @@ export default function AddSecondTimerPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => touch("email")}
                 placeholder="Enter Email"
-                className={inputStyles}
+                className={`${inputStyles} ${emailError ? "border-red-400" : ""}`}
               />
+              {emailError && <p className="mt-1 text-xs text-red-500">{emailError}</p>}
             </div>
             <div>
               <label className={labelStyles}>
@@ -459,7 +468,7 @@ export default function AddSecondTimerPage() {
         )}
 
         <div className="mt-6 flex justify-end">
-          <Button type="submit" variant="primary" disabled={loading} className="w-full sm:w-auto">
+          <Button type="submit" variant="primary" disabled={loading || !!emailError} className="w-full sm:w-auto">
             {loading ? "Saving…" : "Save"}
           </Button>
         </div>

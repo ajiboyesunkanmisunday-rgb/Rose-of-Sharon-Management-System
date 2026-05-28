@@ -29,6 +29,7 @@ import { toCSV, downloadCSV } from "@/lib/csv";
 import { Users2 } from "lucide-react";
 import UserAvatar from "@/components/ui/UserAvatar";
 import { SkeletonRow } from "@/components/ui/Skeleton";
+import ServiceAttendedCombobox from "@/components/ui/ServiceAttendedCombobox";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -53,6 +54,8 @@ export default function SecondTimersPage() {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState("");
+  const [convertConfirmId, setConvertConfirmId] = useState<string | null>(null);
+  const [convertName,      setConvertName]      = useState("");
 
   // Modal states
   const [showCallReportModal, setShowCallReportModal] = useState(false);
@@ -72,12 +75,15 @@ export default function SecondTimersPage() {
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
 
-  const fetchTimers = useCallback(async (page: number, q = "") => {
+  const fetchTimers = useCallback(async (page: number, q = "", svc = "") => {
     setLoading(true);
     setApiError("");
     try {
-      const res = q.trim()
-        ? await searchSecondTimers(q.trim(), page - 1, ITEMS_PER_PAGE)
+      // Combine text search + service filter into a single backend query so
+      // filtering applies across ALL pages, not just the 10 currently loaded.
+      const combined = [svc.trim(), q.trim()].filter(Boolean).join(" ");
+      const res = combined
+        ? await searchSecondTimers(combined, page - 1, ITEMS_PER_PAGE)
         : await getSecondTimers(page - 1, ITEMS_PER_PAGE);
       setTimers(res.content ?? []);
       setTotalPages(res.totalPages || 1);
@@ -91,8 +97,8 @@ export default function SecondTimersPage() {
   }, []);
 
   useEffect(() => {
-    fetchTimers(currentPage, activeSearch);
-  }, [currentPage, activeSearch, fetchTimers]);
+    fetchTimers(currentPage, activeSearch, filterService);
+  }, [currentPage, activeSearch, filterService, fetchTimers]);
 
   // Live search — update activeSearch 400ms after user stops typing
   useEffect(() => {
@@ -103,8 +109,9 @@ export default function SecondTimersPage() {
     return () => clearTimeout(timer);
   }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Service filter is now handled server-side (search query). Only date
+  // filters remain client-side since the backend has no date-range param.
   const displayedTimers = timers.filter((st) => {
-    if (filterService && st.serviceAttended !== filterService) return false;
     if (filterDateFrom || filterDateTo) {
       const d = st.secondTimeService?.date ?? st.createdOn ?? "";
       if (filterDateFrom && d < filterDateFrom) return false;
@@ -137,7 +144,7 @@ export default function SecondTimersPage() {
       setCallReport("");
       setShowCallReportModal(false);
       setSelectedTimerId(null);
-      fetchTimers(currentPage);
+      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to save call report.");
     } finally {
@@ -154,7 +161,7 @@ export default function SecondTimersPage() {
       setVisitReport("");
       setShowVisitReportModal(false);
       setSelectedTimerId(null);
-      fetchTimers(currentPage);
+      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to save visit report.");
     } finally {
@@ -168,7 +175,7 @@ export default function SecondTimersPage() {
       await deleteSecondTimersBulk(Array.from(selectedRows));
       setSelectedRows(new Set());
       setShowBulkDeleteModal(false);
-      fetchTimers(currentPage);
+      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to delete.");
       setShowBulkDeleteModal(false);
@@ -185,7 +192,7 @@ export default function SecondTimersPage() {
       );
       setSelectedRows(new Set());
       setShowBulkAssignModal(false);
-      fetchTimers(currentPage);
+      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to assign follow-up.");
       setShowBulkAssignModal(false);
@@ -201,7 +208,7 @@ export default function SecondTimersPage() {
       await assignFollowUp(selectedTimerId, officerId, note);
       setShowSingleAssignModal(false);
       setSelectedTimerId(null);
-      fetchTimers(currentPage);
+      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to assign follow-up.");
       setShowSingleAssignModal(false);
@@ -218,7 +225,7 @@ export default function SecondTimersPage() {
       await markUserAsInactive(selectedTimerId, reason);
       setShowInactiveSingleModal(false);
       setSelectedTimerId(null);
-      fetchTimers(currentPage);
+      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to mark as inactive.");
       setShowInactiveSingleModal(false);
@@ -236,7 +243,7 @@ export default function SecondTimersPage() {
       );
       setSelectedRows(new Set());
       setShowInactiveBulkModal(false);
-      fetchTimers(currentPage);
+      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to mark as inactive.");
       setShowInactiveBulkModal(false);
@@ -245,16 +252,25 @@ export default function SecondTimersPage() {
     }
   };
 
-  const handleConvertToMember = async (id: string) => {
+  const handleConvertToMember = (id: string, name: string) => {
+    setConvertConfirmId(id);
+    setConvertName(name);
+  };
+
+  const doConvert = async () => {
+    if (!convertConfirmId) return;
+    setConvertConfirmId(null);
     setActionLoading(true);
     setActionError("");
     try {
-      await convertToFullMember(id);
-      fetchTimers(currentPage);
+      await convertToFullMember(convertConfirmId);
+      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to convert to member.");
     } finally {
       setActionLoading(false);
+      setConvertConfirmId(null);
+      setConvertName("");
     }
   };
 
@@ -377,17 +393,10 @@ export default function SecondTimersPage() {
         <div className="mb-4 flex flex-wrap items-end gap-4 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
           <div className="flex flex-col">
             <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">Service Attended</label>
-            <select
+            <ServiceAttendedCombobox
               value={filterService}
-              onChange={(e) => { setFilterService(e.target.value); setCurrentPage(1); }}
-              className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
-            >
-              <option value="">All Services</option>
-              <option value="Sunday Service">Sunday Service</option>
-              <option value="Tuesday Bible Study">Tuesday Bible Study</option>
-              <option value="Thursday Prayer Meeting">Thursday Prayer Meeting</option>
-              <option value="Special Service">Special Service</option>
-            </select>
+              onChange={(v) => { setFilterService(v); setCurrentPage(1); }}
+            />
           </div>
           <div className="flex flex-col">
             <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">From</label>
@@ -544,7 +553,7 @@ export default function SecondTimersPage() {
                         },
                         {
                           label: "Convert to Member",
-                          onClick: () => handleConvertToMember(st.id),
+                          onClick: () => handleConvertToMember(st.id, fullName(st)),
                         },
                         {
                           label: "Mark as Inactive",
@@ -674,6 +683,31 @@ export default function SecondTimersPage() {
         onConfirm={handleBulkMarkInactive}
         count={selectedRows.size}
       />
+
+      {convertConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-xl">
+            <h3 className="mb-2 text-lg font-bold text-[#111827] dark:text-slate-100">Convert to Full Member?</h3>
+            <p className="mb-6 text-sm text-[#374151] dark:text-slate-300">
+              <strong>{convertName}</strong> will be moved to the Members list. This cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => { setConvertConfirmId(null); setConvertName(""); }}
+                className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-2 text-sm font-medium text-[#374151] dark:text-slate-300 hover:bg-[#F9FAFB]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={doConvert}
+                className="rounded-lg bg-[#000080] px-4 py-2 text-sm font-medium text-white hover:bg-[#000066]"
+              >
+                Yes, Convert
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

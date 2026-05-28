@@ -36,6 +36,15 @@ export default function AddRolePage() {
   const [formData, setFormData] = useState({ name: "", description: "" });
   const [permissions, setPermissions] = useState<Matrix>(initialMatrix);
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    name: !formData.name.trim() ? "Role name is required" : "",
+  };
+
+  const isFormValid = !!formData.name.trim();
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -74,8 +83,10 @@ export default function AddRolePage() {
             name="name"
             value={formData.name}
             onChange={handleChange}
+            onBlur={() => touch("name")}
             placeholder="e.g. Department Head"
             required
+            error={touched.name ? fieldErrors.name : undefined}
           />
 
           <TextAreaField
@@ -135,7 +146,7 @@ export default function AddRolePage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
+            <Button variant="primary" type="submit" disabled={!isFormValid}>
               Save Role
             </Button>
           </div>

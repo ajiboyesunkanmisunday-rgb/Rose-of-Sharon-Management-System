@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
-import { uploadMedia } from "@/lib/api";
+import { uploadMedia, uploadLargeMedia } from "@/lib/api";
 import { Link2, Upload } from "lucide-react";
 
 const CATEGORY_OPTIONS = [
@@ -16,9 +16,60 @@ const CATEGORY_OPTIONS = [
   { label: "Thumbnail", value: "THUMBNAIL" },
 ];
 
-// All media types allowed up to 200 MB — no per-category restriction.
-const MEDIA_MAX_BYTES   = 200 * 1024 * 1024; // 200 MB
-const DESC_MAX_CHARS    = 500;
+const MEDIA_MAX_BYTES = 200 * 1024 * 1024; // 200 MB
+const DESC_MAX_CHARS  = 1000;
+
+/** Categories that send to /api/v1/media/large (higher server-side size limit). */
+const LARGE_MEDIA_CATEGORIES = new Set(["PODCAST", "SERMON", "VIDEOS"]);
+
+/**
+ * Returns the HTML accept attribute value for the file input based on
+ * the selected media category. Enforces correct file types per module:
+ *  - Sermon  → video only
+ *  - Videos  → video only
+ *  - Images  → image only
+ *  - Thumbnail → image only
+ *  - Podcast → audio and video
+ */
+function acceptForCategory(cat: string): string {
+  switch (cat) {
+    case "SERMON":    return "video/*";
+    case "VIDEOS":    return "video/*";
+    case "IMAGES":    return "image/*";
+    case "THUMBNAIL": return "image/*";
+    case "PODCAST":   return "audio/*,video/*";
+    default:          return "audio/*,video/*,image/*";
+  }
+}
+
+/**
+ * Human-readable description of the allowed file types shown in validation errors.
+ */
+function acceptLabelForCategory(cat: string): string {
+  switch (cat) {
+    case "SERMON":    return "video files";
+    case "VIDEOS":    return "video files";
+    case "IMAGES":    return "image files";
+    case "THUMBNAIL": return "image files";
+    case "PODCAST":   return "audio or video files";
+    default:          return "media files";
+  }
+}
+
+/**
+ * Returns true if the given file matches the allowed types for the category.
+ */
+function fileMatchesCategory(file: File, cat: string): boolean {
+  const type = file.type.toLowerCase();
+  switch (cat) {
+    case "SERMON":
+    case "VIDEOS":    return type.startsWith("video/");
+    case "IMAGES":
+    case "THUMBNAIL": return type.startsWith("image/");
+    case "PODCAST":   return type.startsWith("audio/") || type.startsWith("video/");
+    default:          return true;
+  }
+}
 
 const inputClass =
   "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none placeholder:text-[#9CA3AF] dark:text-slate-400 focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
@@ -32,11 +83,23 @@ export default function UploadMediaPage() {
   const [title,        setTitle]        = useState("");
   const [category,     setCategory]     = useState("");
   const [description,  setDescription]  = useState("");
+  const [speaker,      setSpeaker]      = useState("");
+  const [date,         setDate]         = useState("");
+  const [tagsInput,    setTagsInput]    = useState(""); // comma-separated
   const [mediaFile,    setMediaFile]     = useState<File | null>(null);
+  const [thumbnail,    setThumbnail]    = useState<File | null>(null);
   const [useYoutube,   setUseYoutube]   = useState(false);
   const [youtubeLink,  setYoutubeLink]  = useState("");
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const [saving,       setSaving]       = useState(false);
   const [error,        setError]        = useState("");
+
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    title: !title.trim() ? "Title is required" : "",
+  };
 
   // Ref used to programmatically reset the file input when switching to YouTube
   // mode — without this the browser keeps showing the old filename even though
@@ -48,22 +111,41 @@ export default function UploadMediaPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const clearThumbnailInput = () => {
+    setThumbnail(null);
+    if (thumbnailInputRef.current) thumbnailInputRef.current.value = "";
+  };
+
   const handleCategoryChange = (val: string) => {
     setCategory(val);
     setError("");
     clearFileInput();
+    clearThumbnailInput();
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    if (file && file.size > MEDIA_MAX_BYTES) {
-      setError(
-        `"${file.name}" is ${(file.size / 1_048_576).toFixed(1)} MB — the maximum allowed size is 200 MB. ` +
-        `Please compress the file or use a YouTube/external link instead.`,
-      );
-      e.target.value = "";
-      setMediaFile(null);
-      return;
+    if (file) {
+      // Validate file type matches selected category
+      if (category && !fileMatchesCategory(file, category)) {
+        setError(
+          `"${file.name}" is not allowed for this media type. ` +
+          `Please select ${acceptLabelForCategory(category)} only.`,
+        );
+        e.target.value = "";
+        setMediaFile(null);
+        return;
+      }
+      // Validate file size
+      if (file.size > MEDIA_MAX_BYTES) {
+        setError(
+          `"${file.name}" is ${(file.size / 1_048_576).toFixed(1)} MB — the maximum allowed size is 200 MB. ` +
+          `Please compress the file or use a YouTube/external link instead.`,
+        );
+        e.target.value = "";
+        setMediaFile(null);
+        return;
+      }
     }
     setError("");
     setMediaFile(file);
@@ -93,16 +175,37 @@ export default function UploadMediaPage() {
       { type: "text/plain" },
     );
 
+    // Build final description — prepend YouTube link if provided
+    let finalDescription = description.trim() || "";
+    if (useYoutube && youtubeLink.trim()) {
+      const prefix = `[External Link]: ${youtubeLink.trim()}`;
+      finalDescription = finalDescription ? `${prefix}\n\n${finalDescription}` : prefix;
+    }
+
     setSaving(true);
     setError("");
     try {
-      await uploadMedia({
+      const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
+      const commonFields = {
         title:       title.trim(),
-        description: description.trim() || undefined,
+        description: finalDescription || undefined,
         category,
         file:        fileToUpload,
-        youtubeLink: useYoutube ? youtubeLink.trim() : undefined,
-      });
+        speaker:     speaker.trim() || undefined,
+        date:        date || undefined,
+        tags:        tags.length > 0 ? tags : undefined,
+      };
+
+      if (LARGE_MEDIA_CATEGORIES.has(category)) {
+        // Route large-media types (PODCAST, SERMON, VIDEOS) to the /large endpoint
+        // which has a higher server-side size limit
+        await uploadLargeMedia({
+          ...commonFields,
+          thumbnail: thumbnail ?? undefined,
+        });
+      } else {
+        await uploadMedia(commonFields);
+      }
       router.push("/media");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Upload failed.";
@@ -114,8 +217,8 @@ export default function UploadMediaPage() {
       ) {
         const fileMB = mediaFile ? (mediaFile.size / 1_048_576).toFixed(1) : null;
         setError(
-          `The server rejected the file${fileMB ? ` (${fileMB} MB)` : ""} — it exceeds the server's upload size limit. ` +
-          `Please compress the file to under 10 MB, or upload it via the YouTube / External Link option instead.`,
+          `The server rejected the file${fileMB ? ` (${fileMB} MB)` : ""} — it exceeds the upload size limit. ` +
+          `Please compress the file, or use the YouTube / External Link option instead.`,
         );
       } else {
         setError(msg);
@@ -148,10 +251,14 @@ export default function UploadMediaPage() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              onBlur={() => touch("title")}
               placeholder="Sermon / podcast / video title"
-              className={inputClass}
+              className={`${inputClass} ${touched.title && fieldErrors.title ? "border-red-400" : ""}`}
               required
             />
+            {touched.title && fieldErrors.title && (
+              <p className="mt-1 text-xs text-red-500">{fieldErrors.title}</p>
+            )}
           </div>
 
           {/* Category */}
@@ -170,6 +277,46 @@ export default function UploadMediaPage() {
                 ))}
               </select>
             </div>
+
+            {/* Date — shown for all categories */}
+            <div>
+              <label className={labelClass}>Date</label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          {/* Speaker — shown for Sermon / Podcast */}
+          {(category === "SERMON" || category === "PODCAST") && (
+            <div>
+              <label className={labelClass}>Speaker / Host</label>
+              <input
+                type="text"
+                value={speaker}
+                onChange={(e) => setSpeaker(e.target.value)}
+                placeholder="e.g. Pastor John Adeyemi"
+                className={inputClass}
+              />
+            </div>
+          )}
+
+          {/* Tags */}
+          <div>
+            <label className={labelClass}>
+              Tags
+              <span className="ml-1 text-xs font-normal text-[#6B7280] dark:text-slate-400">(comma-separated)</span>
+            </label>
+            <input
+              type="text"
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
+              placeholder="e.g. faith, healing, prayer"
+              className={inputClass}
+            />
           </div>
 
           {/* Description with character counter */}
@@ -223,35 +370,64 @@ export default function UploadMediaPage() {
 
           {/* File upload */}
           {!useYoutube && (
-            <div>
-              <label className={labelClass}>
-                Upload File <span className="text-red-500">*</span>
-                <span className="ml-1 text-xs font-normal text-[#6B7280] dark:text-slate-400">(max 200 MB)</span>
-              </label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="audio/*,video/*,image/*"
-                onChange={handleFileChange}
-                required={!useYoutube}
-                className="block w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-[#000080] file:px-3 file:py-1 file:text-xs file:font-medium file:text-white"
-              />
-              {mediaFile && (
-                <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">
-                  Selected: {mediaFile.name} ({(mediaFile.size / 1_048_576).toFixed(1)} MB)
+            <div className="space-y-4">
+              <div>
+                <label className={labelClass}>
+                  Upload File <span className="text-red-500">*</span>
+                  <span className="ml-1 text-xs font-normal text-[#6B7280] dark:text-slate-400">
+                    (max 200 MB{category ? ` · ${acceptLabelForCategory(category)} only` : ""})
+                  </span>
+                </label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={category ? acceptForCategory(category) : "audio/*,video/*,image/*"}
+                  onChange={handleFileChange}
+                  required={!useYoutube}
+                  className="block w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-[#000080] file:px-3 file:py-1 file:text-xs file:font-medium file:text-white"
+                />
+                {mediaFile && (
+                  <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">
+                    Selected: {mediaFile.name} ({(mediaFile.size / 1_048_576).toFixed(1)} MB)
+                  </p>
+                )}
+                <p className="mt-1.5 text-xs text-[#6B7280] dark:text-slate-400">
+                  Tip: For sermons or recordings available on YouTube, use the{" "}
+                  <button
+                    type="button"
+                    onClick={() => { setUseYoutube(true); clearFileInput(); }}
+                    className="font-medium text-[#000080] dark:text-indigo-400 underline"
+                  >
+                    YouTube / External Link
+                  </button>{" "}
+                  option instead of uploading a large file.
                 </p>
+              </div>
+
+              {/* Thumbnail — optional for VIDEOS & PODCAST */}
+              {(category === "VIDEOS" || category === "PODCAST") && (
+                <div>
+                  <label className={labelClass}>
+                    Thumbnail Image
+                    <span className="ml-1 text-xs font-normal text-[#6B7280] dark:text-slate-400">(optional · image only)</span>
+                  </label>
+                  <input
+                    ref={thumbnailInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null;
+                      setThumbnail(f);
+                    }}
+                    className="block w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-[#6B7280] file:px-3 file:py-1 file:text-xs file:font-medium file:text-white"
+                  />
+                  {thumbnail && (
+                    <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">
+                      Thumbnail: {thumbnail.name} ({(thumbnail.size / 1_048_576).toFixed(2)} MB)
+                    </p>
+                  )}
+                </div>
               )}
-              <p className="mt-1.5 text-xs text-[#6B7280] dark:text-slate-400">
-                Tip: For sermons or recordings available on YouTube, use the{" "}
-                <button
-                  type="button"
-                  onClick={() => { setUseYoutube(true); clearFileInput(); }}
-                  className="font-medium text-[#000080] dark:text-indigo-400 underline"
-                >
-                  YouTube / External Link
-                </button>{" "}
-                option instead of uploading a large file.
-              </p>
             </div>
           )}
 

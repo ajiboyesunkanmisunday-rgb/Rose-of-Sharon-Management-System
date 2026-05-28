@@ -386,6 +386,7 @@ export default function MembersPage() {
               className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500"
             />
           </div>
+          {/* Location filter commented out — text search already handles location
           <div>
             <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">
               Location
@@ -398,6 +399,7 @@ export default function MembersPage() {
               className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500"
             />
           </div>
+          */}
           <Button onClick={handleExport}>Export CSV</Button>
           {(startDate || endDate || locationFilter) && (
             <button

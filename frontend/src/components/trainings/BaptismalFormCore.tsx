@@ -101,6 +101,9 @@ function CI({
   );
 }
 
+/* ── Required-field asterisk ────────────────────────────────────────────── */
+const REQ = <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>;
+
 /* ── Section heading ────────────────────────────────────────────────────── */
 function SH({ letter, title }: { letter: string; title: string }) {
   return (
@@ -157,9 +160,10 @@ export default function BaptismalFormCore({
   const [formalReligion, setFormalReligion] = useState("");
 
   /* ── Section B (Addresses) ──────────────────────────────────────────────── */
-  const [homeAddress, setHomeAddress] = useState(
-    initialData?.homeAddress ?? ""
-  );
+  const [homeAddress, setHomeAddress] = useState(initialData?.street  ?? "");
+  const [city,        setCity]        = useState(initialData?.city    ?? "");
+  const [addrState,   setAddrState]   = useState(initialData?.state   ?? "");
+  const [addrCountry, setAddrCountry] = useState(initialData?.country ?? "");
   const [countryCode, setCountryCode] = useState(
     initialData?.countryCode ?? "234"
   );
@@ -171,17 +175,17 @@ export default function BaptismalFormCore({
   );
   const [socialMedia, setSocialMedia] = useState("");
   const [officeAddress, setOfficeAddress] = useState(
-    initialData?.officeAddress ?? ""
+    initialData?.officeFullAddress ?? ""
   );
   const [workPhone, setWorkPhone] = useState(
-    initialData?.workPhoneNumber ?? ""
+    initialData?.officePhoneNumber ?? ""
   );
 
   /* ── Section B (Qualifications) ─────────────────────────────────────────── */
   const [quals, setQuals] = useState(() => {
     const fromData = (initialData?.qualifications ?? []).map((q) => ({
-      schoolAttended: q.schoolAttended ?? "",
-      dates: q.dates ?? "",
+      schoolAttended: q.institution ?? "",
+      dates: q.date ?? "",
       qualificationReceived: q.qualificationReceived ?? "",
     }));
     while (fromData.length < 3)
@@ -200,7 +204,7 @@ export default function BaptismalFormCore({
 
   /* ── Section C — Christian History ─────────────────────────────────────── */
   const [worshipPlaces, setWorshipPlaces] = useState(() => {
-    const fromData = (initialData?.recentWorshipPlaces ?? []).map(
+    const fromData = (initialData?.pastPlaceOfWorships ?? []).map(
       (w) => w.name ?? ""
     );
     while (fromData.length < 2) fromData.push("");
@@ -216,9 +220,7 @@ export default function BaptismalFormCore({
     initialData?.salvationLocation ?? ""
   );
   const [holySpiritAnswer, setHolySpiritAnswer] = useState(
-    initialData?.holySpiritBaptismChurch
-      ? initialData.holySpiritBaptismChurch
-      : ""
+    initialData?.holySpiritBaptismLocation ?? ""
   );
   const [holySpiritWhere, setHolySpiritWhere] = useState(
     initialData?.holySpiritBaptismDate ?? ""
@@ -226,7 +228,7 @@ export default function BaptismalFormCore({
 
   /* ── Section D — Departments ─────────────────────────────────────────────── */
   const [depts, setDepts] = useState(() => {
-    const fromData = (initialData?.churchDepartments ?? []).map((d) => ({
+    const fromData = (initialData?.studentDepartments ?? []).map((d) => ({
       name: d.name ?? "",
       date: d.date ?? "",
     }));
@@ -241,8 +243,8 @@ export default function BaptismalFormCore({
 
   /* ── Section F — New Converts Class ─────────────────────────────────────── */
   const [newConvertsText, setNewConvertsText] = useState(() => {
-    if (initialData?.hasGoneThroughNewConvertsClass === true) return "Yes";
-    if (initialData?.hasGoneThroughNewConvertsClass === false) return "No";
+    if (initialData?.goneThroughNewConverts === true) return "Yes";
+    if (initialData?.goneThroughNewConverts === false) return "No";
     return "";
   });
 
@@ -251,7 +253,7 @@ export default function BaptismalFormCore({
 
   /* ── Section H — Reasons for attending (3 boxes) ────────────────────────── */
   const [reasons, setReasons] = useState<string[]>(() => {
-    const fromData = [...(initialData?.reasonsForAttending ?? [])];
+    const fromData = [...(initialData?.reasonsForApplying ?? [])];
     while (fromData.length < 3) fromData.push("");
     return fromData.slice(0, 3);
   });
@@ -296,8 +298,10 @@ export default function BaptismalFormCore({
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const handleSubmit = async () => {
+    setSubmitAttempted(true);
     const missing: string[] = [];
     if (!firstName.trim()) missing.push("First Name");
     if (!surname.trim()) missing.push("Surname");
@@ -305,6 +309,8 @@ export default function BaptismalFormCore({
     if (!phone.trim()) missing.push("Phone Number");
     if (phone.trim() && !/\d/.test(phone))
       missing.push("Phone Number (must contain digits)");
+    if (!city.trim())       missing.push("City");
+    if (!addrState.trim())  missing.push("State");
     if (missing.length > 0) {
       setSubmitError(`Please fill in: ${missing.join(", ")}.`);
       return;
@@ -326,8 +332,8 @@ export default function BaptismalFormCore({
     const qualItems = quals
       .filter((q) => q.schoolAttended.trim())
       .map((q) => ({
-        schoolAttended: q.schoolAttended.trim(),
-        dates: q.dates.trim() || undefined,
+        institution:           q.schoolAttended.trim(),
+        date:                  q.dates.trim() || undefined,
         qualificationReceived: q.qualificationReceived.trim() || undefined,
       }));
 
@@ -388,24 +394,27 @@ export default function BaptismalFormCore({
         spouseName: spouseName.trim() || undefined,
         countryCode: countryCode.trim().replace(/^\+/, ""),
         phoneNumber: normalisePhone(phone, countryCode),
-        homeAddress: homeAddress.trim() || undefined,
+        street:  homeAddress.trim() || undefined,
+        city:    city.trim()        || undefined,
+        state:   addrState.trim()   || undefined,
+        country: addrCountry.trim() || undefined,
         occupation: occupation.trim() || undefined,
         placeOfWork: placeOfWork.trim() || undefined,
-        workPhoneNumber: workPhone.trim()
+        officePhoneNumber: workPhone.trim()
           ? normalisePhone(workPhone, countryCode)
           : undefined,
-        officeAddress: officeAddress.trim() || undefined,
+        officeFullAddress: officeAddress.trim() || undefined,
         profilePictureUrl,
         salvationDate: salvationDate.trim() || undefined,
         salvationLocation: salvationWhere.trim() || undefined,
         holySpiritBaptismDate: holySpiritWhere.trim() || undefined,
-        holySpiritBaptismChurch: holySpiritAnswer.trim() || undefined,
-        hasGoneThroughNewConvertsClass: parseYesNo(newConvertsText),
+        holySpiritBaptismLocation: holySpiritAnswer.trim() || undefined,
+        goneThroughNewConverts: parseYesNo(newConvertsText),
         otherInformation: otherInfoStr,
-        ...(qualItems.length ? { qualificationRequests: qualItems } : {}),
-        ...(wpItems.length ? { recentWorshipPlaces: wpItems } : {}),
-        ...(deptItems.length ? { churchDepartments: deptItems } : {}),
-        ...(reasonItems.length ? { reasonsForAttending: reasonItems } : {}),
+        ...(qualItems.length ? { qualificationRequests:            qualItems }  : {}),
+        ...(wpItems.length   ? { createPastPlaceOfWorshipRequests: wpItems }    : {}),
+        ...(deptItems.length ? { createStudentDepartmentRequests:  deptItems }  : {}),
+        ...(reasonItems.length ? { reasonsForApplying:             reasonItems } : {}),
       });
 
       const savedId = (created as { id?: string })?.id;
@@ -635,6 +644,7 @@ export default function BaptismalFormCore({
           flexDirection: "column",
           gap: 32,
           transition: "padding-top 0.2s",
+          overflowX: "auto",
         }}
       >
         {/* ══════════════════ PAGE 1 ══════════════════════════════════════ */}
@@ -810,17 +820,33 @@ export default function BaptismalFormCore({
             )}
           </div>
 
+          {/* Admission No. — only shown in view mode (table ID from backend) */}
+          {mode === "view" && initialData?.id && (
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "Times New Roman, serif", border: "1px solid #000", padding: "2px 10px" }}>
+                Admission No:&nbsp;<span style={{ fontWeight: 400 }}>{initialData.id}</span>
+              </span>
+            </div>
+          )}
+
+          {/* Required-field legend — fill mode only */}
+          {!ro && (
+            <p className="bap-no-print" style={{ fontSize: 11, color: "#555", marginBottom: 4 }}>
+              Fields marked <span style={{ color: "red" }}>*</span> are required.
+            </p>
+          )}
+
           {/* ══ SECTION A — BIOGRAPHICAL DATA ═══════════════════════════ */}
           <SH letter="A" title="Biographical Data" />
           <table style={T}>
             <tbody>
               <tr>
-                <td style={LBL}>SURNAME:</td>
-                <td style={CEL}>
+                <td style={LBL}>SURNAME:{!ro && REQ}</td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && !surname.trim() ? "#FEE2E2" : undefined }}>
                   <CI value={surname} onChange={setSurname} readOnly={ro} />
                 </td>
-                <td style={LBL}>FIRST NAME:</td>
-                <td style={CEL}>
+                <td style={LBL}>FIRST NAME:{!ro && REQ}</td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && !firstName.trim() ? "#FEE2E2" : undefined }}>
                   <CI
                     value={firstName}
                     onChange={setFirstName}
@@ -921,8 +947,8 @@ export default function BaptismalFormCore({
                     readOnly={ro}
                   />
                 </td>
-                <td style={LBL}>PHONE:</td>
-                <td style={CEL}>
+                <td style={LBL}>PHONE:{!ro && REQ}</td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && (!phone.trim() || !countryCode.trim()) ? "#FEE2E2" : undefined }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     {!ro && (
                       <>
@@ -944,6 +970,22 @@ export default function BaptismalFormCore({
                       style={{ flex: 1 }}
                     />
                   </div>
+                </td>
+              </tr>
+              <tr>
+                <td style={LBL}>CITY{!ro && REQ}</td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && !city.trim() ? "#FEE2E2" : undefined }}>
+                  <CI value={city} onChange={setCity} readOnly={ro} placeholder="City" />
+                </td>
+                <td style={LBL}>STATE:{!ro && REQ}</td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && !addrState.trim() ? "#FEE2E2" : undefined }}>
+                  <CI value={addrState} onChange={setAddrState} readOnly={ro} placeholder="State" />
+                </td>
+              </tr>
+              <tr>
+                <td style={LBL}>COUNTRY</td>
+                <td style={CEL} colSpan={3}>
+                  <CI value={addrCountry} onChange={setAddrCountry} readOnly={ro} placeholder="Country" />
                 </td>
               </tr>
               <tr>

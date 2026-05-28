@@ -42,6 +42,16 @@ export default function EditNewConvertPage() {
   const [submitting,  setSubmitting]  = useState(false);
   const [submitError, setSubmitError] = useState("");
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    firstName: !firstName.trim() ? "First name is required" : "",
+    lastName: !lastName.trim() ? "Last name is required" : "",
+  };
+
+  const isFormValid = !!firstName.trim() && !!lastName.trim();
+
   const populate = useCallback(async () => {
     if (!id || id.startsWith("nc-")) return;
     try {
@@ -125,9 +135,12 @@ export default function EditNewConvertPage() {
 
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
             <div>
-              <label className={labelStyles}>First Name</label>
-              <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)}
-                placeholder="Enter First Name" className={inputStyles} />
+              <label className={labelStyles}>First Name <span className="text-red-500">*</span></label>
+              <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} onBlur={() => touch("firstName")}
+                placeholder="Enter First Name" className={`${inputStyles} ${touched.firstName && fieldErrors.firstName ? "border-red-400" : ""}`} />
+              {touched.firstName && fieldErrors.firstName && (
+                <p className="mt-1 text-xs text-red-500">{fieldErrors.firstName}</p>
+              )}
             </div>
             <div>
               <label className={labelStyles}>Middle Name</label>
@@ -135,9 +148,12 @@ export default function EditNewConvertPage() {
                 placeholder="Enter Middle Name" className={inputStyles} />
             </div>
             <div>
-              <label className={labelStyles}>Last Name</label>
-              <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)}
-                placeholder="Enter Last Name" className={inputStyles} />
+              <label className={labelStyles}>Last Name <span className="text-red-500">*</span></label>
+              <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} onBlur={() => touch("lastName")}
+                placeholder="Enter Last Name" className={`${inputStyles} ${touched.lastName && fieldErrors.lastName ? "border-red-400" : ""}`} />
+              {touched.lastName && fieldErrors.lastName && (
+                <p className="mt-1 text-xs text-red-500">{fieldErrors.lastName}</p>
+              )}
             </div>
             <div>
               <label className={labelStyles}>Gender</label>
@@ -213,7 +229,7 @@ export default function EditNewConvertPage() {
 
         <div className="flex justify-end gap-3">
           <Button type="button" variant="secondary" onClick={() => router.back()}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={submitting}>
+          <Button type="submit" variant="primary" disabled={submitting || !isFormValid}>
             {submitting ? "Saving…" : "Save Changes"}
           </Button>
         </div>

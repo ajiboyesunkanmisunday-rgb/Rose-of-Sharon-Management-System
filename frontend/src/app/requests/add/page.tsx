@@ -40,6 +40,21 @@ export default function AddRequestPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const MAX_CONTENT = 1000;
+  const MAX_SUBJECT = 150;
+  const contentNear = formData.content.length >= Math.floor(MAX_CONTENT * 0.85);
+
+  const fieldErrors = {
+    subject: !formData.subject.trim() ? "Subject is required" : "",
+    content: !formData.content.trim() ? "Details are required" : "",
+    member: !selectedMember ? "Please select a member" : "",
+  };
+
+  const isFormValid = !!formData.subject.trim() && !!formData.content.trim() && !!selectedMember;
+
   // Debounced member search
   useEffect(() => {
     if (searchDebounce.current) clearTimeout(searchDebounce.current);
@@ -139,9 +154,13 @@ export default function AddRequestPage() {
             label="Subject"
             name="subject"
             value={formData.subject}
-            onChange={handleChange}
+            onChange={(e) => setFormData((prev) => ({ ...prev, subject: e.target.value.slice(0, MAX_SUBJECT) }))}
+            onBlur={() => touch("subject")}
             placeholder="Brief subject for the request"
             required
+            error={touched.subject ? fieldErrors.subject : undefined}
+            showCount
+            maxLength={MAX_SUBJECT}
           />
 
           <SelectField
@@ -213,10 +232,14 @@ export default function AddRequestPage() {
             label="Details"
             name="content"
             value={formData.content}
-            onChange={handleChange}
+            onChange={(e) => setFormData((prev) => ({ ...prev, content: e.target.value.slice(0, MAX_CONTENT) }))}
+            onBlur={() => touch("content")}
             placeholder="Describe the request…"
             rows={6}
             required
+            error={touched.content ? fieldErrors.content : undefined}
+            showCount
+            maxLength={MAX_CONTENT}
           />
 
           <div className="flex items-center justify-end gap-3 pt-4">
@@ -227,7 +250,7 @@ export default function AddRequestPage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={submitting}>
+            <Button variant="primary" type="submit" disabled={submitting || !isFormValid}>
               {submitting ? "Saving…" : "Save Request"}
             </Button>
           </div>

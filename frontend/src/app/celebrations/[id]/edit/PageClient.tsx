@@ -41,6 +41,15 @@ export default function EditCelebrationClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+
+  const fieldErrors = {
+    date: !formData.date ? "Date is required" : "",
+  };
+
+  const isFormValid = !!formData.date;
+
   const populate = useCallback(async () => {
     if (!id || id.startsWith("cel-")) return;
     try {
@@ -111,7 +120,9 @@ export default function EditCelebrationClient() {
             name="date"
             value={formData.date}
             onChange={handleChange}
+            onBlur={() => touch("date")}
             required
+            error={touched.date ? fieldErrors.date : undefined}
           />
 
           <TextAreaField label="Notes" name="notes" value={formData.notes} onChange={handleChange} rows={3} />
@@ -120,7 +131,7 @@ export default function EditCelebrationClient() {
             <Button variant="secondary" type="button" onClick={() => router.push(`/celebrations/${id}`)}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={loading}>
+            <Button variant="primary" type="submit" disabled={loading || !isFormValid}>
               {loading ? "Saving…" : "Save Changes"}
             </Button>
           </div>

@@ -12,6 +12,16 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const fieldErrors = {
+    email: !email.trim() ? "Email is required" : !EMAIL_RE.test(email) ? "Enter a valid email address" : "",
+  };
+
+  const isFormValid = !!email.trim() && EMAIL_RE.test(email);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
@@ -72,13 +82,17 @@ export default function ForgotPasswordPage() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onBlur={() => touch("email")}
               placeholder="you@example.com"
-              className={inputClass}
+              className={`${inputClass} ${touched.email && fieldErrors.email ? "border-red-400" : ""}`}
               required
             />
+            {touched.email && fieldErrors.email && (
+              <p className="mt-1 text-xs text-red-500">{fieldErrors.email}</p>
+            )}
           </div>
 
-          <Button type="submit" variant="primary" className="w-full">
+          <Button type="submit" variant="primary" className="w-full" disabled={!isFormValid}>
             Send Reset Request
           </Button>
         </form>

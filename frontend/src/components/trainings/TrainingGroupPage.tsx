@@ -107,21 +107,21 @@ export default function TrainingGroupPage({ groupKeywords, title, description, a
   return (
     <DashboardLayout>
       {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-6 flex flex-wrap items-start gap-3 sm:flex-nowrap sm:items-center">
         <div
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
           style={{ backgroundColor: `${accentColor}18` }}
         >
           <GraduationCap className="h-6 w-6" style={{ color: accentColor }} />
         </div>
-        <div>
-          <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">{title}</h1>
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-[28px] font-bold text-[#000000] dark:text-slate-100">{title}</h1>
           <p className="text-sm text-[#6B7280] dark:text-slate-400">{description}</p>
         </div>
         <button
           onClick={load}
           disabled={loading}
-          className="ml-auto flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 hover:border-[#7C3AED] hover:text-[#7C3AED] dark:text-purple-400 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 hover:border-[#7C3AED] hover:text-[#7C3AED] dark:text-purple-400 disabled:opacity-50 sm:ml-auto"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
           Refresh
@@ -149,7 +149,7 @@ export default function TrainingGroupPage({ groupKeywords, title, description, a
 
       {/* Stats bar */}
       {!loading && (
-        <div className="mb-5 flex items-center gap-6">
+        <div className="mb-5 flex flex-wrap gap-3">
           <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-3">
             <p className="text-2xl font-bold" style={{ color: accentColor }}>{groupMembers.length}</p>
             <p className="text-xs text-[#6B7280] dark:text-slate-400">Total enrolled</p>

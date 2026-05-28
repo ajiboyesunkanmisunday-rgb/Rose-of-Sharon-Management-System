@@ -127,6 +127,11 @@ export default function SomFormCore({
   const ro = mode === "blank" || mode === "view";
   const router = useRouter();
 
+  /* ── Set / cohort ─────────────────────────────────────────────────────── */
+  const currentYear = new Date().getFullYear();
+  const setYears = Array.from({ length: 8 }, (_, i) => String(currentYear - 5 + i));
+  const [set, setSet] = useState(initialData?.set ?? String(currentYear));
+
   /* ── Section A — Biographical Data ─────────────────────────────────────── */
   const [surname,     setSurname]     = useState(initialData?.lastName   ?? "");
   const [firstName,   setFirstName]   = useState(initialData?.firstName  ?? "");
@@ -149,19 +154,22 @@ export default function SomFormCore({
   const [spouseName,  setSpouseName]  = useState(initialData?.spouseName ?? "");
 
   /* ── Section B — Address ────────────────────────────────────────────────── */
-  const [homeAddress,   setHomeAddress]   = useState(initialData?.homeAddress    ?? "");
+  const [homeAddress,   setHomeAddress]   = useState(initialData?.street   ?? "");
+  const [city,          setCity]          = useState(initialData?.city     ?? "");
+  const [addrState,     setAddrState]     = useState(initialData?.state    ?? "");
+  const [addrCountry,   setAddrCountry]   = useState(initialData?.country  ?? "");
   const [countryCode,   setCountryCode]   = useState(initialData?.countryCode    ?? "234");
   const [phone,         setPhone]         = useState(initialData?.phoneNumber     ?? "");
   const [occupation,    setOccupation]    = useState(initialData?.occupation     ?? "");
   const [placeOfWork,   setPlaceOfWork]   = useState(initialData?.placeOfWork    ?? "");
-  const [workPhone,     setWorkPhone]     = useState(initialData?.workPhoneNumber ?? "");
-  const [officeAddress, setOfficeAddress] = useState(initialData?.officeAddress  ?? "");
+  const [workPhone,     setWorkPhone]     = useState(initialData?.officePhoneNumber ?? "");
+  const [officeAddress, setOfficeAddress] = useState(initialData?.officeFullAddress  ?? "");
 
   /* ── Section C — Educational Qualifications (4 rows) ───────────────────── */
   const [quals, setQuals] = useState(() => {
     const fromData = (initialData?.qualifications ?? []).map((q) => ({
-      schoolAttended:        q.schoolAttended        ?? "",
-      dates:                 q.dates                 ?? "",
+      schoolAttended:        q.institution           ?? "",
+      dates:                 q.date                  ?? "",
       qualificationReceived: q.qualificationReceived ?? "",
     }));
     while (fromData.length < 4) fromData.push({ schoolAttended: "", dates: "", qualificationReceived: "" });
@@ -172,7 +180,7 @@ export default function SomFormCore({
 
   /* ── Section D — Christian History ─────────────────────────────────────── */
   const [worshipPlaces, setWorshipPlaces] = useState(() => {
-    const fromData = (initialData?.recentWorshipPlaces ?? []).map((w) => w.name ?? "");
+    const fromData = (initialData?.pastPlaceOfWorships ?? []).map((w) => w.name ?? "");
     while (fromData.length < 2) fromData.push("");
     return fromData.slice(0, 2);
   });
@@ -182,13 +190,13 @@ export default function SomFormCore({
   const [salvationDate,      setSalvationDate]      = useState(initialData?.salvationDate          ?? "");
   const [salvationWhere,     setSalvationWhere]      = useState(initialData?.salvationLocation       ?? "");
   const [waterBaptismDate,   setWaterBaptismDate]    = useState(initialData?.waterBaptismDate        ?? "");
-  const [waterBaptismChurch, setWaterBaptismChurch]  = useState(initialData?.waterBaptismChurch      ?? "");
-  const [holySpiritDate,     setHolySpiritDate]      = useState(initialData?.holySpiritBaptismDate   ?? "");
-  const [holySpiritChurch,   setHolySpiritChurch]    = useState(initialData?.holySpiritBaptismChurch ?? "");
+  const [waterBaptismChurch, setWaterBaptismChurch]  = useState(initialData?.waterBaptismLocation      ?? "");
+  const [holySpiritDate,     setHolySpiritDate]      = useState(initialData?.holySpiritBaptismDate     ?? "");
+  const [holySpiritChurch,   setHolySpiritChurch]    = useState(initialData?.holySpiritBaptismLocation ?? "");
 
   /* ── Section E — Departments (3 rows with dates) ────────────────────────── */
   const [depts, setDepts] = useState(() => {
-    const fromData = (initialData?.churchDepartments ?? []).map((d) => ({
+    const fromData = (initialData?.studentDepartments ?? []).map((d) => ({
       name: d.name ?? "",
       date: d.date ?? "",
     }));
@@ -200,21 +208,17 @@ export default function SomFormCore({
 
   /* ── Section F — New Converts Class (free text matching physical form) ─── */
   const [newConvertsText, setNewConvertsText] = useState(() => {
-    if (initialData?.hasGoneThroughNewConvertsClass === true)  return "Yes";
-    if (initialData?.hasGoneThroughNewConvertsClass === false) return "No";
+    if (initialData?.goneThroughNewConverts === true)  return "Yes";
+    if (initialData?.goneThroughNewConverts === false) return "No";
     return "";
   });
 
   /* ── Section G — Water Baptismal Class ─────────────────────────────────── */
-  const [waterClassText, setWaterClassText] = useState(() => {
-    if (initialData?.hasGoneThroughWaterBaptismalClass === true)  return "Yes";
-    if (initialData?.hasGoneThroughWaterBaptismalClass === false) return "No";
-    return "";
-  });
+  const [waterClassText, setWaterClassText] = useState("");
 
   /* ── Section H — Reasons for attending (5 lines) ───────────────────────── */
   const [reasons, setReasons] = useState<string[]>(() => {
-    const fromData = [...(initialData?.reasonsForAttending ?? [])];
+    const fromData = [...(initialData?.reasonsForApplying ?? [])];
     while (fromData.length < 5) fromData.push("");
     return fromData.slice(0, 5);
   });
@@ -231,6 +235,10 @@ export default function SomFormCore({
   const updateOtherInfo = (i: number, v: string) =>
     setOtherInfoLines((prev) => prev.map((r, idx) => idx === i ? v : r));
 
+  /* ── Section J — Applicant Signature & Date ────────────────────────────── */
+  const [signatureJ, setSignatureJ] = useState("");
+  const [signDateJ,  setSignDateJ]  = useState("");
+
   /* ── Section K — Official Remarks (3 lines) ─────────────────────────────── */
   const [remarksLines, setRemarksLines] = useState<string[]>(() => {
     const raw = initialData?.officialRemarks ?? "";
@@ -240,6 +248,10 @@ export default function SomFormCore({
   });
   const updateRemark = (i: number, v: string) =>
     setRemarksLines((prev) => prev.map((r, idx) => idx === i ? v : r));
+
+  /* ── Section K — Admin Signature & Date ────────────────────────────────── */
+  const [signatureK, setSignatureK] = useState("");
+  const [signDateK,  setSignDateK]  = useState("");
 
   /* ── Photo ──────────────────────────────────────────────────────────────── */
   const [photo,        setPhoto]        = useState<File | null>(null);
@@ -253,17 +265,21 @@ export default function SomFormCore({
   };
 
   /* ── Submit ─────────────────────────────────────────────────────────────── */
-  const [submitting,    setSubmitting]    = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [submitError,   setSubmitError]   = useState("");
+  const [submitting,      setSubmitting]      = useState(false);
+  const [submitSuccess,   setSubmitSuccess]   = useState(false);
+  const [submitError,     setSubmitError]     = useState("");
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const handleSubmit = async () => {
+    setSubmitAttempted(true);
     const missing: string[] = [];
     if (!firstName.trim())   missing.push("First Name");
     if (!surname.trim())     missing.push("Surname");
     if (!countryCode.trim()) missing.push("Country Code");
     if (!phone.trim())       missing.push("Phone Number");
     if (phone.trim() && !/\d/.test(phone)) missing.push("Phone Number (must contain digits)");
+    if (!city.trim())        missing.push("City");
+    if (!addrState.trim())   missing.push("State");
     if (missing.length > 0) {
       setSubmitError(`Please fill in: ${missing.join(", ")}.`);
       return;
@@ -285,8 +301,8 @@ export default function SomFormCore({
     const qualItems = quals
       .filter((q) => q.schoolAttended.trim())
       .map((q) => ({
-        schoolAttended:        q.schoolAttended.trim(),
-        dates:                 q.dates.trim()                 || undefined,
+        institution:           q.schoolAttended.trim(),
+        date:                  q.dates.trim()                 || undefined,
         qualificationReceived: q.qualificationReceived.trim() || undefined,
       }));
 
@@ -320,6 +336,7 @@ export default function SomFormCore({
       }
 
       const created = await createSchoolOfMinistry({
+        set:          set.trim() || undefined,
         firstName:    firstName.trim(),
         lastName:     surname.trim(),
         middleName:   middleName.trim()   || undefined,
@@ -332,27 +349,29 @@ export default function SomFormCore({
         spouseName:   spouseName.trim()  || undefined,
         countryCode:  countryCode.trim().replace(/^\+/, ""),
         phoneNumber:  normalisePhone(phone, countryCode),
-        homeAddress:  homeAddress.trim()   || undefined,
+        street:  homeAddress.trim() || undefined,
+        city:    city.trim()        || undefined,
+        state:   addrState.trim()   || undefined,
+        country: addrCountry.trim() || undefined,
         occupation:   occupation.trim()    || undefined,
         placeOfWork:  placeOfWork.trim()   || undefined,
-        workPhoneNumber: workPhone.trim()
+        officePhoneNumber: workPhone.trim()
           ? normalisePhone(workPhone, countryCode)
           : undefined,
-        officeAddress: officeAddress.trim() || undefined,
+        officeFullAddress: officeAddress.trim() || undefined,
         profilePictureUrl,
-        salvationDate:           salvationDate.trim()      || undefined,
-        salvationLocation:       salvationWhere.trim()     || undefined,
-        waterBaptismDate:        waterBaptismDate.trim()   || undefined,
-        waterBaptismChurch:      waterBaptismChurch.trim() || undefined,
-        holySpiritBaptismDate:   holySpiritDate.trim()     || undefined,
-        holySpiritBaptismChurch: holySpiritChurch.trim()   || undefined,
-        hasGoneThroughNewConvertsClass:    parseYesNo(newConvertsText),
-        hasGoneThroughWaterBaptismalClass: parseYesNo(waterClassText),
+        salvationDate:          salvationDate.trim()      || undefined,
+        salvationLocation:      salvationWhere.trim()     || undefined,
+        waterBaptismDate:       waterBaptismDate.trim()   || undefined,
+        waterBaptismLocation:   waterBaptismChurch.trim() || undefined,
+        holySpiritBaptismDate:  holySpiritDate.trim()     || undefined,
+        holySpiritBaptismLocation: holySpiritChurch.trim() || undefined,
+        goneThroughNewConverts: parseYesNo(newConvertsText),
         otherInformation: otherInfoStr,
-        ...(qualItems.length   ? { qualificationRequests: qualItems }  : {}),
-        ...(wpItems.length     ? { recentWorshipPlaces:   wpItems }    : {}),
-        ...(deptItems.length   ? { churchDepartments:     deptItems }  : {}),
-        ...(reasonItems.length ? { reasonsForAttending:   reasonItems } : {}),
+        ...(qualItems.length   ? { qualificationRequests:           qualItems }  : {}),
+        ...(wpItems.length     ? { createPastPlaceOfWorshipRequests: wpItems }   : {}),
+        ...(deptItems.length   ? { createStudentDepartmentRequests:  deptItems } : {}),
+        ...(reasonItems.length ? { reasonsForApplying:               reasonItems } : {}),
       });
 
       const savedId = (created as { id?: string })?.id;
@@ -411,6 +430,31 @@ export default function SomFormCore({
               : mode === "view" ? "SOM Application Form — View Record"
               : "SOM Application Form — Fill & Submit"}
           </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {/* Set year selector — shown in fill and view modes */}
+            {mode !== "blank" && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <label style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, fontFamily: "Arial, sans-serif", whiteSpace: "nowrap" }}>
+                  Set:
+                </label>
+                <select
+                  value={set}
+                  onChange={(e) => setSet(e.target.value)}
+                  disabled={mode === "view"}
+                  style={{
+                    background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.4)",
+                    color: "#fff", borderRadius: 5, padding: "4px 8px",
+                    fontSize: 13, fontFamily: "Arial, sans-serif", cursor: mode === "view" ? "default" : "pointer",
+                    outline: "none", minWidth: 72,
+                  }}
+                >
+                  {setYears.map((y) => (
+                    <option key={y} value={y} style={{ background: "#000080", color: "#fff" }}>{y}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
           <div style={{ display: "flex", gap: 10 }}>
             {mode === "fill" && (
               <button
@@ -472,12 +516,28 @@ export default function SomFormCore({
         )}
       </div>
 
+      {/* Required-field legend — fill mode only, hidden on print */}
+      {mode === "fill" && (
+        <div
+          className="som-no-print"
+          style={{
+            position: "fixed", bottom: 16, right: 16, zIndex: 200,
+            background: "#fff", border: "1px solid #E5E7EB",
+            borderRadius: 8, padding: "6px 14px",
+            fontSize: 11, color: "#374151",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.10)",
+          }}
+        >
+          <span style={{ color: "#DC2626", fontWeight: 700 }}>*</span> Required field
+        </div>
+      )}
+
       {/* ── Gray wrapper ──────────────────────────────────────────────────── */}
       <div className="som-wrapper" style={{
         minHeight: "100vh", background: "#b0bec5",
         paddingTop: submitError || submitSuccess ? 110 : 72, paddingBottom: 48,
         display: "flex", flexDirection: "column", gap: 32,
-        transition: "padding-top 0.2s",
+        transition: "padding-top 0.2s", overflowX: "auto",
       }}>
 
         {/* ══════════════════ PAGE 1 ══════════════════════════════════════ */}
@@ -544,15 +604,32 @@ export default function SomFormCore({
             )}
           </div>
 
+          {/* Admission No. — only shown in view mode (table ID from backend) */}
+          {mode === "view" && initialData?.id && (
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "Times New Roman, serif", border: "1px solid #000", padding: "2px 10px" }}>
+                Admission No:&nbsp;<span style={{ fontWeight: 400 }}>{initialData.id}</span>
+              </span>
+            </div>
+          )}
+
           {/* ══ SECTION A — BIOGRAPHICAL DATA ════════════════════════════ */}
           <SH letter="A" title="Biographical Data" />
           <table style={T}>
             <tbody>
               <tr>
-                <td style={LBL}>Surname:</td>
-                <td style={CEL}><CI value={surname} onChange={setSurname} readOnly={ro} /></td>
-                <td style={LBL}>First name:</td>
-                <td style={CEL}><CI value={firstName} onChange={setFirstName} readOnly={ro} /></td>
+                <td style={LBL}>
+                  Surname:{!ro && <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>}
+                </td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && !surname.trim() ? "#FEE2E2" : undefined }}>
+                  <CI value={surname} onChange={setSurname} readOnly={ro} />
+                </td>
+                <td style={LBL}>
+                  First name:{!ro && <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>}
+                </td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && !firstName.trim() ? "#FEE2E2" : undefined }}>
+                  <CI value={firstName} onChange={setFirstName} readOnly={ro} />
+                </td>
               </tr>
               <tr>
                 <td style={LBL}>Other Names:</td>
@@ -585,9 +662,11 @@ export default function SomFormCore({
             <tbody>
               <tr>
                 <td style={LBL}>Home Address:</td>
-                <td style={{ ...CEL, width: "46%" }}><CI value={homeAddress} onChange={setHomeAddress} readOnly={ro} /></td>
-                <td style={LBL}>Phone no.:</td>
-                <td style={CEL}>
+                <td style={{ ...CEL, width: "46%" }}><CI value={homeAddress} onChange={setHomeAddress} readOnly={ro} placeholder="Street" /></td>
+                <td style={LBL}>
+                  Phone no.:{!ro && <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>}
+                </td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && (!phone.trim() || !countryCode.trim()) ? "#FEE2E2" : undefined }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     {!ro && (
                       <>
@@ -598,6 +677,20 @@ export default function SomFormCore({
                     <CI value={phone} onChange={setPhone} readOnly={ro} placeholder="08012345678" style={{ flex: 1 }} />
                   </div>
                 </td>
+              </tr>
+              <tr>
+                <td style={LBL}>City:{!ro && <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>}</td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && !city.trim() ? "#FEE2E2" : undefined }}>
+                  <CI value={city} onChange={setCity} readOnly={ro} placeholder="City" />
+                </td>
+                <td style={LBL}>State:{!ro && <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>}</td>
+                <td style={{ ...CEL, background: !ro && submitAttempted && !addrState.trim() ? "#FEE2E2" : undefined }}>
+                  <CI value={addrState} onChange={setAddrState} readOnly={ro} placeholder="State" />
+                </td>
+              </tr>
+              <tr>
+                <td style={LBL}>Country:</td>
+                <td style={CEL} colSpan={3}><CI value={addrCountry} onChange={setAddrCountry} readOnly={ro} placeholder="Country" /></td>
               </tr>
               <tr>
                 <td style={LBL}>Occupation:</td>
@@ -771,13 +864,37 @@ export default function SomFormCore({
             </tbody>
           </table>
 
-          {/* ══ SECTION J — SIGNATURE ════════════════════════════════════ */}
+          {/* ══ SECTION J — APPLICANT SIGNATURE ═════════════════════════ */}
           <div style={{ fontWeight: 700, fontSize: 12, marginTop: 16, marginBottom: 6 }}>J:</div>
           <table style={T}>
             <tbody>
               <tr>
-                <td style={{ ...LBL, width: "50%", height: 32, fontWeight: 700 }}>SIGNATURE:</td>
-                <td style={{ ...LBL, fontWeight: 700 }}>DATE:</td>
+                <td style={{ ...LBL, width: "50%", fontWeight: 700, verticalAlign: "top", paddingBottom: 8 }}>
+                  <div style={{ marginBottom: 6 }}>
+                    SIGNATURE:
+                    {!ro && <span style={{ fontSize: 9, fontWeight: 400, color: "#888", marginLeft: 4 }}>(type full name)</span>}
+                  </div>
+                  <CI
+                    value={signatureJ}
+                    onChange={setSignatureJ}
+                    readOnly={ro}
+                    placeholder="Type your full name"
+                    style={{ borderBottom: "1px solid #000", paddingBottom: 2 }}
+                  />
+                </td>
+                <td style={{ ...LBL, fontWeight: 700, verticalAlign: "top", paddingBottom: 8 }}>
+                  <div style={{ marginBottom: 6 }}>
+                    DATE:
+                    {!ro && <span style={{ fontSize: 9, fontWeight: 400, color: "#888", marginLeft: 4 }}>(DD/MM/YYYY)</span>}
+                  </div>
+                  <CI
+                    value={signDateJ}
+                    onChange={setSignDateJ}
+                    readOnly={ro}
+                    placeholder="DD/MM/YYYY"
+                    style={{ borderBottom: "1px solid #000", paddingBottom: 2 }}
+                  />
+                </td>
               </tr>
             </tbody>
           </table>
@@ -798,6 +915,40 @@ export default function SomFormCore({
                   </td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+
+          {/* Admin Signature + Date (editable in view/admin mode only) */}
+          <table style={{ ...T, marginTop: 0 }}>
+            <tbody>
+              <tr>
+                <td style={{ ...LBL, width: "50%", fontWeight: 700, verticalAlign: "top", paddingBottom: 8 }}>
+                  <div style={{ marginBottom: 6 }}>
+                    SIGNATURE (Admin):
+                    {mode === "view" && <span style={{ fontSize: 9, fontWeight: 400, color: "#888", marginLeft: 4 }}>(type full name)</span>}
+                  </div>
+                  <CI
+                    value={signatureK}
+                    onChange={mode === "view" ? setSignatureK : undefined}
+                    readOnly={mode !== "view"}
+                    placeholder="Admin full name"
+                    style={{ borderBottom: "1px solid #000", paddingBottom: 2 }}
+                  />
+                </td>
+                <td style={{ ...LBL, fontWeight: 700, verticalAlign: "top", paddingBottom: 8 }}>
+                  <div style={{ marginBottom: 6 }}>
+                    DATE:
+                    {mode === "view" && <span style={{ fontSize: 9, fontWeight: 400, color: "#888", marginLeft: 4 }}>(DD/MM/YYYY)</span>}
+                  </div>
+                  <CI
+                    value={signDateK}
+                    onChange={mode === "view" ? setSignDateK : undefined}
+                    readOnly={mode !== "view"}
+                    placeholder="DD/MM/YYYY"
+                    style={{ borderBottom: "1px solid #000", paddingBottom: 2 }}
+                  />
+                </td>
+              </tr>
             </tbody>
           </table>
 
