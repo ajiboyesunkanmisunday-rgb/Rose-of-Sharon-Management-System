@@ -13,19 +13,29 @@
       "dependencies": [
         "npm:@netlify/plugin-nextjs@^5.15.9",
         "npm:@tailwindcss/postcss@4",
+        "npm:@tanstack/react-query@^5.100.9",
+        "npm:@types/file-saver@^2.0.7",
         "npm:@types/node@20",
         "npm:@types/react-dom@19",
         "npm:@types/react@19",
+        "npm:docx@^9.6.1",
         "npm:eslint-config-next@16.2.3",
         "npm:eslint@9",
+        "npm:file-saver@^2.0.5",
+        "npm:jspdf-autotable@^5.0.7",
+        "npm:jspdf@^4.2.1",
+        "npm:jszip@^3.10.1",
         "npm:lucide-react@^1.8.0",
         "npm:next@16.2.3",
         "npm:qrcode.react@^4.2.0",
         "npm:react-dom@19.2.4",
         "npm:react@19.2.4",
+        "npm:recharts@^3.8.1",
         "npm:sharp@~0.34.5",
+        "npm:sonner@^2.0.7",
         "npm:tailwindcss@4",
-        "npm:typescript@5"
+        "npm:typescript@5",
+        "npm:xlsx@~0.18.5"
       ]
     }
   }
