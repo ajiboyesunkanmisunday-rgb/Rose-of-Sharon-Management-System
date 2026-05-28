@@ -74,6 +74,9 @@ export default function SecondTimersPage() {
   const [filterService, setFilterService] = useState("");
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
+  // Pending date inputs — only applied to active filter on Apply click
+  const [pendingDateFrom, setPendingDateFrom] = useState("");
+  const [pendingDateTo, setPendingDateTo] = useState("");
 
   const fetchTimers = useCallback(async (page: number, q = "", svc = "") => {
     setLoading(true);
@@ -400,14 +403,20 @@ export default function SecondTimersPage() {
           </div>
           <div className="flex flex-col">
             <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">From</label>
-            <input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]" />
+            <input type="date" value={pendingDateFrom} onChange={(e) => setPendingDateFrom(e.target.value)} className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]" />
           </div>
           <div className="flex flex-col">
             <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">To</label>
-            <input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]" />
+            <input type="date" value={pendingDateTo} min={pendingDateFrom || undefined} onChange={(e) => setPendingDateTo(e.target.value)} className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]" />
           </div>
           <button
-            onClick={() => { setFilterService(""); setFilterDateFrom(""); setFilterDateTo(""); setCurrentPage(1); }}
+            onClick={() => { setFilterDateFrom(pendingDateFrom); setFilterDateTo(pendingDateTo); setCurrentPage(1); }}
+            className="h-[42px] rounded-lg border border-[#000080] dark:border-indigo-500 bg-[#000080] dark:bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-[#000066] dark:hover:bg-indigo-700"
+          >
+            Apply
+          </button>
+          <button
+            onClick={() => { setPendingDateFrom(""); setPendingDateTo(""); setFilterService(""); setFilterDateFrom(""); setFilterDateTo(""); setCurrentPage(1); }}
             className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 text-sm text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50"
           >
             Clear

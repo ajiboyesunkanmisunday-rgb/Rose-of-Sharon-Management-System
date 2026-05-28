@@ -263,15 +263,52 @@ export default function ViewSecondTimerPage() {
           </div>
 
           {activeTab === "details" && user && (
-            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 text-sm text-center text-gray-400 dark:text-slate-500">
-              Assigned Follow-Up:{" "}
-              <span className="font-medium text-[#374151] dark:text-slate-300">{fullName(user.assignedFollowUp) || "Not assigned"}</span>
-              {(user.noOfCalls !== undefined || user.noOfVisits !== undefined) && (
-                <span className="ml-4 text-[#374151] dark:text-slate-300">
-                  · Calls: <strong>{user.noOfCalls ?? 0}</strong>
-                  &nbsp;· Visits: <strong>{user.noOfVisits ?? 0}</strong>
-                </span>
-              )}
+            <div className="space-y-4">
+              {/* Profile fields */}
+              <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+                <h3 className="mb-4 text-sm font-bold text-[#111827] dark:text-slate-100">Personal Information</h3>
+                <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-3 text-sm">
+                  {[
+                    { label: "First Name",     value: user.firstName },
+                    { label: "Middle Name",    value: user.middleName },
+                    { label: "Last Name",      value: user.lastName },
+                    { label: "Email",          value: user.email },
+                    { label: "Phone",          value: phone },
+                    { label: "Gender",         value: user.sex },
+                    { label: "Date of Birth",  value: fmtDOB(user.dayOfBirth, user.monthOfBirth, user.yearOfBirth) },
+                    { label: "Marital Status", value: user.maritalStatus },
+                    { label: "Occupation",     value: user.occupation },
+                    { label: "Address",        value: address },
+                    { label: "Last Service",   value: user.secondTimeService?.title },
+                    { label: "Service Date",   value: fmtDate(user.secondTimeService?.date ?? user.createdOn) },
+                    { label: "Registered On",  value: fmtDate(user.createdOn) },
+                  ].map(({ label, value }) => value ? (
+                    <div key={label}>
+                      <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">{label}</p>
+                      <p className="mt-1 text-[#111827] dark:text-slate-100">{value}</p>
+                    </div>
+                  ) : null)}
+                </div>
+              </div>
+
+              {/* Follow-up summary */}
+              <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+                <h3 className="mb-4 text-sm font-bold text-[#111827] dark:text-slate-100">Follow-Up</h3>
+                <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-3 text-sm">
+                  <div>
+                    <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Assigned Officer</p>
+                    <p className="mt-1 text-[#111827] dark:text-slate-100">{fullName(user.assignedFollowUp) || "Not assigned"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Calls Made</p>
+                    <p className="mt-1 text-[#111827] dark:text-slate-100">{user.noOfCalls ?? 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Visits Made</p>
+                    <p className="mt-1 text-[#111827] dark:text-slate-100">{user.noOfVisits ?? 0}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
