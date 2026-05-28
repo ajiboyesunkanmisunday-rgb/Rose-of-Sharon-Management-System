@@ -26,6 +26,7 @@ import {
   ChevronDown,
   Megaphone,
   ShoppingBag,
+  Trophy,
 } from "lucide-react";
 
 interface SubItem {
@@ -69,6 +70,14 @@ const navItems: NavItem[] = [
   },
   { label: "Requests",             icon: UserRoundPlus, href: "/requests" },
   { label: "Testimonies",          icon: Heart,         href: "/testimonies" },
+  {
+    label: "Voting", icon: Trophy,
+    children: [
+      { label: "Face of the Month", href: "/voting" },
+      { label: "Hall of Fame",      href: "/voting/hall-of-fame" },
+      { label: "Categories",        href: "/voting/categories" },
+    ],
+  },
   { label: "Celebrations",         icon: PartyPopper,   href: "/celebrations" },
   {
     label: "Trainings", icon: Swords,
