@@ -3931,27 +3931,29 @@ export async function uploadLargeMedia(fields: {
     throw new Error("Session expired. Please log in again.");
   }
 
-  const params = new URLSearchParams({
-    title: fields.title,
-    type: fields.category,
-    category: fields.category,
-    size: String(fields.file.size),
-    isFromMedia: "true",
-  });
-  if (fields.description) params.set("description", fields.description);
-  if (fields.duration != null) params.set("duration", String(fields.duration));
-  if (fields.speaker) params.set("speaker", fields.speaker);
-  if (fields.date)    params.set("date", fields.date);
-  if (fields.tags && fields.tags.length > 0) params.set("tags", fields.tags.join(","));
-
+  // Send all metadata as multipart form fields — avoids URL-length issues with
+  // long descriptions and ensures Spring @ModelAttribute binding picks them up.
   const form = new FormData();
+  form.append("title",       fields.title);
+  form.append("type",        fields.category);
+  form.append("category",    fields.category);
+  form.append("size",        String(fields.file.size));
+  form.append("isFromMedia", "true");
+  if (fields.description) form.append("description", fields.description);
+  if (fields.duration != null) form.append("duration", String(fields.duration));
+  if (fields.speaker) form.append("speaker",  fields.speaker);
+  if (fields.date)    form.append("date",     fields.date);
+  // Tags sent as repeated form entries so Spring binds them as List<String>
+  if (fields.tags && fields.tags.length > 0) {
+    fields.tags.forEach((tag) => form.append("tags", tag));
+  }
   form.append("multipartFile", fields.file);
   if (fields.thumbnail) form.append("thumbnailMultipartFile", fields.thumbnail);
 
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const response = await fetch(`/api/v1/media/large?${params.toString()}`, {
+  const response = await fetch(`/api/v1/media/large`, {
     method: "POST",
     headers,
     body: form,
