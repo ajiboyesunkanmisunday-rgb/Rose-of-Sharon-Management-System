@@ -99,17 +99,30 @@ function CI({
   readOnly,
   placeholder,
   style,
+  maxLength,
+  onlyAlpha,
+  onlyNumeric,
 }: {
   value: string;
   onChange?: (v: string) => void;
   readOnly?: boolean;
   placeholder?: string;
   style?: React.CSSProperties;
+  maxLength?: number;
+  onlyAlpha?: boolean;
+  onlyNumeric?: boolean;
 }) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value;
+    if (onlyNumeric) v = v.replace(/\D/g, "");
+    else if (onlyAlpha) v = v.replace(/[^a-zA-Z\s'\-]/g, "");
+    if (maxLength !== undefined && v.length > maxLength) v = v.slice(0, maxLength);
+    onChange?.(v);
+  };
   return (
     <input
       value={value}
-      onChange={readOnly ? undefined : (e) => onChange?.(e.target.value)}
+      onChange={readOnly ? undefined : handleChange}
       readOnly={readOnly}
       placeholder={readOnly ? undefined : placeholder}
       style={{
@@ -290,6 +303,8 @@ export default function SomFormCore({
     setPhoto(file);
     setPhotoPreview(file ? URL.createObjectURL(file) : null);
   };
+
+  const isSingle = marital.trim().toLowerCase() === "single";
 
   /* ── Submit ─────────────────────────────────────────────────────────────── */
   const [submitting,      setSubmitting]      = useState(false);
@@ -654,34 +669,34 @@ export default function SomFormCore({
                   Surname:{!ro && <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>}
                 </td>
                 <td style={{ ...CEL, background: !ro && submitAttempted && !surname.trim() ? "#FEE2E2" : undefined }}>
-                  <CI value={surname} onChange={setSurname} readOnly={ro} />
+                  <CI value={surname} onChange={setSurname} readOnly={ro} maxLength={25} onlyAlpha />
                 </td>
                 <td style={LBL}>
                   First name:{!ro && <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>}
                 </td>
                 <td style={{ ...CEL, background: !ro && submitAttempted && !firstName.trim() ? "#FEE2E2" : undefined }}>
-                  <CI value={firstName} onChange={setFirstName} readOnly={ro} />
+                  <CI value={firstName} onChange={setFirstName} readOnly={ro} maxLength={25} onlyAlpha />
                 </td>
               </tr>
               <tr>
                 <td style={LBL}>Other Names:</td>
-                <td style={CEL}><CI value={middleName} onChange={setMiddleName} readOnly={ro} /></td>
+                <td style={CEL}><CI value={middleName} onChange={setMiddleName} readOnly={ro} maxLength={25} onlyAlpha /></td>
                 <td style={LBL}>Sex:</td>
-                <td style={CEL}><CI value={sex} onChange={setSex} readOnly={ro} placeholder="Male / Female" /></td>
+                <td style={CEL}><CI value={sex} onChange={setSex} readOnly={ro} placeholder="Male / Female" maxLength={6} /></td>
               </tr>
               <tr>
                 <td style={LBL}>Date of Birth:</td>
-                <td style={CEL}><CI value={dob} onChange={setDob} readOnly={ro} placeholder="yyyy-mm-dd" /></td>
+                <td style={CEL}><CI value={dob} onChange={setDob} readOnly={ro} placeholder="yyyy-mm-dd" maxLength={10} /></td>
                 <td style={LBL}>Marital Status:</td>
-                <td style={CEL}><CI value={marital} onChange={setMarital} readOnly={ro} placeholder="Single / Married…" /></td>
+                <td style={CEL}><CI value={marital} onChange={setMarital} readOnly={ro} placeholder="Single / Married…" maxLength={10} /></td>
               </tr>
               <tr>
                 <td style={LBL}>No. of Children:</td>
-                <td style={{ ...CEL, width: "18%" }}><CI value={numChildren} onChange={setNumChildren} readOnly={ro} /></td>
+                <td style={{ ...CEL, width: "18%" }}><CI value={!ro && isSingle ? "N/A — Single" : numChildren} onChange={setNumChildren} readOnly={ro || isSingle} maxLength={2} onlyNumeric={!ro && !isSingle} /></td>
                 <td style={{ ...LBL, fontWeight: 400 }} colSpan={2}>
                   <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     <span style={{ whiteSpace: "nowrap" }}>Name of Spouse:</span>
-                    <CI value={spouseName} onChange={setSpouseName} readOnly={ro} style={{ flex: 1 }} />
+                    <CI value={!ro && isSingle ? "N/A — Single" : spouseName} onChange={setSpouseName} readOnly={ro || isSingle} maxLength={60} onlyAlpha={!ro && !isSingle} style={{ flex: 1 }} />
                   </div>
                 </td>
               </tr>
@@ -694,7 +709,7 @@ export default function SomFormCore({
             <tbody>
               <tr>
                 <td style={LBL}>Home Address:</td>
-                <td style={{ ...CEL, width: "46%" }}><CI value={homeAddress} onChange={setHomeAddress} readOnly={ro} placeholder="Street" /></td>
+                <td style={{ ...CEL, width: "46%" }}><CI value={homeAddress} onChange={setHomeAddress} readOnly={ro} placeholder="Street" maxLength={100} /></td>
                 <td style={LBL}>
                   Phone no.:{!ro && <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>}
                 </td>
@@ -702,41 +717,41 @@ export default function SomFormCore({
                   <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     {!ro && (
                       <>
-                        <CI value={countryCode} onChange={setCountryCode} readOnly={ro} placeholder="234" style={{ width: 40 }} />
+                        <CI value={countryCode} onChange={setCountryCode} readOnly={ro} placeholder="234" style={{ width: 40 }} maxLength={4} onlyNumeric />
                         <span style={{ color: "#555" }}>-</span>
                       </>
                     )}
-                    <CI value={phone} onChange={setPhone} readOnly={ro} placeholder="08012345678" style={{ flex: 1 }} />
+                    <CI value={phone} onChange={setPhone} readOnly={ro} placeholder="08012345678" style={{ flex: 1 }} maxLength={15} onlyNumeric />
                   </div>
                 </td>
               </tr>
               <tr>
                 <td style={LBL}>City:{!ro && <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>}</td>
                 <td style={{ ...CEL, background: !ro && submitAttempted && !city.trim() ? "#FEE2E2" : undefined }}>
-                  <CI value={city} onChange={setCity} readOnly={ro} placeholder="City" />
+                  <CI value={city} onChange={setCity} readOnly={ro} placeholder="City" maxLength={30} onlyAlpha />
                 </td>
                 <td style={LBL}>State:{!ro && <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span>}</td>
                 <td style={{ ...CEL, background: !ro && submitAttempted && !addrState.trim() ? "#FEE2E2" : undefined }}>
-                  <CI value={addrState} onChange={setAddrState} readOnly={ro} placeholder="State" />
+                  <CI value={addrState} onChange={setAddrState} readOnly={ro} placeholder="State" maxLength={30} onlyAlpha />
                 </td>
               </tr>
               <tr>
                 <td style={LBL}>Country:</td>
-                <td style={CEL} colSpan={3}><CI value={addrCountry} onChange={setAddrCountry} readOnly={ro} placeholder="Country" /></td>
+                <td style={CEL} colSpan={3}><CI value={addrCountry} onChange={setAddrCountry} readOnly={ro} placeholder="Country" maxLength={30} onlyAlpha /></td>
               </tr>
               <tr>
                 <td style={LBL}>Occupation:</td>
-                <td style={CEL} colSpan={3}><CI value={occupation} onChange={setOccupation} readOnly={ro} /></td>
+                <td style={CEL} colSpan={3}><CI value={occupation} onChange={setOccupation} readOnly={ro} maxLength={50} /></td>
               </tr>
               <tr>
                 <td style={LBL}>Place of Work:</td>
-                <td style={{ ...CEL, width: "46%" }}><CI value={placeOfWork} onChange={setPlaceOfWork} readOnly={ro} /></td>
+                <td style={{ ...CEL, width: "46%" }}><CI value={placeOfWork} onChange={setPlaceOfWork} readOnly={ro} maxLength={60} /></td>
                 <td style={LBL}>Phone no.:</td>
-                <td style={CEL}><CI value={workPhone} onChange={setWorkPhone} readOnly={ro} /></td>
+                <td style={CEL}><CI value={workPhone} onChange={setWorkPhone} readOnly={ro} maxLength={15} onlyNumeric /></td>
               </tr>
               <tr>
                 <td style={LBL}>Office Address:</td>
-                <td style={CEL} colSpan={3}><CI value={officeAddress} onChange={setOfficeAddress} readOnly={ro} /></td>
+                <td style={CEL} colSpan={3}><CI value={officeAddress} onChange={setOfficeAddress} readOnly={ro} maxLength={100} /></td>
               </tr>
             </tbody>
           </table>
@@ -754,9 +769,9 @@ export default function SomFormCore({
             <tbody>
               {quals.map((q, i) => (
                 <tr key={i}>
-                  <td style={CEL}><CI value={q.schoolAttended} onChange={(v) => updateQual(i, "schoolAttended", v)} readOnly={ro} /></td>
-                  <td style={CEL}><CI value={q.dates} onChange={(v) => updateQual(i, "dates", v)} readOnly={ro} /></td>
-                  <td style={CEL}><CI value={q.qualificationReceived} onChange={(v) => updateQual(i, "qualificationReceived", v)} readOnly={ro} /></td>
+                  <td style={CEL}><CI value={q.schoolAttended} onChange={(v) => updateQual(i, "schoolAttended", v)} readOnly={ro} maxLength={60} /></td>
+                  <td style={CEL}><CI value={q.dates} onChange={(v) => updateQual(i, "dates", v)} readOnly={ro} maxLength={15} /></td>
+                  <td style={CEL}><CI value={q.qualificationReceived} onChange={(v) => updateQual(i, "qualificationReceived", v)} readOnly={ro} maxLength={60} /></td>
                 </tr>
               ))}
             </tbody>
@@ -774,7 +789,7 @@ export default function SomFormCore({
               {worshipPlaces.map((wp, i) => (
                 <tr key={i}>
                   <td style={{ ...NUM, width: 28 }}>{i + 1}.</td>
-                  <td style={CEL}><CI value={wp} onChange={(v) => updateWp(i, v)} readOnly={ro} /></td>
+                  <td style={CEL}><CI value={wp} onChange={(v) => updateWp(i, v)} readOnly={ro} maxLength={60} /></td>
                 </tr>
               ))}
             </tbody>
@@ -786,21 +801,21 @@ export default function SomFormCore({
               <tr>
                 <td style={{ ...LBL, width: "42%", fontWeight: 700 }}>Date of Salvation:</td>
                 <td style={{ ...LBL, width: "18%" }}>Where?</td>
-                <td style={CEL}><CI value={salvationWhere} onChange={setSalvationWhere} readOnly={ro} /></td>
+                <td style={CEL}><CI value={salvationWhere} onChange={setSalvationWhere} readOnly={ro} maxLength={50} /></td>
               </tr>
               <tr>
                 <td style={{ ...CEL, fontWeight: 400 }}>
-                  <CI value={salvationDate} onChange={setSalvationDate} readOnly={ro} placeholder="e.g. 15 March 2010" />
+                  <CI value={salvationDate} onChange={setSalvationDate} readOnly={ro} placeholder="e.g. 15 March 2010" maxLength={30} />
                 </td>
                 <td style={LBL} colSpan={2}></td>
               </tr>
               <tr>
                 <td style={{ ...LBL, fontWeight: 400 }}>Date of water Baptism by immersion:</td>
                 <td style={LBL}>Church?</td>
-                <td style={CEL}><CI value={waterBaptismChurch} onChange={setWaterBaptismChurch} readOnly={ro} /></td>
+                <td style={CEL}><CI value={waterBaptismChurch} onChange={setWaterBaptismChurch} readOnly={ro} maxLength={50} /></td>
               </tr>
               <tr>
-                <td style={CEL}><CI value={waterBaptismDate} onChange={setWaterBaptismDate} readOnly={ro} /></td>
+                <td style={CEL}><CI value={waterBaptismDate} onChange={setWaterBaptismDate} readOnly={ro} maxLength={30} /></td>
                 <td style={LBL} colSpan={2}></td>
               </tr>
               <tr>
@@ -808,10 +823,10 @@ export default function SomFormCore({
                   Date of Baptism of the Holy Spirit<br />(with the evidence of speaking in tongues):
                 </td>
                 <td style={LBL}>Church?</td>
-                <td style={CEL}><CI value={holySpiritChurch} onChange={setHolySpiritChurch} readOnly={ro} /></td>
+                <td style={CEL}><CI value={holySpiritChurch} onChange={setHolySpiritChurch} readOnly={ro} maxLength={50} /></td>
               </tr>
               <tr>
-                <td style={CEL}><CI value={holySpiritDate} onChange={setHolySpiritDate} readOnly={ro} /></td>
+                <td style={CEL}><CI value={holySpiritDate} onChange={setHolySpiritDate} readOnly={ro} maxLength={30} /></td>
                 <td style={LBL} colSpan={2}></td>
               </tr>
             </tbody>
@@ -832,9 +847,9 @@ export default function SomFormCore({
               {depts.map((d, i) => (
                 <tr key={i}>
                   <td style={NUM}>{i + 1}.</td>
-                  <td style={{ ...CEL, width: "70%" }}><CI value={d.name} onChange={(v) => updateDept(i, "name", v)} readOnly={ro} placeholder="Department name" /></td>
+                  <td style={{ ...CEL, width: "70%" }}><CI value={d.name} onChange={(v) => updateDept(i, "name", v)} readOnly={ro} placeholder="Department name" maxLength={60} /></td>
                   <td style={LBL}>Date:</td>
-                  <td style={{ ...CEL, width: "18%" }}><CI value={d.date} onChange={(v) => updateDept(i, "date", v)} readOnly={ro} placeholder="e.g. Jan 2020" /></td>
+                  <td style={{ ...CEL, width: "18%" }}><CI value={d.date} onChange={(v) => updateDept(i, "date", v)} readOnly={ro} placeholder="e.g. Jan 2020" maxLength={20} /></td>
                 </tr>
               ))}
             </tbody>
@@ -846,7 +861,7 @@ export default function SomFormCore({
             <tbody>
               <tr>
                 <td style={{ ...CEL, height: 26 }}>
-                  <CI value={newConvertsText} onChange={setNewConvertsText} readOnly={ro} placeholder="Yes / No" />
+                  <CI value={newConvertsText} onChange={setNewConvertsText} readOnly={ro} placeholder="Yes / No" maxLength={3} />
                 </td>
               </tr>
               <tr>
@@ -861,7 +876,7 @@ export default function SomFormCore({
             <tbody>
               <tr>
                 <td style={{ ...CEL, height: 26 }}>
-                  <CI value={waterClassText} onChange={setWaterClassText} readOnly={ro} placeholder="Yes / No" />
+                  <CI value={waterClassText} onChange={setWaterClassText} readOnly={ro} placeholder="Yes / No" maxLength={3} />
                 </td>
               </tr>
               <tr>
@@ -877,7 +892,7 @@ export default function SomFormCore({
               {reasons.map((r, i) => (
                 <tr key={i}>
                   <td style={NUM}>{i + 1}.</td>
-                  <td style={{ ...CEL, height: 24 }}><CI value={r} onChange={(v) => updateReason(i, v)} readOnly={ro} /></td>
+                  <td style={{ ...CEL, height: 24 }}><CI value={r} onChange={(v) => updateReason(i, v)} readOnly={ro} maxLength={150} /></td>
                 </tr>
               ))}
             </tbody>
@@ -890,7 +905,7 @@ export default function SomFormCore({
               {otherInfoLines.map((r, i) => (
                 <tr key={i}>
                   <td style={NUM}>{i + 1}.</td>
-                  <td style={{ ...CEL, height: 24 }}><CI value={r} onChange={(v) => updateOtherInfo(i, v)} readOnly={ro} /></td>
+                  <td style={{ ...CEL, height: 24 }}><CI value={r} onChange={(v) => updateOtherInfo(i, v)} readOnly={ro} maxLength={300} /></td>
                 </tr>
               ))}
             </tbody>
@@ -912,6 +927,7 @@ export default function SomFormCore({
                     readOnly={ro}
                     placeholder="Type your full name"
                     style={{ borderBottom: "1px solid #000", paddingBottom: 2 }}
+                    maxLength={60}
                   />
                 </td>
                 <td style={{ ...LBL, fontWeight: 700, verticalAlign: "top", paddingBottom: 8 }}>
@@ -925,6 +941,7 @@ export default function SomFormCore({
                     readOnly={ro}
                     placeholder="DD/MM/YYYY"
                     style={{ borderBottom: "1px solid #000", paddingBottom: 2 }}
+                    maxLength={10}
                   />
                 </td>
               </tr>
@@ -943,6 +960,7 @@ export default function SomFormCore({
                       value={r}
                       onChange={mode === "view" ? (v) => updateRemark(i, v) : undefined}
                       readOnly={mode !== "view"}
+                      maxLength={300}
                     />
                   </td>
                 </tr>
@@ -965,6 +983,7 @@ export default function SomFormCore({
                     readOnly={mode !== "view"}
                     placeholder="Admin full name"
                     style={{ borderBottom: "1px solid #000", paddingBottom: 2 }}
+                    maxLength={60}
                   />
                 </td>
                 <td style={{ ...LBL, fontWeight: 700, verticalAlign: "top", paddingBottom: 8 }}>
@@ -978,6 +997,7 @@ export default function SomFormCore({
                     readOnly={mode !== "view"}
                     placeholder="DD/MM/YYYY"
                     style={{ borderBottom: "1px solid #000", paddingBottom: 2 }}
+                    maxLength={10}
                   />
                 </td>
               </tr>
