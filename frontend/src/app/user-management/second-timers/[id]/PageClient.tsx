@@ -13,9 +13,30 @@ import { SkeletonProfile } from "@/components/ui/Skeleton";
 
 type Tab = "details" | "activity";
 
-function fmtDate(s?: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fmtDate(s?: any): string {
   if (!s) return "—";
-  return new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  if (Array.isArray(s)) {
+    const [year, month, day] = s as number[];
+    const d = new Date(year, month - 1, day);
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+  const d = new Date(s as string);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fmtDateTime(s?: any): string {
+  if (!s) return "—";
+  if (Array.isArray(s)) {
+    const [year, month, day, hour = 0, minute = 0] = s as number[];
+    const d = new Date(year, month - 1, day, hour, minute);
+    return d.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+  const d = new Date(s as string);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 function fmtDOB(day?: number, month?: number, year?: number) {
@@ -374,7 +395,7 @@ export default function ViewSecondTimerPage() {
                           <div className="mb-1 flex items-center justify-between gap-2">
                             <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${typeBg}`}>{typeLabel}</span>
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-[#9CA3AF] dark:text-slate-400">{n.createdOn ? new Date(n.createdOn).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</span>
+                              <span className="text-xs text-[#9CA3AF] dark:text-slate-400">{fmtDateTime(n.createdOn)}</span>
                               <button
                                 onClick={() => handleDeleteNote(n.id)}
                                 disabled={deletingNoteId === n.id}
