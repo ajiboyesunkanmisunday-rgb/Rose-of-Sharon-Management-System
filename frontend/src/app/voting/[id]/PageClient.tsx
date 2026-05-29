@@ -60,14 +60,28 @@ const STATUS_BADGE_COLOR: Record<string, string> = {
   WINNER_ANNOUNCED:  "bg-[#EDE9FE] dark:bg-purple-900/30 text-[#7C3AED] dark:text-purple-300",
 };
 
-function fmtDate(s?: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fmtDate(s?: any): string {
   if (!s) return "—";
-  return new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  if (Array.isArray(s)) {
+    const [year, month, day] = s as number[];
+    return new Date(year, month - 1, day).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+  const d = new Date(s as string);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-function fmtDateTime(s?: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fmtDateTime(s?: any): string {
   if (!s) return "—";
-  return new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  if (Array.isArray(s)) {
+    const [year, month, day, hour = 0, minute = 0] = s as number[];
+    return new Date(year, month - 1, day, hour, minute).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+  const d = new Date(s as string);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 export default function VotingCyclePageClient() {
