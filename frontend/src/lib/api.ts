@@ -1662,6 +1662,7 @@ export async function createTestimony(body: {
   userId: string;
   state?: string;
   country?: string;
+  wantsToBeShot?: boolean;
 }): Promise<TestimonyResponse> {
   return apiFetch<TestimonyResponse>("/api/v1/testimonies", {
     method: "POST",
