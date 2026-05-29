@@ -87,7 +87,7 @@ export default function ViewSecondTimerPage() {
   }, [id]);
 
   const fetchUser = useCallback(async () => {
-    if (!id || id.startsWith("st-")) return;
+    if (!id || id.startsWith("st-")) { setLoading(false); return; }
     setLoading(true);
     setError("");
     try {
