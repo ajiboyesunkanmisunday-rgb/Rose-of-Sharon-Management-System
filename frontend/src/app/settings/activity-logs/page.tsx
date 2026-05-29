@@ -10,6 +10,18 @@ import { ScrollText, RefreshCw } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fmtDateTime(s?: any): string {
+  if (!s) return "—";
+  if (Array.isArray(s)) {
+    const [year, month, day, hour = 0, minute = 0] = s as number[];
+    return new Date(year, month - 1, day, hour, minute).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  }
+  const d = new Date(s as string);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+}
+
 const moduleBadgeColors: Record<string, string> = {
   Login: "bg-[#000080] text-white",
   Member: "bg-[#16A34A] text-white",
@@ -133,7 +145,15 @@ export default function ActivityLogsPage() {
                 placeholder="Search activity..."
             />
            </div>
-           <button 
+           {(activeSearch) && (
+             <button
+               onClick={() => { setSearch(""); setActiveSearch(""); setCurrentPage(1); }}
+               className="h-11 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-4 text-sm text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors whitespace-nowrap"
+             >
+               Clear
+             </button>
+           )}
+           <button
              onClick={() => fetchLogs(currentPage, activeSearch, fromDate, toDate)}
              className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 transition-colors"
              title="Refresh"
@@ -192,10 +212,7 @@ export default function ActivityLogsPage() {
                         <div className="text-xs text-gray-400 dark:text-slate-500">{log.user?.email}</div>
                     </td>
                     <td className="hidden sm:table-cell px-4 py-4 text-sm text-[#374151] dark:text-slate-300">
-                        {log.createdOn ? new Date(log.createdOn).toLocaleString(undefined, {
-                            dateStyle: 'medium',
-                            timeStyle: 'short'
-                        }) : "—"}
+                        {fmtDateTime(log.createdOn)}
                     </td>
                     <td className="hidden md:table-cell px-4 py-4 text-sm text-[#374151] dark:text-slate-300">
                       {log.location || "Unknown"}

@@ -37,6 +37,16 @@ function fullName(u: UserResponse): string {
   return [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ");
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toIsoDate(d: any): string {
+  if (!d) return "";
+  if (Array.isArray(d)) {
+    const [year, month, day] = d as number[];
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+  return typeof d === "string" ? d.slice(0, 10) : "";
+}
+
 export default function SecondTimersPage() {
   const router = useRouter();
 
@@ -116,7 +126,7 @@ export default function SecondTimersPage() {
   // filters remain client-side since the backend has no date-range param.
   const displayedTimers = timers.filter((st) => {
     if (filterDateFrom || filterDateTo) {
-      const d = st.secondTimeService?.date ?? st.createdOn ?? "";
+      const d = toIsoDate(st.secondTimeService?.date ?? st.createdOn);
       if (filterDateFrom && d < filterDateFrom) return false;
       if (filterDateTo && d > filterDateTo) return false;
     }
