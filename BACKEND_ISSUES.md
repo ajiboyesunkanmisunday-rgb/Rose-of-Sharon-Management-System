@@ -124,4 +124,32 @@ if (ip == null || ip.isEmpty()) {
 
 ---
 
+## 10. WhatsApp Number Not Returned in User GET Response
+
+**Affects:** First Timers, Second Timers → Edit form  
+**Symptom:** When editing a first-timer or second-timer, the WhatsApp Number field is always blank even though the number was entered when the record was created.  
+**Root cause:** The `GET /api/v1/users/{id}` response does not include the `whatsappNumber` field. The field is accepted on create/update but is omitted from the GET response body.  
+**Fix:**
+- Include `whatsappNumber` in the response DTO for `GET /api/v1/users/{id}`.
+- The field should be serialized as a plain string in the same format it was stored (e.g., `"08012345678"` or `"+2348012345678"`).
+- The same fix may be needed for `GET /api/v1/users/first-timer/{id}` and `GET /api/v1/users/second-timer/{id}` if those are separate endpoints.
+
+---
+
+## 11. Search Does Not Find Records by Non-Name Fields
+
+**Affects:** All list pages (First Timers, Second Timers, Members, E-Members, etc.)  
+**Symptom:** When searching for a person by their email address, phone number, WhatsApp number, or occupation, no results are returned — even though the person exists in the system.  
+**Root cause:** The backend search endpoints (e.g., `GET /api/v1/users/second-timer/search?searchParam=...`) only search against first name and/or last name fields. Email, phone, occupation, and other profile fields are not included in the search query.  
+**Fix:** Expand the search query in each relevant endpoint to include additional fields:
+- `email`
+- `phoneNumber`
+- `whatsappNumber`
+- `occupation`
+- `street`, `city`, `state`
+
+This applies to all search endpoints across user types: first-timers, second-timers, members, e-members, new-converts.
+
+---
+
 *Last updated: 2026-05-29. Please update this file as issues are resolved.*
