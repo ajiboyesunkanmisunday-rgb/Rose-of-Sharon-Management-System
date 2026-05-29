@@ -89,7 +89,7 @@ export default function ViewNewConvertPage() {
   }, [id]);
 
   const fetchUser = useCallback(async () => {
-    if (!id || id.startsWith("nc-")) return;
+    if (!id || id.startsWith("nc-")) { setLoading(false); return; }
     setLoading(true);
     setError("");
     try {
