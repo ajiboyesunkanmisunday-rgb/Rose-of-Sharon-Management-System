@@ -18,6 +18,7 @@ export default function TestimonyTestPage() {
   const [content,   setContent]   = useState("");
   const [state,     setState]     = useState("");
   const [country,   setCountry]   = useState("Nigeria");
+  const [rostv,     setRostv]     = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [history,   setHistory]   = useState<Submission[]>([]);
 
@@ -33,9 +34,10 @@ export default function TestimonyTestPage() {
         userId: user.id,
         state: state.trim() || undefined,
         country: country.trim() || undefined,
+        wantsToBeShot: rostv,
       });
       setHistory((p) => [{ id: res.id, subject: subject.trim(), submittedAt: new Date().toLocaleTimeString(), status: "ok", message: "Created successfully." }, ...p]);
-      setSubject(""); setContent(""); setState("");
+      setSubject(""); setContent(""); setState(""); setRostv(false);
     } catch (e) {
       setHistory((p) => [{ subject: subject.trim(), submittedAt: new Date().toLocaleTimeString(), status: "error", message: e instanceof Error ? e.message : "Unknown error." }, ...p]);
     } finally {
@@ -101,6 +103,18 @@ export default function TestimonyTestPage() {
                   <input value={country} onChange={(e) => setCountry(e.target.value)}
                     className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2.5 text-sm text-[#111827] dark:text-slate-100 outline-none focus:border-amber-400" />
                 </div>
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  id="rostv"
+                  type="checkbox"
+                  checked={rostv}
+                  onChange={(e) => setRostv(e.target.checked)}
+                  className="h-4 w-4 rounded border-[#D1D5DB] text-amber-500 focus:ring-amber-400"
+                />
+                <label htmlFor="rostv" className="text-xs font-semibold text-[#374151] dark:text-slate-300 cursor-pointer">
+                  Request ROSTV (I want my story filmed)
+                </label>
               </div>
             </div>
 

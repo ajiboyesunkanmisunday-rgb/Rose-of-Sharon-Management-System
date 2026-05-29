@@ -5,7 +5,6 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
 import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
-import BulkActionsBar from "@/components/ui/BulkActionsBar";
 import Modal from "@/components/ui/Modal";
 import {
   getTestimonies,
@@ -176,6 +175,24 @@ export default function TestimoniesPage() {
             placeholder="Search testimonies..."
           />
         </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {selectedRows.size > 0 && (
+            <>
+              <span className="text-sm text-gray-500 dark:text-slate-400">
+                {selectedRows.size} {selectedRows.size === 1 ? "testimony" : "testimonies"} selected
+              </span>
+              <ActionDropdown
+                actions={[
+                  { label: saving ? "Saving…" : "Mark as Read",       onClick: bulkMarkRead },
+                  { label: saving ? "Saving…" : "Mark as Featured",   onClick: bulkMarkFeatured },
+                  { label: saving ? "Saving…" : "Unmark as Featured", onClick: bulkUnmarkFeatured },
+                  { label: "Clear selection", onClick: () => setSelectedRows(new Set()), danger: false },
+                ]}
+              />
+            </>
+          )}
+        </div>
       </div>
 
       <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -194,23 +211,6 @@ export default function TestimoniesPage() {
         ))}
       </div>
 
-      {selectedRows.size === 0 && (
-        <p className="mb-3 text-xs text-[#9CA3AF] dark:text-slate-500">
-          Check the boxes next to testimonies to select them, then use bulk actions (Mark as Read, etc.)
-        </p>
-      )}
-
-      <BulkActionsBar
-        count={selectedRows.size}
-        onClear={() => setSelectedRows(new Set())}
-        labelSingular="testimony"
-        labelPlural="testimonies"
-        actions={[
-          { label: saving ? "Saving…" : "Mark as Read",        onClick: bulkMarkRead },
-          { label: saving ? "Saving…" : "Mark as Featured",    onClick: bulkMarkFeatured },
-          { label: saving ? "Saving…" : "Unmark as Featured",  onClick: bulkUnmarkFeatured },
-        ]}
-      />
 
       {apiError && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
