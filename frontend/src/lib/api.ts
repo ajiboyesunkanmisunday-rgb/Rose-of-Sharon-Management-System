@@ -910,7 +910,6 @@ export async function convertToSecondTimer(
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
     `/api/v1/users/${userId}/convert-to-second-timer`,
-    { method: "PUT" },
   );
 }
 
@@ -919,7 +918,6 @@ export async function convertToFullMember(
 ): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(
     `/api/v1/users/${userId}/convert-to-full-member`,
-    { method: "PUT" },
   );
 }
 
@@ -1654,8 +1652,8 @@ export async function getTestimonies(
   );
 }
 
-export async function getFeaturedTestimonies(): Promise<TestimonyResponse[]> {
-  return apiFetch<TestimonyResponse[]>("/api/v1/testimonies/featured");
+export async function getFeaturedTestimonies(): Promise<CustomPageResponse<TestimonyResponse>> {
+  return apiFetch<CustomPageResponse<TestimonyResponse>>("/api/v1/testimonies/featured");
 }
 
 export async function createTestimony(body: {
@@ -3931,29 +3929,32 @@ export async function uploadLargeMedia(fields: {
     throw new Error("Session expired. Please log in again.");
   }
 
-  // Send all metadata as multipart form fields — avoids URL-length issues with
-  // long descriptions and ensures Spring @ModelAttribute binding picks them up.
-  const form = new FormData();
-  form.append("title",       fields.title);
-  form.append("type",        fields.category);
-  form.append("category",    fields.category);
-  form.append("size",        String(fields.file.size));
-  form.append("isFromMedia", "true");
-  if (fields.description) form.append("description", fields.description);
-  if (fields.duration != null) form.append("duration", String(fields.duration));
-  if (fields.speaker) form.append("speaker",  fields.speaker);
-  if (fields.date)    form.append("date",     fields.date);
-  // Tags sent as repeated form entries so Spring binds them as List<String>
+  // Metadata goes in query params (UploadMediaRequest is @ModelAttribute / in:query per Swagger).
+  // Only the file(s) go in the multipart body — same pattern as uploadMedia.
+  const params = new URLSearchParams({
+    title: fields.title,
+    type: fields.category,
+    category: fields.category,
+    size: String(fields.file.size),
+    isFromMedia: "true",
+  });
+  if (fields.description) params.set("description", fields.description);
+  if (fields.duration != null) params.set("duration", String(fields.duration));
+  if (fields.speaker) params.set("speaker", fields.speaker);
+  if (fields.date) params.set("date", fields.date);
+  // Tags sent as repeated query params so Spring binds them as List<String>
   if (fields.tags && fields.tags.length > 0) {
-    fields.tags.forEach((tag) => form.append("tags", tag));
+    fields.tags.forEach((tag) => params.append("tags", tag));
   }
+
+  const form = new FormData();
   form.append("multipartFile", fields.file);
   if (fields.thumbnail) form.append("thumbnailMultipartFile", fields.thumbnail);
 
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const response = await fetch(`/api/v1/media/large`, {
+  const response = await fetch(`/api/v1/media/large?${params.toString()}`, {
     method: "POST",
     headers,
     body: form,
