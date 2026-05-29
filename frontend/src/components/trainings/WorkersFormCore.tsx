@@ -777,7 +777,13 @@ export default function WorkersFormCore({
               </tr>
               <tr>
                 <td style={TDL}>No. Of Children</td>
-                <td style={TD}><CI value={numChildren} onChange={setNumChildren} readOnly={ro} placeholder="e.g. 2" maxLength={3} onlyNumeric={!ro} /></td>
+                <td style={{ ...TD, background: isSingle ? "#F3F4F6" : undefined }}>
+                  {isSingle ? (
+                    <span style={{ fontSize: 10, color: "#9CA3AF", fontStyle: "italic" }}>N/A — Single</span>
+                  ) : (
+                    <CI value={numChildren} onChange={setNumChildren} readOnly={ro} placeholder="e.g. 2" maxLength={3} onlyNumeric={!ro} />
+                  )}
+                </td>
                 <td style={{ ...TDL, whiteSpace: "normal" }}>Name of Spouse:<br /><span style={{ fontWeight: 400 }}>(if ever Married)</span></td>
                 <td style={{ ...TD, background: isSingle ? "#F3F4F6" : undefined, position: "relative" }}>
                   {isSingle ? (

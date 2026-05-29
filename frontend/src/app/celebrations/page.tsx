@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
@@ -9,8 +9,6 @@ import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
 import DateRangePicker from "@/components/ui/DateRangePicker";
 import StatusFilterTabs from "@/components/ui/StatusFilterTabs";
-import SendSMSModal from "@/components/user-management/SendSMSModal";
-import SendEmailModal from "@/components/user-management/SendEmailModal";
 import {
   getBirthdays,
   getWeddingAnniversaries,
@@ -19,7 +17,7 @@ import {
   type UserResponse,
   type CelebrationResponse,
 } from "@/lib/api";
-import { PartyPopper, Download, ChevronDown } from "lucide-react";
+import { PartyPopper, Download } from "lucide-react";
 
 type Tab = "birthdays" | "anniversaries" | "thanksgiving";
 type ThanksgivingStatus = "All" | "PENDING" | "TREATED";
@@ -99,20 +97,6 @@ function isoToParts(iso: string) {
   return { day: dd, month: mm };
 }
 
-// ── Inline SVG icons ─────────────────────────────────────────────────────────
-
-const MessageIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-  </svg>
-);
-
-const MailIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-    <polyline points="22,6 12,13 2,6" />
-  </svg>
-);
 
 // ── Export row type ──────────────────────────────────────────────────────────
 
@@ -387,59 +371,21 @@ async function exportData(
 // ── Export dropdown ──────────────────────────────────────────────────────────
 
 function ExportMenu({ onExport, disabled }: { onExport: (fmt: ExportFormat) => void; disabled?: boolean }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const formats: { key: ExportFormat; label: string }[] = [
-    { key: "csv",   label: "CSV (.csv)" },
-    { key: "excel", label: "Excel (.xlsx)" },
-    { key: "pdf",   label: "PDF (.pdf)" },
-    { key: "word",  label: "Word (.docx)" },
-  ];
-
   return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        disabled={disabled}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] bg-white dark:bg-slate-800 px-3 py-2 text-sm font-medium text-[#000080] dark:text-indigo-400 hover:bg-[#000080]/5 disabled:opacity-40"
-      >
-        <Download className="h-4 w-4" />
-        Export
-        <ChevronDown className="h-3.5 w-3.5" />
-      </button>
-      {open && (
-        <div className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 py-1 shadow-lg">
-          {formats.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => { onExport(f.key); setOpen(false); }}
-              className="block w-full px-4 py-2 text-left text-sm text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50"
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <button
+      onClick={() => onExport("excel")}
+      disabled={disabled}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-[#000080] bg-white dark:bg-slate-800 px-3 py-2 text-sm font-medium text-[#000080] dark:text-indigo-400 hover:bg-[#000080]/5 disabled:opacity-40"
+    >
+      <Download className="h-4 w-4" />
+      Export
+    </button>
   );
 }
 
 // ── Birthday card (directory-style) ─────────────────────────────────────────
 
-function BirthdayCard({ u, onSMS, onEmail }: {
-  u: UserResponse;
-  onSMS: () => void;
-  onEmail: () => void;
-}) {
+function BirthdayCard({ u }: { u: UserResponse }) {
   const bg = avatarColor(u.id);
   const name = fullName(u);
   const date = fmtBirthdayDate(u);
@@ -476,33 +422,13 @@ function BirthdayCard({ u, onSMS, onEmail }: {
       {u.email && (
         <p className="mt-0.5 truncate text-xs text-[#000080] dark:text-indigo-400">{u.email}</p>
       )}
-
-      {/* Actions */}
-      <div className="mt-auto flex items-center gap-2 pt-4">
-        <button
-          onClick={onSMS}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] dark:text-indigo-400 hover:bg-[#000080]/5"
-        >
-          <MessageIcon /> SMS
-        </button>
-        <button
-          onClick={onEmail}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] dark:text-indigo-400 hover:bg-[#000080]/5"
-        >
-          <MailIcon /> Email
-        </button>
-      </div>
     </div>
   );
 }
 
 // ── Anniversary card (directory-style) ──────────────────────────────────────
 
-function AnniversaryCard({ u, onSMS, onEmail }: {
-  u: UserResponse;
-  onSMS: () => void;
-  onEmail: () => void;
-}) {
+function AnniversaryCard({ u }: { u: UserResponse }) {
   const bg = avatarColor(u.id);
   const coupleName = fullName(u) + (u.spouse ? ` & ${fullName(u.spouse)}` : "");
   const date = fmtWeddingDate(u);
@@ -539,22 +465,6 @@ function AnniversaryCard({ u, onSMS, onEmail }: {
       {u.email && (
         <p className="mt-0.5 truncate text-xs text-[#000080] dark:text-indigo-400">{u.email}</p>
       )}
-
-      {/* Actions */}
-      <div className="mt-auto flex items-center gap-2 pt-4">
-        <button
-          onClick={onSMS}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] dark:text-indigo-400 hover:bg-[#000080]/5"
-        >
-          <MessageIcon /> SMS
-        </button>
-        <button
-          onClick={onEmail}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#000080] py-1.5 text-xs font-medium text-[#000080] dark:text-indigo-400 hover:bg-[#000080]/5"
-        >
-          <MailIcon /> Email
-        </button>
-      </div>
     </div>
   );
 }
@@ -564,6 +474,19 @@ function AnniversaryCard({ u, onSMS, onEmail }: {
 export default function CelebrationsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("birthdays");
+
+  // Read ?tab= URL param after mount (useSearchParams can't be used in static export
+  // without a Suspense boundary, so we read window.location directly).
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab") as Tab | null;
+      if (tab && (["birthdays", "anniversaries", "thanksgiving"] as Tab[]).includes(tab)) {
+        setActiveTab(tab);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [search, setSearch] = useState("");
 
   // Birthdays
@@ -593,12 +516,6 @@ export default function CelebrationsPage() {
 
   // Exporting state
   const [exporting, setExporting] = useState(false);
-
-  // Modals
-  const [showSMSModal, setShowSMSModal] = useState(false);
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [smsTarget, setSmsTarget] = useState<UserResponse | null>(null);
-  const [emailTarget, setEmailTarget] = useState<UserResponse | null>(null);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "birthdays", label: "Birthdays" },
@@ -807,12 +724,7 @@ export default function CelebrationsPage() {
             <>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {paginatedBirthdays.map((u) => (
-                  <BirthdayCard
-                    key={u.id}
-                    u={u}
-                    onSMS={() => { setSmsTarget(u); setShowSMSModal(true); }}
-                    onEmail={() => { setEmailTarget(u); setShowEmailModal(true); }}
-                  />
+                  <BirthdayCard key={u.id} u={u} />
                 ))}
               </div>
               <div className="mt-6">
@@ -872,12 +784,7 @@ export default function CelebrationsPage() {
             <>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {paginatedAnniversaries.map((u) => (
-                  <AnniversaryCard
-                    key={u.id}
-                    u={u}
-                    onSMS={() => { setSmsTarget(u); setShowSMSModal(true); }}
-                    onEmail={() => { setEmailTarget(u); setShowEmailModal(true); }}
-                  />
+                  <AnniversaryCard key={u.id} u={u} />
                 ))}
               </div>
               <div className="mt-6">
@@ -988,16 +895,6 @@ export default function CelebrationsPage() {
         </>
       )}
 
-      <SendSMSModal
-        isOpen={showSMSModal}
-        onClose={() => { setShowSMSModal(false); setSmsTarget(null); }}
-        selectedCount={1}
-      />
-      <SendEmailModal
-        isOpen={showEmailModal}
-        onClose={() => { setShowEmailModal(false); setEmailTarget(null); }}
-        selectedCount={1}
-      />
     </DashboardLayout>
   );
 }
