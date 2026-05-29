@@ -18,6 +18,29 @@ import {
   type SchoolOfMinistryFullResponse,
 } from "@/lib/api";
 
+/** Compress + resize before upload to avoid nginx 413 errors. */
+async function compressImage(file: File, maxDim = 800, quality = 0.8): Promise<File> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        (blob) => resolve(new File([blob!], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" })),
+        "image/jpeg",
+        quality,
+      );
+    };
+    img.src = objectUrl;
+  });
+}
+
 export type BaptismalMode = "blank" | "fill" | "view";
 
 /* ── Table/cell style constants ─────────────────────────────────────────── */
@@ -365,11 +388,12 @@ export default function BaptismalFormCore({
       Divorced: "DIVORCED",
       Widowed: "WIDOWED",
     };
+    // Only send recognised enum values to avoid backend 400 on invalid sex
     const sexNorm = sex.trim().toLowerCase().startsWith("f")
       ? "FEMALE"
       : sex.trim().toLowerCase().startsWith("m")
       ? "MALE"
-      : sex.trim() || undefined;
+      : undefined;
 
     setSubmitError("");
     setSubmitting(true);
@@ -377,7 +401,9 @@ export default function BaptismalFormCore({
       let profilePictureUrl: string | undefined;
       if (photo) {
         setUploading(true);
-        profilePictureUrl = await uploadProfilePicture(photo);
+        // Compress to ≤ 800 px / 80 % JPEG to stay within nginx's body-size limit
+        const compressed = await compressImage(photo);
+        profilePictureUrl = await uploadProfilePicture(compressed);
         setUploading(false);
       }
 
@@ -386,7 +412,8 @@ export default function BaptismalFormCore({
         lastName: surname.trim(),
         middleName: middleName.trim() || undefined,
         sex: sexNorm as string | undefined,
-        dateOfBirth: dob.trim() || undefined,
+        // Normalise date separators: accept "2024/03/15" or "2024-03-15"
+        dateOfBirth: dob.trim().replace(/\//g, "-") || undefined,
         maritalStatus: marital.trim()
           ? maritalMap[marital.trim()] ?? marital.trim().toUpperCase()
           : undefined,
