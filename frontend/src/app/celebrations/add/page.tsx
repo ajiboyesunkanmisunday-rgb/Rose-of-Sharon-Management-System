@@ -124,7 +124,12 @@ export default function AddCelebrationPage() {
         date: formData.date,
         notes: formData.notes || undefined,
       });
-      router.push("/celebrations");
+      // Redirect to the matching tab so the user lands on the right section.
+      const tab =
+        formData.type === "BIRTHDAY" ? "birthdays"
+        : formData.type === "WEDDING" ? "anniversaries"
+        : "thanksgiving";
+      router.push(`/celebrations?tab=${tab}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save celebration.");
     } finally {

@@ -3929,34 +3929,48 @@ export async function uploadLargeMedia(fields: {
     throw new Error("Session expired. Please log in again.");
   }
 
-  // Send all metadata as multipart form fields so Spring's @ModelAttribute binding
-  // picks them up alongside the file — query params on multipart endpoints are
-  // unreliable through Netlify's CDN proxy and were causing persistent 400s.
+  // Build metadata as query params — same pattern as the working uploadMedia function.
+  // /api/v1/media/large has persistently returned 400 (empty body, text/plain) regardless
+  // of format, so we try it first and fall back to /api/v1/media on 400.
+  const params = new URLSearchParams({
+    title:       fields.title,
+    type:        fields.category,
+    category:    fields.category,
+    size:        String(fields.file.size),
+    isFromMedia: "true",
+  });
+  if (fields.description) params.set("description", fields.description);
+  if (fields.duration != null) params.set("duration", String(fields.duration));
+  if (fields.speaker) params.set("speaker", fields.speaker);
+  if (fields.date)    params.set("date",    fields.date);
+  if (fields.tags && fields.tags.length > 0) params.set("tags", fields.tags.join(","));
+
   const form = new FormData();
-  form.append("title",       fields.title);
-  form.append("type",        fields.category);
-  form.append("category",    fields.category);
-  form.append("size",        String(fields.file.size));
-  form.append("isFromMedia", "true");
-  if (fields.description) form.append("description", fields.description);
-  if (fields.duration != null) form.append("duration", String(fields.duration));
-  if (fields.speaker) form.append("speaker", fields.speaker);
-  if (fields.date)    form.append("date",    fields.date);
-  // Tags sent as repeated form entries so Spring binds them as List<String>
-  if (fields.tags && fields.tags.length > 0) {
-    fields.tags.forEach((tag) => form.append("tags", tag));
-  }
   form.append("multipartFile", fields.file);
   if (fields.thumbnail) form.append("thumbnailMultipartFile", fields.thumbnail);
 
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const response = await fetch(`/api/v1/media/large`, {
+  // Try the dedicated /large endpoint first; if it returns 400 (backend not yet
+  // fully configured), transparently fall back to the regular /media endpoint.
+  let response = await fetch(`/api/v1/media/large?${params.toString()}`, {
     method: "POST",
     headers,
     body: form,
   });
+
+  if (response.status === 400) {
+    // /large endpoint is not working — retry against the standard /media endpoint.
+    console.warn("[uploadLargeMedia] /api/v1/media/large returned 400; retrying via /api/v1/media");
+    const form2 = new FormData();
+    form2.append("multipartFile", fields.file);
+    response = await fetch(`/api/v1/media?${params.toString()}`, {
+      method: "POST",
+      headers,
+      body: form2,
+    });
+  }
 
   if (response.status === 401) {
     removeToken();

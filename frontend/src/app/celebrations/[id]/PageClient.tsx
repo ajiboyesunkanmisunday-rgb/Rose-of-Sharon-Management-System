@@ -147,8 +147,8 @@ export default function CelebrationDetailClient() {
         >
           Edit
         </Button>
-        <Button variant="danger" onClick={() => setShowDeleteModal(true)} disabled={treating}>
-          Mark as Treated
+        <Button variant="secondary" onClick={() => setShowDeleteModal(true)} disabled={treating}>
+          {treating ? "Processing…" : "Mark as Treated"}
         </Button>
       </div>
 
@@ -156,7 +156,9 @@ export default function CelebrationDetailClient() {
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
-        message="Are you sure you want to mark this celebration as treated?"
+        title="Mark as Treated"
+        message="Are you sure you want to mark this celebration as treated? This action cannot be undone."
+        confirmLabel="Mark as Treated"
       />
     </DashboardLayout>
   );
