@@ -152,4 +152,31 @@ This applies to all search endpoints across user types: first-timers, second-tim
 
 ---
 
-*Last updated: 2026-05-29. Please update this file as issues are resolved.*
+## 12. Malformed JSON — Null LocalDateTime Serialized as Missing Array Bracket
+
+**Affects:** Any user detail page where a nested record has a null `LocalDateTime` field  
+**Symptom:** Certain user profiles (e.g., second-timers) show completely blank details (all fields showing "—") even though the API returns HTTP 200. The frontend silently falls back to an empty object `{}` because `JSON.parse` throws.  
+**Root cause:** Spring Boot serializes `LocalDateTime` as an array `[year, month, day, hour, minute, second, nanos]`. When the value is `null`, it should serialize as `null` or be omitted. Instead, the serializer emits `"createdOn":` with no value — the `[` that begins the array is missing, leaving a lone `]` that closes an outer array prematurely. The resulting JSON is structurally invalid.
+
+**Example of malformed output:**
+```json
+"spouse": {"id": "13c1e121-...", "createdOn":]
+```
+(The `]` should not appear here without a matching `[` for `createdOn`'s value.)
+
+**Fix:** Configure Jackson to serialize null `LocalDateTime` fields as `null` (not as a missing value):
+```java
+// In Jackson configuration:
+objectMapper.configOverride(LocalDateTime.class)
+  .setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.AS_EMPTY)); // or SET_NULL
+// Or simpler:
+@JsonInclude(JsonInclude.Include.NON_NULL)  // on DTO class, omit null fields entirely
+```
+
+Alternatively, ensure `@JsonSerialize` annotations are applied consistently to all `LocalDateTime` fields across all entity/DTO classes.
+
+**Temporary frontend workaround:** The frontend now pre-processes the response text before parsing to fix the known orphaned-bracket pattern (`"field":]` → `"field":null`). This is a stopgap — the backend must be fixed to prevent data loss on other fields we don't know to fix.
+
+---
+
+*Last updated: 2026-05-30. Please update this file as issues are resolved.*

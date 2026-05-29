@@ -284,7 +284,18 @@ async function apiFetchRaw<T>(
   const text = await response.text();
   let data: T;
   try {
-    data = text ? (JSON.parse(text) as T) : ({} as T);
+    // Spring Boot serialization bug: null LocalDateTime values are emitted as
+    // "field":] (the [ that opens the array was dropped), leaving one orphaned ].
+    // Fix in two passes:
+    // 1. "key":] — the ] is the orphaned bracket; replace with "key":null
+    //    (consuming the ] so bracket counts stay balanced).
+    // 2. "key": followed by , or } — missing value entirely; inject null.
+    const safeText = text
+      ? text
+          .replace(/("[^"\\]+")\s*:\s*\]/g, "$1:null")
+          .replace(/("[^"\\]+")\s*:\s*(?=[,}])/g, "$1:null")
+      : "";
+    data = safeText ? (JSON.parse(safeText) as T) : ({} as T);
   } catch {
     // Backend returned 2xx but non-parseable body — treat as success
     data = {} as T;
