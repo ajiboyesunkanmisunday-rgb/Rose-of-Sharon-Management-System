@@ -35,18 +35,31 @@ function F({
   style,
   readOnly,
   placeholder,
+  maxLength,
+  onlyAlpha,
+  onlyNumeric,
 }: {
   value: string;
   onChange?: (v: string) => void;
   style?: React.CSSProperties;
   readOnly?: boolean;
   placeholder?: string;
+  maxLength?: number;
+  onlyAlpha?: boolean;
+  onlyNumeric?: boolean;
 }) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value;
+    if (onlyNumeric) v = v.replace(/\D/g, "");
+    else if (onlyAlpha) v = v.replace(/[^a-zA-Z\s'\-]/g, "");
+    if (maxLength !== undefined && v.length > maxLength) v = v.slice(0, maxLength);
+    onChange?.(v);
+  };
   return (
     <input
       className="sod-f"
       value={value}
-      onChange={(e) => onChange?.(e.target.value)}
+      onChange={readOnly ? undefined : handleChange}
       style={style}
       readOnly={readOnly}
       placeholder={readOnly ? undefined : placeholder}
@@ -60,17 +73,24 @@ function FullRow({
   onChange,
   readOnly,
   required,
+  maxLength,
+  onlyAlpha,
+  onlyNumeric,
 }: {
   label: string;
   value: string;
   onChange?: (v: string) => void;
   readOnly?: boolean;
   required?: boolean;
+  maxLength?: number;
+  onlyAlpha?: boolean;
+  onlyNumeric?: boolean;
 }) {
   return (
     <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
       <span style={{ whiteSpace: "nowrap" }}>{label}{required && REQ}</span>
-      <F value={value} onChange={onChange} style={{ flex: 1 }} readOnly={readOnly} />
+      <F value={value} onChange={onChange} style={{ flex: 1 }} readOnly={readOnly}
+         maxLength={maxLength} onlyAlpha={onlyAlpha} onlyNumeric={onlyNumeric} />
     </div>
   );
 }
@@ -80,19 +100,21 @@ function PairedRow({
   right,
   readOnly,
 }: {
-  left:  { label: string; value: string; onChange?: (v: string) => void; required?: boolean };
-  right: { label: string; value: string; onChange?: (v: string) => void; required?: boolean };
+  left:  { label: string; value: string; onChange?: (v: string) => void; required?: boolean; maxLength?: number; onlyAlpha?: boolean; onlyNumeric?: boolean };
+  right: { label: string; value: string; onChange?: (v: string) => void; required?: boolean; maxLength?: number; onlyAlpha?: boolean; onlyNumeric?: boolean };
   readOnly?: boolean;
 }) {
   return (
     <div style={{ display: "flex", alignItems: "baseline", gap: 28 }}>
       <div style={{ flex: 1, display: "flex", alignItems: "baseline", gap: 4 }}>
         <span style={{ whiteSpace: "nowrap" }}>{left.label}{left.required && REQ}</span>
-        <F value={left.value} onChange={left.onChange} style={{ flex: 1 }} readOnly={readOnly} />
+        <F value={left.value} onChange={left.onChange} style={{ flex: 1 }} readOnly={readOnly}
+           maxLength={left.maxLength} onlyAlpha={left.onlyAlpha} onlyNumeric={left.onlyNumeric} />
       </div>
       <div style={{ flex: 1, display: "flex", alignItems: "baseline", gap: 4 }}>
         <span style={{ whiteSpace: "nowrap" }}>{right.label}{right.required && REQ}</span>
-        <F value={right.value} onChange={right.onChange} style={{ flex: 1 }} readOnly={readOnly} />
+        <F value={right.value} onChange={right.onChange} style={{ flex: 1 }} readOnly={readOnly}
+           maxLength={right.maxLength} onlyAlpha={right.onlyAlpha} onlyNumeric={right.onlyNumeric} />
       </div>
     </div>
   );
@@ -610,6 +632,7 @@ export default function SodFormCore({
                     onChange={setSet}
                     readOnly={ro}
                     placeholder="e.g. 2026"
+                    maxLength={10}
                     style={{ width: 120, borderBottom: (!ro && !set.trim()) ? "1.5px solid red" : undefined }}
                   />
                 </div>
@@ -670,17 +693,17 @@ export default function SodFormCore({
             <tbody>
               {(
                 [
-                  ["REGION",   region,   setRegion,   true],
-                  ["PROVINCE", province, setProvince, true],
-                  ["CENTRE",   centre,   setCentre,   true],
-                ] as [string, string, (v: string) => void, boolean][]
-              ).map(([lbl, val, setter, req]) => (
+                  ["REGION",   region,   setRegion,   true, 40],
+                  ["PROVINCE", province, setProvince, true, 40],
+                  ["CENTRE",   centre,   setCentre,   true, 40],
+                ] as [string, string, (v: string) => void, boolean, number][]
+              ).map(([lbl, val, setter, req, maxLen]) => (
                 <tr key={lbl}>
                   <td style={{ border: "1px solid #000", padding: "4px 10px", fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>
                     {lbl}{req && REQ}
                   </td>
                   <td style={{ border: "1px solid #000", padding: "2px 8px", width: 240 }}>
-                    <F value={val} onChange={setter} style={{ width: "100%" }} readOnly={ro} />
+                    <F value={val} onChange={setter} style={{ width: "100%" }} readOnly={ro} maxLength={maxLen} />
                   </td>
                 </tr>
               ))}
@@ -704,7 +727,7 @@ export default function SodFormCore({
                   ] as [string, string, (v: string) => void][]
                 ).map(([lbl, val, setter]) => (
                   <div key={lbl} style={{ flex: 1 }}>
-                    <F value={val} onChange={setter} style={{ width: "100%" }} readOnly={ro} />
+                    <F value={val} onChange={setter} style={{ width: "100%" }} readOnly={ro} maxLength={25} onlyAlpha={!ro} />
                     <div style={{ fontSize: 9, textAlign: "center", color: "#666", marginTop: 2 }}>{lbl}</div>
                   </div>
                 ))}
@@ -713,33 +736,33 @@ export default function SodFormCore({
 
             {/* 2. Address — Street / City / State / Country */}
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              <FullRow label="2.  Street Address:" value={street} onChange={setStreet} readOnly={ro} required />
+              <FullRow label="2.  Street Address:" value={street} onChange={setStreet} readOnly={ro} required maxLength={100} />
               <PairedRow
-                left={{  label: "City:",    value: city,      onChange: setCity,      required: true }}
-                right={{ label: "State:",   value: addrState, onChange: setAddrState, required: true }}
+                left={{  label: "City:",    value: city,      onChange: setCity,      required: true, maxLength: 30, onlyAlpha: !ro }}
+                right={{ label: "State:",   value: addrState, onChange: setAddrState, required: true, maxLength: 30, onlyAlpha: !ro }}
                 readOnly={ro}
               />
-              <FullRow label="    Country:" value={country} onChange={setCountry} readOnly={ro} required />
+              <FullRow label="    Country:" value={country} onChange={setCountry} readOnly={ro} required maxLength={30} onlyAlpha={!ro} />
             </div>
 
             {/* 3 & 3b */}
             <PairedRow
-              left={{  label: "3.  Date of Birth (yyyy-mm-dd):", value: dob, onChange: setDob, required: true }}
-              right={{ label: "3b. Sex:", value: sex, onChange: setSex }}
+              left={{  label: "3.  Date of Birth (yyyy-mm-dd):", value: dob, onChange: setDob, required: true, maxLength: 10 }}
+              right={{ label: "3b. Sex:", value: sex, onChange: setSex, maxLength: 6 }}
               readOnly={ro}
             />
 
             {/* 4 & 4b */}
             <PairedRow
-              left={{  label: "4.  Nationality:", value: nationality, onChange: setNationality, required: true }}
-              right={{ label: "4b. State of Origin:", value: stateOfOrigin, onChange: setStateOfOrigin }}
+              left={{  label: "4.  Nationality:", value: nationality, onChange: setNationality, required: true, maxLength: 30, onlyAlpha: !ro }}
+              right={{ label: "4b. State of Origin:", value: stateOfOrigin, onChange: setStateOfOrigin, maxLength: 30, onlyAlpha: !ro }}
               readOnly={ro}
             />
 
             {/* 5 & 5b */}
             <PairedRow
-              left={{  label: "5.  Home Town:", value: homeTown, onChange: setHomeTown }}
-              right={{ label: "5b. Phone Number:", value: phone, onChange: setPhone, required: true }}
+              left={{  label: "5.  Home Town:", value: homeTown, onChange: setHomeTown, maxLength: 40, onlyAlpha: !ro }}
+              right={{ label: "5b. Phone Number:", value: phone, onChange: setPhone, required: true, maxLength: 15, onlyNumeric: !ro }}
               readOnly={ro}
             />
 
@@ -751,6 +774,8 @@ export default function SodFormCore({
                 onChange={setCountryCode}
                 readOnly={ro}
                 placeholder="e.g. 234"
+                maxLength={4}
+                onlyNumeric={!ro}
                 style={{ width: 70 }}
               />
               <span style={{ color: "#888" }}>(digits only, e.g. 234 for Nigeria)</span>
@@ -758,13 +783,13 @@ export default function SodFormCore({
 
             {/* 6 & 6b */}
             <PairedRow
-              left={{  label: "6.  Email Address:", value: email, onChange: setEmail }}
-              right={{ label: "6b. Occupation:", value: occupation, onChange: setOccupation, required: true }}
+              left={{  label: "6.  Email Address:", value: email, onChange: setEmail, maxLength: 60 }}
+              right={{ label: "6b. Occupation:", value: occupation, onChange: setOccupation, required: true, maxLength: 50 }}
               readOnly={ro}
             />
 
             {/* 7. Office / Occupation Address */}
-            <FullRow label="7.  Office / Occupation Address:" value={officeAddr} onChange={setOfficeAddr} readOnly={ro} required />
+            <FullRow label="7.  Office / Occupation Address:" value={officeAddr} onChange={setOfficeAddr} readOnly={ro} required maxLength={100} />
 
             {/* 8. Marital Status */}
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16 }}>
@@ -777,15 +802,15 @@ export default function SodFormCore({
             {/* 9 & 9b */}
             <PairedRow
               left={{  label: "9.  Spouse Name:", value: spouseName, onChange: setSpouseName,
-                       required: marital === "Married" }}
-              right={{ label: "Spouse Phone Number:", value: spousePhone, onChange: setSpousePhone }}
+                       required: marital === "Married", maxLength: 60, onlyAlpha: !ro }}
+              right={{ label: "Spouse Phone Number:", value: spousePhone, onChange: setSpousePhone, maxLength: 15, onlyNumeric: !ro }}
               readOnly={ro}
             />
 
             {/* 10 & 10b */}
             <PairedRow
-              left={{  label: "10. Spouse's Occupation:", value: spouseOcc, onChange: setSpouseOcc }}
-              right={{ label: "Number of Children (digits only):", value: numChildren, onChange: setNumChildren }}
+              left={{  label: "10. Spouse's Occupation:", value: spouseOcc, onChange: setSpouseOcc, maxLength: 50 }}
+              right={{ label: "Number of Children (digits only):", value: numChildren, onChange: setNumChildren, maxLength: 2, onlyNumeric: !ro }}
               readOnly={ro}
             />
           </div>
@@ -809,13 +834,13 @@ export default function SodFormCore({
                     {["i.", "ii.", "iii."][i]}
                   </td>
                   <td className="sod-td-input">
-                    <F value={q.institution} onChange={(v) => updateQual(i, "institution", v)} style={{ width: "100%" }} readOnly={ro} placeholder="e.g. UNILAG" />
+                    <F value={q.institution} onChange={(v) => updateQual(i, "institution", v)} style={{ width: "100%" }} readOnly={ro} placeholder="e.g. UNILAG" maxLength={60} />
                   </td>
                   <td className="sod-td-input">
-                    <F value={q.date} onChange={(v) => updateQual(i, "date", v)} style={{ width: "100%" }} readOnly={ro} placeholder="e.g. 2018" />
+                    <F value={q.date} onChange={(v) => updateQual(i, "date", v)} style={{ width: "100%" }} readOnly={ro} placeholder="e.g. 2018" maxLength={15} />
                   </td>
                   <td className="sod-td-input">
-                    <F value={q.qualificationReceived} onChange={(v) => updateQual(i, "qualificationReceived", v)} style={{ width: "100%" }} readOnly={ro} placeholder="e.g. B.Sc." />
+                    <F value={q.qualificationReceived} onChange={(v) => updateQual(i, "qualificationReceived", v)} style={{ width: "100%" }} readOnly={ro} placeholder="e.g. B.Sc." maxLength={60} />
                   </td>
                 </tr>
               ))}
@@ -855,13 +880,13 @@ export default function SodFormCore({
                       {["I.", "II.", "III."][i]}
                     </td>
                     <td className="sod-td-input">
-                      <F value={row.name} onChange={(v) => updateWp(i, "name", v)} style={{ width: "100%" }} readOnly={ro} />
+                      <F value={row.name} onChange={(v) => updateWp(i, "name", v)} style={{ width: "100%" }} readOnly={ro} maxLength={60} />
                     </td>
                     <td className="sod-td-input">
-                      <F value={row.address} onChange={(v) => updateWp(i, "address", v)} style={{ width: "100%" }} readOnly={ro} />
+                      <F value={row.address} onChange={(v) => updateWp(i, "address", v)} style={{ width: "100%" }} readOnly={ro} maxLength={100} />
                     </td>
                     <td className="sod-td-input">
-                      <F value={row.date} onChange={(v) => updateWp(i, "date", v)} style={{ width: "100%" }} readOnly={ro} placeholder="e.g. 2020–2023" />
+                      <F value={row.date} onChange={(v) => updateWp(i, "date", v)} style={{ width: "100%" }} readOnly={ro} placeholder="e.g. 2020–2023" maxLength={15} />
                     </td>
                   </tr>
                 ))}
@@ -889,10 +914,10 @@ export default function SodFormCore({
                       {["I.", "II.", "III."][i]}
                     </td>
                     <td className="sod-td-input">
-                      <F value={row.name} onChange={(v) => updatePh(i, "name", v)} style={{ width: "100%" }} readOnly={ro} />
+                      <F value={row.name} onChange={(v) => updatePh(i, "name", v)} style={{ width: "100%" }} readOnly={ro} maxLength={60} />
                     </td>
                     <td className="sod-td-input">
-                      <F value={row.position} onChange={(v) => updatePh(i, "position", v)} style={{ width: "100%" }} readOnly={ro} />
+                      <F value={row.position} onChange={(v) => updatePh(i, "position", v)} style={{ width: "100%" }} readOnly={ro} maxLength={40} />
                     </td>
                   </tr>
                 ))}
@@ -903,30 +928,30 @@ export default function SodFormCore({
           {/* 14 onwards */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <PairedRow
-              left={{  label: "14. Salvation Date:", value: salvationDate, onChange: setSalvationDate, required: true }}
-              right={{ label: "Where:", value: salvationWhere, onChange: setSalvationWhere, required: true }}
+              left={{  label: "14. Salvation Date:", value: salvationDate, onChange: setSalvationDate, required: true, maxLength: 30 }}
+              right={{ label: "Where:", value: salvationWhere, onChange: setSalvationWhere, required: true, maxLength: 50 }}
               readOnly={ro}
             />
 
             <PairedRow
-              left={{  label: "15. Water Baptism Date (by Immersion):", value: waterBaptismDate, onChange: setWaterBaptismDate, required: true }}
-              right={{ label: "Church:", value: waterBaptismChurch, onChange: setWaterBaptismChurch, required: true }}
+              left={{  label: "15. Water Baptism Date (by Immersion):", value: waterBaptismDate, onChange: setWaterBaptismDate, required: true, maxLength: 30 }}
+              right={{ label: "Church:", value: waterBaptismChurch, onChange: setWaterBaptismChurch, required: true, maxLength: 50 }}
               readOnly={ro}
             />
 
             <PairedRow
-              left={{  label: "16. Holy Spirit Baptism Date (with speaking in tongues):", value: holyGhostDate, onChange: setHolyGhostDate, required: true }}
-              right={{ label: "Where:", value: holyGhostWhere, onChange: setHolyGhostWhere, required: true }}
+              left={{  label: "16. Holy Spirit Baptism Date (with speaking in tongues):", value: holyGhostDate, onChange: setHolyGhostDate, required: true, maxLength: 30 }}
+              right={{ label: "Where:", value: holyGhostWhere, onChange: setHolyGhostWhere, required: true, maxLength: 50 }}
               readOnly={ro}
             />
 
-            <FullRow label="17. Current Parish Pastor Name:" value={pastorName} onChange={setPastorName} readOnly={ro} required />
+            <FullRow label="17. Current Parish Pastor Name:" value={pastorName} onChange={setPastorName} readOnly={ro} required maxLength={60} />
 
-            <FullRow label="18. Current Parish Pastor Phone Number:" value={pastorPhone} onChange={setPastorPhone} readOnly={ro} />
+            <FullRow label="18. Current Parish Pastor Phone Number:" value={pastorPhone} onChange={setPastorPhone} readOnly={ro} maxLength={15} onlyNumeric={!ro} />
 
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              <FullRow label="19. Your Activity / Department in your Current Parish:" value={activity1} onChange={setActivity1} readOnly={ro} />
-              <F value={activity2} onChange={setActivity2} style={{ width: "100%" }} readOnly={ro} />
+              <FullRow label="19. Your Activity / Department in your Current Parish:" value={activity1} onChange={setActivity1} readOnly={ro} maxLength={100} />
+              <F value={activity2} onChange={setActivity2} style={{ width: "100%" }} readOnly={ro} maxLength={100} />
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
@@ -946,17 +971,17 @@ export default function SodFormCore({
           {/* ══ SECTION D ═══════════════════════════════════════════════ */}
           <SectionHead>D.  Other Relevant Information:</SectionHead>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <F value={otherInfo1} onChange={setOtherInfo1} style={{ width: "100%" }} readOnly={ro} />
-            <F value={otherInfo2} onChange={setOtherInfo2} style={{ width: "100%" }} readOnly={ro} />
+            <F value={otherInfo1} onChange={setOtherInfo1} style={{ width: "100%" }} readOnly={ro} maxLength={300} />
+            <F value={otherInfo2} onChange={setOtherInfo2} style={{ width: "100%" }} readOnly={ro} maxLength={300} />
           </div>
 
           {/* ══ SECTION E — Declaration ═════════════════════════════════ */}
           <SectionHead>E.  Declaration:</SectionHead>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
             <span>I,</span>
-            <F value={declName} onChange={setDeclName} style={{ flex: 1 }} readOnly={ro} />
+            <F value={declName} onChange={setDeclName} style={{ flex: 1 }} readOnly={ro} maxLength={60} />
             <span style={{ whiteSpace: "nowrap" }}> of</span>
-            <F value={declOf} onChange={setDeclOf} style={{ flex: 1 }} readOnly={ro} />
+            <F value={declOf} onChange={setDeclOf} style={{ flex: 1 }} readOnly={ro} maxLength={100} />
           </div>
           <p style={{ fontSize: 12, lineHeight: 1.7, margin: "0 0 12px 0" }}>
             Hereby promise that if taken as an S.O.D student, I will abide by the rules and regulations of
@@ -1000,8 +1025,8 @@ export default function SodFormCore({
           {/* ══ SECTION F ═══════════════════════════════════════════════ */}
           <SectionHead>F.  Official Remarks:</SectionHead>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <F value={remarks1} onChange={setRemarks1} style={{ width: "100%" }} readOnly={ro} />
-            <F value={remarks2} onChange={setRemarks2} style={{ width: "100%" }} readOnly={ro} />
+            <F value={remarks1} onChange={setRemarks1} style={{ width: "100%" }} readOnly={ro} maxLength={300} />
+            <F value={remarks2} onChange={setRemarks2} style={{ width: "100%" }} readOnly={ro} maxLength={300} />
           </div>
 
         </div>{/* end page 2 */}
