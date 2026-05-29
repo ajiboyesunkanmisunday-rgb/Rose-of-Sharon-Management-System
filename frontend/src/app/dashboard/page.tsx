@@ -10,6 +10,10 @@ import {
   Cake,
   Heart,
   PhoneCall,
+  Trophy,
+  Crown,
+  Timer,
+  ChevronRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -21,8 +25,10 @@ import {
   getPastServicesAttendance,
   getBirthdays,
   getWeddingAnniversaries,
+  getVotingCycles,
   type UserResponse,
   type UserBasicResponse,
+  type VotingCycle,
 } from "@/lib/api";
 import { SkeletonCard } from "@/components/ui/Skeleton";
 import AttendanceChart, {
@@ -72,6 +78,10 @@ export default function DashboardPage() {
     CelebrationItem[]
   >([]);
   const [celebrationsLoading, setCelebrationsLoading] = useState(true);
+
+  const [faceOfMonth, setFaceOfMonth]       = useState<VotingCycle | null>(null);
+  const [activeVoting, setActiveVoting]     = useState<VotingCycle | null>(null);
+  const [faceLoading, setFaceLoading]       = useState(true);
 
   useEffect(() => {
     const formatLabel = (raw: string, index: number) => {
@@ -224,6 +234,27 @@ export default function DashboardPage() {
       })
       .catch(() => setUpcomingCelebrations([]))
       .finally(() => setCelebrationsLoading(false));
+  }, []);
+
+  // Face of the Month — fetch most recent winner + any active voting cycle
+  useEffect(() => {
+    setFaceLoading(true);
+    Promise.allSettled([
+      getVotingCycles(0, 1, undefined, "WINNER_ANNOUNCED"),
+      getVotingCycles(0, 1, undefined, "VOTING_OPEN"),
+    ])
+      .then(([winnerRes, votingRes]) => {
+        if (winnerRes.status === "fulfilled") {
+          const content = winnerRes.value.content ?? [];
+          setFaceOfMonth(content[0] ?? null);
+        }
+        if (votingRes.status === "fulfilled") {
+          const content = votingRes.value.content ?? [];
+          setActiveVoting(content[0] ?? null);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setFaceLoading(false));
   }, []);
 
   const monthLabel = new Date().toLocaleString("en-GB", {
@@ -456,6 +487,197 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* ── Face of the Month ─────────────────────────────────────────────── */}
+      <FaceOfTheMonthWidget
+        loading={faceLoading}
+        winner={faceOfMonth}
+        activeCycle={activeVoting}
+        onViewAll={() => router.push("/voting/hall-of-fame")}
+        onManage={() => router.push("/voting")}
+      />
     </DashboardLayout>
+  );
+}
+
+// ─── Face of the Month Widget ─────────────────────────────────────────────────
+const MONTHS_FULL = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December",
+];
+
+function FaceOfTheMonthWidget({
+  loading,
+  winner,
+  activeCycle,
+  onViewAll,
+  onManage,
+}: {
+  loading: boolean;
+  winner: VotingCycle | null;
+  activeCycle: VotingCycle | null;
+  onViewAll: () => void;
+  onManage: () => void;
+}) {
+  const [countdown, setCountdown] = useState("");
+
+  // Live countdown for active voting cycle
+  useEffect(() => {
+    if (!activeCycle?.votingEndDate) { setCountdown(""); return; }
+    const tick = () => {
+      const diff = new Date(activeCycle.votingEndDate!).getTime() - Date.now();
+      if (diff <= 0) { setCountdown("Closed"); return; }
+      const d = Math.floor(diff / 86_400_000);
+      const h = Math.floor((diff % 86_400_000) / 3_600_000);
+      const m = Math.floor((diff % 3_600_000) / 60_000);
+      setCountdown(d > 0 ? `${d}d ${h}h remaining` : `${h}h ${m}m remaining`);
+    };
+    tick();
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, [activeCycle]);
+
+  const monthYear = (cycle: VotingCycle) =>
+    `${MONTHS_FULL[(cycle.month ?? 1) - 1] ?? ""} ${cycle.year ?? ""}`;
+
+  return (
+    <div className="mt-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm dark:shadow-slate-900">
+      {/* Header */}
+      <div className="mb-5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FEF9C3] dark:bg-yellow-900/30">
+            <Crown className="h-5 w-5 text-[#CA8A04] dark:text-yellow-400" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-[#111827] dark:text-slate-100">
+              Face of the Month
+            </h2>
+            <p className="text-xs text-[#6B7280] dark:text-slate-400">Monthly recognition spotlight</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onManage}
+            className="text-xs font-medium text-[#6B7280] dark:text-slate-400 hover:text-[#000080] dark:hover:text-indigo-400 transition-colors"
+          >
+            Manage
+          </button>
+          <button
+            onClick={onViewAll}
+            className="flex items-center gap-1 text-sm font-medium text-[#000080] dark:text-indigo-400 hover:underline"
+          >
+            Hall of Fame
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        /* Skeleton */
+        <div className="flex gap-6">
+          <div className="skeleton h-28 w-28 rounded-full shrink-0" />
+          <div className="flex-1 space-y-3 pt-2">
+            <div className="skeleton h-5 w-40" />
+            <div className="skeleton h-3 w-24" />
+            <div className="skeleton h-3 w-32" />
+          </div>
+        </div>
+      ) : activeCycle ? (
+        /* Voting in Progress */
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+          <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-[#DCFCE7] dark:bg-green-900/20 ring-4 ring-[#DCFCE7] dark:ring-green-900/40">
+            <Trophy className="h-10 w-10 text-[#16A34A] dark:text-green-400" />
+          </div>
+          <div className="flex-1">
+            <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-[#DCFCE7] dark:bg-green-900/20 px-3 py-1">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#16A34A] dark:bg-green-400" />
+              <span className="text-xs font-semibold text-[#16A34A] dark:text-green-400">Voting Open</span>
+            </div>
+            <h3 className="mt-1.5 text-lg font-bold text-[#111827] dark:text-slate-100">
+              {activeCycle.title}
+            </h3>
+            <p className="text-sm text-[#6B7280] dark:text-slate-400">{monthYear(activeCycle)}</p>
+            {countdown && (
+              <div className="mt-2 flex items-center gap-1.5 text-sm font-medium text-[#CA8A04] dark:text-yellow-400">
+                <Timer className="h-4 w-4" />
+                {countdown}
+              </div>
+            )}
+            <button
+              onClick={onManage}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[#000080] px-4 py-2 text-sm font-medium text-white hover:bg-[#000066] transition-colors"
+            >
+              View Results
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      ) : winner ? (
+        /* Latest Winner */
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+          {/* Winner Photo */}
+          <div className="relative shrink-0">
+            {winner.winnerPhotoUrl ? (
+              <img
+                src={winner.winnerPhotoUrl}
+                alt={winner.winnerName ?? "Winner"}
+                className="h-28 w-28 rounded-full object-cover ring-4 ring-[#FEF9C3] dark:ring-yellow-900/40"
+              />
+            ) : (
+              <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-[#FEF9C3] to-[#FDE68A] dark:from-yellow-900/30 dark:to-yellow-800/20 ring-4 ring-[#FEF9C3] dark:ring-yellow-900/40 text-3xl font-bold text-[#CA8A04] dark:text-yellow-400">
+                {(winner.winnerName ?? "?").charAt(0).toUpperCase()}
+              </div>
+            )}
+            {/* Crown badge */}
+            <div className="absolute -top-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-[#CA8A04] shadow-md">
+              <Crown className="h-4 w-4 text-white" />
+            </div>
+          </div>
+
+          {/* Winner Info */}
+          <div className="flex-1">
+            <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-[#FEF9C3] dark:bg-yellow-900/20 px-3 py-1">
+              <Star className="h-3 w-3 text-[#CA8A04] dark:text-yellow-400 fill-[#CA8A04]" />
+              <span className="text-xs font-semibold text-[#CA8A04] dark:text-yellow-400">
+                {monthYear(winner)}
+              </span>
+            </div>
+            <h3 className="mt-1.5 text-xl font-bold text-[#111827] dark:text-slate-100">
+              {winner.winnerName ?? "—"}
+            </h3>
+            <p className="text-sm text-[#6B7280] dark:text-slate-400">
+              {winner.categoryName ?? "Face of the Month"}
+            </p>
+            {winner.totalVotes != null && winner.totalVotes > 0 && (
+              <p className="mt-1 text-xs text-[#9CA3AF] dark:text-slate-500">
+                {winner.totalVotes.toLocaleString()} total votes
+              </p>
+            )}
+            <button
+              onClick={onViewAll}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-2 text-sm font-medium text-[#374151] dark:text-slate-300 hover:border-[#000080] hover:text-[#000080] dark:hover:text-indigo-400 transition-colors"
+            >
+              View All Winners
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* No active cycle or winner yet */
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#F3F4F6] dark:bg-slate-700">
+            <Trophy className="h-8 w-8 text-[#D1D5DB] dark:text-slate-500" />
+          </div>
+          <p className="mt-3 text-sm font-medium text-[#374151] dark:text-slate-300">No active voting cycle</p>
+          <p className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">Start a new cycle to recognize a member</p>
+          <button
+            onClick={onManage}
+            className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[#000080] px-4 py-2 text-sm font-medium text-white hover:bg-[#000066] transition-colors"
+          >
+            Start New Cycle
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
