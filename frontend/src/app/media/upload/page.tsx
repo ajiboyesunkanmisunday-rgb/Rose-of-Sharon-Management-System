@@ -209,13 +209,23 @@ export default function UploadMediaPage() {
       router.push("/media");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Upload failed.";
-      if (
+      const fileMB = mediaFile ? (mediaFile.size / 1_048_576).toFixed(1) : null;
+      const isSizeError =
         msg === "FILE_TOO_LARGE_FOR_SERVER" ||
         msg.includes("413") ||
+        msg.includes("400") ||
         msg.toLowerCase().includes("too large") ||
-        msg.toLowerCase().includes("payload")
-      ) {
-        const fileMB = mediaFile ? (mediaFile.size / 1_048_576).toFixed(1) : null;
+        msg.toLowerCase().includes("payload");
+
+      if (isSizeError && LARGE_MEDIA_CATEGORIES.has(category)) {
+        // Both /large and /media returned 400 — the backend's multipart size limit is
+        // lower than the file being uploaded. Direct the user to the YouTube option.
+        setError(
+          `Upload failed${fileMB ? ` (file is ${fileMB} MB)` : ""} — the server rejected this file. ` +
+          `The backend's upload size limit may be too low for files this large. ` +
+          `Please use the YouTube / External Link option instead, or contact the backend team to raise the multipart size limit (spring.servlet.multipart.max-file-size).`,
+        );
+      } else if (isSizeError) {
         setError(
           `The server rejected the file${fileMB ? ` (${fileMB} MB)` : ""} — it exceeds the upload size limit. ` +
           `Please compress the file, or use the YouTube / External Link option instead.`,
