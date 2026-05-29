@@ -338,7 +338,7 @@ function WorkerCard({
       </div>
 
       {/* Name + set */}
-      <h3 className="text-sm font-bold text-[#111827] dark:text-slate-100">{fullName(worker)}</h3>
+      <h3 className="text-sm font-bold text-[#111827] dark:text-slate-100 break-words">{fullName(worker)}</h3>
       {worker.set && (
         <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-[#7C3AED]/10 px-2.5 py-0.5 text-[10px] font-semibold text-[#7C3AED] dark:text-purple-400">
           <Star className="h-2.5 w-2.5" />
