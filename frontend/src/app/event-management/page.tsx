@@ -40,10 +40,15 @@ function locationLabel(event: EventResponse): string {
   return parts.length ? parts.join(", ") : "—";
 }
 
-function fmtDate(raw?: string | null): string {
-  if (!raw) return "—";
-  const d = new Date(raw);
-  if (isNaN(d.getTime())) return raw; // fallback to raw if unparseable
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fmtDate(s?: any): string {
+  if (!s) return "—";
+  if (Array.isArray(s)) {
+    const [year, month, day] = s as number[];
+    return new Date(year, month - 1, day).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+  const d = new Date(s as string);
+  if (isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 

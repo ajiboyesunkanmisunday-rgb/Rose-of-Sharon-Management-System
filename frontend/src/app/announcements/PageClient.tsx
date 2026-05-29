@@ -19,9 +19,14 @@ import { Download, X, ChevronLeft, ChevronRight, Check } from "lucide-react";
 
 type Tab = "RECEIVED" | "APPROVED" | "DECLINED";
 
-function fmtDateOnly(s?: string): string {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fmtDateOnly(s?: any): string {
   if (!s) return "—";
-  const parts = s.split("T")[0].split("-");
+  if (Array.isArray(s)) {
+    const [year, month, day] = s as number[];
+    return new Date(year, month - 1, day).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+  const parts = (s as string).split("T")[0].split("-");
   if (parts.length === 3) {
     const [y, m, d] = parts;
     const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
@@ -31,20 +36,30 @@ function fmtDateOnly(s?: string): string {
       year: "numeric",
     });
   }
-  return s;
+  return s as string;
 }
 
-function fmtDate(s?: string): string {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fmtDate(s?: any): string {
   if (!s) return "—";
+  if (Array.isArray(s)) {
+    const [year, month, day] = s as number[];
+    return new Date(year, month - 1, day).toLocaleString("en-GB", {
+      day: "2-digit",
+      weekday: "long",
+      month: "long",
+      year: "numeric",
+    });
+  }
   try {
-    return new Date(s).toLocaleString("en-GB", {
+    return new Date(s as string).toLocaleString("en-GB", {
       day: "2-digit",
       weekday: "long",
       month: "long",
       year: "numeric",
     });
   } catch {
-    return s;
+    return s as string;
   }
 }
 
