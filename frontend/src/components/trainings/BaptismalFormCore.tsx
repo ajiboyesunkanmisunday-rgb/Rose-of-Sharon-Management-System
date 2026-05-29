@@ -95,17 +95,30 @@ function CI({
   readOnly,
   placeholder,
   style,
+  maxLength,
+  onlyAlpha,
+  onlyNumeric,
 }: {
   value: string;
   onChange?: (v: string) => void;
   readOnly?: boolean;
   placeholder?: string;
   style?: React.CSSProperties;
+  maxLength?: number;
+  onlyAlpha?: boolean;
+  onlyNumeric?: boolean;
 }) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value;
+    if (onlyNumeric) v = v.replace(/\D/g, "");
+    else if (onlyAlpha) v = v.replace(/[^a-zA-Z\s'\-]/g, "");
+    if (maxLength !== undefined && v.length > maxLength) v = v.slice(0, maxLength);
+    onChange?.(v);
+  };
   return (
     <input
       value={value}
-      onChange={readOnly ? undefined : (e) => onChange?.(e.target.value)}
+      onChange={readOnly ? undefined : handleChange}
       readOnly={readOnly}
       placeholder={readOnly ? undefined : placeholder}
       style={{
@@ -316,6 +329,9 @@ export default function BaptismalFormCore({
     setPhoto(file);
     setPhotoPreview(file ? URL.createObjectURL(file) : null);
   };
+
+  /* ── Derived state ──────────────────────────────────────────────────────── */
+  const isSingle = marital.trim().toLowerCase() === "single";
 
   /* ── Submit ─────────────────────────────────────────────────────────────── */
   const [submitting, setSubmitting] = useState(false);
@@ -870,7 +886,7 @@ export default function BaptismalFormCore({
               <tr>
                 <td style={LBL}>SURNAME:{!ro && REQ}</td>
                 <td style={{ ...CEL, background: !ro && submitAttempted && !surname.trim() ? "#FEE2E2" : undefined }}>
-                  <CI value={surname} onChange={setSurname} readOnly={ro} />
+                  <CI value={surname} onChange={setSurname} readOnly={ro} maxLength={25} onlyAlpha />
                 </td>
                 <td style={LBL}>FIRST NAME:{!ro && REQ}</td>
                 <td style={{ ...CEL, background: !ro && submitAttempted && !firstName.trim() ? "#FEE2E2" : undefined }}>
@@ -878,6 +894,8 @@ export default function BaptismalFormCore({
                     value={firstName}
                     onChange={setFirstName}
                     readOnly={ro}
+                    maxLength={25}
+                    onlyAlpha
                   />
                 </td>
               </tr>
@@ -888,6 +906,8 @@ export default function BaptismalFormCore({
                     value={middleName}
                     onChange={setMiddleName}
                     readOnly={ro}
+                    maxLength={25}
+                    onlyAlpha
                   />
                 </td>
                 <td style={LBL}>SEX:</td>
@@ -897,6 +917,7 @@ export default function BaptismalFormCore({
                     onChange={setSex}
                     readOnly={ro}
                     placeholder="Male / Female"
+                    maxLength={6}
                   />
                 </td>
               </tr>
@@ -908,6 +929,7 @@ export default function BaptismalFormCore({
                     onChange={setDob}
                     readOnly={ro}
                     placeholder="dd/mm/yyyy"
+                    maxLength={10}
                   />
                 </td>
                 <td style={LBL}>MARITAL STATUS:</td>
@@ -917,6 +939,7 @@ export default function BaptismalFormCore({
                     onChange={setMarital}
                     readOnly={ro}
                     placeholder="Single / Married…"
+                    maxLength={10}
                   />
                 </td>
               </tr>
@@ -927,6 +950,8 @@ export default function BaptismalFormCore({
                     value={stateOfOrigin}
                     onChange={ro ? undefined : setStateOfOrigin}
                     readOnly={ro}
+                    maxLength={30}
+                    onlyAlpha
                   />
                 </td>
                 <td style={{ ...LBL, whiteSpace: "normal" }}>
@@ -934,9 +959,11 @@ export default function BaptismalFormCore({
                 </td>
                 <td style={CEL}>
                   <CI
-                    value={spouseName}
+                    value={!ro && isSingle ? "N/A — Single" : spouseName}
                     onChange={setSpouseName}
-                    readOnly={ro}
+                    readOnly={ro || isSingle}
+                    maxLength={60}
+                    onlyAlpha
                   />
                 </td>
               </tr>
@@ -944,9 +971,11 @@ export default function BaptismalFormCore({
                 <td style={LBL}>NUMBER OF CHILDREN:</td>
                 <td style={CEL}>
                   <CI
-                    value={numChildren}
+                    value={!ro && isSingle ? "N/A — Single" : numChildren}
                     onChange={setNumChildren}
-                    readOnly={ro}
+                    readOnly={ro || isSingle}
+                    maxLength={2}
+                    onlyNumeric
                   />
                 </td>
                 <td style={LBL}>FORMAL RELIGION:</td>
@@ -955,6 +984,7 @@ export default function BaptismalFormCore({
                     value={formalReligion}
                     onChange={ro ? undefined : setFormalReligion}
                     readOnly={ro}
+                    maxLength={30}
                   />
                 </td>
               </tr>
@@ -972,6 +1002,7 @@ export default function BaptismalFormCore({
                     value={homeAddress}
                     onChange={setHomeAddress}
                     readOnly={ro}
+                    maxLength={100}
                   />
                 </td>
                 <td style={LBL}>PHONE:{!ro && REQ}</td>
@@ -985,6 +1016,8 @@ export default function BaptismalFormCore({
                           readOnly={ro}
                           placeholder="234"
                           style={{ width: 40 }}
+                          maxLength={4}
+                          onlyNumeric
                         />
                         <span style={{ color: "#555" }}>-</span>
                       </>
@@ -995,6 +1028,8 @@ export default function BaptismalFormCore({
                       readOnly={ro}
                       placeholder="08012345678"
                       style={{ flex: 1 }}
+                      maxLength={15}
+                      onlyNumeric
                     />
                   </div>
                 </td>
@@ -1002,17 +1037,17 @@ export default function BaptismalFormCore({
               <tr>
                 <td style={LBL}>CITY{!ro && REQ}</td>
                 <td style={{ ...CEL, background: !ro && submitAttempted && !city.trim() ? "#FEE2E2" : undefined }}>
-                  <CI value={city} onChange={setCity} readOnly={ro} placeholder="City" />
+                  <CI value={city} onChange={setCity} readOnly={ro} placeholder="City" maxLength={30} onlyAlpha />
                 </td>
                 <td style={LBL}>STATE:{!ro && REQ}</td>
                 <td style={{ ...CEL, background: !ro && submitAttempted && !addrState.trim() ? "#FEE2E2" : undefined }}>
-                  <CI value={addrState} onChange={setAddrState} readOnly={ro} placeholder="State" />
+                  <CI value={addrState} onChange={setAddrState} readOnly={ro} placeholder="State" maxLength={30} onlyAlpha />
                 </td>
               </tr>
               <tr>
                 <td style={LBL}>COUNTRY</td>
                 <td style={CEL} colSpan={3}>
-                  <CI value={addrCountry} onChange={setAddrCountry} readOnly={ro} placeholder="Country" />
+                  <CI value={addrCountry} onChange={setAddrCountry} readOnly={ro} placeholder="Country" maxLength={30} onlyAlpha />
                 </td>
               </tr>
               <tr>
@@ -1022,6 +1057,7 @@ export default function BaptismalFormCore({
                     value={occupation}
                     onChange={setOccupation}
                     readOnly={ro}
+                    maxLength={50}
                   />
                 </td>
                 <td style={LBL}>E-MAIL:</td>
@@ -1030,6 +1066,7 @@ export default function BaptismalFormCore({
                     value={email}
                     onChange={ro ? undefined : setEmail}
                     readOnly={ro}
+                    maxLength={60}
                   />
                 </td>
               </tr>
@@ -1040,6 +1077,7 @@ export default function BaptismalFormCore({
                     value={placeOfWork}
                     onChange={setPlaceOfWork}
                     readOnly={ro}
+                    maxLength={60}
                   />
                 </td>
                 <td style={LBL}>SOCIAL MEDIA HANDLE:</td>
@@ -1048,6 +1086,7 @@ export default function BaptismalFormCore({
                     value={socialMedia}
                     onChange={ro ? undefined : setSocialMedia}
                     readOnly={ro}
+                    maxLength={50}
                   />
                 </td>
               </tr>
@@ -1058,6 +1097,7 @@ export default function BaptismalFormCore({
                     value={officeAddress}
                     onChange={setOfficeAddress}
                     readOnly={ro}
+                    maxLength={100}
                   />
                 </td>
                 <td style={LBL}>PHONE:</td>
@@ -1066,6 +1106,8 @@ export default function BaptismalFormCore({
                     value={workPhone}
                     onChange={setWorkPhone}
                     readOnly={ro}
+                    maxLength={15}
+                    onlyNumeric
                   />
                 </td>
               </tr>
@@ -1103,6 +1145,7 @@ export default function BaptismalFormCore({
                       value={q.schoolAttended}
                       onChange={(v) => updateQual(i, "schoolAttended", v)}
                       readOnly={ro}
+                      maxLength={60}
                     />
                   </td>
                   <td style={CEL}>
@@ -1110,6 +1153,7 @@ export default function BaptismalFormCore({
                       value={q.dates}
                       onChange={(v) => updateQual(i, "dates", v)}
                       readOnly={ro}
+                      maxLength={15}
                     />
                   </td>
                   <td style={CEL}>
@@ -1119,6 +1163,7 @@ export default function BaptismalFormCore({
                         updateQual(i, "qualificationReceived", v)
                       }
                       readOnly={ro}
+                      maxLength={60}
                     />
                   </td>
                 </tr>
@@ -1150,6 +1195,7 @@ export default function BaptismalFormCore({
                       value={wp}
                       onChange={(v) => updateWp(i, v)}
                       readOnly={ro}
+                      maxLength={60}
                     />
                   </td>
                 </tr>
@@ -1177,6 +1223,7 @@ export default function BaptismalFormCore({
                     value={salvationWhere}
                     onChange={setSalvationWhere}
                     readOnly={ro}
+                    maxLength={50}
                   />
                 </td>
               </tr>
@@ -1187,6 +1234,7 @@ export default function BaptismalFormCore({
                     onChange={setSalvationDate}
                     readOnly={ro}
                     placeholder="e.g. 15 March 2010"
+                    maxLength={30}
                   />
                 </td>
                 <td style={LBL} colSpan={2}></td>
@@ -1210,6 +1258,7 @@ export default function BaptismalFormCore({
                     onChange={setHolySpiritAnswer}
                     readOnly={ro}
                     placeholder="Yes / No"
+                    maxLength={3}
                   />
                 </td>
               </tr>
@@ -1220,6 +1269,7 @@ export default function BaptismalFormCore({
                     onChange={setHolySpiritWhere}
                     readOnly={ro}
                     placeholder="Church / Location"
+                    maxLength={50}
                   />
                 </td>
                 <td style={LBL} colSpan={2}></td>
@@ -1243,6 +1293,7 @@ export default function BaptismalFormCore({
                       onChange={(v) => updateDept(i, "name", v)}
                       readOnly={ro}
                       placeholder="Department name"
+                      maxLength={60}
                     />
                   </td>
                   <td style={LBL}>DATES</td>
@@ -1252,6 +1303,7 @@ export default function BaptismalFormCore({
                       onChange={(v) => updateDept(i, "date", v)}
                       readOnly={ro}
                       placeholder="e.g. Jan 2020"
+                      maxLength={20}
                     />
                   </td>
                 </tr>
@@ -1291,6 +1343,7 @@ export default function BaptismalFormCore({
                     onChange={setNewConvertsText}
                     readOnly={ro}
                     placeholder="Yes / No"
+                    maxLength={3}
                   />
                 </td>
               </tr>
@@ -1327,6 +1380,7 @@ export default function BaptismalFormCore({
                     onChange={ro ? undefined : setAfraidOfWater}
                     readOnly={ro}
                     placeholder="Yes / No"
+                    maxLength={3}
                   />
                 </td>
               </tr>
@@ -1360,6 +1414,7 @@ export default function BaptismalFormCore({
                       onChange={(v) => updateReason(i, v)}
                       readOnly={ro}
                       style={{ height: "100%" }}
+                      maxLength={150}
                     />
                   </td>
                 </tr>
