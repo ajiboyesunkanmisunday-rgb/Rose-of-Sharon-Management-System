@@ -689,7 +689,24 @@ export default function CelebrationsPage() {
               <div className="w-full sm:w-72">
                 <SearchBar value={search} onChange={(v) => { setSearch(v); setBdPage(1); }} onSearch={() => {}} placeholder="Search birthdays…" />
               </div>
-              <DateRangePicker from={bFrom} to={bTo} onFromChange={(v) => { setBFrom(v); setBdPage(1); }} onToChange={(v) => { setBTo(v); setBdPage(1); }} />
+              <DateRangePicker
+                from={bFrom}
+                to={bTo}
+                onFromChange={(v) => {
+                  const today = new Date().toISOString().slice(0, 10);
+                  if (v > today) return;
+                  setBFrom(v);
+                  if (bTo && v > bTo) setBTo(v);
+                  setBdPage(1);
+                }}
+                onToChange={(v) => {
+                  const today = new Date().toISOString().slice(0, 10);
+                  if (v > today) return;
+                  if (bFrom && v < bFrom) return;
+                  setBTo(v);
+                  setBdPage(1);
+                }}
+              />
             </div>
             <ExportMenu onExport={handleBirthdayExport} disabled={exporting || filteredBirthdays.length === 0} />
           </div>
@@ -749,7 +766,24 @@ export default function CelebrationsPage() {
               <div className="w-full sm:w-72">
                 <SearchBar value={search} onChange={(v) => { setSearch(v); setAnnPage(1); }} onSearch={() => {}} placeholder="Search anniversaries…" />
               </div>
-              <DateRangePicker from={aFrom} to={aTo} onFromChange={(v) => { setAFrom(v); setAnnPage(1); }} onToChange={(v) => { setATo(v); setAnnPage(1); }} />
+              <DateRangePicker
+                from={aFrom}
+                to={aTo}
+                onFromChange={(v) => {
+                  const today = new Date().toISOString().slice(0, 10);
+                  if (v > today) return;
+                  setAFrom(v);
+                  if (aTo && v > aTo) setATo(v);
+                  setAnnPage(1);
+                }}
+                onToChange={(v) => {
+                  const today = new Date().toISOString().slice(0, 10);
+                  if (v > today) return;
+                  if (aFrom && v < aFrom) return;
+                  setATo(v);
+                  setAnnPage(1);
+                }}
+              />
             </div>
             <ExportMenu onExport={handleAnniversaryExport} disabled={exporting || filteredAnniversaries.length === 0} />
           </div>

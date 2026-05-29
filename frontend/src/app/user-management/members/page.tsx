@@ -75,7 +75,10 @@ export default function MembersPage() {
       const res = q.trim()
         ? await searchMembers(q.trim(), page - 1, ITEMS_PER_PAGE)
         : await getMembers(page - 1, ITEMS_PER_PAGE);
-      setMembers(res.content ?? []);
+      const sorted = [...(res.content ?? [])].sort((a, b) =>
+        (a.lastName ?? "").localeCompare(b.lastName ?? "")
+      );
+      setMembers(sorted);
       setTotalPages(res.totalPages ?? 1);
       setTotalItems(res.totalElements ?? 0);
     } catch (err) {
