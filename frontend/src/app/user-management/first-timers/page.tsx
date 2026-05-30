@@ -82,6 +82,12 @@ export default function FirstTimersPage() {
   const [filterService, setFilterService] = useState("");
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
+  // Pending date inputs — only applied to active filter on Apply click
+  const [pendingDateFrom, setPendingDateFrom] = useState("");
+  const [pendingDateTo, setPendingDateTo] = useState("");
+  // Convert to Second Timer confirmation
+  const [convertConfirmId, setConvertConfirmId] = useState<string | null>(null);
+  const [convertName,      setConvertName]      = useState("");
 
   const fetchTimers = useCallback(async (page: number, q = "", svc = "") => {
     setLoading(true);
@@ -260,11 +266,20 @@ export default function FirstTimersPage() {
     }
   };
 
-  const handleConvertToSecondTimer = async (id: string) => {
+  const handleConvertToSecondTimer = (id: string, name: string) => {
+    setConvertConfirmId(id);
+    setConvertName(name);
+  };
+
+  const doConvertToSecondTimer = async () => {
+    if (!convertConfirmId) return;
+    const idToConvert = convertConfirmId;
+    setConvertConfirmId(null);
+    setConvertName("");
     setActionLoading(true);
     setActionError("");
     try {
-      await convertToSecondTimer(id);
+      await convertToSecondTimer(idToConvert);
       fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to convert.");
@@ -401,14 +416,20 @@ export default function FirstTimersPage() {
           </div>
           <div className="flex flex-col">
             <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">From</label>
-            <input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500" />
+            <input type="date" value={pendingDateFrom} onChange={(e) => setPendingDateFrom(e.target.value)} className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500" />
           </div>
           <div className="flex flex-col">
             <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">To</label>
-            <input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }} className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500" />
+            <input type="date" value={pendingDateTo} min={pendingDateFrom || undefined} onChange={(e) => setPendingDateTo(e.target.value)} className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 dark:text-slate-100 outline-none focus:border-[#000080] dark:focus:border-indigo-500 focus:ring-1 focus:ring-[#000080] dark:focus:ring-indigo-500" />
           </div>
           <button
-            onClick={() => { setFilterService(""); setFilterDateFrom(""); setFilterDateTo(""); setCurrentPage(1); }}
+            onClick={() => { setFilterDateFrom(pendingDateFrom); setFilterDateTo(pendingDateTo); setCurrentPage(1); }}
+            className="h-[42px] rounded-lg bg-[#000080] px-4 text-sm font-medium text-white hover:bg-[#000066] dark:bg-indigo-600 dark:hover:bg-indigo-700"
+          >
+            Apply
+          </button>
+          <button
+            onClick={() => { setFilterService(""); setFilterDateFrom(""); setFilterDateTo(""); setPendingDateFrom(""); setPendingDateTo(""); setCurrentPage(1); }}
             className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 dark:border-slate-600 px-4 text-sm text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:bg-slate-700/50 dark:hover:bg-slate-700"
           >
             Clear
@@ -559,7 +580,7 @@ export default function FirstTimersPage() {
                         },
                         {
                           label: "Convert to Second Timer",
-                          onClick: () => handleConvertToSecondTimer(ft.id),
+                          onClick: () => handleConvertToSecondTimer(ft.id, fullName(ft)),
                         },
                         {
                           label: "Mark as Inactive",
@@ -690,6 +711,31 @@ export default function FirstTimersPage() {
         onConfirm={handleBulkMarkInactive}
         count={selectedRows.size}
       />
+
+      {convertConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-xl">
+            <h3 className="mb-2 text-lg font-bold text-[#111827] dark:text-slate-100">Convert to Second Timer?</h3>
+            <p className="mb-6 text-sm text-[#374151] dark:text-slate-300">
+              <strong>{convertName}</strong> will be moved to the Second Timers list. This cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => { setConvertConfirmId(null); setConvertName(""); }}
+                className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-2 text-sm font-medium text-[#374151] dark:text-slate-300 hover:bg-[#F9FAFB]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={doConvertToSecondTimer}
+                className="rounded-lg bg-[#000080] px-4 py-2 text-sm font-medium text-white hover:bg-[#000066]"
+              >
+                Yes, Convert
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
