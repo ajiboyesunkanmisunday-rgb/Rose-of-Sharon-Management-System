@@ -940,7 +940,9 @@ export async function linkSpouse(
   spouseId: string,
   couplePictureUrl?: string,
 ): Promise<UserResponse> {
-  const qs = couplePictureUrl ? `?couplePictureUrl=${encodeURIComponent(couplePictureUrl)}` : "";
+  // The backend requires couplePictureUrl as a query param (even if empty).
+  // Always include it to avoid NPE-style 5xx errors on the server.
+  const qs = `?couplePictureUrl=${encodeURIComponent(couplePictureUrl ?? "")}`;
   return apiFetch<UserResponse>(
     `/api/v1/users/${userId}/link-spouse/${spouseId}${qs}`,
     { method: "PUT" },
