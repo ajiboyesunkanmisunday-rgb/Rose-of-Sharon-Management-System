@@ -431,35 +431,48 @@ export interface LoginRequest {
 }
 
 export async function loginUser(body: LoginRequest): Promise<UserResponse> {
-  // Login goes through the same /api/* CDN redirect as every other API call.
-  // Netlify proxies the request server-to-server to api.rccgros.org and passes
-  // all response headers back to the browser (same-origin, no CORS restrictions).
-  // The JWT lives in the Authorization response header on the backend.
-  const { data, headers } = await apiFetchRaw<UserResponse>("/api/v1/users/login", {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
+  // Login is routed through netlify/functions/login.js which:
+  //  - proxies the request to api.rccgros.org server-to-server
+  //  - reads the Authorization response header on the server
+  //  - injects the raw token as `_token` in the JSON body before returning
+  // This works for every Netlify deployment (production, preview, branch) with
+  // no hardcoded URLs.
+  const { data, headers } = await apiFetchRaw<UserResponse & { _token?: string }>(
+    "/api/v1/users/login",
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
 
   const isJwt = (v: unknown): v is string =>
     typeof v === "string" && v.split(".").length === 3 && v.startsWith("eyJ");
 
-  // 1. Deep-scan the response body for any JWT-like string value — the backend
-  //    sometimes embeds the token directly even if Swagger doesn't document it.
+  // 1. Prefer the `_token` field injected by login.js — most reliable path.
   let token: string | undefined;
-  const extractJwt = (obj: Record<string, unknown>): string | undefined => {
-    for (const val of Object.values(obj)) {
-      if (isJwt(val)) return val;
-      if (val && typeof val === "object" && !Array.isArray(val)) {
-        const found = extractJwt(val as Record<string, unknown>);
-        if (found) return found;
-      }
-    }
-    return undefined;
-  };
-  token = extractJwt(data as unknown as Record<string, unknown>);
+  if (data._token) {
+    token = data._token;
+    // Remove the synthetic field so it doesn't pollute the UserResponse object
+    delete (data as unknown as Record<string, unknown>)["_token"];
+  }
 
-  // 2. Fall back to the Authorization response header.
-  //    Netlify passes this through because the request is same-origin.
+  // 2. Deep-scan the response body for any JWT-like string value.
+  if (!token) {
+    const extractJwt = (obj: Record<string, unknown>): string | undefined => {
+      for (const val of Object.values(obj)) {
+        if (isJwt(val)) return val;
+        if (val && typeof val === "object" && !Array.isArray(val)) {
+          const found = extractJwt(val as Record<string, unknown>);
+          if (found) return found;
+        }
+      }
+      return undefined;
+    };
+    token = extractJwt(data as unknown as Record<string, unknown>);
+  }
+
+  // 3. Fall back to the Authorization response header (works when CDN proxy
+  //    forwards it; may not be available in all environments).
   if (!token) {
     const authHeader = headers.get("authorization") ?? headers.get("Authorization") ?? "";
     const candidate = authHeader.replace(/^Bearer\s+/i, "").trim();
@@ -924,9 +937,9 @@ export async function assignFollowUp(
   userId: string,
   officerId: string,
   note?: string, // kept for call-site compat; Swagger endpoint has no body
-): Promise<OperationalResponse> {
+): Promise<UserResponse> {
   void note; // intentionally unused — PUT /api/v1/users/{id}/assign-followup/{followUpMemberId}
-  return apiFetch<OperationalResponse>(
+  return apiFetch<UserResponse>(
     `/api/v1/users/${userId}/assign-followup/${officerId}`,
     { method: "PUT" },
   );
