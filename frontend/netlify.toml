@@ -6,9 +6,6 @@
 [functions]
   node_bundler = "esbuild"
 
-[functions."api-proxy"]
-  timeout = 26          # max Netlify allows; default is 10s
-
 [build.environment]
   NODE_VERSION = "18"
 
@@ -20,20 +17,12 @@
   to     = "/login"
   status = 302
 
-# Login is handled by a serverless function so it can read the
-# Authorization response header (JWT) that the backend places there,
-# and inject it into the JSON response body for the frontend to consume.
-# The function dynamically forwards the caller's Origin so every deployment
-# (production, preview, branch deploy) presents the correct domain.
-[[redirects]]
-  from  = "/api/v1/users/login"
-  to    = "/.netlify/functions/login"
-  status = 200
-  force  = true
-
-# All other API calls are proxied server-to-server through Netlify's CDN.
-# This avoids browser mixed-content and CORS issues — the backend sees
-# Netlify as the caller, not the browser.  Works for every team deployment.
+# All API calls are routed through Netlify's CDN to api.rccgros.org.
+# The browser makes same-origin requests (/api/...) and Netlify proxies
+# them server-to-server — no CORS issues, no mixed-content, works for
+# every team deployment (production, preview, branch deploys).
+# The Authorization response header (JWT) is passed back by Netlify and
+# readable by the browser since the request is same-origin.
 [[redirects]]
   from  = "/api/*"
   to    = "https://api.rccgros.org/api/:splat"
