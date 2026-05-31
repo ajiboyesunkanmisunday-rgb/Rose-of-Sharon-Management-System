@@ -1,10 +1,18 @@
 /**
  * Serverless proxy for POST /api/v1/users/login
  *
- * The backend is configured to return the JWT in the Authorization
- * response header (Access-Control-Expose-Headers: Authorization).
- * This function proxies the request server-side so it can read that
- * header and inject the token into the JSON response body.
+ * The backend returns the JWT in the Authorization response header
+ * (Access-Control-Expose-Headers: Authorization). This function proxies
+ * the request server-to-server so it can read that header and inject the
+ * token into the JSON response body — bypassing browser CORS restrictions.
+ *
+ * The Origin we send to the backend is taken from the incoming request's
+ * own Origin header. This means every Netlify deployment (production,
+ * preview, branch deploy) correctly presents its own domain to the backend
+ * instead of the hardcoded URL that only worked for one specific site.
+ *
+ * If the backend CORS policy needs updating for a new domain, add that
+ * domain to the backend's allowed-origins list — not to this file.
  */
 exports.handler = async function (event) {
   if (event.httpMethod !== "POST") {
@@ -13,14 +21,20 @@ exports.handler = async function (event) {
 
   const postData = event.body || "{}";
 
+  // Forward the real Origin from the browser so the backend enters CORS
+  // mode and exposes the Authorization header. Falls back to the
+  // api.rccgros.org domain itself (same-origin, always allowed).
+  const incomingOrigin =
+    event.headers?.origin ||
+    event.headers?.Origin ||
+    "https://api.rccgros.org";
+
   try {
     const response = await fetch("https://api.rccgros.org/api/v1/users/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // Include Origin so the backend enters CORS mode and returns
-        // Access-Control-Expose-Headers: Authorization (with the JWT).
-        "Origin": "https://aquamarine-chaja-11dedd.netlify.app",
+        "Origin": incomingOrigin,
         "Accept": "application/json",
       },
       body: postData,

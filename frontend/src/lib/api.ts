@@ -137,27 +137,16 @@ async function apiFetchRaw<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  // ALL requests to /api/* are routed through the serverless proxy function.
-  // Netlify's CDN redirect rules forward the browser's Origin header to the backend.
-  // The backend CORS filter + token checker now rejects these requests.
-  // The serverless function calls the backend server-to-server (no Origin header)
-  // so the CORS filter never runs, and the Authorization header is forwarded correctly.
+  // All /api/* requests are served as relative URLs so Netlify's CDN
+  // redirect rule in netlify.toml transparently proxies them to
+  // https://api.rccgros.org/api/:splat — no CORS issues, no Origin header
+  // forwarded to the backend. Works identically for every team member's
+  // deployment (production site, preview deploys, branch deploys).
   //
-  // Requests to /.netlify/functions/* (e.g. login) are NOT proxied — they
-  // call the function directly.
-  let fetchUrl = `${BASE_URL}${path}`;
-  let fetchMethod = method;
-  // Backend now accepts the Netlify origin header directly.
-  // All /api/* requests route through the [[redirects]] rule in netlify.toml.
-  const needsProxy = false;
-  if (needsProxy) {
-    // Separate the path from any query string the caller already attached
-    const [basePath, existingQs] = path.split("?");
-    let proxyUrl = `/.netlify/functions/api-proxy?_path=${encodeURIComponent(basePath)}&_method=${method}`;
-    if (existingQs) proxyUrl += `&_qs=${encodeURIComponent(existingQs)}`;
-    fetchUrl = proxyUrl;
-    fetchMethod = "POST"; // transport method to the function; actual method sent via _method param
-  }
+  // If BASE_URL is set (local development), requests go directly to that host.
+  // Requests to /.netlify/functions/* (e.g. login) call the function directly.
+  const fetchUrl = `${BASE_URL}${path}`;
+  const fetchMethod = method;
 
   const response = await fetch(fetchUrl, {
     ...options,

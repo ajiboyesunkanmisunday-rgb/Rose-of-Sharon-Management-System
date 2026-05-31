@@ -21,15 +21,19 @@
   status = 302
 
 # Login is handled by a serverless function so it can read the
-# Authorization response header from the backend and return the
-# JWT token inside the JSON body.
+# Authorization response header (JWT) that the backend places there,
+# and inject it into the JSON response body for the frontend to consume.
+# The function dynamically forwards the caller's Origin so every deployment
+# (production, preview, branch deploy) presents the correct domain.
 [[redirects]]
   from  = "/api/v1/users/login"
   to    = "/.netlify/functions/login"
   status = 200
   force  = true
 
-# All other API calls are proxied through Netlify to avoid CORS issues.
+# All other API calls are proxied server-to-server through Netlify's CDN.
+# This avoids browser mixed-content and CORS issues — the backend sees
+# Netlify as the caller, not the browser.  Works for every team deployment.
 [[redirects]]
   from  = "/api/*"
   to    = "https://api.rccgros.org/api/:splat"
