@@ -686,7 +686,22 @@ export default function SomFormCore({
               </tr>
               <tr>
                 <td style={LBL}>Date of Birth:</td>
-                <td style={CEL}><CI value={dob} onChange={setDob} readOnly={ro} placeholder="yyyy-mm-dd" maxLength={10} /></td>
+                <td style={CEL}>
+                  {ro ? (
+                    <input
+                      value={dob}
+                      readOnly
+                      style={{ border: "none", outline: "none", background: "transparent", width: "100%", fontSize: 12, fontFamily: "Times New Roman, serif", color: "#000", padding: "2px 0", boxSizing: "border-box" as const }}
+                    />
+                  ) : (
+                    <input
+                      type="date"
+                      value={dob}
+                      onChange={(e) => setDob(e.target.value)}
+                      style={{ border: "none", outline: "none", background: "transparent", width: "100%", fontSize: 12, fontFamily: "Times New Roman, serif", color: "#000", padding: "2px 0", boxSizing: "border-box" as const }}
+                    />
+                  )}
+                </td>
                 <td style={LBL}>Marital Status:</td>
                 <td style={CEL}><CI value={marital} onChange={setMarital} readOnly={ro} placeholder="Single / Married…" maxLength={10} /></td>
               </tr>
@@ -950,6 +965,15 @@ export default function SomFormCore({
 
           {/* ══ SECTION K — OFFICIAL REMARKS ═════════════════════════════ */}
           <SH letter="K" title="Official Remarks" />
+          {mode === "fill" && (
+            <div style={{
+              fontSize: 11, fontStyle: "italic", color: "#888",
+              background: "#F9FAFB", border: "1px solid #E5E7EB",
+              borderRadius: 4, padding: "4px 10px", marginBottom: 6,
+            }}>
+              ℹ️ This section is for official use only and will be completed by church administrators after your application is reviewed.
+            </div>
+          )}
           <table style={T}>
             <tbody>
               {remarksLines.map((r, i) => (
