@@ -415,6 +415,7 @@ export default function SomFormCore({
         holySpiritBaptismLocation: holySpiritChurch.trim() || undefined,
         goneThroughNewConverts: parseYesNo(newConvertsText),
         otherInformation: otherInfoStr,
+        consent: true,
         ...(qualItems.length   ? { qualificationRequests:           qualItems }  : {}),
         ...(wpItems.length     ? { createPastPlaceOfWorshipRequests: wpItems }   : {}),
         ...(deptItems.length   ? { createStudentDepartmentRequests:  deptItems } : {}),
