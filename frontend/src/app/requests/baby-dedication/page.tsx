@@ -294,13 +294,19 @@ export default function BabyDedicationPage() {
           </div>
         </form>
 
-        {/* ── Footer colour bar — black bg + pink blocks ─────────────────── */}
-        <div className="flex h-12 bg-black items-stretch gap-0 p-2">
-          <div className="flex-1 bg-[#FF007F]" />
-          <div className="w-3 bg-black" />
-          <div className="flex-1 bg-[#FF007F]" />
-          <div className="w-3 bg-black" />
-          <div className="flex-1 bg-[#FF007F]" />
+        {/* ── Footer — pink blocks protrude above the black base ──────────── */}
+        <div className="relative overflow-hidden" style={{ height: 44 }}>
+          {/* Full-width black base at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 bg-black" style={{ height: 20 }} />
+          {/* Three pink blocks protruding above the black */}
+          <div
+            className="absolute flex"
+            style={{ bottom: 4, left: 14, right: 14, height: 30, gap: 8 }}
+          >
+            <div style={{ flex: 5, background: "#E8198B" }} />
+            <div style={{ flex: 3, background: "#E8198B" }} />
+            <div style={{ flex: 3, background: "#E8198B" }} />
+          </div>
         </div>
       </div>
     </DashboardLayout>
