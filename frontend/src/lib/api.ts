@@ -431,33 +431,60 @@ export interface LoginRequest {
 }
 
 export async function loginUser(body: LoginRequest): Promise<UserResponse> {
-  // Use the direct backend login endpoint if BASE_URL is set (development);
-  // otherwise use the Netlify function proxy (production).
-  const path = BASE_URL ? "/api/v1/users/login" : "/.netlify/functions/login";
-  const response = await apiFetch<UserResponse>(path, {
+  // Login goes through the same /api/* CDN redirect as every other API call.
+  // Netlify proxies the request server-to-server to api.rccgros.org and passes
+  // all response headers back to the browser (same-origin, no CORS restrictions).
+  // The JWT lives in the Authorization response header on the backend.
+  const { data, headers } = await apiFetchRaw<UserResponse>("/api/v1/users/login", {
     method: "POST",
     body: JSON.stringify(body),
   });
 
-  if (response.token) {
-    setToken(response.token);
-  } else if (response.id) {
-    // Backend returned a valid user but no token field.
-    // Store a session marker so the UI remains accessible until the backend
-    // consistently returns a token on every login response.
-    setToken(`session_${response.id}`);
+  const isJwt = (v: unknown): v is string =>
+    typeof v === "string" && v.split(".").length === 3 && v.startsWith("eyJ");
+
+  // 1. Deep-scan the response body for any JWT-like string value — the backend
+  //    sometimes embeds the token directly even if Swagger doesn't document it.
+  let token: string | undefined;
+  const extractJwt = (obj: Record<string, unknown>): string | undefined => {
+    for (const val of Object.values(obj)) {
+      if (isJwt(val)) return val;
+      if (val && typeof val === "object" && !Array.isArray(val)) {
+        const found = extractJwt(val as Record<string, unknown>);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  };
+  token = extractJwt(data as unknown as Record<string, unknown>);
+
+  // 2. Fall back to the Authorization response header.
+  //    Netlify passes this through because the request is same-origin.
+  if (!token) {
+    const authHeader = headers.get("authorization") ?? headers.get("Authorization") ?? "";
+    const candidate = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (isJwt(candidate)) token = candidate;
+    else if (candidate) token = candidate; // non-JWT session token — pass through
+  }
+
+  if (token) {
+    setToken(token);
+  } else if (data.id) {
+    // Backend returned a valid user but no token.  Store a session marker so
+    // the UI stays accessible until the backend consistently returns a token.
+    setToken(`session_${data.id}`);
   }
 
   setStoredUser({
-    id: response.id,
-    firstName: response.firstName,
-    lastName: response.lastName,
-    email: response.email,
-    userType: response.userType,
-    profilePictureUrl: response.profilePictureUrl,
+    id: data.id,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    email: data.email,
+    userType: data.userType,
+    profilePictureUrl: data.profilePictureUrl,
   });
 
-  return response;
+  return data;
 }
 
 export function logoutUser(): void {
