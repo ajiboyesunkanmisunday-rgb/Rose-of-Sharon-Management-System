@@ -11,8 +11,11 @@ import {
   getTotalMembers, getTotalMembersInPeriod, getTotalFirstTimersInPeriod,
   getTotalSecondTimersInPeriod, getTotalNewConvertsInPeriod,
   getVisitingVsNotVisiting, getServiceSectionsStats, getMediumOfInvitationStats,
+  getFirstTimerToSecondTimerRate, getFirstTimerToMemberRate, getFollowupAttentionRate,
+  getPastServicesAttendance, getTotalSpecialEvents,
   type UserResponse, type NewConvertResponse, type GroupResponse,
   type CountStatisticsResponse, type FeatureStatResponse, type UserBasicResponse,
+  type PercentStatisticsResponse, type PastServicesAttendanceResponse,
 } from "@/lib/api";
 import { RefreshCw, Calendar, AlertTriangle } from "lucide-react";
 
@@ -222,6 +225,11 @@ interface ServerStats {
   invitation: FeatureStatResponse | null;
   urgentFollowup: never[];
   urgentTotal: number;
+  ftToStRate: PercentStatisticsResponse | null;
+  ftToMemRate: PercentStatisticsResponse | null;
+  followupAttentionRate: PercentStatisticsResponse | null;
+  pastServicesAttendance: PastServicesAttendanceResponse | null;
+  totalSpecialEvents: number;
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -289,6 +297,7 @@ export default function AnalyticsDashboard() {
       const [
         totMem, memPeriod, ftPeriod, stPeriod, ncPeriod,
         visiting, service, invitation,
+        ftToSt, ftToMem, followupRate, pastSvcAtt, specEvents,
       ] = await Promise.all([
         getTotalMembers().catch((): CountStatisticsResponse => ({ totalCount: 0 })),
         getTotalMembersInPeriod(startTime, endTime).catch((): CountStatisticsResponse => ({ totalCount: 0 })),
@@ -298,6 +307,11 @@ export default function AnalyticsDashboard() {
         getVisitingVsNotVisiting(startTime, endTime).catch((): FeatureStatResponse => ({ columns: [] })),
         getServiceSectionsStats(startTime, endTime).catch((): FeatureStatResponse => ({ columns: [] })),
         getMediumOfInvitationStats(startTime, endTime).catch((): FeatureStatResponse => ({ columns: [] })),
+        getFirstTimerToSecondTimerRate(startTime, endTime).catch((): PercentStatisticsResponse => ({ percentage: 0 })),
+        getFirstTimerToMemberRate(startTime, endTime).catch((): PercentStatisticsResponse => ({ percentage: 0 })),
+        getFollowupAttentionRate(startTime, endTime).catch((): PercentStatisticsResponse => ({ percentage: 0 })),
+        getPastServicesAttendance().catch((): PastServicesAttendanceResponse => ({ columns: [] })),
+        getTotalSpecialEvents(startTime, endTime).catch((): CountStatisticsResponse => ({ totalCount: 0 })),
       ]);
       setSvrStats({
         totalMembers:         totMem.totalCount,
@@ -310,6 +324,11 @@ export default function AnalyticsDashboard() {
         invitation: invitation.columns.length ? invitation : null,
         urgentFollowup: [],
         urgentTotal:    0,
+        ftToStRate:   ftToSt,
+        ftToMemRate:  ftToMem,
+        followupAttentionRate: followupRate,
+        pastServicesAttendance: pastSvcAtt.columns.length ? pastSvcAtt : null,
+        totalSpecialEvents: specEvents.totalCount,
       });
     } catch (err) {
       setSvrError(err instanceof Error ? err.message : "Failed to load server stats.");
@@ -609,7 +628,56 @@ export default function AnalyticsDashboard() {
               </ChartCard>
             </div>
 
-            {/* Urgent followup — shown in the existing section below (server endpoint not yet available) */}
+            {/* Conversion rates + attention rate + special events */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] dark:text-slate-400">FT → 2nd Timer Rate</p>
+                <p className="mt-1 text-2xl font-bold text-[#EA580C]">
+                  {svrStats.ftToStRate != null ? `${(svrStats.ftToStRate.percentage ?? 0).toFixed(1)}%` : "—"}
+                </p>
+                <p className="text-[10px] text-[#9CA3AF] dark:text-slate-400">In selected period</p>
+              </div>
+              <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] dark:text-slate-400">FT → Member Rate</p>
+                <p className="mt-1 text-2xl font-bold text-[#9333EA]">
+                  {svrStats.ftToMemRate != null ? `${(svrStats.ftToMemRate.percentage ?? 0).toFixed(1)}%` : "—"}
+                </p>
+                <p className="text-[10px] text-[#9CA3AF] dark:text-slate-400">In selected period</p>
+              </div>
+              <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] dark:text-slate-400">Follow-up Attention</p>
+                <p className="mt-1 text-2xl font-bold text-[#0891B2]">
+                  {svrStats.followupAttentionRate != null ? `${(svrStats.followupAttentionRate.percentage ?? 0).toFixed(1)}%` : "—"}
+                </p>
+                <p className="text-[10px] text-[#9CA3AF] dark:text-slate-400">Visitors contacted</p>
+              </div>
+              <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] dark:text-slate-400">Special Events</p>
+                <p className="mt-1 text-2xl font-bold text-[#D97706]">{svrStats.totalSpecialEvents.toLocaleString()}</p>
+                <p className="text-[10px] text-[#9CA3AF] dark:text-slate-400">In selected period</p>
+              </div>
+            </div>
+
+            {/* Past 6 services attendance */}
+            {svrStats.pastServicesAttendance && (
+              <ChartCard title="Past Services Attendance">
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart
+                    data={svrStats.pastServicesAttendance.columns.map((c) => ({
+                      name: (c.feature ?? "").length > 16 ? (c.feature ?? "").slice(0, 14) + "…" : (c.feature ?? ""),
+                      count: c.totalCount,
+                    }))}
+                    margin={{ top: 4, right: 10, left: -10, bottom: 40 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-20} textAnchor="end" />
+                    <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                    <Tooltip {...TOOLTIP_STYLE} />
+                    <Bar dataKey="count" name="Attendees" fill={C.navy} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            )}
           </div>
         ) : !svrLoading ? (
           <p className="py-6 text-center text-xs text-[#9CA3AF] dark:text-slate-400">
