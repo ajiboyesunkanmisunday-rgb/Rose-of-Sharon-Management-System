@@ -309,6 +309,16 @@
   status = 200
 
 [[redirects]]
+  from   = "/requests/baby-christening/"
+  to     = "/requests/baby-christening/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/requests/baby-dedication/"
+  to     = "/requests/baby-dedication/index.html"
+  status = 200
+
+[[redirects]]
   from   = "/prayer-requests/"
   to     = "/prayer-requests/index.html"
   status = 200
