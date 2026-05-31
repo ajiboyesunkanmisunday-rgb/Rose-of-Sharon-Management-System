@@ -3584,11 +3584,13 @@ export interface CreateSchoolOfMinistryRequest {
 export async function getSchoolOfMinistries(
   pageNo = 0,
   pageSize = 20,
-  set?: number,
+  set?: string,
 ): Promise<CustomPageResponse<SchoolOfMinistryResponse>> {
-  const setParam = set != null ? `&set=${set}` : "";
+  // Backend requires the `set` param (year string, e.g. "2026") — without it
+  // the endpoint returns an empty list.
+  const qs = set ? `&set=${encodeURIComponent(set)}` : "";
   return apiFetch<CustomPageResponse<SchoolOfMinistryResponse>>(
-    `/api/v1/school-of-ministries?pageNo=${pageNo}&pageSize=${pageSize}${setParam}`,
+    `/api/v1/school-of-ministries?pageNo=${pageNo}&pageSize=${pageSize}${qs}`,
   );
 }
 
