@@ -2,24 +2,25 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import { createSuggestion, getStoredUser } from "@/lib/api";
 
 export default function BabyChristeningPage() {
-  const router = useRouter();
+  const router      = useRouter();
   const currentUser = getStoredUser();
 
   const [form, setForm] = useState({
-    parentName:           "",
-    address:              "",
-    sex:                  "",
-    dateOfBirth:          "",
-    namingCeremonyDate:   "",
-    phoneNumber:          "",
-    churchHandleNaming:   "",
-    houseFellowshipCentre:"",
-    houseLeader:          "",
+    parentName:            "",
+    address:               "",
+    sex:                   "",
+    dateOfBirth:           "",
+    namingCeremonyDate:    "",
+    phoneNumber:           "",
+    churchHandleNaming:    "",
+    houseFellowshipCentre: "",
+    houseLeader:           "",
   });
   const [touched,    setTouched]    = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -52,7 +53,7 @@ export default function BabyChristeningPage() {
       const content = [
         `Name of Parent: ${form.parentName}`,
         `Parents' Address: ${form.address}`,
-        `Sex of Baby: ${form.sex}`,
+        `Sex: ${form.sex}`,
         `Date of Birth: ${form.dateOfBirth}`,
         `Naming Ceremony Date: ${form.namingCeremonyDate}`,
         `Phone Number of Parent: ${form.phoneNumber}`,
@@ -73,13 +74,9 @@ export default function BabyChristeningPage() {
     }
   };
 
-  // Underline-only input — matches the paper-form look
-  const ul =
-    "w-full border-0 border-b border-[#000000] dark:border-slate-500 bg-transparent outline-none px-0 py-1 text-sm text-[#374151] dark:text-slate-200 focus:border-[#000080] transition-colors";
-
   return (
     <DashboardLayout>
-      {/* Page header */}
+      {/* Breadcrumb */}
       <div className="mb-6">
         <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Requests</h1>
         <div className="flex items-center gap-2">
@@ -87,13 +84,12 @@ export default function BabyChristeningPage() {
             onClick={() => router.back()}
             className="flex items-center text-[#000080] dark:text-indigo-400 hover:text-[#000066]"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
             </svg>
           </button>
-          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">
-            Baby Christening Form
-          </h2>
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">Baby Christening Form</h2>
         </div>
       </div>
 
@@ -103,169 +99,147 @@ export default function BabyChristeningPage() {
         </div>
       )}
 
-      {/* ── Paper form card ───────────────────────────────────────────────── */}
+      {/* ── Paper form card ─────────────────────────────────────────────── */}
       <div className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
 
-        {/* ── Church header ───────────────────────────────────────────────── */}
-        <div className="px-8 pt-8 pb-5 text-center">
-          {/* RCCG crest */}
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full border-[3px] border-[#CC0000]">
-            <svg viewBox="0 0 64 64" className="h-12 w-12">
-              <circle cx="32" cy="32" r="30" fill="none" stroke="#CC0000" strokeWidth="2"/>
-              <circle cx="32" cy="32" r="22" fill="none" stroke="#CC0000" strokeWidth="1"/>
-              <text x="32" y="28" textAnchor="middle" fontSize="7" fontWeight="bold" fill="#CC0000" fontFamily="serif">THE</text>
-              <text x="32" y="36" textAnchor="middle" fontSize="7" fontWeight="bold" fill="#CC0000" fontFamily="serif">REDEEMED</text>
-              <text x="32" y="44" textAnchor="middle" fontSize="5.5" fontWeight="bold" fill="#CC0000" fontFamily="serif">CHRISTIAN</text>
-              <path d="M18 20 L32 10 L46 20" fill="none" stroke="#CC0000" strokeWidth="1.5"/>
-            </svg>
-          </div>
-
-          <p className="text-[15px] font-extrabold uppercase tracking-wide text-[#000000] dark:text-slate-100">
+        {/* ── Church header ─────────────────────────────────────────────── */}
+        <div className="flex flex-col items-center px-8 pt-8 pb-6 text-center">
+          <Image
+            src="/rccg-icon.png"
+            alt="RCCG Logo"
+            width={80}
+            height={80}
+            className="mb-3 object-contain"
+          />
+          <p className="text-[16px] font-extrabold uppercase tracking-wide text-black dark:text-slate-100">
             THE REDEEMED CHRISTIAN CHURCH OF GOD
           </p>
           <p
-            className="mt-0.5 text-[17px] font-bold italic text-[#000000] dark:text-slate-100"
+            className="mt-1 text-[20px] font-bold italic text-black dark:text-slate-100"
             style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
           >
             Rose of Sharon
           </p>
-          <p className="mt-4 text-[13px] font-extrabold uppercase text-[#000000] dark:text-slate-100 leading-snug">
+          <p className="mt-5 text-[14px] font-extrabold uppercase text-black dark:text-slate-100 leading-tight">
             NOTIFICATION OF BIRTH AND REQUEST FOR CHURCH TO<br />
             CONDUCT BABY&apos;S CHRISTENING
           </p>
         </div>
 
-        {/* Colour bar */}
-        <div className="flex h-[6px]">
-          <div className="flex-1 bg-[#CC0000]"/>
-          <div className="w-3 bg-black"/>
-          <div className="flex-1 bg-[#FF007F]"/>
-          <div className="w-3 bg-black"/>
-          <div className="flex-1 bg-[#CC0000]"/>
-        </div>
+        {/* ── Form body ─────────────────────────────────────────────────── */}
+        <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-5">
 
-        {/* ── Form body ───────────────────────────────────────────────────── */}
-        <form onSubmit={handleSubmit} className="space-y-6 px-8 py-7">
-
-          <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#000000] dark:text-slate-100">
+          <p className="text-[13px] font-extrabold uppercase text-black dark:text-slate-100 mb-2">
             Please fill all in block letters
           </p>
 
           {/* Name of Parent */}
-          <div>
-            <label className="block text-[13px] font-bold text-[#000000] dark:text-slate-200">
-              Name of Parent: <span className="text-red-500">*</span>
+          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
+            <label className="shrink-0 text-[13px] font-bold text-black dark:text-slate-100 whitespace-nowrap">
+              Name of Parent:
             </label>
             <input
               type="text"
               value={form.parentName}
               onChange={(e) => set("parentName", e.target.value)}
               onBlur={() => touch("parentName")}
-              className={ul}
+              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
               required
             />
-            {touched.parentName && !form.parentName.trim() && (
-              <p className="mt-1 text-xs text-red-500">Required</p>
-            )}
           </div>
+          {touched.parentName && !form.parentName.trim() && (
+            <p className="text-xs text-red-500 -mt-3">Required</p>
+          )}
 
-          {/* Parents' Address */}
-          <div>
-            <label className="block text-[13px] font-bold text-[#000000] dark:text-slate-200">
-              Parents&apos; Address: <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              value={form.address}
-              onChange={(e) => set("address", e.target.value)}
-              onBlur={() => touch("address")}
-              rows={2}
-              className="w-full resize-none border-0 border-b border-[#000000] dark:border-slate-500 bg-transparent px-0 py-1 text-sm text-[#374151] dark:text-slate-200 outline-none focus:border-[#000080] transition-colors"
-              required
-            />
-            {touched.address && !form.address.trim() && (
-              <p className="mt-1 text-xs text-red-500">Required</p>
-            )}
+          {/* Parents' Address — label + first underline */}
+          <div className="space-y-2">
+            <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
+              <label className="shrink-0 text-[13px] font-bold text-black dark:text-slate-100 whitespace-nowrap">
+                Parents&apos; Address:
+              </label>
+              <input
+                type="text"
+                value={form.address}
+                onChange={(e) => set("address", e.target.value)}
+                onBlur={() => touch("address")}
+                className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
+                required
+              />
+            </div>
+            {/* Second blank underline for overflow */}
+            <div className="border-b border-black dark:border-slate-400 h-5" />
           </div>
 
           {/* Sex */}
-          <div>
-            <label className="block text-[13px] font-bold text-[#000000] dark:text-slate-200">
-              Sex: <span className="text-red-500">*</span>
+          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
+            <label className="shrink-0 text-[13px] font-bold text-black dark:text-slate-100 whitespace-nowrap">
+              Sex:
             </label>
-            <div className="mt-2 flex gap-8">
-              {["Male", "Female"].map((opt) => (
-                <label
-                  key={opt}
-                  className="flex cursor-pointer items-center gap-2 text-sm text-[#374151] dark:text-slate-300"
-                >
-                  <input
-                    type="radio"
-                    name="sex"
-                    value={opt}
-                    checked={form.sex === opt}
-                    onChange={() => set("sex", opt)}
-                    className="h-4 w-4 accent-[#000080]"
-                  />
-                  {opt}
-                </label>
-              ))}
-            </div>
+            <select
+              value={form.sex}
+              onChange={(e) => set("sex", e.target.value)}
+              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0 cursor-pointer"
+              required
+            >
+              <option value="">—</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
           </div>
 
           {/* Date of Birth */}
-          <div>
-            <label className="block text-[13px] font-bold text-[#000000] dark:text-slate-200">
-              Date of Birth: <span className="text-red-500">*</span>
+          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
+            <label className="shrink-0 text-[13px] font-bold text-black dark:text-slate-100 whitespace-nowrap">
+              Date of birth:
             </label>
             <input
               type="date"
               value={form.dateOfBirth}
               onChange={(e) => set("dateOfBirth", e.target.value)}
-              className={ul}
+              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
               required
             />
           </div>
 
           {/* Naming Ceremony Date */}
-          <div>
-            <label className="block text-[13px] font-bold text-[#000000] dark:text-slate-200">
-              Naming Ceremony Date: <span className="text-red-500">*</span>
+          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
+            <label className="shrink-0 text-[13px] font-bold text-black dark:text-slate-100 whitespace-nowrap">
+              Naming ceremony date:
             </label>
             <input
               type="date"
               value={form.namingCeremonyDate}
               onChange={(e) => set("namingCeremonyDate", e.target.value)}
-              className={ul}
+              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
               required
             />
           </div>
 
           {/* Phone Number */}
-          <div>
-            <label className="block text-[13px] font-bold text-[#000000] dark:text-slate-200">
-              Phone Number of Parent: <span className="text-red-500">*</span>
+          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
+            <label className="shrink-0 text-[13px] font-bold text-black dark:text-slate-100 whitespace-nowrap">
+              Phone number of Parent:
             </label>
             <input
               type="tel"
               value={form.phoneNumber}
               onChange={(e) => set("phoneNumber", e.target.value)}
               onBlur={() => touch("phoneNumber")}
-              className={ul}
+              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
               required
             />
           </div>
 
-          {/* Church handle naming */}
-          <div>
-            <label className="block text-[13px] font-bold text-[#000000] dark:text-slate-200">
-              Do you want the Church to handle the naming ceremony?{" "}
-              <span className="text-red-500">*</span>
-            </label>
-            <div className="mt-2 flex gap-8">
+          {/* Church handle naming ceremony + House Fellowship Centre */}
+          <div className="space-y-2">
+            <p className="text-[13px] font-bold text-black dark:text-slate-100">
+              Do you want the Church to handle the naming ceremony?
+            </p>
+            <div className="flex items-center gap-6">
               {["Yes", "No"].map((opt) => (
                 <label
                   key={opt}
-                  className="flex cursor-pointer items-center gap-2 text-sm text-[#374151] dark:text-slate-300"
+                  className="flex items-center gap-1.5 text-[13px] font-bold text-black dark:text-slate-100 cursor-pointer"
                 >
                   <input
                     type="radio"
@@ -275,52 +249,49 @@ export default function BabyChristeningPage() {
                     onChange={() => set("churchHandleNaming", opt)}
                     className="h-4 w-4 accent-[#000080]"
                   />
-                  {opt}
+                  {opt} [ ]
                 </label>
               ))}
             </div>
-          </div>
-
-          {/* House Fellowship Centre */}
-          <div>
-            <label className="block text-[13px] font-bold text-[#000000] dark:text-slate-200">
-              House Fellowship Centre: <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={form.houseFellowshipCentre}
-              onChange={(e) => set("houseFellowshipCentre", e.target.value)}
-              onBlur={() => touch("houseFellowshipCentre")}
-              className={ul}
-              required
-            />
+            {/* House Fellowship Centre on same section */}
+            <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5 mt-2">
+              <label className="shrink-0 text-[13px] font-bold text-black dark:text-slate-100 whitespace-nowrap">
+                House Fellowship Centre:
+              </label>
+              <input
+                type="text"
+                value={form.houseFellowshipCentre}
+                onChange={(e) => set("houseFellowshipCentre", e.target.value)}
+                onBlur={() => touch("houseFellowshipCentre")}
+                className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
+                required
+              />
+            </div>
           </div>
 
           {/* House Leader & Signature */}
-          <div>
-            <label className="block text-[13px] font-bold text-[#000000] dark:text-slate-200">
-              House Leader &amp; Signature: <span className="text-red-500">*</span>
+          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
+            <label className="shrink-0 text-[13px] font-bold text-black dark:text-slate-100 whitespace-nowrap">
+              House Leader &amp; Signature:
             </label>
             <input
               type="text"
               value={form.houseLeader}
               onChange={(e) => set("houseLeader", e.target.value)}
               onBlur={() => touch("houseLeader")}
-              className={ul}
+              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
               required
             />
           </div>
 
           {/* Note */}
-          <div className="rounded-md border border-[#E5E7EB] dark:border-slate-700 bg-[#FAFAFA] dark:bg-slate-700/30 px-4 py-3">
-            <p className="text-[12.5px] italic text-[#374151] dark:text-slate-400">
-              <span className="font-semibold not-italic">Note:</span> The second Sunday of the
-              month is Baby Dedication Sunday: please notify the Church as soon as you are ready
-              to dedicate the baby.
-            </p>
-          </div>
+          <p className="text-[12.5px] italic text-[#374151] dark:text-slate-400 pt-4">
+            <span className="font-semibold not-italic">Note:</span> The second Sunday of the month
+            is Baby Dedication Sunday: please notify the Church as soon as you are ready to dedicate
+            the baby.
+          </p>
 
-          <div className="flex items-center justify-end gap-3 pt-1">
+          <div className="flex items-center justify-end gap-3 pt-3">
             <Button variant="secondary" type="button" onClick={() => router.push("/requests")}>
               Cancel
             </Button>
@@ -330,13 +301,13 @@ export default function BabyChristeningPage() {
           </div>
         </form>
 
-        {/* Footer colour bar */}
-        <div className="flex h-4">
-          <div className="flex-1 bg-[#CC0000]"/>
-          <div className="w-3 bg-black"/>
-          <div className="flex-1 bg-[#FF007F]"/>
-          <div className="w-3 bg-black"/>
-          <div className="flex-1 bg-[#CC0000]"/>
+        {/* ── Footer colour bar — black bg + pink blocks ─────────────────── */}
+        <div className="flex h-12 bg-black items-stretch gap-0 p-2">
+          <div className="flex-1 bg-[#FF007F]" />
+          <div className="w-3 bg-black" />
+          <div className="flex-1 bg-[#FF007F]" />
+          <div className="w-3 bg-black" />
+          <div className="flex-1 bg-[#FF007F]" />
         </div>
       </div>
     </DashboardLayout>
