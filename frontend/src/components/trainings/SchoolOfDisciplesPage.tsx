@@ -31,7 +31,7 @@ import {
   BookOpen, Phone, Mail, RefreshCw, Award, Users,
   CheckCircle, Clock, Star, ChevronDown, X, MessageSquare,
   CalendarCheck, BookCheck, ClipboardList, PlusCircle, FileText, Eye,
-  CalendarPlus, BarChart3, Upload, Loader2, DollarSign, Hash,
+  CalendarPlus, BarChart3, Upload, Loader2, Hash,
 } from "lucide-react";
 
 const ACCENT   = "#D97706";
@@ -1362,7 +1362,7 @@ function StudentCard({
           onClick={() => onFeesPaid(student)}
           className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-2 py-1.5 text-xs font-medium text-[#374151] dark:text-slate-300 transition-colors hover:border-green-600 hover:text-green-600"
         >
-          <DollarSign className="h-3 w-3" />
+          <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1 }}>₦</span>
           Fees
         </button>
         <button
@@ -1758,7 +1758,7 @@ export default function SchoolOfDisciplesPage() {
                   onClick={() => handleMarkFormAsPaid([...selected])}
                   className="flex items-center gap-2 rounded-lg bg-[#059669] px-3 py-2 text-xs font-semibold text-white hover:bg-[#047857]"
                 >
-                  <DollarSign className="h-3.5 w-3.5" />
+                  <span style={{ fontSize: 13, fontWeight: 700, lineHeight: 1 }}>₦</span>
                   Mark Form Paid
                 </button>
               </>

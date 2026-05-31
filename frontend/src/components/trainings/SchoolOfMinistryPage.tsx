@@ -14,7 +14,7 @@ import {
 } from "@/lib/api";
 import {
   BookOpen, Phone, RefreshCw, PlusCircle, FileText, Users,
-  CheckCircle, MessageSquare, DollarSign, X, GraduationCap,
+  CheckCircle, MessageSquare, X, GraduationCap,
 } from "lucide-react";
 
 const ACCENT    = "#059669";
@@ -505,7 +505,7 @@ export default function SchoolOfMinistryPage() {
                           title="Update Fees Paid"
                           className="rounded-lg p-1.5 hover:bg-green-50 transition-colors"
                         >
-                          <DollarSign className="h-3.5 w-3.5 text-[#059669]" />
+                          <span style={{ fontSize: 13, fontWeight: 700, color: "#059669", lineHeight: 1 }}>₦</span>
                         </button>
                       </div>
                     </td>
