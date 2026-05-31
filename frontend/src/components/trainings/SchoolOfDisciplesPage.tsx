@@ -10,6 +10,9 @@ import {
   searchSchoolOfDisciples,
   markSodAsGraduated,
   giveSodOfficialRemark,
+  updateSodFeesPaid,
+  markSodFormAsPaid,
+  updateSodAdmissionNumber,
   getTrainingEvents,
   createAttendanceRecord,
   getAttendanceSheet,
@@ -28,7 +31,7 @@ import {
   BookOpen, Phone, Mail, RefreshCw, Award, Users,
   CheckCircle, Clock, Star, ChevronDown, X, MessageSquare,
   CalendarCheck, BookCheck, ClipboardList, PlusCircle, FileText, Eye,
-  CalendarPlus, BarChart3, Upload, Loader2,
+  CalendarPlus, BarChart3, Upload, Loader2, DollarSign, Hash,
 } from "lucide-react";
 
 const ACCENT   = "#D97706";
@@ -1032,6 +1035,152 @@ function RemarkModal({
   );
 }
 
+// ─── Fees Paid Modal ──────────────────────────────────────────────────────────
+function FeesPaidModal({
+  student,
+  onClose,
+  onSave,
+}: {
+  student: SchoolOfDisciplesResponse;
+  onClose: () => void;
+  onSave: (id: string, fees: number) => Promise<void>;
+}) {
+  const [amount, setAmount] = useState(String(student.feesPaid ?? ""));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSave = async () => {
+    const val = Number(amount);
+    if (isNaN(val) || val < 0) { setError("Please enter a valid amount."); return; }
+    setSaving(true);
+    setError("");
+    try {
+      await onSave(student.id, val);
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update fees paid.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-800 shadow-xl">
+        <div className="flex items-center justify-between border-b border-[#E5E7EB] dark:border-slate-700 px-5 py-4">
+          <div>
+            <h2 className="text-base font-bold text-[#111827] dark:text-slate-100">Update Fees Paid</h2>
+            <p className="text-xs text-[#6B7280] dark:text-slate-400">{fullName(student)}</p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-[#F3F4F6] dark:bg-slate-700/30">
+            <X className="h-4 w-4 text-[#6B7280] dark:text-slate-400" />
+          </button>
+        </div>
+        <div className="p-5">
+          <label className="mb-1.5 block text-xs font-semibold text-[#374151] dark:text-slate-300">Amount Paid (₦)</label>
+          <input
+            type="number"
+            min="0"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="e.g. 5000"
+            className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2.5 text-sm text-[#111827] dark:text-slate-100 focus:border-[#D97706] focus:outline-none bg-white dark:bg-slate-900"
+          />
+          {student.feesPaid != null && (
+            <p className="mt-1.5 text-xs text-[#9CA3AF] dark:text-slate-400">Current: ₦{student.feesPaid.toLocaleString()}</p>
+          )}
+          {student.paidForForm && (
+            <p className="mt-1 text-xs font-medium text-green-600">Form payment confirmed ✓</p>
+          )}
+          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+        </div>
+        <div className="flex justify-end gap-2 border-t border-[#E5E7EB] dark:border-slate-700 px-5 py-4">
+          <button onClick={onClose} className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-2 text-sm font-medium text-[#374151] dark:text-slate-300 hover:bg-[#F9FAFB]">
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            style={{ backgroundColor: ACCENT }}
+          >
+            {saving ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Admission Number Modal ────────────────────────────────────────────────────
+function AdmissionNumberModal({
+  student,
+  onClose,
+  onSave,
+}: {
+  student: SchoolOfDisciplesResponse;
+  onClose: () => void;
+  onSave: (id: string, admNo: string) => Promise<void>;
+}) {
+  const [admNo, setAdmNo] = useState(student.admissionNo ?? "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSave = async () => {
+    if (!admNo.trim()) { setError("Admission number cannot be empty."); return; }
+    setSaving(true);
+    setError("");
+    try {
+      await onSave(student.id, admNo.trim());
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update admission number.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-800 shadow-xl">
+        <div className="flex items-center justify-between border-b border-[#E5E7EB] dark:border-slate-700 px-5 py-4">
+          <div>
+            <h2 className="text-base font-bold text-[#111827] dark:text-slate-100">Update Admission Number</h2>
+            <p className="text-xs text-[#6B7280] dark:text-slate-400">{fullName(student)}</p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-[#F3F4F6] dark:bg-slate-700/30">
+            <X className="h-4 w-4 text-[#6B7280] dark:text-slate-400" />
+          </button>
+        </div>
+        <div className="p-5">
+          <label className="mb-1.5 block text-xs font-semibold text-[#374151] dark:text-slate-300">Admission Number</label>
+          <input
+            type="text"
+            value={admNo}
+            onChange={(e) => setAdmNo(e.target.value)}
+            placeholder="e.g. SOD/2024/001"
+            className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2.5 text-sm text-[#111827] dark:text-slate-100 focus:border-[#D97706] focus:outline-none bg-white dark:bg-slate-900"
+          />
+          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+        </div>
+        <div className="flex justify-end gap-2 border-t border-[#E5E7EB] dark:border-slate-700 px-5 py-4">
+          <button onClick={onClose} className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-2 text-sm font-medium text-[#374151] dark:text-slate-300 hover:bg-[#F9FAFB]">
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            style={{ backgroundColor: ACCENT }}
+          >
+            {saving ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Attendance Mini-Summary (shown on card) ──────────────────────────────────
 function AttendanceSummaryBar({ student }: { student: SchoolOfDisciplesResponse }) {
   const classAttended = new Set((student.classAttendance ?? []).map((r) => r.classNumber));
@@ -1070,6 +1219,8 @@ function StudentCard({
   onRemark,
   onAttendance,
   onViewForm,
+  onFeesPaid,
+  onAdmissionNumber,
 }: {
   student: SchoolOfDisciplesResponse;
   selected: boolean;
@@ -1077,6 +1228,8 @@ function StudentCard({
   onRemark: (s: SchoolOfDisciplesResponse) => void;
   onAttendance: (s: SchoolOfDisciplesResponse) => void;
   onViewForm: (id: string) => void;
+  onFeesPaid: (s: SchoolOfDisciplesResponse) => void;
+  onAdmissionNumber: (s: SchoolOfDisciplesResponse) => void;
 }) {
   const bg = avatarColor(student.id);
   const phone = student.phoneNumber
@@ -1182,20 +1335,42 @@ function StudentCard({
         <p className="mt-0.5 text-[10px] font-medium text-green-600">Graduated {fmtDate(student.graduationDate)}</p>
       )}
 
-      <div className="mt-3 flex gap-2">
+      {/* Fees paid badge */}
+      {student.feesPaid != null && (
+        <div className="mt-2 rounded-lg bg-green-50 px-2.5 py-1.5 text-[10px] text-green-700">
+          <span className="font-semibold">Fees Paid:</span> ₦{student.feesPaid.toLocaleString()}
+          {student.paidForForm && <span className="ml-1.5 font-semibold">(Form ✓)</span>}
+        </div>
+      )}
+
+      <div className="mt-3 grid grid-cols-2 gap-1.5">
         <button
           onClick={() => onAttendance(student)}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-[#374151] dark:text-slate-300 transition-colors hover:border-[#D97706] hover:text-[#D97706]"
+          className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-2 py-1.5 text-xs font-medium text-[#374151] dark:text-slate-300 transition-colors hover:border-[#D97706] hover:text-[#D97706]"
         >
           <CalendarCheck className="h-3 w-3" />
           Attendance
         </button>
         <button
           onClick={() => onRemark(student)}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-[#374151] dark:text-slate-300 transition-colors hover:border-[#D97706] hover:text-[#D97706]"
+          className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-2 py-1.5 text-xs font-medium text-[#374151] dark:text-slate-300 transition-colors hover:border-[#D97706] hover:text-[#D97706]"
         >
           <MessageSquare className="h-3 w-3" />
           {student.officialRemarks ? "Edit Remark" : "Remark"}
+        </button>
+        <button
+          onClick={() => onFeesPaid(student)}
+          className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-2 py-1.5 text-xs font-medium text-[#374151] dark:text-slate-300 transition-colors hover:border-green-600 hover:text-green-600"
+        >
+          <DollarSign className="h-3 w-3" />
+          Fees
+        </button>
+        <button
+          onClick={() => onAdmissionNumber(student)}
+          className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-2 py-1.5 text-xs font-medium text-[#374151] dark:text-slate-300 transition-colors hover:border-blue-600 hover:text-blue-600"
+        >
+          <Hash className="h-3 w-3" />
+          Adm No.
         </button>
       </div>
       <button
@@ -1222,6 +1397,8 @@ export default function SchoolOfDisciplesPage() {
   const [graduating,            setGraduating]            = useState(false);
   const [remarkStudent,         setRemarkStudent]         = useState<SchoolOfDisciplesResponse | null>(null);
   const [attendanceStudent,     setAttendanceStudent]     = useState<SchoolOfDisciplesResponse | null>(null);
+  const [feesStudent,           setFeesStudent]           = useState<SchoolOfDisciplesResponse | null>(null);
+  const [admNoStudent,          setAdmNoStudent]          = useState<SchoolOfDisciplesResponse | null>(null);
   const [successMsg,            setSuccessMsg]            = useState("");
   const [activeTab,             setActiveTab]             = useState<Tab>("students");
   const [showCreateEventModal,  setShowCreateEventModal]  = useState(false);
@@ -1335,6 +1512,37 @@ export default function SchoolOfDisciplesPage() {
     await load(setFilter);
   };
 
+  const handleSaveFees = async (id: string, fees: number) => {
+    try {
+      await updateSodFeesPaid(id, fees);
+      flash("Fees paid updated.");
+      setAllStudents((prev) => prev.map((s) => s.id === id ? { ...s, feesPaid: fees } : s));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update fees.");
+    }
+  };
+
+  const handleSaveAdmissionNumber = async (id: string, admNo: string) => {
+    try {
+      await updateSodAdmissionNumber(id, admNo);
+      flash("Admission number updated.");
+      setAllStudents((prev) => prev.map((s) => s.id === id ? { ...s, admissionNo: admNo } : s));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update admission number.");
+    }
+  };
+
+  const handleMarkFormAsPaid = async (ids: string[]) => {
+    try {
+      await markSodFormAsPaid(ids);
+      flash(`${ids.length} form${ids.length > 1 ? "s" : ""} marked as paid.`);
+      setAllStudents((prev) => prev.map((s) => ids.includes(s.id) ? { ...s, paidForForm: true } : s));
+      setSelected(new Set());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to mark forms as paid.");
+    }
+  };
+
   const handleSearch = async () => {
     if (!search.trim()) { await load(setFilter); return; }
     setLoading(true);
@@ -1370,6 +1578,20 @@ export default function SchoolOfDisciplesPage() {
           student={attendanceStudent}
           onClose={() => setAttendanceStudent(null)}
           onSave={handleSaveAttendance}
+        />
+      )}
+      {feesStudent && (
+        <FeesPaidModal
+          student={feesStudent}
+          onClose={() => setFeesStudent(null)}
+          onSave={handleSaveFees}
+        />
+      )}
+      {admNoStudent && (
+        <AdmissionNumberModal
+          student={admNoStudent}
+          onClose={() => setAdmNoStudent(null)}
+          onSave={handleSaveAdmissionNumber}
         />
       )}
       {showCreateEventModal && (
@@ -1523,14 +1745,23 @@ export default function SchoolOfDisciplesPage() {
             </div>
 
             {selected.size > 0 && (
-              <button
-                onClick={handleGraduate}
-                disabled={graduating}
-                className="flex items-center gap-2 rounded-lg bg-[#16A34A] px-3 py-2 text-xs font-semibold text-white hover:bg-[#15803D] disabled:opacity-50"
-              >
-                <Award className="h-3.5 w-3.5" />
-                {graduating ? "Graduating…" : `Graduate ${selected.size} selected`}
-              </button>
+              <>
+                <button
+                  onClick={handleGraduate}
+                  disabled={graduating}
+                  className="flex items-center gap-2 rounded-lg bg-[#16A34A] px-3 py-2 text-xs font-semibold text-white hover:bg-[#15803D] disabled:opacity-50"
+                >
+                  <Award className="h-3.5 w-3.5" />
+                  {graduating ? "Graduating…" : `Graduate ${selected.size}`}
+                </button>
+                <button
+                  onClick={() => handleMarkFormAsPaid([...selected])}
+                  className="flex items-center gap-2 rounded-lg bg-[#059669] px-3 py-2 text-xs font-semibold text-white hover:bg-[#047857]"
+                >
+                  <DollarSign className="h-3.5 w-3.5" />
+                  Mark Form Paid
+                </button>
+              </>
             )}
 
             <span className="ml-auto text-sm text-[#6B7280] dark:text-slate-400">
@@ -1586,6 +1817,8 @@ export default function SchoolOfDisciplesPage() {
                   onRemark={setRemarkStudent}
                   onAttendance={setAttendanceStudent}
                   onViewForm={(id) => router.push(`/trainings/sod/form?mode=view&id=${id}`)}
+                  onFeesPaid={setFeesStudent}
+                  onAdmissionNumber={setAdmNoStudent}
                 />
               ))}
             </div>
