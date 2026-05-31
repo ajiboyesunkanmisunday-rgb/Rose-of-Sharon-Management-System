@@ -133,31 +133,26 @@ function buildAnniversaryRows(users: UserResponse[]): ExportRow[] {
 
 async function fetchImageData(url: string): Promise<{ buffer: ArrayBuffer; ext: string } | null> {
   if (!url) return null;
-  const candidates = [
-    `/.netlify/functions/img-proxy?url=${encodeURIComponent(url)}`,
-    url,
-  ];
-  for (const u of candidates) {
-    try {
-      const r = await fetch(u);
-      if (!r.ok) continue;
-      const buf = await r.arrayBuffer();
-      const ct = r.headers.get("content-type") ?? "";
-      let ext = "jpg";
-      if (ct.includes("png")) ext = "png";
-      else if (ct.includes("gif")) ext = "gif";
-      else if (ct.includes("webp")) ext = "webp";
-      else {
-        const urlPath = url.split("?")[0].toLowerCase();
-        if (urlPath.endsWith(".png")) ext = "png";
-        else if (urlPath.endsWith(".gif")) ext = "gif";
-        else if (urlPath.endsWith(".webp")) ext = "webp";
-        else ext = "jpg";
-      }
-      return { buffer: buf, ext };
-    } catch { continue; }
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const buf = await r.arrayBuffer();
+    const ct = r.headers.get("content-type") ?? "";
+    let ext = "jpg";
+    if (ct.includes("png")) ext = "png";
+    else if (ct.includes("gif")) ext = "gif";
+    else if (ct.includes("webp")) ext = "webp";
+    else {
+      const urlPath = url.split("?")[0].toLowerCase();
+      if (urlPath.endsWith(".png")) ext = "png";
+      else if (urlPath.endsWith(".gif")) ext = "gif";
+      else if (urlPath.endsWith(".webp")) ext = "webp";
+      else ext = "jpg";
+    }
+    return { buffer: buf, ext };
+  } catch {
+    return null;
   }
-  return null;
 }
 
 /** Convert a celebrant's full name to a safe filename stem, e.g. "Mr John Doe" → "Mr_John_Doe" */
