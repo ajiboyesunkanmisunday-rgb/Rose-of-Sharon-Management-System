@@ -199,7 +199,7 @@ export default function SchoolOfMinistryPage() {
   const [error,    setError]    = useState("");
   const [search,   setSearch]   = useState("");
   const [page,     setPage]     = useState(1);
-  const [somSet,   setSomSet]   = useState(1);
+  const [somSet,   setSomSet]   = useState(String(new Date().getFullYear()));
 
   // Selection
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -210,7 +210,7 @@ export default function SchoolOfMinistryPage() {
   const [graduating,     setGraduating]     = useState(false);
   const [actionError,    setActionError]    = useState("");
 
-  const load = useCallback(async (pg: number, set?: number) => {
+  const load = useCallback(async (pg: number, set?: string) => {
     setLoading(true);
     setError("");
     try {
@@ -321,7 +321,7 @@ export default function SchoolOfMinistryPage() {
       {error && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error}{" "}
-          <button onClick={() => load(page)} className="font-medium underline">Retry</button>
+          <button onClick={() => load(page, somSet)} className="font-medium underline">Retry</button>
         </div>
       )}
       {actionError && (
@@ -330,26 +330,26 @@ export default function SchoolOfMinistryPage() {
         </div>
       )}
 
-      {/* Set selector */}
+      {/* Set selector — year-based (matches what the application form submits) */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium text-[#374151] dark:text-slate-300">Set:</span>
-        {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+        <span className="text-sm font-medium text-[#374151] dark:text-slate-300">Set (Year):</span>
+        {Array.from({ length: 8 }, (_, i) => String(new Date().getFullYear() - 3 + i)).map((yr) => (
           <button
-            key={n}
+            key={yr}
             onClick={() => {
-              setSomSet(n);
+              setSomSet(yr);
               setPage(1);
               setSearch("");
               setSelected(new Set());
             }}
             className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-              somSet === n
+              somSet === yr
                 ? "text-white"
                 : "border border-[#E5E7EB] dark:border-slate-600 text-[#6B7280] dark:text-slate-400"
             }`}
-            style={somSet === n ? { backgroundColor: ACCENT } : undefined}
+            style={somSet === yr ? { backgroundColor: ACCENT } : undefined}
           >
-            {n}
+            {yr}
           </button>
         ))}
       </div>
