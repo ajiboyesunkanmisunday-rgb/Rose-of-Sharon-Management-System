@@ -1,13 +1,13 @@
 /**
  * ROSMS API Service
- * Base URL: http://137.184.72.16:6001
- * Sprint 1 endpoints: User Management, Settings, Groups, Events
+ * Base URL: https://api.rccgros.org
  */
 
-// Empty string = relative URL, so requests go to /api/...
-// Netlify proxies /api/* → http://137.184.72.16:6001/api/* server-side,
-// avoiding the browser's mixed-content (HTTPS→HTTP) block.
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+// Direct requests to the backend — no Netlify proxy in the middle.
+// The backend has CORS configured (Access-Control-Allow-Origin: *) so
+// the browser can call it directly from any Netlify deployment without
+// any team-member-specific proxy configuration.
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.rccgros.org";
 
 // ─── Token helpers ─────────────────────────────────────────────────────────────
 
@@ -137,14 +137,6 @@ async function apiFetchRaw<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  // All /api/* requests are served as relative URLs so Netlify's CDN
-  // redirect rule in netlify.toml transparently proxies them to
-  // https://api.rccgros.org/api/:splat — no CORS issues, no Origin header
-  // forwarded to the backend. Works identically for every team member's
-  // deployment (production site, preview deploys, branch deploys).
-  //
-  // If BASE_URL is set (local development), requests go directly to that host.
-  // Requests to /.netlify/functions/* (e.g. login) call the function directly.
   const fetchUrl = `${BASE_URL}${path}`;
   const fetchMethod = method;
 
@@ -431,13 +423,10 @@ export interface LoginRequest {
 }
 
 export async function loginUser(body: LoginRequest): Promise<UserResponse> {
-  // Login is routed through netlify/functions/login.js which:
-  //  - proxies the request to api.rccgros.org server-to-server
-  //  - reads the Authorization response header on the server
-  //  - injects the raw token as `_token` in the JSON body before returning
-  // This works for every Netlify deployment (production, preview, branch) with
-  // no hardcoded URLs.
-  const { data, headers } = await apiFetchRaw<UserResponse & { _token?: string }>(
+  // Direct request to api.rccgros.org — no Netlify proxy.
+  // The backend sets Access-Control-Expose-Headers: Authorization so the
+  // browser can read the JWT from the response header directly.
+  const { data, headers } = await apiFetchRaw<UserResponse>(
     "/api/v1/users/login",
     {
       method: "POST",
@@ -445,46 +434,15 @@ export async function loginUser(body: LoginRequest): Promise<UserResponse> {
     },
   );
 
-  const isJwt = (v: unknown): v is string =>
-    typeof v === "string" && v.split(".").length === 3 && v.startsWith("eyJ");
-
-  // 1. Prefer the `_token` field injected by login.js — most reliable path.
-  let token: string | undefined;
-  if (data._token) {
-    token = data._token;
-    // Remove the synthetic field so it doesn't pollute the UserResponse object
-    delete (data as unknown as Record<string, unknown>)["_token"];
-  }
-
-  // 2. Deep-scan the response body for any JWT-like string value.
-  if (!token) {
-    const extractJwt = (obj: Record<string, unknown>): string | undefined => {
-      for (const val of Object.values(obj)) {
-        if (isJwt(val)) return val;
-        if (val && typeof val === "object" && !Array.isArray(val)) {
-          const found = extractJwt(val as Record<string, unknown>);
-          if (found) return found;
-        }
-      }
-      return undefined;
-    };
-    token = extractJwt(data as unknown as Record<string, unknown>);
-  }
-
-  // 3. Fall back to the Authorization response header (works when CDN proxy
-  //    forwards it; may not be available in all environments).
-  if (!token) {
-    const authHeader = headers.get("authorization") ?? headers.get("Authorization") ?? "";
-    const candidate = authHeader.replace(/^Bearer\s+/i, "").trim();
-    if (isJwt(candidate)) token = candidate;
-    else if (candidate) token = candidate; // non-JWT session token — pass through
-  }
+  // Read the token from the Authorization response header.
+  // Backend exposes it via Access-Control-Expose-Headers: Authorization.
+  const authHeader = headers.get("authorization") ?? headers.get("Authorization") ?? "";
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
 
   if (token) {
     setToken(token);
   } else if (data.id) {
-    // Backend returned a valid user but no token.  Store a session marker so
-    // the UI stays accessible until the backend consistently returns a token.
+    // Backend returned a valid user but no token — store a session marker.
     setToken(`session_${data.id}`);
   }
 

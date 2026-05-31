@@ -17,26 +17,6 @@
   to     = "/login"
   status = 302
 
-# Login is routed through a thin serverless function (login.js) so the JWT
-# from the Authorization response header is reliably captured and injected
-# into the response body — this works for every team deployment without any
-# hardcoded URLs.  Must appear BEFORE the catch-all /api/* rule.
-[[redirects]]
-  from  = "/api/v1/users/login"
-  to    = "/.netlify/functions/login"
-  status = 200
-  force  = true
-
-# All other API calls are routed through Netlify's CDN to api.rccgros.org.
-# The browser makes same-origin requests (/api/...) and Netlify proxies
-# them server-to-server — no CORS issues, no mixed-content, works for
-# every team deployment (production, preview, branch deploys).
-[[redirects]]
-  from  = "/api/*"
-  to    = "https://api.rccgros.org/api/:splat"
-  status = 200
-  force  = true
-
 # Forgot-password — static page, ensure trailing-slash variant is served too
 [[redirects]]
   from   = "/forgot-password/"
