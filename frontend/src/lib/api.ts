@@ -3911,8 +3911,8 @@ export async function getFollowupAttentionRate(
 // ─── Media — large file upload ────────────────────────────────────────────────
 
 /**
- * POST /api/v1/media/large — upload large media (e.g. videos with thumbnails).
- * Same multipart pattern as uploadMedia but targets the /large endpoint.
+ * POST /api/v1/media/large — upload large media (videos, sermons, podcasts).
+ * Uses XMLHttpRequest so callers can track upload progress via onProgress.
  */
 export async function uploadLargeMedia(fields: {
   title: string;
@@ -3924,6 +3924,8 @@ export async function uploadLargeMedia(fields: {
   speaker?: string;
   date?: string;
   tags?: string[];
+  /** Called repeatedly during upload with 0–100 percentage. */
+  onProgress?: (pct: number) => void;
 }): Promise<MediaResponse> {
   const token = getToken();
   if (token && isTokenExpired(token)) {
@@ -3932,9 +3934,7 @@ export async function uploadLargeMedia(fields: {
     throw new Error("Session expired. Please log in again.");
   }
 
-  // Build metadata as query params — same pattern as the working uploadMedia function.
-  // /api/v1/media/large has persistently returned 400 (empty body, text/plain) regardless
-  // of format, so we try it first and fall back to /api/v1/media on 400.
+  // Build query-string metadata (matches /api/v1/media/large OpenAPI spec)
   const params = new URLSearchParams({
     title:       fields.title,
     type:        fields.category,
@@ -3942,54 +3942,63 @@ export async function uploadLargeMedia(fields: {
     size:        String(fields.file.size),
     isFromMedia: "true",
   });
-  if (fields.description) params.set("description", fields.description);
+  if (fields.description)  params.set("description", fields.description);
   if (fields.duration != null) params.set("duration", String(fields.duration));
-  if (fields.speaker) params.set("speaker", fields.speaker);
-  if (fields.date)    params.set("date",    fields.date);
-  if (fields.tags && fields.tags.length > 0) params.set("tags", fields.tags.join(","));
+  if (fields.speaker)      params.set("speaker",  fields.speaker);
+  if (fields.date)         params.set("date",     fields.date);
+  // Send tags as repeated params so Spring binds them as List<String>
+  if (fields.tags && fields.tags.length > 0) {
+    fields.tags.forEach((tag) => params.append("tags", tag));
+  }
 
   const form = new FormData();
   form.append("multipartFile", fields.file);
   if (fields.thumbnail) form.append("thumbnailMultipartFile", fields.thumbnail);
 
-  const headers: Record<string, string> = {};
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return new Promise<MediaResponse>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `/api/v1/media/large?${params.toString()}`);
+    if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
 
-  // Try the dedicated /large endpoint first; if it returns 400 (backend not yet
-  // fully configured), transparently fall back to the regular /media endpoint.
-  let response = await fetch(`/api/v1/media/large?${params.toString()}`, {
-    method: "POST",
-    headers,
-    body: form,
+    // Upload progress events
+    if (fields.onProgress && xhr.upload) {
+      xhr.upload.addEventListener("progress", (ev) => {
+        if (ev.lengthComputable) {
+          fields.onProgress!(Math.round((ev.loaded / ev.total) * 100));
+        }
+      });
+    }
+
+    xhr.onload = () => {
+      if (xhr.status === 401) {
+        removeToken();
+        if (typeof window !== "undefined") window.location.href = "/login";
+        reject(new Error("Session expired. Please log in again."));
+        return;
+      }
+      if (xhr.status < 200 || xhr.status >= 300) {
+        let msg = `Upload failed (${xhr.status})`;
+        try {
+          const b = JSON.parse(xhr.responseText);
+          msg = b?.message ?? b?.error ?? xhr.responseText ?? msg;
+        } catch {
+          if (xhr.responseText) msg = xhr.responseText;
+        }
+        reject(new Error(msg));
+        return;
+      }
+      try {
+        resolve(xhr.responseText ? (JSON.parse(xhr.responseText) as MediaResponse) : ({} as MediaResponse));
+      } catch {
+        resolve({} as MediaResponse);
+      }
+    };
+
+    xhr.onerror = () => reject(new Error("Upload failed — please check your connection and try again."));
+    xhr.ontimeout = () => reject(new Error("Upload timed out — the file may be too large or your connection is slow."));
+
+    xhr.send(form);
   });
-
-  if (response.status === 400) {
-    // /large endpoint is not working — retry against the standard /media endpoint.
-    console.warn("[uploadLargeMedia] /api/v1/media/large returned 400; retrying via /api/v1/media");
-    const form2 = new FormData();
-    form2.append("multipartFile", fields.file);
-    response = await fetch(`/api/v1/media?${params.toString()}`, {
-      method: "POST",
-      headers,
-      body: form2,
-    });
-  }
-
-  if (response.status === 401) {
-    removeToken();
-    if (typeof window !== "undefined") window.location.href = "/login";
-    throw new Error("Session expired. Please log in again.");
-  }
-  if (!response.ok) {
-    let msg = `Upload failed (${response.status})`;
-    try {
-      const raw = await response.text();
-      if (raw) { try { const b = JSON.parse(raw); msg = b?.message ?? raw; } catch { msg = raw; } }
-    } catch {}
-    throw new Error(msg);
-  }
-  const text = await response.text();
-  return text ? (JSON.parse(text) as MediaResponse) : ({} as MediaResponse);
 }
 
 // ─── Voting / Face of the Month ────────────────────────────────────────────
