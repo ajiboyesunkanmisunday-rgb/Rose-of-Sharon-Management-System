@@ -92,6 +92,7 @@ export default function UploadMediaPage() {
   const [youtubeLink,  setYoutubeLink]  = useState("");
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const [saving,       setSaving]       = useState(false);
+  const [uploadPct,    setUploadPct]    = useState<number | null>(null);
   const [error,        setError]        = useState("");
 
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -183,6 +184,7 @@ export default function UploadMediaPage() {
     }
 
     setSaving(true);
+    setUploadPct(null);
     setError("");
     try {
       const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
@@ -197,11 +199,10 @@ export default function UploadMediaPage() {
       };
 
       if (LARGE_MEDIA_CATEGORIES.has(category)) {
-        // Route large-media types (PODCAST, SERMON, VIDEOS) to the /large endpoint
-        // which has a higher server-side size limit
         await uploadLargeMedia({
           ...commonFields,
-          thumbnail: thumbnail ?? undefined,
+          thumbnail:   thumbnail ?? undefined,
+          onProgress:  setUploadPct,
         });
       } else {
         await uploadMedia(commonFields);
@@ -211,21 +212,11 @@ export default function UploadMediaPage() {
       const msg = err instanceof Error ? err.message : "Upload failed.";
       const fileMB = mediaFile ? (mediaFile.size / 1_048_576).toFixed(1) : null;
       const isSizeError =
-        msg === "FILE_TOO_LARGE_FOR_SERVER" ||
         msg.includes("413") ||
-        msg.includes("400") ||
         msg.toLowerCase().includes("too large") ||
         msg.toLowerCase().includes("payload");
 
-      if (isSizeError && LARGE_MEDIA_CATEGORIES.has(category)) {
-        // Both /large and /media returned 400 — the backend's multipart size limit is
-        // lower than the file being uploaded. Direct the user to the YouTube option.
-        setError(
-          `Upload failed${fileMB ? ` (file is ${fileMB} MB)` : ""} — the server rejected this file. ` +
-          `The backend's upload size limit may be too low for files this large. ` +
-          `Please use the YouTube / External Link option instead, or contact the backend team to raise the multipart size limit (spring.servlet.multipart.max-file-size).`,
-        );
-      } else if (isSizeError) {
+      if (isSizeError) {
         setError(
           `The server rejected the file${fileMB ? ` (${fileMB} MB)` : ""} — it exceeds the upload size limit. ` +
           `Please compress the file, or use the YouTube / External Link option instead.`,
@@ -233,6 +224,7 @@ export default function UploadMediaPage() {
       } else {
         setError(msg);
       }
+      setUploadPct(null);
       setSaving(false);
     }
   };
@@ -461,14 +453,37 @@ export default function UploadMediaPage() {
             </div>
           )}
 
+          {/* Upload progress bar — shown only while a large-media file is uploading */}
+          {saving && uploadPct !== null && (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-xs text-[#6B7280] dark:text-slate-400">
+                <span>Uploading…</span>
+                <span>{uploadPct}%</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-[#E5E7EB] dark:bg-slate-700">
+                <div
+                  className="h-full rounded-full bg-[#000080] transition-all duration-200"
+                  style={{ width: `${uploadPct}%` }}
+                />
+              </div>
+              <p className="text-xs text-[#9CA3AF] dark:text-slate-500">
+                Please wait — large files may take a few minutes.
+              </p>
+            </div>
+          )}
+
           <div className="flex items-center justify-end gap-3 pt-2">
-            <Button variant="secondary" type="button" onClick={() => router.push("/media")}>Cancel</Button>
+            <Button variant="secondary" type="button" onClick={() => router.push("/media")} disabled={saving}>Cancel</Button>
             <Button
               variant="primary"
               type="submit"
               disabled={saving || !title.trim() || !category || (!useYoutube && !mediaFile) || (useYoutube && !youtubeLink.trim()) || description.length > DESC_MAX_CHARS}
             >
-              {saving ? "Uploading…" : "Upload Media"}
+              {saving
+                ? uploadPct !== null
+                  ? `Uploading ${uploadPct}%…`
+                  : "Uploading…"
+                : "Upload Media"}
             </Button>
           </div>
         </form>
