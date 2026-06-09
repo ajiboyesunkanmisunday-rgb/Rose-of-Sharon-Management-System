@@ -11,6 +11,7 @@ import Modal from "@/components/ui/Modal";
 import { Users } from "lucide-react";
 import {
   getGroups,
+  searchGroups,
   createGroup,
   deleteGroupsBulk,
   type GroupResponse,
@@ -36,11 +37,13 @@ export default function GroupsPage() {
   const [saveError, setSaveError] = useState("");
   const [newGroup, setNewGroup] = useState({ name: "", description: "" });
 
-  const fetchGroups = useCallback(async (page: number) => {
+  const fetchGroups = useCallback(async (page: number, query = "") => {
     setLoading(true);
     setApiError("");
     try {
-      const res = await getGroups(page - 1, ITEMS_PER_PAGE);
+      const res = query.trim()
+        ? await searchGroups(query.trim(), page - 1, ITEMS_PER_PAGE)
+        : await getGroups(page - 1, ITEMS_PER_PAGE);
       setGroups(res.content);
       setTotalPages(res.totalPages || 1);
       setTotalItems(res.totalElements || 0);
@@ -53,26 +56,27 @@ export default function GroupsPage() {
   }, []);
 
   useEffect(() => {
-    fetchGroups(currentPage);
-  }, [currentPage, fetchGroups]);
+    fetchGroups(currentPage, search);
+  }, [currentPage, fetchGroups]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleSearch = () => setCurrentPage(1);
+  // Debounce search: re-fetch from backend 400 ms after the user stops typing
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setCurrentPage(1);
+      fetchGroups(1, search);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSearch = () => { setCurrentPage(1); fetchGroups(1, search); };
 
   const groupHeadName = (gh: GroupResponse["groupHead"]): string => {
     if (!gh) return "";
     return [gh.firstName, gh.middleName, gh.lastName].filter(Boolean).join(" ");
   };
 
-  const displayedGroups = search.trim()
-    ? groups.filter((g) => {
-        const q = search.toLowerCase();
-        return (
-          g.name.toLowerCase().includes(q) ||
-          (g.description ?? "").toLowerCase().includes(q) ||
-          groupHeadName(g.groupHead).toLowerCase().includes(q)
-        );
-      })
-    : groups;
+  // Results come directly from the backend (search or paginated list)
+  const displayedGroups = groups;
 
   const handleAddGroup = async () => {
     if (!newGroup.name.trim()) return;
