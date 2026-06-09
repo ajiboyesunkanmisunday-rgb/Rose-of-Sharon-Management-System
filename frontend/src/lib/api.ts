@@ -2118,7 +2118,9 @@ export async function uploadMedia(fields: {
 
   let response: Response;
   try {
-    response = await fetch(`/api/v1/media?${params.toString()}`, {
+    // Use BASE_URL (absolute) — relative URLs hit Netlify's proxy which has a
+    // 6 MB body limit and will reject any upload larger than that.
+    response = await fetch(`${BASE_URL}/api/v1/media?${params.toString()}`, {
       method: "POST",
       headers,
       body: form,
@@ -3957,7 +3959,9 @@ export async function uploadLargeMedia(fields: {
 
   return new Promise<MediaResponse>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", `/api/v1/media/large?${params.toString()}`);
+    // Use BASE_URL (absolute) — relative URLs go through Netlify's proxy which
+    // rejects request bodies larger than 6 MB before they reach the backend.
+    xhr.open("POST", `${BASE_URL}/api/v1/media/large?${params.toString()}`);
     if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
 
     // Upload progress events
