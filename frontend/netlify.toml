@@ -5,19 +5,6 @@
 [build.environment]
   NODE_VERSION = "18"
 
-# ── API proxy ────────────────────────────────────────────────────────────────
-# Forward all /api/* calls to the backend through Netlify's redirect proxy.
-# This keeps uploads same-origin from the browser's perspective, avoiding
-# CORS preflight failures on multipart POSTs (XHR + Authorization header).
-# Netlify redirect proxies have NO body-size limit (unlike Netlify Functions
-# which cap at 6 MB), so large file uploads work without restriction.
-# Must be listed BEFORE any page-specific redirects so it matches first.
-[[redirects]]
-  from   = "/api/*"
-  to     = "https://api.rccgros.org/api/:splat"
-  status = 200
-  force  = true
-
 # Root path — Next.js static export does NOT generate out/index.html
 # because redirect() in page.tsx is a server-side call; Netlify needs
 # an explicit rule to redirect visitors to the login page.

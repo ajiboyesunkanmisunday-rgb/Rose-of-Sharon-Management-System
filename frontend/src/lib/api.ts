@@ -2118,10 +2118,8 @@ export async function uploadMedia(fields: {
 
   let response: Response;
   try {
-    // Use a relative URL so the request goes through the Netlify /api/* proxy
-    // rule (same-origin, no CORS preflight). The proxy forwards to api.rccgros.org
-    // and has no body-size limit, unlike Netlify Functions.
-    response = await fetch(`/api/v1/media?${params.toString()}`, {
+    // Absolute URL — goes directly to api.rccgros.org, bypassing Netlify entirely.
+    response = await fetch(`${BASE_URL}/api/v1/media?${params.toString()}`, {
       method: "POST",
       headers,
       body: form,
@@ -3960,9 +3958,8 @@ export async function uploadLargeMedia(fields: {
 
   return new Promise<MediaResponse>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    // Relative URL — goes through the Netlify /api/* proxy rule (same-origin,
-    // no CORS preflight). The proxy streams to api.rccgros.org with no size limit.
-    xhr.open("POST", `/api/v1/media/large?${params.toString()}`);
+    // Absolute URL — goes directly to api.rccgros.org, bypassing Netlify.
+    xhr.open("POST", `${BASE_URL}/api/v1/media/large?${params.toString()}`);
     if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
 
     // Upload progress events
