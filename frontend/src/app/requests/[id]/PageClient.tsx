@@ -65,6 +65,7 @@ export default function RequestDetailPage() {
   const [currentStatus, setCurrentStatus] = useState("Received");
   const [currentAssignee, setCurrentAssignee] = useState("");
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [statusError, setStatusError] = useState("");
 
   const loadRequest = useCallback(async () => {
     if (!id || id.startsWith("req-")) return;
@@ -108,12 +109,13 @@ export default function RequestDetailPage() {
   const handleStatusChange = async (status: string) => {
     setShowStatusDropdown(false);
     setUpdatingStatus(true);
+    setStatusError("");
     try {
       const apiStatus = STATUS_API_MAP[status] ?? status;
       await changeRequestStatus(id, apiStatus);
       setCurrentStatus(status);
-    } catch {
-      // silently keep old status
+    } catch (err) {
+      setStatusError(err instanceof Error ? err.message : "Failed to update status. Please try again.");
     } finally {
       setUpdatingStatus(false);
     }
@@ -205,6 +207,11 @@ export default function RequestDetailPage() {
       {/* Status Section */}
       <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <h4 className="mb-4 text-sm font-bold text-[#111827] dark:text-slate-100">Status</h4>
+        {statusError && (
+          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-2 text-sm text-red-700 dark:text-red-400">
+            {statusError}
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-4">
           <span
             className={`rounded-full px-3 py-1 text-xs font-medium ${
