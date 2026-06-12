@@ -206,6 +206,11 @@
     Cache-Control = "no-store, no-cache, must-revalidate"
 
 [[redirects]]
+  from   = "/voting/:id/"
+  to     = "/voting/fotm-1/"
+  status = 200
+
+[[redirects]]
   from   = "/trainings/courses/:id/"
   to     = "/trainings/courses/course-1/"
   status = 200

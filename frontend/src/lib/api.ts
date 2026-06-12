@@ -4003,7 +4003,90 @@ export async function uploadLargeMedia(fields: {
   });
 }
 
-// ─── Voting / Face of the Month ────────────────────────────────────────────
+// ─── Face of the Month ──────────────────────────────────────────────────────
+
+export interface FaceOfTheMonthResponse {
+  id: string;
+  title: string;
+  votingStartTime?: string;
+  votingEndTime?: string;
+  totalVotes?: number;
+}
+
+export interface FaceOfTheMonthNominee {
+  id: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  email?: string;
+  profilePictureUrl?: string;
+  sex?: "MALE" | "FEMALE";
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+  dayOfBirth?: number;
+  monthOfBirth?: number;
+  maritalStatus?: string;
+  occupation?: string;
+  voteCount?: number;
+}
+
+export interface FaceOfTheMonthFullResponse {
+  id: string;
+  title: string;
+  votingStartTime?: string;
+  votingEndTime?: string;
+  nominees: FaceOfTheMonthNominee[];
+}
+
+export interface SetVoteTimeRequest {
+  startTime: string;
+  endTime: string;
+}
+
+export interface CastVoteRequest {
+  voterId: string;
+  votedFor: string;
+  category: string;
+}
+
+export async function getFaceOfTheMonths(pageNo = 0, pageSize = 10): Promise<CustomPageResponse<FaceOfTheMonthResponse>> {
+  return apiFetch<CustomPageResponse<FaceOfTheMonthResponse>>(`/api/v1/face-of-the-months?pageNo=${pageNo}&pageSize=${pageSize}`);
+}
+
+export async function generateFaceOfTheMonth(title: string): Promise<FaceOfTheMonthFullResponse> {
+  return apiFetch<FaceOfTheMonthFullResponse>("/api/v1/face-of-the-months", {
+    method: "POST",
+    body: JSON.stringify({ text: title }),
+  });
+}
+
+export async function getFaceOfTheMonth(id: string): Promise<FaceOfTheMonthFullResponse> {
+  return apiFetch<FaceOfTheMonthFullResponse>(`/api/v1/face-of-the-months/${id}`);
+}
+
+export async function approveFaceOfTheMonth(id: string, body: SetVoteTimeRequest): Promise<FaceOfTheMonthFullResponse> {
+  return apiFetch<FaceOfTheMonthFullResponse>(`/api/v1/face-of-the-months/${id}/approve`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function declineFaceOfTheMonth(id: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/face-of-the-months/${id}/decline`, { method: "PUT" });
+}
+
+export async function castVote(votingEventId: string, body: CastVoteRequest): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/voting/${votingEventId}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+// ─── Voting / Face of the Month (legacy) ────────────────────────────────────
 
 export interface VotingCategory {
   id: string;

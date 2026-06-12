@@ -2,667 +2,313 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
 import UserAvatar from "@/components/ui/UserAvatar";
+import { Trophy, ArrowLeft, CheckCircle, XCircle, Vote } from "lucide-react";
 import {
-  ChevronRight,
-  RefreshCw,
-  Trophy,
-} from "lucide-react";
-import {
-  getVotingCycle,
-  generateNominees,
-  approveNominees,
-  swapNominee,
-  scheduleVoting,
-  openVoting,
-  closeVoting,
-  extendVotingDeadline,
-  announceWinner,
-  getVotingResults,
-  type VotingCycle,
-  type VotingNominee,
-  type VotingResultsResponse,
+  getFaceOfTheMonth,
+  approveFaceOfTheMonth,
+  declineFaceOfTheMonth,
+  getStoredUser,
+  type FaceOfTheMonthFullResponse,
+  type FaceOfTheMonthNominee,
 } from "@/lib/api";
 
-const MONTHS = [
-  "January","February","March","April","May","June",
-  "July","August","September","October","November","December",
-];
+const inputClass =
+  "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none transition-colors focus:border-[#000080] focus:ring-1 focus:ring-[#000080] bg-white dark:bg-slate-800/50";
 
-const STATUS_ORDER = [
-  "DRAFT",
-  "NOMINEES_PENDING",
-  "NOMINEES_APPROVED",
-  "VOTING_OPEN",
-  "VOTING_CLOSED",
-  "WINNER_ANNOUNCED",
-] as const;
-
-const STATUS_LABEL: Record<string, string> = {
-  DRAFT:             "Draft",
-  NOMINEES_PENDING:  "Nominees Pending",
-  NOMINEES_APPROVED: "Nominees Approved",
-  VOTING_OPEN:       "Voting Open",
-  VOTING_CLOSED:     "Voting Closed",
-  WINNER_ANNOUNCED:  "Winner Announced",
-};
-
-const STATUS_BADGE_COLOR: Record<string, string> = {
-  DRAFT:             "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400",
-  NOMINEES_PENDING:  "bg-[#FEF9C3] dark:bg-yellow-900/30 text-[#CA8A04] dark:text-yellow-300",
-  NOMINEES_APPROVED: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
-  VOTING_OPEN:       "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
-  VOTING_CLOSED:     "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300",
-  WINNER_ANNOUNCED:  "bg-[#EDE9FE] dark:bg-purple-900/30 text-[#7C3AED] dark:text-purple-300",
-};
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function fmtDate(s?: any): string {
+function fmtDateTime(s?: string | null): string {
   if (!s) return "—";
-  if (Array.isArray(s)) {
-    const [year, month, day] = s as number[];
-    return new Date(year, month - 1, day).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-  }
-  const d = new Date(s as string);
+  const d = new Date(s);
   if (isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  return (
+    d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) +
+    " at " +
+    d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+  );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function fmtDateTime(s?: any): string {
-  if (!s) return "—";
-  if (Array.isArray(s)) {
-    const [year, month, day, hour = 0, minute = 0] = s as number[];
-    return new Date(year, month - 1, day, hour, minute).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-  }
-  const d = new Date(s as string);
-  if (isNaN(d.getTime())) return "—";
-  return d.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+function toLocalInputValue(iso?: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 16);
 }
 
-export default function VotingCyclePageClient() {
-  const params = useParams();
+function getStatus(item: FaceOfTheMonthFullResponse): string {
+  const now = Date.now();
+  if (!item.votingStartTime) return "Pending";
+  const start = new Date(item.votingStartTime).getTime();
+  const end = item.votingEndTime ? new Date(item.votingEndTime).getTime() : null;
+  if (start > now) return "Approved";
+  if (end && now < end) return "Voting Open";
+  return "Completed";
+}
+
+function NomineeCard({ nominee, rank }: { nominee: FaceOfTheMonthNominee; rank: number }) {
+  const name = [nominee.firstName, nominee.middleName, nominee.lastName].filter(Boolean).join(" ");
+  return (
+    <div className="flex items-center gap-4 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+      <div className="relative shrink-0">
+        <UserAvatar
+          profilePictureUrl={nominee.profilePictureUrl}
+          firstName={nominee.firstName}
+          lastName={nominee.lastName}
+          size="md"
+        />
+        {rank <= 3 && (
+          <span className={`absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white ${
+            rank === 1 ? "bg-yellow-500" : rank === 2 ? "bg-gray-400" : "bg-amber-600"
+          }`}>
+            {rank}
+          </span>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-semibold text-[#374151] dark:text-slate-200">{name}</p>
+        <p className="text-xs text-[#6B7280] dark:text-slate-400">{nominee.occupation || nominee.email || "—"}</p>
+      </div>
+      <div className="shrink-0 text-right">
+        <p className="text-lg font-bold text-[#000080] dark:text-indigo-400">{nominee.voteCount ?? 0}</p>
+        <p className="text-xs text-[#6B7280] dark:text-slate-400">votes</p>
+      </div>
+    </div>
+  );
+}
+
+export default function FaceOfTheMonthDetailClient() {
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const id = params?.id as string;
 
-  const [cycle,        setCycle]        = useState<VotingCycle | null>(null);
-  const [nominees,     setNominees]     = useState<VotingNominee[]>([]);
-  const [results,      setResults]      = useState<VotingResultsResponse | null>(null);
-  const [loading,      setLoading]      = useState(true);
-  const [apiError,     setApiError]     = useState("");
-  const [successMsg,   setSuccessMsg]   = useState("");
-  const [activeTab,    setActiveTab]    = useState<"nominees" | "schedule" | "results" | "winner">("nominees");
-  const [saving,       setSaving]       = useState(false);
-  const [actionError,  setActionError]  = useState("");
+  const [data, setData] = useState<FaceOfTheMonthFullResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState("");
 
-  // Schedule form
-  const [schedStart,   setSchedStart]   = useState("");
-  const [schedEnd,     setSchedEnd]     = useState("");
-  const [extendDate,   setExtendDate]   = useState("");
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [approving, setApproving] = useState(false);
+  const [approveError, setApproveError] = useState("");
 
-  // Swap modal
-  const [swapOpen,     setSwapOpen]     = useState(false);
-  const [swapNominee_, setSwapNominee_] = useState<VotingNominee | null>(null);
-  const [swapUserId,   setSwapUserId]   = useState("");
-  const [swapping,     setSwapping]     = useState(false);
+  const [declining, setDeclining] = useState(false);
 
-  const showSuccess = (msg: string) => {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(""), 3000);
-  };
-
-  const fetchCycle = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!id) return;
     setLoading(true);
     setApiError("");
     try {
-      const data = await getVotingCycle(id);
-      setCycle(data);
+      const res = await getFaceOfTheMonth(id);
+      setData(res);
+      if (res.votingStartTime) setStartTime(toLocalInputValue(res.votingStartTime));
+      if (res.votingEndTime) setEndTime(toLocalInputValue(res.votingEndTime));
     } catch (err) {
-      setApiError(err instanceof Error ? err.message : "Failed to load cycle.");
+      setApiError(err instanceof Error ? err.message : "Failed to load event.");
     } finally {
       setLoading(false);
     }
   }, [id]);
 
-  const fetchResults = useCallback(async () => {
-    if (!id) return;
-    try {
-      const data = await getVotingResults(id);
-      setResults(data);
-      setNominees(data.nominees ?? []);
-    } catch {
-      // non-blocking
-    }
-  }, [id]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  useEffect(() => { fetchCycle(); }, [fetchCycle]);
-  useEffect(() => {
-    if (cycle && ["VOTING_OPEN", "VOTING_CLOSED", "WINNER_ANNOUNCED"].includes(cycle.status)) {
-      fetchResults();
-    }
-  }, [cycle, fetchResults]);
-
-  const doAction = async (label: string, fn: () => Promise<unknown>) => {
-    setSaving(true);
-    setActionError("");
+  const handleApprove = async () => {
+    if (!data || !startTime || !endTime) return;
+    setApproving(true);
+    setApproveError("");
     try {
-      await fn();
-      showSuccess(`${label} successful.`);
-      fetchCycle();
+      const updated = await approveFaceOfTheMonth(data.id, {
+        startTime: new Date(startTime).toISOString(),
+        endTime: new Date(endTime).toISOString(),
+      });
+      setData(updated);
+      setShowApproveModal(false);
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : `${label} failed.`);
+      setApproveError(err instanceof Error ? err.message : "Failed to approve event.");
     } finally {
-      setSaving(false);
+      setApproving(false);
     }
   };
 
-  const handleGenerateNominees = () =>
-    doAction("Generate nominees", async () => {
-      const list = await generateNominees(id);
-      setNominees(list ?? []);
-    });
-
-  const handleApproveNominees = () =>
-    doAction("Approve nominees", () => approveNominees(id));
-
-  const handleOpenVoting = () =>
-    doAction("Open voting", () => openVoting(id));
-
-  const handleCloseVoting = () => {
-    if (!window.confirm("Close voting early? This cannot be undone.")) return;
-    doAction("Close voting", () => closeVoting(id));
-  };
-
-  const handleSaveSchedule = () => {
-    if (!schedStart || !schedEnd) { setActionError("Both start and end dates are required."); return; }
-    doAction("Save schedule", () => scheduleVoting(id, schedStart, schedEnd));
-  };
-
-  const handleExtend = () => {
-    if (!extendDate) { setActionError("New end date is required."); return; }
-    doAction("Extend deadline", () => extendVotingDeadline(id, extendDate));
-  };
-
-  const handleAnnounceWinner = (nomineeId: string) => {
-    if (!window.confirm("Announce this nominee as the winner? This cannot be undone.")) return;
-    doAction("Announce winner", () => announceWinner(id, nomineeId));
-  };
-
-  const handleSwap = async () => {
-    if (!swapNominee_ || !swapUserId.trim()) return;
-    setSwapping(true);
+  const handleDecline = async () => {
+    if (!data) return;
+    if (!confirm("Decline this Face of the Month? This cannot be undone.")) return;
+    setDeclining(true);
     try {
-      await swapNominee(id, swapNominee_.id, swapUserId.trim());
-      showSuccess("Nominee swapped successfully.");
-      setSwapOpen(false);
-      setSwapUserId("");
-      setSwapNominee_(null);
-      fetchCycle();
+      await declineFaceOfTheMonth(data.id);
+      router.push("/voting");
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Swap failed.");
-    } finally {
-      setSwapping(false);
+      console.error("Decline failed:", err);
+      setDeclining(false);
     }
   };
 
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#000080] border-t-transparent" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const status = data ? getStatus(data) : "";
+  const sortedNominees = data
+    ? [...data.nominees].sort((a, b) => (b.voteCount ?? 0) - (a.voteCount ?? 0))
+    : [];
 
-  if (!cycle) {
-    return (
-      <DashboardLayout>
-        <div className="rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-6 text-center text-red-700">
-          {apiError || "Cycle not found."}
-          <div className="mt-3">
-            <Button variant="outline" onClick={() => router.push("/voting")}>Back to Voting</Button>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  const statusIdx = STATUS_ORDER.indexOf(cycle.status as typeof STATUS_ORDER[number]);
-  const canSwap = ["DRAFT", "NOMINEES_PENDING"].includes(cycle.status);
+  const currentUser = getStoredUser();
 
   return (
     <DashboardLayout>
-      {/* Breadcrumb */}
-      <nav className="mb-4 flex items-center gap-2 text-sm text-[#6B7280] dark:text-slate-400">
-        <Link href="/voting" className="hover:text-[#000080] dark:hover:text-indigo-400">Voting</Link>
-        <ChevronRight className="h-4 w-4" />
-        <span className="text-[#374151] dark:text-slate-300 font-medium truncate max-w-[300px]">{cycle.title}</span>
-      </nav>
+      {/* Back */}
+      <button
+        onClick={() => router.push("/voting")}
+        className="mb-4 flex items-center gap-1 text-sm text-[#6B7280] dark:text-slate-400 hover:text-[#000080] dark:hover:text-indigo-400 transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Face of the Month
+      </button>
 
-      {/* Header */}
-      <div className="mb-6 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-[#000000] dark:text-slate-100">{cycle.title}</h1>
-          <p className="mt-1 text-sm text-[#6B7280] dark:text-slate-400">
-            {MONTHS[cycle.month - 1]} {cycle.year} · {cycle.categoryName ?? "—"}
-          </p>
+      {loading ? (
+        <div className="py-16 text-center text-gray-400 dark:text-slate-500">Loading…</div>
+      ) : apiError ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
+          {apiError} —{" "}
+          <button className="font-medium underline" onClick={fetchData}>Retry</button>
         </div>
-        <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${STATUS_BADGE_COLOR[cycle.status] ?? ""}`}>
-          {STATUS_LABEL[cycle.status] ?? cycle.status}
-        </span>
-      </div>
-
-      {/* Status Pipeline */}
-      <div className="mb-6 overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
-        <div className="flex min-w-max items-center gap-0">
-          {STATUS_ORDER.map((s, i) => {
-            const done    = i < statusIdx;
-            const current = i === statusIdx;
-            return (
-              <div key={s} className="flex items-center">
-                <div className="flex flex-col items-center gap-1">
-                  <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                      done    ? "bg-[#000080] text-white" :
-                      current ? "bg-[#7C3AED] text-white ring-2 ring-[#7C3AED] ring-offset-2" :
-                                "bg-[#F3F4F6] dark:bg-slate-700 text-[#9CA3AF]"
-                    }`}
-                  >
-                    {done ? "✓" : i + 1}
-                  </div>
-                  <span className={`text-[10px] text-center max-w-[70px] leading-tight ${
-                    current ? "font-semibold text-[#7C3AED]" :
-                    done    ? "text-[#000080] dark:text-indigo-400" :
-                              "text-[#9CA3AF] dark:text-slate-500"
-                  }`}>
-                    {STATUS_LABEL[s]}
-                  </span>
+      ) : data ? (
+        <>
+          {/* Header card */}
+          <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#FEF9C3]">
+                  <Trophy className="h-6 w-6 text-[#CA8A04]" />
                 </div>
-                {i < STATUS_ORDER.length - 1 && (
-                  <div className={`mx-2 h-0.5 w-10 flex-shrink-0 ${i < statusIdx ? "bg-[#000080]" : "bg-[#E5E7EB] dark:bg-slate-700"}`} />
+                <div>
+                  <h1 className="text-2xl font-bold text-[#000000] dark:text-slate-100">{data.title}</h1>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[#6B7280] dark:text-slate-400">
+                    {data.votingStartTime && (
+                      <span>Start: {fmtDateTime(data.votingStartTime)}</span>
+                    )}
+                    {data.votingEndTime && (
+                      <span>End: {fmtDateTime(data.votingEndTime)}</span>
+                    )}
+                    <span>{data.nominees.length} nominees</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {status === "Pending" && (
+                  <>
+                    <Button
+                      variant="primary"
+                      onClick={() => setShowApproveModal(true)}
+                      icon={<CheckCircle className="h-4 w-4" />}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={handleDecline}
+                      disabled={declining}
+                      icon={<XCircle className="h-4 w-4" />}
+                    >
+                      {declining ? "Declining…" : "Decline"}
+                    </Button>
+                  </>
+                )}
+                {status === "Approved" && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-sm font-medium text-blue-700 dark:text-blue-300">
+                    <CheckCircle className="h-4 w-4" /> Approved — voting starts soon
+                  </span>
+                )}
+                {status === "Voting Open" && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-sm font-medium text-green-700 dark:text-green-300">
+                    <Vote className="h-4 w-4" /> Voting is open
+                  </span>
+                )}
+                {status === "Completed" && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 dark:bg-slate-700 px-3 py-1 text-sm font-medium text-gray-600 dark:text-slate-400">
+                    <Trophy className="h-4 w-4" /> Completed
+                  </span>
                 )}
               </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Success / Action error banners */}
-      {successMsg && (
-        <div className="mb-4 rounded-lg border border-green-200 bg-[#DCFCE7] px-4 py-3 text-sm text-[#16A34A]">
-          {successMsg}
-        </div>
-      )}
-      {actionError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
-          {actionError}
-        </div>
-      )}
-
-      {/* Tabs */}
-      <div className="mb-4 flex gap-1 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-[#F3F4F6] dark:bg-slate-700/30 p-1">
-        {(["nominees", "schedule", "results", "winner"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium capitalize transition-colors ${
-              activeTab === tab
-                ? "bg-white dark:bg-slate-800 text-[#000080] dark:text-indigo-400 shadow-sm"
-                : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:hover:text-slate-300"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      {/* ── NOMINEES TAB ──────────────────────────────────────────────────── */}
-      {activeTab === "nominees" && (
-        <div>
-          <div className="mb-4 flex flex-wrap gap-3">
-            {(cycle.status === "DRAFT" || cycle.status === "NOMINEES_PENDING") && nominees.length === 0 && (
-              <Button variant="primary" loading={saving} onClick={handleGenerateNominees}>
-                Generate Nominees
-              </Button>
-            )}
-            {cycle.status === "NOMINEES_PENDING" && nominees.length > 0 && (
-              <Button variant="primary" loading={saving} onClick={handleApproveNominees}>
-                Approve All Nominees
-              </Button>
-            )}
+            </div>
           </div>
 
-          {nominees.length === 0 ? (
-            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-10 text-center text-[#6B7280] dark:text-slate-400">
-              No nominees yet. Generate nominees to begin.
+          {/* Nominees */}
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-[#374151] dark:text-slate-200">Nominees</h2>
+            <span className="text-sm text-[#6B7280] dark:text-slate-400">
+              {sortedNominees.length} total
+            </span>
+          </div>
+
+          {sortedNominees.length === 0 ? (
+            <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 py-12 text-center text-gray-400 dark:text-slate-500">
+              No nominees for this event.
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {nominees.map((nom) => (
-                <div
-                  key={nom.id}
-                  className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4 flex flex-col items-center gap-3"
-                >
-                  <UserAvatar
-                    profilePictureUrl={nom.profilePictureUrl}
-                    firstName={nom.firstName}
-                    lastName={nom.lastName}
-                    size="md"
-                  />
-                  <div className="text-center">
-                    <div className="font-semibold text-[#374151] dark:text-slate-300">
-                      {nom.firstName} {nom.lastName}
-                    </div>
-                    {["VOTING_OPEN", "VOTING_CLOSED", "WINNER_ANNOUNCED"].includes(cycle.status) && (
-                      <div className="mt-1 text-sm text-[#6B7280] dark:text-slate-400">
-                        {nom.voteCount} vote{nom.voteCount !== 1 ? "s" : ""}
-                      </div>
-                    )}
-                    {nom.isApproved && (
-                      <span className="mt-1 inline-block rounded-full bg-[#DCFCE7] px-2 py-0.5 text-[10px] font-medium text-[#16A34A]">
-                        Approved
-                      </span>
-                    )}
-                  </div>
-                  {canSwap && (
-                    <button
-                      className="text-xs text-[#7C3AED] hover:underline"
-                      onClick={() => { setSwapNominee_(nom); setSwapOpen(true); }}
-                    >
-                      Swap
-                    </button>
-                  )}
-                </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {sortedNominees.map((nominee, idx) => (
+                <NomineeCard key={nominee.id} nominee={nominee} rank={idx + 1} />
               ))}
             </div>
           )}
-        </div>
-      )}
 
-      {/* ── SCHEDULE TAB ──────────────────────────────────────────────────── */}
-      {activeTab === "schedule" && (
-        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
-          {cycle.status === "NOMINEES_APPROVED" && !cycle.votingStartDate && (
-            <div className="space-y-4">
-              <h3 className="font-semibold text-[#374151] dark:text-slate-300">Set Voting Schedule</h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">Start Date &amp; Time</label>
-                  <input
-                    type="datetime-local"
-                    value={schedStart}
-                    onChange={(e) => setSchedStart(e.target.value)}
-                    className="w-full rounded-xl border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2.5 text-sm text-[#374151] dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#000080]"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">End Date &amp; Time</label>
-                  <input
-                    type="datetime-local"
-                    value={schedEnd}
-                    onChange={(e) => setSchedEnd(e.target.value)}
-                    className="w-full rounded-xl border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2.5 text-sm text-[#374151] dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#000080]"
-                  />
-                </div>
-              </div>
-              <Button variant="primary" loading={saving} onClick={handleSaveSchedule}>
-                Save Schedule
-              </Button>
-            </div>
-          )}
-
-          {cycle.status === "NOMINEES_APPROVED" && cycle.votingStartDate && (
-            <div className="space-y-4">
-              <h3 className="font-semibold text-[#374151] dark:text-slate-300">Scheduled Voting Window</h3>
-              <div className="grid gap-4 sm:grid-cols-2 text-sm">
-                <div>
-                  <div className="text-xs text-[#6B7280] dark:text-slate-400">Start</div>
-                  <div className="text-[#374151] dark:text-slate-300">{fmtDateTime(cycle.votingStartDate)}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-[#6B7280] dark:text-slate-400">End</div>
-                  <div className="text-[#374151] dark:text-slate-300">{fmtDateTime(cycle.votingEndDate)}</div>
-                </div>
-              </div>
-              <Button variant="primary" loading={saving} onClick={handleOpenVoting}>
-                Open Voting Now
-              </Button>
-            </div>
-          )}
-
-          {cycle.status === "VOTING_OPEN" && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="mb-3 font-semibold text-[#374151] dark:text-slate-300">Current Voting Window</h3>
-                <div className="grid gap-4 sm:grid-cols-2 text-sm">
-                  <div>
-                    <div className="text-xs text-[#6B7280] dark:text-slate-400">Start</div>
-                    <div className="text-[#374151] dark:text-slate-300">{fmtDateTime(cycle.votingStartDate)}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-[#6B7280] dark:text-slate-400">End</div>
-                    <div className="text-[#374151] dark:text-slate-300">{fmtDateTime(cycle.votingEndDate)}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-600 p-4 space-y-3">
-                <h4 className="text-sm font-semibold text-[#374151] dark:text-slate-300">Extend Deadline</h4>
-                <div className="flex gap-3 items-end">
-                  <div className="flex-1">
-                    <label className="mb-1 block text-xs text-[#6B7280] dark:text-slate-400">New End Date &amp; Time</label>
-                    <input
-                      type="datetime-local"
-                      value={extendDate}
-                      onChange={(e) => setExtendDate(e.target.value)}
-                      className="w-full rounded-xl border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#000080]"
-                    />
-                  </div>
-                  <Button variant="secondary" loading={saving} onClick={handleExtend}>
-                    Extend
-                  </Button>
-                </div>
-              </div>
-
-              <Button variant="danger" loading={saving} onClick={handleCloseVoting}>
-                Close Voting Early
-              </Button>
-            </div>
-          )}
-
-          {(cycle.status === "VOTING_CLOSED" || cycle.status === "WINNER_ANNOUNCED") && (
-            <div>
-              <h3 className="mb-3 font-semibold text-[#374151] dark:text-slate-300">Voting Window (Closed)</h3>
-              <div className="grid gap-4 sm:grid-cols-2 text-sm">
-                <div>
-                  <div className="text-xs text-[#6B7280] dark:text-slate-400">Start</div>
-                  <div className="text-[#374151] dark:text-slate-300">{fmtDateTime(cycle.votingStartDate)}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-[#6B7280] dark:text-slate-400">End</div>
-                  <div className="text-[#374151] dark:text-slate-300">{fmtDateTime(cycle.votingEndDate)}</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!["NOMINEES_APPROVED", "VOTING_OPEN", "VOTING_CLOSED", "WINNER_ANNOUNCED"].includes(cycle.status) && (
-            <p className="text-sm text-[#6B7280] dark:text-slate-400">
-              Schedule will be available once nominees are approved.
+          {/* Current user ID info for voting integration */}
+          {currentUser && status === "Voting Open" && (
+            <p className="mt-4 text-xs text-[#6B7280] dark:text-slate-500">
+              Voting is open. Use the mobile app or member portal to cast your vote.
             </p>
           )}
-        </div>
-      )}
+        </>
+      ) : null}
 
-      {/* ── RESULTS TAB ───────────────────────────────────────────────────── */}
-      {activeTab === "results" && (
-        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
-          {!["VOTING_OPEN", "VOTING_CLOSED", "WINNER_ANNOUNCED"].includes(cycle.status) ? (
-            <p className="text-sm text-[#6B7280] dark:text-slate-400">
-              Results will be available once voting opens.
-            </p>
-          ) : (
-            <>
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-[#374151] dark:text-slate-300">Live Results</h3>
-                  <p className="text-sm text-[#6B7280] dark:text-slate-400">
-                    Total votes: <span className="font-medium">{results?.totalVotes ?? 0}</span>
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  icon={<RefreshCw className="h-4 w-4" />}
-                  onClick={fetchResults}
-                >
-                  Refresh
-                </Button>
-              </div>
-
-              {/* CSS Bar Chart */}
-              <div className="mb-6 space-y-3">
-                {[...(results?.nominees ?? [])].sort((a, b) => b.voteCount - a.voteCount).map((nom, i) => {
-                  const pct = results && results.totalVotes > 0
-                    ? Math.round((nom.voteCount / results.totalVotes) * 100)
-                    : 0;
-                  return (
-                    <div key={nom.id} className="flex items-center gap-3">
-                      <div className="w-5 text-xs text-right text-[#9CA3AF]">{i + 1}</div>
-                      <div className="w-24 truncate text-xs text-[#374151] dark:text-slate-300">{nom.firstName} {nom.lastName}</div>
-                      <div className="flex-1 rounded-full bg-[#F3F4F6] dark:bg-slate-700 h-5 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-[#000080] dark:bg-indigo-500 transition-all duration-500"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                      <div className="w-12 text-right text-xs font-medium text-[#374151] dark:text-slate-300">{pct}%</div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Results Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-[#E5E7EB] dark:border-slate-700">
-                      <th className="pb-2 text-left text-xs font-bold text-[#000080] dark:text-indigo-400">Rank</th>
-                      <th className="pb-2 text-left text-xs font-bold text-[#000080] dark:text-indigo-400">Name</th>
-                      <th className="pb-2 text-right text-xs font-bold text-[#000080] dark:text-indigo-400">Votes</th>
-                      <th className="pb-2 text-right text-xs font-bold text-[#000080] dark:text-indigo-400">%</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...(results?.nominees ?? [])].sort((a, b) => b.voteCount - a.voteCount).map((nom, i) => {
-                      const pct = results && results.totalVotes > 0
-                        ? Math.round((nom.voteCount / results.totalVotes) * 100)
-                        : 0;
-                      return (
-                        <tr key={nom.id} className="border-b border-[#F3F4F6] dark:border-slate-700">
-                          <td className="py-2 text-[#9CA3AF] dark:text-slate-500">#{i + 1}</td>
-                          <td className="py-2 text-[#374151] dark:text-slate-300">{nom.firstName} {nom.lastName}</td>
-                          <td className="py-2 text-right font-medium text-[#374151] dark:text-slate-300">{nom.voteCount}</td>
-                          <td className="py-2 text-right text-[#6B7280] dark:text-slate-400">{pct}%</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* ── WINNER TAB ────────────────────────────────────────────────────── */}
-      {activeTab === "winner" && (
-        <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
-          {cycle.status === "WINNER_ANNOUNCED" ? (
-            <div className="flex flex-col items-center gap-4 py-6">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#EDE9FE]">
-                <Trophy className="h-8 w-8 text-[#7C3AED]" />
-              </div>
-              <UserAvatar
-                profilePictureUrl={cycle.winnerPhotoUrl}
-                firstName={cycle.winnerName?.split(" ")[0]}
-                lastName={cycle.winnerName?.split(" ").slice(1).join(" ")}
-                size="md"
-              />
-              <div className="text-center">
-                <div className="text-2xl font-bold text-[#374151] dark:text-slate-100">{cycle.winnerName}</div>
-                <div className="mt-1 text-sm text-[#7C3AED] font-medium">Face of the Month</div>
-                <div className="mt-1 text-xs text-[#6B7280] dark:text-slate-400">
-                  {MONTHS[cycle.month - 1]} {cycle.year}
-                </div>
-              </div>
-            </div>
-          ) : cycle.status === "VOTING_CLOSED" ? (
-            <div>
-              <h3 className="mb-4 font-semibold text-[#374151] dark:text-slate-300">Announce Winner</h3>
-              <p className="mb-4 text-sm text-[#6B7280] dark:text-slate-400">
-                Select a nominee to announce as the winner.
-              </p>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {[...(results?.nominees ?? nominees)].sort((a, b) => b.voteCount - a.voteCount).map((nom, i) => (
-                  <div
-                    key={nom.id}
-                    className={`flex items-center gap-3 rounded-xl border p-3 ${
-                      i === 0
-                        ? "border-[#7C3AED] bg-[#EDE9FE]/50 dark:bg-purple-900/20"
-                        : "border-[#E5E7EB] dark:border-slate-700"
-                    }`}
-                  >
-                    <UserAvatar profilePictureUrl={nom.profilePictureUrl} firstName={nom.firstName} lastName={nom.lastName} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-[#374151] dark:text-slate-300 truncate">{nom.firstName} {nom.lastName}</div>
-                      <div className="text-xs text-[#6B7280] dark:text-slate-400">{nom.voteCount} votes</div>
-                    </div>
-                    {i === 0 && <Trophy className="h-4 w-4 text-[#7C3AED] flex-shrink-0" />}
-                    <Button variant="primary" className="!py-1.5 !px-3 !text-xs" onClick={() => handleAnnounceWinner(nom.id)}>
-                      Announce
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-[#6B7280] dark:text-slate-400">
-              Winner will be determined after voting closes.
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Swap Nominee Modal */}
-      <Modal isOpen={swapOpen} onClose={() => { setSwapOpen(false); setSwapUserId(""); }} title="Swap Nominee" size="sm">
+      {/* Approve Modal */}
+      <Modal
+        isOpen={showApproveModal}
+        onClose={() => { setShowApproveModal(false); setApproveError(""); }}
+        title="Approve & Set Voting Period"
+      >
         <div className="space-y-4">
-          {swapNominee_ && (
-            <p className="text-sm text-[#6B7280] dark:text-slate-400">
-              Replacing <span className="font-medium text-[#374151] dark:text-slate-300">{swapNominee_.firstName} {swapNominee_.lastName}</span>
-            </p>
+          {approveError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
+              {approveError}
+            </div>
           )}
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">
+            Set the start and end date/time for the voting period. Members will be able to vote during this window.
+          </p>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">New User ID</label>
+            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
+              Voting Start
+            </label>
             <input
-              type="text"
-              value={swapUserId}
-              onChange={(e) => setSwapUserId(e.target.value)}
-              placeholder="Enter user ID..."
-              className="w-full rounded-xl border border-[#E5E7EB] dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2.5 text-sm text-[#374151] dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#000080]"
+              type="datetime-local"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              className={inputClass}
             />
           </div>
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => { setSwapOpen(false); setSwapUserId(""); }}>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
+              Voting End
+            </label>
+            <input
+              type="datetime-local"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="secondary"
+              onClick={() => { setShowApproveModal(false); setApproveError(""); }}
+            >
               Cancel
             </Button>
-            <Button variant="primary" loading={swapping} onClick={handleSwap}>
-              Swap
+            <Button
+              variant="primary"
+              onClick={handleApprove}
+              disabled={approving || !startTime || !endTime}
+            >
+              {approving ? "Approving…" : "Approve"}
             </Button>
           </div>
         </div>
