@@ -119,7 +119,16 @@ export default function RequestDetailPage() {
     }
   };
 
-  const category = request.requestType ?? "";
+  const category = (() => {
+    const t = request.requestType ?? "";
+    if (t === "SUGGESTIONS" || t === "SUGGESTION") {
+      const s = (request.subject ?? "").toLowerCase();
+      if (s.includes("christening")) return "Baby Christening";
+      if (s.includes("dedication")) return "Baby Dedication";
+      return "Suggestion";
+    }
+    return t;
+  })();
   const submittedBy = fullName(request.owner ?? request.createdBy);
   const date = request.createdOn
     ? new Date(request.createdOn).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })

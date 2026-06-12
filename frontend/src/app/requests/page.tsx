@@ -54,6 +54,28 @@ const statusBadgeColors: Record<string, string> = {
   RESOLVED:    "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
 };
 
+function requestTypeLabel(type?: string | null, subject?: string | null): string {
+  if (type === "SUGGESTIONS" || type === "SUGGESTION") {
+    const s = (subject ?? "").toLowerCase();
+    if (s.includes("christening")) return "Baby Christening";
+    if (s.includes("dedication")) return "Baby Dedication";
+    return "Suggestion";
+  }
+  if (!type) return "—";
+  return type.charAt(0) + type.slice(1).toLowerCase();
+}
+
+function requestTypeBadgeClass(type?: string | null, subject?: string | null): string {
+  if (type === "PRAYER") return "bg-[#16A34A] text-white";
+  if (type === "COUNSELING") return "bg-[#000080] text-white";
+  if (type === "SUGGESTIONS" || type === "SUGGESTION") {
+    const s = (subject ?? "").toLowerCase();
+    if (s.includes("christening") || s.includes("dedication")) return "bg-[#7C3AED] text-white";
+    return "bg-[#CA8A04] text-white";
+  }
+  return "bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-slate-300";
+}
+
 function fullName(u?: { firstName?: string; middleName?: string; lastName?: string } | null) {
   if (!u) return "—";
   return [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—";
@@ -308,8 +330,8 @@ export default function RequestsPage() {
                       className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]" />
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${categoryBadgeColors[r.requestType ?? ""] ?? "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400"}`}>
-                      {(r.requestType ?? "—").replace(/_/g, " ")}
+                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${requestTypeBadgeClass(r.requestType, r.subject)}`}>
+                      {requestTypeLabel(r.requestType, r.subject)}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[200px]"><span className="block truncate">{r.subject}</span></td>
