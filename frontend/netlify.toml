@@ -206,6 +206,16 @@
     Cache-Control = "no-store, no-cache, must-revalidate"
 
 [[redirects]]
+  from   = "/voting/hall-of-fame/"
+  to     = "/voting/hall-of-fame/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/voting/categories/"
+  to     = "/voting/categories/index.html"
+  status = 200
+
+[[redirects]]
   from   = "/voting/:id/"
   to     = "/voting/fotm-1/"
   status = 200
