@@ -231,7 +231,7 @@ export default function SchoolOfMinistryPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await searchSchoolOfMinistries(search.trim(), 0, ITEMS_PER_PAGE);
+      const res = await searchSchoolOfMinistries(search.trim(), 0, ITEMS_PER_PAGE, somSet);
       setRecords(res.content ?? []);
       setTotal(res.totalElements ?? 0);
       setPage(1);

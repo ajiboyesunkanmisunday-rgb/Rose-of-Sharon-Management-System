@@ -235,11 +235,16 @@ export default function FaceOfTheMonthPage() {
         <div className="space-y-4">
           {genError && (
             <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
-              {genError}
+              <p className="font-medium">{genError}</p>
+              {genError.toLowerCase().includes("nominee") && (
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                  The system selects nominees from active members based on their engagement and activity. Ensure members are registered and active before generating.
+                </p>
+              )}
             </div>
           )}
           <p className="text-sm text-[#6B7280] dark:text-slate-400">
-            The backend will automatically select nominees. Provide a title for this month&apos;s event.
+            The system will automatically select nominees from active members. Provide a title for this month&apos;s event.
           </p>
           <div>
             <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
