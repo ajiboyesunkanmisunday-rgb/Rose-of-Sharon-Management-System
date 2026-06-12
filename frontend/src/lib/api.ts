@@ -2901,9 +2901,11 @@ export async function searchSchoolOfDisciples(
   text: string,
   pageNo = 0,
   pageSize = 20,
+  set?: string,
 ): Promise<CustomPageResponse<SchoolOfDisciplesResponse>> {
+  const qs = set ? `&set=${encodeURIComponent(set)}` : "";
   return apiFetch<CustomPageResponse<SchoolOfDisciplesResponse>>(
-    `/api/v1/school-of-disciples/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    `/api/v1/school-of-disciples/search?pageNo=${pageNo}&pageSize=${pageSize}${qs}`,
     { method: "POST", body: JSON.stringify({ text }) },
   );
 }
@@ -3607,9 +3609,11 @@ export async function searchSchoolOfMinistries(
   text: string,
   pageNo = 0,
   pageSize = 20,
+  set?: string,
 ): Promise<CustomPageResponse<SchoolOfMinistryResponse>> {
+  const qs = set ? `&set=${encodeURIComponent(set)}` : "";
   return apiFetch<CustomPageResponse<SchoolOfMinistryResponse>>(
-    `/api/v1/school-of-ministries/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    `/api/v1/school-of-ministries/search?pageNo=${pageNo}&pageSize=${pageSize}${qs}`,
     { method: "POST", body: JSON.stringify({ text }) },
   );
 }

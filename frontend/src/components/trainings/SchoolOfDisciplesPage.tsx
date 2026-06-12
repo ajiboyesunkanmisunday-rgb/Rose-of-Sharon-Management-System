@@ -1548,7 +1548,7 @@ export default function SchoolOfDisciplesPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await searchSchoolOfDisciples(search.trim(), 0, 200);
+      const res = await searchSchoolOfDisciples(search.trim(), 0, 200, setFilter);
       setAllStudents(res.content ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Search failed.");
