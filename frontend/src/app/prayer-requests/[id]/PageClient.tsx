@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
-import { getRequest, type RequestResponse } from "@/lib/api";
+import { getRequest, changeRequestStatus, type RequestResponse } from "@/lib/api";
 
 interface Note {
   id: string;
@@ -14,6 +14,13 @@ interface Note {
 }
 
 const statusOptions = ["Pending", "Assigned", "Prayed For", "Closed"];
+
+const STATUS_API_MAP: Record<string, string> = {
+  "Pending":    "RECEIVED",
+  "Assigned":   "ASSIGNED",
+  "Prayed For": "IN_PROGRESS",
+  "Closed":     "RESOLVED",
+};
 
 const statusBadgeClass: Record<string, string> = {
   "Pending": "bg-yellow-100 text-yellow-800",
@@ -49,6 +56,9 @@ export default function PrayerRequestDetailClient() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [newNote, setNewNote] = useState("");
   const [addingNote, setAddingNote] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const loadRequest = useCallback(async () => {
     if (!id || id.startsWith("pr-")) return;
@@ -67,6 +77,22 @@ export default function PrayerRequestDetailClient() {
   }, [id]);
 
   useEffect(() => { loadRequest(); }, [loadRequest]);
+
+  const handleSave = async () => {
+    if (!request) return;
+    setSaving(true);
+    setSaveError("");
+    setSaveSuccess(false);
+    try {
+      await changeRequestStatus(request.id, STATUS_API_MAP[status] ?? status);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save changes.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const inputClass =
     "h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
@@ -156,6 +182,16 @@ export default function PrayerRequestDetailClient() {
       {/* Status & Assignment */}
       <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <h2 className="mb-4 text-lg font-bold text-[#000000] dark:text-slate-100">Manage Request</h2>
+        {saveError && (
+          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-2 text-sm text-red-700">
+            {saveError}
+          </div>
+        )}
+        {saveSuccess && (
+          <div className="mb-3 rounded-lg border border-green-200 bg-green-50 dark:bg-green-900/20 px-4 py-2 text-sm text-green-700">
+            Status updated successfully.
+          </div>
+        )}
         <div className="flex flex-wrap items-end gap-4">
           <div className="flex flex-col">
             <label className="mb-1.5 text-xs font-medium text-[#374151] dark:text-slate-300">Update Status</label>
@@ -170,20 +206,14 @@ export default function PrayerRequestDetailClient() {
             </select>
           </div>
           <div className="flex flex-col">
-            <label className="mb-1.5 text-xs font-medium text-[#374151] dark:text-slate-300">Assign To</label>
-            <select
-              value={assignedTo}
-              onChange={(e) => setAssignedTo(e.target.value)}
-              className={inputClass}
-            >
-              <option value="">Select officer</option>
-              <option value="Pastor David">Pastor David</option>
-              <option value="Pastor James">Pastor James</option>
-              <option value="Deaconess Grace">Deaconess Grace</option>
-              <option value="Shola Damson">Shola Damson</option>
-            </select>
+            <label className="mb-1.5 text-xs font-medium text-[#374151] dark:text-slate-300">Assigned To</label>
+            <p className={`${inputClass} flex items-center bg-gray-50 dark:bg-slate-700/50 text-[#6B7280] dark:text-slate-400`}>
+              {assignedTo && assignedTo !== "—" ? assignedTo : "Unassigned"}
+            </p>
           </div>
-          <Button variant="primary">Save Changes</Button>
+          <Button variant="primary" onClick={handleSave} disabled={saving}>
+            {saving ? "Saving…" : "Save Changes"}
+          </Button>
         </div>
       </div>
 
