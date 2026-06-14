@@ -3991,7 +3991,7 @@ export async function getFaceOfTheMonths(pageNo = 0, pageSize = 10): Promise<Cus
 export async function generateFaceOfTheMonth(title: string): Promise<FaceOfTheMonthFullResponse> {
   return apiFetch<FaceOfTheMonthFullResponse>("/api/v1/face-of-the-months", {
     method: "POST",
-    body: JSON.stringify({ text: title }),
+    body: JSON.stringify({ title }),
   });
 }
 
