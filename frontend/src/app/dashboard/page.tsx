@@ -25,10 +25,10 @@ import {
   getPastServicesAttendance,
   getBirthdays,
   getWeddingAnniversaries,
-  getVotingCycles,
+  getFaceOfTheMonths,
+  getFaceOfTheMonth,
   type UserResponse,
   type UserBasicResponse,
-  type VotingCycle,
 } from "@/lib/api";
 import { SkeletonCard } from "@/components/ui/Skeleton";
 import AttendanceChart, {
@@ -58,6 +58,21 @@ interface CelebrationItem {
   date: string;
 }
 
+// ─── Local types for Face of the Month widget ─────────────────────────────────
+interface FotmWinner {
+  winnerPhotoUrl?: string;
+  winnerName: string;
+  categoryName?: string;
+  totalVotes?: number;
+  month: number;
+  year: number;
+}
+
+interface FotmActiveCycle {
+  title: string;
+  votingEndDate?: string;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [attendanceData, setAttendanceData] = useState<AttendanceItem[]>([]);
@@ -79,8 +94,8 @@ export default function DashboardPage() {
   >([]);
   const [celebrationsLoading, setCelebrationsLoading] = useState(true);
 
-  const [faceOfMonth, setFaceOfMonth]       = useState<VotingCycle | null>(null);
-  const [activeVoting, setActiveVoting]     = useState<VotingCycle | null>(null);
+  const [faceOfMonth, setFaceOfMonth]       = useState<FotmWinner | null>(null);
+  const [activeVoting, setActiveVoting]     = useState<FotmActiveCycle | null>(null);
   const [faceLoading, setFaceLoading]       = useState(true);
 
   useEffect(() => {
@@ -236,21 +251,54 @@ export default function DashboardPage() {
       .finally(() => setCelebrationsLoading(false));
   }, []);
 
-  // Face of the Month — fetch most recent winner + any active voting cycle
+  // Face of the Month — fetch recent events, find winner + active voting period
   useEffect(() => {
     setFaceLoading(true);
-    Promise.allSettled([
-      getVotingCycles(0, 1, undefined, "WINNER_ANNOUNCED"),
-      getVotingCycles(0, 1, undefined, "VOTING_OPEN"),
-    ])
-      .then(([winnerRes, votingRes]) => {
-        if (winnerRes.status === "fulfilled") {
-          const content = winnerRes.value.content ?? [];
-          setFaceOfMonth(content[0] ?? null);
+    getFaceOfTheMonths(0, 10)
+      .then(async (page) => {
+        const now = Date.now();
+        const events = page.content ?? [];
+
+        // Find an event currently in its voting window
+        const active = events.find((e) => {
+          if (!e.votingStartTime || !e.votingEndTime) return false;
+          const start = new Date(e.votingStartTime).getTime();
+          const end   = new Date(e.votingEndTime).getTime();
+          return start <= now && now < end;
+        });
+        if (active) {
+          setActiveVoting({ title: active.title, votingEndDate: active.votingEndTime });
         }
-        if (votingRes.status === "fulfilled") {
-          const content = votingRes.value.content ?? [];
-          setActiveVoting(content[0] ?? null);
+
+        // Find the most recently completed event (past votingEndTime) — fetch full
+        // details to get nominee vote counts and pick the winner.
+        const completed = events.filter(
+          (e) => e.votingEndTime && new Date(e.votingEndTime).getTime() < now,
+        );
+        if (completed.length > 0) {
+          // Sort descending by end time and take the most recent
+          completed.sort(
+            (a, b) => new Date(b.votingEndTime!).getTime() - new Date(a.votingEndTime!).getTime(),
+          );
+          try {
+            const detail = await getFaceOfTheMonth(completed[0].id);
+            if (detail.nominees.length > 0) {
+              const winner = [...detail.nominees].sort(
+                (a, b) => (b.voteCount ?? 0) - (a.voteCount ?? 0),
+              )[0];
+              const endDate = new Date(detail.votingEndTime ?? completed[0].votingEndTime ?? "");
+              setFaceOfMonth({
+                winnerPhotoUrl: winner.profilePictureUrl,
+                winnerName: [winner.firstName, winner.middleName, winner.lastName].filter(Boolean).join(" "),
+                categoryName: "Face of the Month",
+                totalVotes: detail.nominees.reduce((sum, n) => sum + (n.voteCount ?? 0), 0),
+                month: endDate.getMonth() + 1,
+                year: endDate.getFullYear(),
+              });
+            }
+          } catch {
+            // Non-critical — widget shows empty state
+          }
         }
       })
       .catch(() => {})
@@ -514,8 +562,8 @@ function FaceOfTheMonthWidget({
   onManage,
 }: {
   loading: boolean;
-  winner: VotingCycle | null;
-  activeCycle: VotingCycle | null;
+  winner: FotmWinner | null;
+  activeCycle: FotmActiveCycle | null;
   onViewAll: () => void;
   onManage: () => void;
 }) {
@@ -537,7 +585,7 @@ function FaceOfTheMonthWidget({
     return () => clearInterval(id);
   }, [activeCycle]);
 
-  const monthYear = (cycle: VotingCycle) =>
+  const monthYear = (cycle: FotmWinner) =>
     `${MONTHS_FULL[(cycle.month ?? 1) - 1] ?? ""} ${cycle.year ?? ""}`;
 
   return (
@@ -596,7 +644,11 @@ function FaceOfTheMonthWidget({
             <h3 className="mt-1.5 text-lg font-bold text-[#111827] dark:text-slate-100">
               {activeCycle.title}
             </h3>
-            <p className="text-sm text-[#6B7280] dark:text-slate-400">{monthYear(activeCycle)}</p>
+            <p className="text-sm text-[#6B7280] dark:text-slate-400">
+              {activeCycle.votingEndDate
+                ? new Date(activeCycle.votingEndDate).toLocaleDateString("en-GB", { month: "long", year: "numeric" })
+                : ""}
+            </p>
             {countdown && (
               <div className="mt-2 flex items-center gap-1.5 text-sm font-medium text-[#CA8A04] dark:text-yellow-400">
                 <Timer className="h-4 w-4" />
