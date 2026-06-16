@@ -74,6 +74,18 @@ export default function EditCelebrationClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    const el = (e.target as HTMLFormElement).elements;
+    const getVal = (fieldName: string) =>
+      ((el.namedItem(fieldName) as HTMLInputElement | null)?.value ?? "").trim();
+
+    const date = getVal("date") || formData.date.trim();
+
+    if (!date) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+
     setLoading(true);
     try {
       // UpdateCelebrationRequest only accepts { date, notes } — no type field
@@ -131,7 +143,7 @@ export default function EditCelebrationClient() {
             <Button variant="secondary" type="button" onClick={() => router.push(`/celebrations/${id}`)}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={loading || !isFormValid}>
+            <Button variant="primary" type="submit" disabled={loading}>
               {loading ? "Saving…" : "Save Changes"}
             </Button>
           </div>

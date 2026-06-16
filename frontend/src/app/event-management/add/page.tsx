@@ -96,7 +96,12 @@ export default function AddEventPage() {
     const fd = new FormData(e.currentTarget);
     const rawDate = (fd.get("date") as string | null) ?? "";
     const date = normalizeDate(rawDate) || normalizeDate(formData.date);
+    const title = ((fd.get("title") as string | null) ?? "").trim() || formData.title.trim();
 
+    if (!title) {
+      setError("Event title is required.");
+      return;
+    }
     if (!date) {
       setError("Please select a date for the event.");
       return;
@@ -313,7 +318,7 @@ export default function AddEventPage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={loading || !isFormValid}>
+            <Button variant="primary" type="submit" disabled={loading}>
               {loading ? "Creating…" : "Create Event"}
             </Button>
           </div>

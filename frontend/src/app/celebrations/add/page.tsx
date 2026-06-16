@@ -224,7 +224,7 @@ export default function AddCelebrationPage() {
             <Button variant="secondary" type="button" onClick={() => router.push("/celebrations")}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={loading || !isFormValid}>
+            <Button variant="primary" type="submit" disabled={loading}>
               {loading ? "Saving…" : "Save Celebration"}
             </Button>
           </div>

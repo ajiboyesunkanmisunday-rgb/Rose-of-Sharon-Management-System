@@ -128,7 +128,21 @@ export default function AddProductPage() {
     e.preventDefault();
     setError("");
     setTouched({ name: true, owner: true, price: true, qty: true });
-    if (!isFormValid) return;
+
+    const el = (e.target as HTMLFormElement).elements;
+    const getVal = (fieldName: string) =>
+      ((el.namedItem(fieldName) as HTMLInputElement | null)?.value ?? "").trim();
+
+    const productName = getVal("name") || formData.name.trim();
+
+    if (!productName || !selectedOwner) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+    if (fieldErrors.price || fieldErrors.qty) {
+      setError("Please correct the field errors above.");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -384,7 +398,7 @@ export default function AddProductPage() {
             <Button variant="secondary" type="button" onClick={() => router.push("/marketplace")}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={submitting || uploading || !isFormValid}>
+            <Button variant="primary" type="submit" disabled={submitting || uploading}>
               {uploading
                 ? "Uploading media…"
                 : submitting

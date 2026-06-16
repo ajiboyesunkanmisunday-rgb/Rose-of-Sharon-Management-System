@@ -238,7 +238,7 @@ export default function AddCalendarEventPage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={loading || !isFormValid}>
+            <Button variant="primary" type="submit" disabled={loading}>
               {loading ? "Saving…" : "Save Event"}
             </Button>
           </div>

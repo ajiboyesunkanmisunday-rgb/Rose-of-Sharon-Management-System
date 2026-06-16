@@ -62,10 +62,31 @@ export default function AddRolePage() {
     }));
   };
 
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Add role:", { ...formData, permissions });
-    router.push("/settings/roles");
+    setSubmitError("");
+
+    const el = (e.target as HTMLFormElement).elements;
+    const getVal = (fieldName: string) =>
+      ((el.namedItem(fieldName) as HTMLInputElement | null)?.value ?? "").trim();
+
+    const name = getVal("name") || formData.name.trim();
+
+    if (!name) {
+      setSubmitError("Please fill in all required fields.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      console.log("Add role:", { ...formData, permissions });
+      router.push("/settings/roles");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -138,6 +159,10 @@ export default function AddRolePage() {
             </div>
           </div>
 
+          {submitError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{submitError}</div>
+          )}
+
           <div className="flex items-center justify-end gap-3 pt-4">
             <Button
               variant="secondary"
@@ -146,8 +171,8 @@ export default function AddRolePage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={!isFormValid}>
-              Save Role
+            <Button variant="primary" type="submit" disabled={submitting}>
+              {submitting ? "Saving…" : "Save Role"}
             </Button>
           </div>
         </form>
