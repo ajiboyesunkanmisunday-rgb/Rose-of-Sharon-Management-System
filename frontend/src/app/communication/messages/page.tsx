@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
@@ -8,12 +8,36 @@ import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
 import Modal from "@/components/ui/Modal";
-import { messages as messagesData } from "@/lib/mock-data";
 import { Message } from "@/lib/types";
 import { MessageSquare } from "lucide-react";
+import { getSentMessages, getScheduledMessages } from "@/lib/api";
 
 const ITEMS_PER_PAGE = 10;
 type MessageTab = "Sent" | "Scheduled";
+
+function parseDate(isoString: string): { date: string; time: string } {
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return { date: "—", time: "—" };
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const year = d.getFullYear();
+
+    let hours = d.getHours();
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const timeStr = `${String(hours).padStart(2, "0")}:${minutes} ${ampm}`;
+
+    return {
+      date: `${month}/${day}/${year}`,
+      time: timeStr,
+    };
+  } catch {
+    return { date: "—", time: "—" };
+  }
+}
 
 export default function MessagesPage() {
   const router = useRouter();
@@ -21,13 +45,65 @@ export default function MessagesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<MessageTab>("Sent");
-  const [list, setList] = useState<Message[]>(messagesData);
+  const [list, setList] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState("");
   const [viewing, setViewing] = useState<Message | null>(null);
   const [showFilter, setShowFilter] = useState(false);
   const [filterType, setFilterType] = useState<"" | "SMS" | "Email">("");
   const [filterStatus, setFilterStatus] = useState<"" | "Sent" | "Scheduled" | "Failed">("");
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
+
+  const fetchMessages = useCallback(async () => {
+    setLoading(true);
+    setApiError("");
+    try {
+      if (activeTab === "Sent") {
+        const res = await getSentMessages(0, 1000);
+        const mapped: Message[] = (res.content ?? []).map((m) => {
+          const { date, time } = parseDate(m.timeSent || m.createdOn);
+          return {
+            id: m.id,
+            type: m.channel === "EMAIL" ? "Email" : "SMS",
+            recipient: m.receiver,
+            subject: m.subject,
+            content: m.content,
+            status: m.success ? "Sent" : "Failed",
+            sentBy: "Admin",
+            date,
+            time,
+          };
+        });
+        setList(mapped);
+      } else {
+        const res = await getScheduledMessages(0, 1000);
+        const mapped: Message[] = (res.content ?? []).map((m) => {
+          const { date, time } = parseDate(m.timeSent || m.createdOn);
+          return {
+            id: m.id,
+            type: m.channel === "EMAIL" ? "Email" : "SMS",
+            recipient: m.receiver,
+            subject: m.subject,
+            content: m.content,
+            status: "Scheduled",
+            sentBy: "Admin",
+            date,
+            time,
+          };
+        });
+        setList(mapped);
+      }
+    } catch (err) {
+      setApiError(err instanceof Error ? err.message : "Failed to load messages.");
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    fetchMessages();
+  }, [fetchMessages]);
 
   const filteredMessages = useMemo(() => {
     let result = list;
@@ -40,7 +116,6 @@ export default function MessagesPage() {
     if (filterStatus) result = result.filter((m) => m.status === filterStatus);
     if (filterDateFrom || filterDateTo) {
       result = result.filter((m) => {
-        // date stored as MM/DD/YYYY — convert to comparable YYYY-MM-DD
         const parts = m.date.split("/");
         if (parts.length !== 3) return true;
         const msgDate = `${parts[2]}-${parts[0].padStart(2, "0")}-${parts[1].padStart(2, "0")}`;
@@ -76,7 +151,11 @@ export default function MessagesPage() {
 
   const handleSelectRow = (id: string) => {
     const newSelected = new Set(selectedRows);
-    newSelected.has(id) ? newSelected.delete(id) : newSelected.add(id);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
     setSelectedRows(newSelected);
   };
 
@@ -174,7 +253,7 @@ export default function MessagesPage() {
             <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">Type</label>
             <select
               value={filterType}
-              onChange={(e) => { setFilterType(e.target.value as any); setCurrentPage(1); }}
+              onChange={(e) => { setFilterType(e.target.value as "" | "SMS" | "Email"); setCurrentPage(1); }}
               className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             >
               <option value="">All Types</option>
@@ -186,7 +265,7 @@ export default function MessagesPage() {
             <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-slate-300">Status</label>
             <select
               value={filterStatus}
-              onChange={(e) => { setFilterStatus(e.target.value as any); setCurrentPage(1); }}
+              onChange={(e) => { setFilterStatus(e.target.value as "" | "Sent" | "Scheduled" | "Failed"); setCurrentPage(1); }}
               className="h-[42px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-2 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]"
             >
               <option value="">All Statuses</option>
@@ -225,6 +304,15 @@ export default function MessagesPage() {
         </div>
       )}
 
+      {apiError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
+          {apiError} —{" "}
+          <button className="font-medium underline" onClick={() => fetchMessages()}>
+            Retry
+          </button>
+        </div>
+      )}
+
       {selectedRows.size > 0 && (
         <div className="mb-2 text-sm text-gray-500 dark:text-slate-400">
           {selectedRows.size} message{selectedRows.size > 1 ? "s" : ""} selected
@@ -254,46 +342,53 @@ export default function MessagesPage() {
             </tr>
           </thead>
           <tbody>
-            {paginatedMessages.map((message) => (
-              <tr key={message.id} className="border-b border-[#F3F4F6] hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 cursor-pointer" style={{ height: "56px" }} onDoubleClick={() => setViewing(message)}>
-                <td className="px-4 py-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.has(message.id)}
-                    onChange={() => handleSelectRow(message.id)}
-                    className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
-                  />
-                </td>
-                <td className="px-4 py-3">{getTypeBadge(message.type)}</td>
-                <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[160px]"><span className="block truncate">{message.recipient}</span></td>
-                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[200px]"><span className="block truncate">{message.subject || "—"}</span></td>
-                <td className="px-4 py-3">{getStatusBadge(message.status)}</td>
-                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[140px]"><span className="block truncate">{message.sentBy}</span></td>
-                <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{message.date}</td>
-                <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{message.time || "—"}</td>
-                <td className="px-4 py-3">
-                  <ActionDropdown
-                    actions={
-                      activeTab === "Scheduled"
-                        ? [
-                            { label: "View", onClick: () => setViewing(message) },
-                            { label: "Terminate", onClick: () => handleTerminate(message.id) },
-                          ]
-                        : [
-                            { label: "View", onClick: () => setViewing(message) },
-                            { label: "Resend", onClick: () => console.log("Resend message:", message.id) },
-                          ]
-                    }
-                  />
+            {loading ? (
+              <tr>
+                <td colSpan={9} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
+                  Loading messages…
                 </td>
               </tr>
-            ))}
-            {paginatedMessages.length === 0 && (
+            ) : paginatedMessages.length === 0 ? (
               <tr>
                 <td colSpan={9} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
                   No messages found.
                 </td>
               </tr>
+            ) : (
+              paginatedMessages.map((message) => (
+                <tr key={message.id} className="border-b border-[#F3F4F6] hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 cursor-pointer" style={{ height: "56px" }} onDoubleClick={() => setViewing(message)}>
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.has(message.id)}
+                      onChange={() => handleSelectRow(message.id)}
+                      className="h-[18px] w-[18px] rounded-sm border-2 border-[#D1D5DB] text-[#000080] dark:text-indigo-400 focus:ring-[#000080]"
+                    />
+                  </td>
+                  <td className="px-4 py-3">{getTypeBadge(message.type)}</td>
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[160px]"><span className="block truncate">{message.recipient}</span></td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[200px]"><span className="block truncate">{message.subject || "—"}</span></td>
+                  <td className="px-4 py-3">{getStatusBadge(message.status)}</td>
+                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[140px]"><span className="block truncate">{message.sentBy}</span></td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{message.date}</td>
+                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{message.time || "—"}</td>
+                  <td className="px-4 py-3">
+                    <ActionDropdown
+                      actions={
+                        activeTab === "Scheduled"
+                          ? [
+                              { label: "View", onClick: () => setViewing(message) },
+                              { label: "Terminate", onClick: () => handleTerminate(message.id) },
+                            ]
+                          : [
+                              { label: "View", onClick: () => setViewing(message) },
+                              { label: "Resend", onClick: () => console.log("Resend message:", message.id) },
+                            ]
+                      }
+                    />
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -322,7 +417,14 @@ export default function MessagesPage() {
             )}
             <div>
               <p className="text-xs font-medium text-[#6B7280] dark:text-slate-400">Content</p>
-              <p className="whitespace-pre-wrap text-[#374151] dark:text-slate-300">{viewing.content}</p>
+              {viewing.type === "Email" ? (
+                <div
+                  className="mt-1 p-3 rounded-lg border border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/50 text-sm text-gray-700 dark:text-slate-300 prose dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: viewing.content }}
+                />
+              ) : (
+                <p className="whitespace-pre-wrap text-[#374151] dark:text-slate-300">{viewing.content}</p>
+              )}
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pt-2">
               <div>
