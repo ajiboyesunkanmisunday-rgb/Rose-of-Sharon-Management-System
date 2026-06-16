@@ -51,13 +51,36 @@ export default function AddWorkflowTemplatePage() {
   const removeStep = (idx: number) =>
     setSteps((prev) => prev.filter((_, i) => i !== idx));
 
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanedSteps = steps
-      .filter((s) => s.trim())
-      .map((label, idx) => ({ label, order: idx + 1 }));
-    console.log("Create template:", { ...formData, steps: cleanedSteps });
-    router.push("/workflows/templates");
+    setSubmitError("");
+
+    const el = (e.target as HTMLFormElement).elements;
+    const getVal = (fieldName: string) =>
+      ((el.namedItem(fieldName) as HTMLInputElement | null)?.value ?? "").trim();
+
+    const name = getVal("name") || formData.name.trim();
+    const description = getVal("description") || formData.description.trim();
+    const trigger = getVal("trigger") || formData.trigger.trim();
+
+    if (!name || !description || !trigger) {
+      setSubmitError("Please fill in all required fields.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const cleanedSteps = steps
+        .filter((s) => s.trim())
+        .map((label, idx) => ({ label, order: idx + 1 }));
+      console.log("Create template:", { ...formData, steps: cleanedSteps });
+      router.push("/workflows/templates");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -156,6 +179,10 @@ export default function AddWorkflowTemplatePage() {
             </label>
           </div>
 
+          {submitError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{submitError}</div>
+          )}
+
           <div className="flex items-center justify-end gap-3 pt-4">
             <Button
               variant="secondary"
@@ -164,8 +191,8 @@ export default function AddWorkflowTemplatePage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={!isFormValid}>
-              Save Template
+            <Button variant="primary" type="submit" disabled={submitting}>
+              {submitting ? "Saving…" : "Save Template"}
             </Button>
           </div>
         </form>

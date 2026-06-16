@@ -66,6 +66,19 @@ export default function AddMemberPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    const resolvedFirstName = firstName.trim();
+    const resolvedLastName = lastName.trim();
+
+    if (!resolvedFirstName || !resolvedLastName) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+    if (email && !EMAIL_RE.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
     setLoading(true);
 
     // Parse wedding date from spouse data when married
@@ -458,7 +471,7 @@ export default function AddMemberPage() {
 
               {/* Save Member Button */}
               <div className="mt-6 flex justify-end">
-                <Button type="submit" variant="primary" disabled={loading || !isFormValid} className="w-full sm:w-auto">
+                <Button type="submit" variant="primary" disabled={loading} className="w-full sm:w-auto">
                   {loading ? "Saving…" : "Save Member"}
                 </Button>
               </div>

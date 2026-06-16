@@ -45,8 +45,27 @@ export default function AddAnnouncementPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
+
+    const el = (e.target as HTMLFormElement).elements;
+    const getVal = (fieldName: string) =>
+      ((el.namedItem(fieldName) as HTMLInputElement | null)?.value ?? "").trim();
+
+    const subject = getVal("subject") || formData.subject.trim();
+    const content = getVal("content") || formData.content.trim();
+    const startDate = getVal("startDate") || formData.startDate;
+    const endDate = getVal("endDate") || formData.endDate;
+
+    if (!subject || !content || !startDate || !endDate) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+    if (startDate > endDate) {
+      setError("Start date must be on or before the end date.");
+      return;
+    }
+
+    setLoading(true);
     try {
       const currentUser = getStoredUser();
       await createAnnouncement({
@@ -135,7 +154,7 @@ export default function AddAnnouncementPage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={loading || !isFormValid}>
+            <Button variant="primary" type="submit" disabled={loading}>
               {loading ? "Saving..." : "Save Announcement"}
             </Button>
           </div>

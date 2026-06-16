@@ -71,6 +71,18 @@ export default function EditGroupClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    const el = (e.target as HTMLFormElement).elements;
+    const getVal = (fieldName: string) =>
+      ((el.namedItem(fieldName) as HTMLInputElement | null)?.value ?? "").trim();
+
+    const name = getVal("name") || formData.name.trim();
+
+    if (!name) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       await updateGroup(id, {
@@ -107,7 +119,7 @@ export default function EditGroupClient() {
             <Button variant="secondary" type="button" onClick={() => router.push(`/settings/groups/grp-1/?id=${encodeURIComponent(id)}`)}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={submitting || !isFormValid}>
+            <Button variant="primary" type="submit" disabled={submitting}>
               {submitting ? "Saving…" : "Save Changes"}
             </Button>
           </div>

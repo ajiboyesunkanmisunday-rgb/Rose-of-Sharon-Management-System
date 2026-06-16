@@ -33,6 +33,8 @@ export default function AddCoursePage() {
     endDate: "",
     status: "Upcoming",
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -43,8 +45,27 @@ export default function AddCoursePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Create course:", formData);
-    router.push("/trainings/courses");
+    setError("");
+
+    const el = (e.target as HTMLFormElement).elements;
+    const getVal = (name: string) =>
+      ((el.namedItem(name) as HTMLInputElement | null)?.value ?? "").trim();
+
+    const courseName = getVal("name") || formData.name.trim();
+    const description = getVal("description") || formData.description.trim();
+
+    if (!courseName || !description) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      console.log("Create course:", formData);
+      router.push("/trainings/courses");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -124,6 +145,10 @@ export default function AddCoursePage() {
             />
           </div>
 
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{error}</div>
+          )}
+
           <div className="flex items-center justify-end gap-3 pt-4">
             <Button
               variant="secondary"
@@ -132,8 +157,8 @@ export default function AddCoursePage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
-              Save Course
+            <Button variant="primary" type="submit" disabled={submitting}>
+              {submitting ? "Saving…" : "Save Course"}
             </Button>
           </div>
         </form>

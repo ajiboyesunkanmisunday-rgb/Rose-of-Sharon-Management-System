@@ -191,7 +191,7 @@ export default function AddTemplatePage() {
             <Button variant="secondary" type="button" onClick={() => router.push("/communication/templates")}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={saving || !isFormValid}>
+            <Button variant="primary" type="submit" disabled={saving}>
               {saving ? "Saving…" : "Save Template"}
             </Button>
           </div>

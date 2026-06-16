@@ -102,12 +102,23 @@ export default function AddRequestPage() {
     e.preventDefault();
     setError("");
 
+    const el = (e.target as HTMLFormElement).elements;
+    const getVal = (fieldName: string) =>
+      ((el.namedItem(fieldName) as HTMLInputElement | null)?.value ?? "").trim();
+
+    const subject = getVal("subject") || formData.subject.trim();
+    const content = getVal("content") || formData.content.trim();
+
     if (!selectedMember) {
       setError("Please search for and select a member first.");
       return;
     }
     if (!formData.category) {
       setError("Please select a request category.");
+      return;
+    }
+    if (!subject || !content) {
+      setError("Please fill in all required fields.");
       return;
     }
 
@@ -250,7 +261,7 @@ export default function AddRequestPage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={submitting || !isFormValid}>
+            <Button variant="primary" type="submit" disabled={submitting}>
               {submitting ? "Saving…" : "Save Request"}
             </Button>
           </div>
