@@ -135,7 +135,12 @@ export default function EditEventClient() {
     const fd = new FormData(e.currentTarget);
     const rawDate = (fd.get("date") as string | null) ?? "";
     const date = normalizeDate(rawDate) || normalizeDate(formData.date);
+    const title = ((fd.get("title") as string | null) ?? "").trim() || formData.title.trim();
 
+    if (!title) {
+      setError("Event title is required.");
+      return;
+    }
     if (!date) {
       setError("Please select a date for the event.");
       return;
@@ -245,7 +250,7 @@ export default function EditEventClient() {
 
           <div className="flex items-center justify-end gap-3 pt-4">
             <Button variant="secondary" type="button" onClick={() => router.push(`/event-management/${id}`)}>Cancel</Button>
-            <Button variant="primary" type="submit" disabled={loading || !isFormValid}>{loading ? "Saving…" : "Save Changes"}</Button>
+            <Button variant="primary" type="submit" disabled={loading}>{loading ? "Saving…" : "Save Changes"}</Button>
           </div>
         </form>
       </div>

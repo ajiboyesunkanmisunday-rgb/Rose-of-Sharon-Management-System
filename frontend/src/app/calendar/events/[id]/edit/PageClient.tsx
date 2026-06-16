@@ -107,12 +107,20 @@ export default function EditCalendarEventClient() {
     e.preventDefault();
     setError("");
 
+    const el = (e.target as HTMLFormElement).elements;
+    const getVal = (fieldName: string) =>
+      ((el.namedItem(fieldName) as HTMLInputElement | null)?.value ?? "").trim();
+
+    const title = getVal("title") || formData.title.trim();
     const dateEl = document.getElementById("event-date-input") as HTMLInputElement | null;
     const date = dateEl?.value || formData.date || "";
 
+    if (!title) {
+      setError("Event name is required.");
+      return;
+    }
     if (!date) {
       setError("Please select a date for the event.");
-      setLoading(false);
       return;
     }
 
@@ -168,7 +176,7 @@ export default function EditCalendarEventClient() {
             <Button variant="secondary" type="button" onClick={() => router.push(`/calendar/events/${id}`)}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={loading || !isFormValid}>
+            <Button variant="primary" type="submit" disabled={loading}>
               {loading ? "Saving…" : "Save Changes"}
             </Button>
           </div>

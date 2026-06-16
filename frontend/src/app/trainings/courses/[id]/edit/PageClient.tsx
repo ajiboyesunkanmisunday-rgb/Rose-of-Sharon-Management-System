@@ -59,6 +59,9 @@ export default function EditCourseClient() {
     status: existing.status,
   });
 
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -68,8 +71,27 @@ export default function EditCourseClient() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Update course:", id, formData);
-    router.push(`/trainings/courses/${id}`);
+    setError("");
+
+    const el = (e.target as HTMLFormElement).elements;
+    const getVal = (fieldName: string) =>
+      ((el.namedItem(fieldName) as HTMLInputElement | null)?.value ?? "").trim();
+
+    const courseName = getVal("name") || formData.name.trim();
+    const description = getVal("description") || formData.description.trim();
+
+    if (!courseName || !description) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      console.log("Update course:", id, formData);
+      router.push(`/trainings/courses/${id}`);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -94,12 +116,16 @@ export default function EditCourseClient() {
             <FormField label="End Date" type="date" name="endDate" value={formData.endDate} onChange={handleChange} />
           </div>
 
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{error}</div>
+          )}
+
           <div className="flex items-center justify-end gap-3 pt-4">
             <Button variant="secondary" type="button" onClick={() => router.push(`/trainings/courses/${id}`)}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
-              Save Changes
+            <Button variant="primary" type="submit" disabled={submitting}>
+              {submitting ? "Saving…" : "Save Changes"}
             </Button>
           </div>
         </form>

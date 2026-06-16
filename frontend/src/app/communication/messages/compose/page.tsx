@@ -59,13 +59,36 @@ export default function ComposeMessagePage() {
     setFormData((prev) => ({ ...prev, [name]: val }));
   };
 
+  const isEmail = formData.type === "Email";
+
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Send message:", formData);
-    router.push("/communication/messages");
-  };
+    setSubmitError("");
 
-  const isEmail = formData.type === "Email";
+    const el = (e.target as HTMLFormElement).elements;
+    const getVal = (fieldName: string) =>
+      ((el.namedItem(fieldName) as HTMLInputElement | null)?.value ?? "").trim();
+
+    const recipient = getVal("recipient") || formData.recipient;
+    const content = getVal("content") || formData.content.trim();
+    const subject = isEmail ? (getVal("subject") || formData.subject.trim()) : "";
+
+    if (!recipient || !content || (isEmail && !subject)) {
+      setSubmitError("Please fill in all required fields.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      console.log("Send message:", formData);
+      router.push("/communication/messages");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const MAX_CONTENT = 1000;
   const MAX_SUBJECT = 150;
@@ -175,11 +198,15 @@ export default function ComposeMessagePage() {
             />
           )}
 
+          {submitError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{submitError}</div>
+          )}
+
           <div className="flex items-center justify-end gap-3 pt-4">
             <Button variant="secondary" type="button" onClick={() => router.push("/communication/messages")}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={!isFormValid}>
+            <Button variant="primary" type="submit" disabled={submitting}>
               {formData.sendNow ? "Send Now" : "Schedule"}
             </Button>
           </div>

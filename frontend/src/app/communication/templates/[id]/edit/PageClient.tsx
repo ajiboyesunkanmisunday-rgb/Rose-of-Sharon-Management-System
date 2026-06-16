@@ -85,8 +85,21 @@ export default function EditTemplateClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setError("");
+
+    const el = (e.target as HTMLFormElement).elements;
+    const getVal = (fieldName: string) =>
+      ((el.namedItem(fieldName) as HTMLInputElement | null)?.value ?? "").trim();
+
+    const resolvedName = getVal("name") || name.trim();
+    const resolvedContent = content.trim();
+
+    if (!resolvedName || !resolvedContent) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+
+    setSaving(true);
     try {
       await updateMessageTemplate(id, {
         category,
@@ -169,6 +182,7 @@ export default function EditTemplateClient() {
               </label>
               <input
                 type="text"
+                name="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onBlur={() => touch("name")}
@@ -232,7 +246,7 @@ export default function EditTemplateClient() {
               >
                 Cancel
               </Button>
-              <Button variant="primary" type="submit" disabled={saving || !isFormValid}>
+              <Button variant="primary" type="submit" disabled={saving}>
                 {saving ? "Saving…" : "Save Changes"}
               </Button>
             </div>
