@@ -2213,6 +2213,58 @@ export async function searchMessageTemplates(
   );
 }
 
+// ─── Messages ──────────────────────────────────────────────────────────────────
+
+export interface MessageResponse {
+  id: string;
+  channel: "EMAIL" | "SMS";
+  receiver: string;
+  receiverId?: string;
+  content: string;
+  subject?: string;
+  timeSent: string;
+  success: boolean;
+  createdOn: string;
+}
+
+export interface CreateMessageRequest {
+  subject?: string;
+  content: string;
+  channel: "EMAIL" | "SMS";
+  isInstant: boolean;
+  timeSent: string;
+  category: string;
+  categoryValue?: string;
+  customReceivers?: string[];
+}
+
+export async function getSentMessages(
+  pageNo = 0,
+  pageSize = 10,
+): Promise<CustomPageResponse<MessageResponse>> {
+  return apiFetch<CustomPageResponse<MessageResponse>>(
+    `/api/v1/messages/sent?pageNo=${pageNo}&pageSize=${pageSize}`,
+  );
+}
+
+export async function getScheduledMessages(
+  pageNo = 0,
+  pageSize = 10,
+): Promise<CustomPageResponse<MessageResponse>> {
+  return apiFetch<CustomPageResponse<MessageResponse>>(
+    `/api/v1/messages/scheduled?pageNo=${pageNo}&pageSize=${pageSize}`,
+  );
+}
+
+export async function createMessage(
+  body: CreateMessageRequest,
+): Promise<unknown> {
+  return apiFetch<unknown>("/api/v1/messages", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
 // ─── Admin Users ──────────────────────────────────────────────────────────────
 
 export interface AdminResponse {
