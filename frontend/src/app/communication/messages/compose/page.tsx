@@ -286,6 +286,8 @@ export default function ComposeMessagePage() {
             />
           )}
 
+         
+
           <div className="flex items-center justify-end gap-3 pt-4">
             <Button variant="secondary" type="button" onClick={() => router.push("/communication/messages")}>
               Cancel

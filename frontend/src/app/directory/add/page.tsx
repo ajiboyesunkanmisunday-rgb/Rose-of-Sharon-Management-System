@@ -50,10 +50,37 @@ export default function AddContactPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Add contact:", formData);
-    router.push("/directory");
+    setSubmitError("");
+
+    const el = (e.target as HTMLFormElement).elements;
+    const getVal = (fieldName: string) =>
+      ((el.namedItem(fieldName) as HTMLInputElement | null)?.value ?? "").trim();
+
+    const name = getVal("name") || formData.name.trim();
+    const phone = getVal("phone") || formData.phone.trim();
+    const emailVal = getVal("email") || formData.email.trim();
+
+    if (!name || !phone) {
+      setSubmitError("Please fill in all required fields.");
+      return;
+    }
+    if (emailVal && !EMAIL_RE.test(emailVal)) {
+      setSubmitError("Please enter a valid email address.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      console.log("Add contact:", formData);
+      router.push("/directory");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -131,6 +158,10 @@ export default function AddContactPage() {
             />
           </div>
 
+          {submitError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{submitError}</div>
+          )}
+
           <div className="flex items-center justify-end gap-3 pt-4">
             <Button
               variant="secondary"
@@ -139,8 +170,8 @@ export default function AddContactPage() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={!isFormValid}>
-              Save Contact
+            <Button variant="primary" type="submit" disabled={submitting}>
+              {submitting ? "Saving…" : "Save Contact"}
             </Button>
           </div>
         </form>

@@ -25,6 +25,8 @@ export default function AddSchedulePage() {
     capacity: "",
     status: "Upcoming",
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -35,8 +37,28 @@ export default function AddSchedulePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Create schedule:", formData);
-    router.push("/trainings/schedules");
+    setError("");
+
+    const el = (e.target as HTMLFormElement).elements;
+    const getVal = (name: string) =>
+      ((el.namedItem(name) as HTMLInputElement | null)?.value ?? "").trim();
+
+    const courseId = getVal("courseId") || formData.courseId.trim();
+    const startDate = getVal("startDate") || formData.startDate.trim();
+    const endDate = getVal("endDate") || formData.endDate.trim();
+
+    if (!courseId || !startDate || !endDate) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      console.log("Create schedule:", formData);
+      router.push("/trainings/schedules");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const courseOptions = trainingCourses.map((c) => ({
@@ -73,12 +95,16 @@ export default function AddSchedulePage() {
             <SelectField label="Status" name="status" value={formData.status} onChange={handleChange} options={STATUS_OPTIONS} />
           </div>
 
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">{error}</div>
+          )}
+
           <div className="flex items-center justify-end gap-3 pt-4">
             <Button variant="secondary" type="button" onClick={() => router.push("/trainings/schedules")}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
-              Save Schedule
+            <Button variant="primary" type="submit" disabled={submitting}>
+              {submitting ? "Saving…" : "Save Schedule"}
             </Button>
           </div>
         </form>
