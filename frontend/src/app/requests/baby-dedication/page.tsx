@@ -22,24 +22,11 @@ export default function BabyDedicationPage() {
     houseFellowshipCentre: "",
     houseLeader:           "",
   });
-  const [touched,    setTouched]    = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error,      setError]      = useState("");
 
-  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
-  const set   = (field: string, value: string) =>
+  const set = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
-
-  const isValid =
-    !!form.fatherName.trim() &&
-    !!form.motherName.trim() &&
-    !!form.childFullName.trim() &&
-    !!form.dateOfBirth &&
-    !!form.placeOfBirth.trim() &&
-    !!form.meaningOfNames.trim() &&
-    !!form.phoneNumber.trim() &&
-    !!form.houseFellowshipCentre.trim() &&
-    !!form.houseLeader.trim();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,29 +34,51 @@ export default function BabyDedicationPage() {
       setError("You must be logged in to submit this form.");
       return;
     }
+    // Re-read values from the form DOM directly so autofill is always captured
+    const el = (e.target as HTMLFormElement).elements;
+    const getValue = (name: string) =>
+      ((el.namedItem(name) as HTMLInputElement | null)?.value ?? "").trim();
+
+    const fatherName            = getValue("fatherName")            || form.fatherName.trim();
+    const motherName            = getValue("motherName")            || form.motherName.trim();
+    const childFullName         = getValue("childFullName")         || form.childFullName.trim();
+    const dateOfBirth           = getValue("dateOfBirth")           || form.dateOfBirth.trim();
+    const placeOfBirth          = getValue("placeOfBirth")          || form.placeOfBirth.trim();
+    const meaningOfNames        = getValue("meaningOfNames")        || form.meaningOfNames.trim();
+    const phoneNumber           = getValue("phoneNumber")           || form.phoneNumber.trim();
+    const houseFellowshipCentre = getValue("houseFellowshipCentre") || form.houseFellowshipCentre.trim();
+    const houseLeader           = getValue("houseLeader")           || form.houseLeader.trim();
+
+    if (!fatherName || !motherName || !childFullName || !dateOfBirth || !placeOfBirth ||
+        !meaningOfNames || !phoneNumber || !houseFellowshipCentre || !houseLeader) {
+      setError("Please fill in all required fields before submitting.");
+      return;
+    }
+
     setSubmitting(true);
     setError("");
     try {
       const content = [
-        `Name of Father: ${form.fatherName}`,
-        `Name of Mother: ${form.motherName}`,
-        `Full Name of Child: ${form.childFullName}`,
-        `Date of Birth: ${form.dateOfBirth}`,
-        `Place of Birth: ${form.placeOfBirth}`,
-        `Meaning of Names: ${form.meaningOfNames}`,
-        `Phone Number: ${form.phoneNumber}`,
-        `House Fellowship Centre: ${form.houseFellowshipCentre}`,
-        `House Leader: ${form.houseLeader}`,
+        `Name of Father: ${fatherName}`,
+        `Name of Mother: ${motherName}`,
+        `Full Name of Child: ${childFullName}`,
+        `Date of Birth: ${dateOfBirth}`,
+        `Place of Birth: ${placeOfBirth}`,
+        `Meaning of Names: ${meaningOfNames}`,
+        `Phone Number: ${phoneNumber}`,
+        `House Fellowship Centre: ${houseFellowshipCentre}`,
+        `House Leader: ${houseLeader}`,
       ].join("\n");
 
       await createSuggestion({
         userId:  currentUser.id,
-        subject: `Baby Dedication – ${form.childFullName}`,
+        subject: `Baby Dedication – ${childFullName}`,
         content,
       });
       router.push("/requests");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit form.");
+    } finally {
       setSubmitting(false);
     }
   };
@@ -139,9 +148,9 @@ export default function BabyDedicationPage() {
             </label>
             <input
               type="text"
+              name="fatherName"
               value={form.fatherName}
               onChange={(e) => set("fatherName", e.target.value)}
-              onBlur={() => touch("fatherName")}
               className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
               required
             />
@@ -154,9 +163,9 @@ export default function BabyDedicationPage() {
             </label>
             <input
               type="text"
+              name="motherName"
               value={form.motherName}
               onChange={(e) => set("motherName", e.target.value)}
-              onBlur={() => touch("motherName")}
               className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
               required
             />
@@ -169,9 +178,9 @@ export default function BabyDedicationPage() {
             </label>
             <input
               type="text"
+              name="childFullName"
               value={form.childFullName}
               onChange={(e) => set("childFullName", e.target.value)}
-              onBlur={() => touch("childFullName")}
               className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
               required
             />
@@ -184,6 +193,7 @@ export default function BabyDedicationPage() {
             </label>
             <input
               type="date"
+              name="dateOfBirth"
               value={form.dateOfBirth}
               onChange={(e) => set("dateOfBirth", e.target.value)}
               className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
@@ -198,9 +208,9 @@ export default function BabyDedicationPage() {
             </label>
             <input
               type="text"
+              name="placeOfBirth"
               value={form.placeOfBirth}
               onChange={(e) => set("placeOfBirth", e.target.value)}
-              onBlur={() => touch("placeOfBirth")}
               className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
               required
             />
@@ -214,9 +224,9 @@ export default function BabyDedicationPage() {
               </label>
               <input
                 type="text"
+                name="meaningOfNames"
                 value={form.meaningOfNames}
                 onChange={(e) => set("meaningOfNames", e.target.value)}
-                onBlur={() => touch("meaningOfNames")}
                 className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
                 required
               />
@@ -232,9 +242,9 @@ export default function BabyDedicationPage() {
             </label>
             <input
               type="tel"
+              name="phoneNumber"
               value={form.phoneNumber}
               onChange={(e) => set("phoneNumber", e.target.value)}
-              onBlur={() => touch("phoneNumber")}
               className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
               required
             />
@@ -247,9 +257,9 @@ export default function BabyDedicationPage() {
             </label>
             <input
               type="text"
+              name="houseFellowshipCentre"
               value={form.houseFellowshipCentre}
               onChange={(e) => set("houseFellowshipCentre", e.target.value)}
-              onBlur={() => touch("houseFellowshipCentre")}
               className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
               required
             />
@@ -262,9 +272,9 @@ export default function BabyDedicationPage() {
             </label>
             <input
               type="text"
+              name="houseLeader"
               value={form.houseLeader}
               onChange={(e) => set("houseLeader", e.target.value)}
-              onBlur={() => touch("houseLeader")}
               className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
               required
             />
@@ -288,7 +298,7 @@ export default function BabyDedicationPage() {
             <Button variant="secondary" type="button" onClick={() => router.push("/requests")}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={submitting || !isValid}>
+            <Button variant="primary" type="submit" disabled={submitting}>
               {submitting ? "Submitting…" : "Submit Form"}
             </Button>
           </div>

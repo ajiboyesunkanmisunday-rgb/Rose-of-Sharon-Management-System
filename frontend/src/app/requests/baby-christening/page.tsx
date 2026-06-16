@@ -22,24 +22,11 @@ export default function BabyChristeningPage() {
     houseFellowshipCentre: "",
     houseLeader:           "",
   });
-  const [touched,    setTouched]    = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error,      setError]      = useState("");
 
-  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
-  const set   = (field: string, value: string) =>
+  const set = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
-
-  const isValid =
-    !!form.parentName.trim() &&
-    !!form.address.trim() &&
-    !!form.sex &&
-    !!form.dateOfBirth &&
-    !!form.namingCeremonyDate &&
-    !!form.phoneNumber.trim() &&
-    !!form.churchHandleNaming &&
-    !!form.houseFellowshipCentre.trim() &&
-    !!form.houseLeader.trim();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,29 +34,51 @@ export default function BabyChristeningPage() {
       setError("You must be logged in to submit this form.");
       return;
     }
+    // Re-read values from the form DOM so autofill is always captured
+    const el = (e.target as HTMLFormElement).elements;
+    const getValue = (name: string) =>
+      ((el.namedItem(name) as HTMLInputElement | null)?.value ?? "").trim();
+
+    const parentName            = getValue("parentName")            || form.parentName.trim();
+    const address               = getValue("address")               || form.address.trim();
+    const sex                   = form.sex; // radio — always from state
+    const dateOfBirth           = getValue("dateOfBirth")           || form.dateOfBirth.trim();
+    const namingCeremonyDate    = getValue("namingCeremonyDate")    || form.namingCeremonyDate.trim();
+    const phoneNumber           = getValue("phoneNumber")           || form.phoneNumber.trim();
+    const churchHandleNaming    = form.churchHandleNaming;           // radio — always from state
+    const houseFellowshipCentre = getValue("houseFellowshipCentre") || form.houseFellowshipCentre.trim();
+    const houseLeader           = getValue("houseLeader")           || form.houseLeader.trim();
+
+    if (!parentName || !address || !sex || !dateOfBirth || !namingCeremonyDate ||
+        !phoneNumber || !churchHandleNaming || !houseFellowshipCentre || !houseLeader) {
+      setError("Please fill in all required fields before submitting.");
+      return;
+    }
+
     setSubmitting(true);
     setError("");
     try {
       const content = [
-        `Name of Parent: ${form.parentName}`,
-        `Parents' Address: ${form.address}`,
-        `Sex: ${form.sex}`,
-        `Date of Birth: ${form.dateOfBirth}`,
-        `Naming Ceremony Date: ${form.namingCeremonyDate}`,
-        `Phone Number of Parent: ${form.phoneNumber}`,
-        `Church to Handle Naming Ceremony: ${form.churchHandleNaming}`,
-        `House Fellowship Centre: ${form.houseFellowshipCentre}`,
-        `House Leader: ${form.houseLeader}`,
+        `Name of Parent: ${parentName}`,
+        `Parents' Address: ${address}`,
+        `Sex: ${sex}`,
+        `Date of Birth: ${dateOfBirth}`,
+        `Naming Ceremony Date: ${namingCeremonyDate}`,
+        `Phone Number of Parent: ${phoneNumber}`,
+        `Church to Handle Naming Ceremony: ${churchHandleNaming}`,
+        `House Fellowship Centre: ${houseFellowshipCentre}`,
+        `House Leader: ${houseLeader}`,
       ].join("\n");
 
       await createSuggestion({
         userId:  currentUser.id,
-        subject: `Baby Christening – ${form.parentName}`,
+        subject: `Baby Christening – ${parentName}`,
         content,
       });
       router.push("/requests");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit form.");
+    } finally {
       setSubmitting(false);
     }
   };
@@ -140,16 +149,13 @@ export default function BabyChristeningPage() {
             </label>
             <input
               type="text"
+              name="parentName"
               value={form.parentName}
               onChange={(e) => set("parentName", e.target.value)}
-              onBlur={() => touch("parentName")}
               className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
               required
             />
           </div>
-          {touched.parentName && !form.parentName.trim() && (
-            <p className="text-xs text-red-500 -mt-3">Required</p>
-          )}
 
           {/* Parents' Address — label + first underline */}
           <div className="space-y-2">
@@ -159,9 +165,9 @@ export default function BabyChristeningPage() {
               </label>
               <input
                 type="text"
+                name="address"
                 value={form.address}
                 onChange={(e) => set("address", e.target.value)}
-                onBlur={() => touch("address")}
                 className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
                 required
               />
@@ -176,6 +182,7 @@ export default function BabyChristeningPage() {
               Sex:
             </label>
             <select
+              name="sex"
               value={form.sex}
               onChange={(e) => set("sex", e.target.value)}
               className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0 cursor-pointer"
@@ -194,6 +201,7 @@ export default function BabyChristeningPage() {
             </label>
             <input
               type="date"
+              name="dateOfBirth"
               value={form.dateOfBirth}
               onChange={(e) => set("dateOfBirth", e.target.value)}
               className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
@@ -208,6 +216,7 @@ export default function BabyChristeningPage() {
             </label>
             <input
               type="date"
+              name="namingCeremonyDate"
               value={form.namingCeremonyDate}
               onChange={(e) => set("namingCeremonyDate", e.target.value)}
               className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
@@ -222,9 +231,9 @@ export default function BabyChristeningPage() {
             </label>
             <input
               type="tel"
+              name="phoneNumber"
               value={form.phoneNumber}
               onChange={(e) => set("phoneNumber", e.target.value)}
-              onBlur={() => touch("phoneNumber")}
               className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
               required
             />
@@ -260,9 +269,9 @@ export default function BabyChristeningPage() {
               </label>
               <input
                 type="text"
+                name="houseFellowshipCentre"
                 value={form.houseFellowshipCentre}
                 onChange={(e) => set("houseFellowshipCentre", e.target.value)}
-                onBlur={() => touch("houseFellowshipCentre")}
                 className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
                 required
               />
@@ -276,9 +285,9 @@ export default function BabyChristeningPage() {
             </label>
             <input
               type="text"
+              name="houseLeader"
               value={form.houseLeader}
               onChange={(e) => set("houseLeader", e.target.value)}
-              onBlur={() => touch("houseLeader")}
               className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
               required
             />
@@ -295,7 +304,7 @@ export default function BabyChristeningPage() {
             <Button variant="secondary" type="button" onClick={() => router.push("/requests")}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={submitting || !isValid}>
+            <Button variant="primary" type="submit" disabled={submitting}>
               {submitting ? "Submitting…" : "Submit Form"}
             </Button>
           </div>
