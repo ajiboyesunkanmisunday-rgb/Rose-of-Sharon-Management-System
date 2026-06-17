@@ -307,9 +307,9 @@ export default function AnalyticsDashboard() {
         getVisitingVsNotVisiting(startTime, endTime).catch((): FeatureStatResponse => ({ columns: [] })),
         getServiceSectionsStats(startTime, endTime).catch((): FeatureStatResponse => ({ columns: [] })),
         getMediumOfInvitationStats(startTime, endTime).catch((): FeatureStatResponse => ({ columns: [] })),
-        getFirstTimerToSecondTimerRate(startTime, endTime).catch((): PercentStatisticsResponse => ({ percentage: 0 })),
-        getFirstTimerToMemberRate(startTime, endTime).catch((): PercentStatisticsResponse => ({ percentage: 0 })),
-        getFollowupAttentionRate(startTime, endTime).catch((): PercentStatisticsResponse => ({ percentage: 0 })),
+        getFirstTimerToSecondTimerRate(startTime, endTime).catch((): PercentStatisticsResponse => ({ totalPercent: 0 })),
+        getFirstTimerToMemberRate(startTime, endTime).catch((): PercentStatisticsResponse => ({ totalPercent: 0 })),
+        getFollowupAttentionRate(startTime, endTime).catch((): PercentStatisticsResponse => ({ totalPercent: 0 })),
         getPastServicesAttendance().catch((): PastServicesAttendanceResponse => ({ columns: [] })),
         getTotalSpecialEvents(startTime, endTime).catch((): CountStatisticsResponse => ({ totalCount: 0 })),
       ]);
@@ -633,21 +633,21 @@ export default function AnalyticsDashboard() {
               <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] p-4">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] dark:text-slate-400">FT → 2nd Timer Rate</p>
                 <p className="mt-1 text-2xl font-bold text-[#EA580C]">
-                  {svrStats.ftToStRate != null ? `${(svrStats.ftToStRate.percentage ?? 0).toFixed(1)}%` : "—"}
+                  {svrStats.ftToStRate != null ? `${(svrStats.ftToStRate.totalPercent ?? svrStats.ftToStRate.percentage ?? 0).toFixed(1)}%` : "—"}
                 </p>
                 <p className="text-[10px] text-[#9CA3AF] dark:text-slate-400">In selected period</p>
               </div>
               <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] p-4">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] dark:text-slate-400">FT → Member Rate</p>
                 <p className="mt-1 text-2xl font-bold text-[#9333EA]">
-                  {svrStats.ftToMemRate != null ? `${(svrStats.ftToMemRate.percentage ?? 0).toFixed(1)}%` : "—"}
+                  {svrStats.ftToMemRate != null ? `${(svrStats.ftToMemRate.totalPercent ?? svrStats.ftToMemRate.percentage ?? 0).toFixed(1)}%` : "—"}
                 </p>
                 <p className="text-[10px] text-[#9CA3AF] dark:text-slate-400">In selected period</p>
               </div>
               <div className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F9FAFB] p-4">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] dark:text-slate-400">Follow-up Attention</p>
                 <p className="mt-1 text-2xl font-bold text-[#0891B2]">
-                  {svrStats.followupAttentionRate != null ? `${(svrStats.followupAttentionRate.percentage ?? 0).toFixed(1)}%` : "—"}
+                  {svrStats.followupAttentionRate != null ? `${(svrStats.followupAttentionRate.totalPercent ?? svrStats.followupAttentionRate.percentage ?? 0).toFixed(1)}%` : "—"}
                 </p>
                 <p className="text-[10px] text-[#9CA3AF] dark:text-slate-400">Visitors contacted</p>
               </div>
