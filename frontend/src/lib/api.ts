@@ -2955,7 +2955,10 @@ export interface CountStatisticsResponse {
   totalCount: number;
 }
 export interface PercentStatisticsResponse {
-  percentage: number;
+  /** Swagger field name from backend */
+  totalPercent?: number;
+  /** Alias kept for call-site compat */
+  percentage?: number;
   count?: number;
 }
 
@@ -3324,8 +3327,8 @@ export async function markSodFormAsPaid(
 
 export async function getSodNewConvert(
   id: string,
-): Promise<NewConvertResponse> {
-  return apiFetch<NewConvertResponse>(
+): Promise<NewConvertResponse[]> {
+  return apiFetch<NewConvertResponse[]>(
     `/api/v1/school-of-disciples/${id}/new-convert`,
   );
 }
@@ -3374,8 +3377,8 @@ export async function deleteSodNewConvert(
 export async function updateNewConvert(
   id: string,
   body: SetupNewConvertRequest,
-): Promise<OperationalResponse> {
-  return apiFetch<OperationalResponse>(`/api/v1/new-converts/${id}`, {
+): Promise<NewConvertResponse> {
+  return apiFetch<NewConvertResponse>(`/api/v1/new-converts/${id}`, {
     method: "PUT",
     body: JSON.stringify(body),
   });
