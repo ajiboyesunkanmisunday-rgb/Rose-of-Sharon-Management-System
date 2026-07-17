@@ -57,9 +57,11 @@ export default function FaceOfTheMonthPage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [showGenerateModal, setShowGenerateModal] = useState(false);
-  const [title, setTitle] = useState("");
-  const [generating, setGenerating] = useState(false);
-  const [genError, setGenError] = useState("");
+  const [title,         setTitle]         = useState("");
+  const [numMale,       setNumMale]       = useState("3");
+  const [numFemale,     setNumFemale]     = useState("3");
+  const [generating,    setGenerating]    = useState(false);
+  const [genError,      setGenError]      = useState("");
 
   const fetchItems = useCallback(async (page: number) => {
     setLoading(true);
@@ -82,12 +84,20 @@ export default function FaceOfTheMonthPage() {
 
   const handleGenerate = async () => {
     if (!title.trim()) return;
+    const male   = parseInt(numMale,   10) || 0;
+    const female = parseInt(numFemale, 10) || 0;
+    if (male < 1 || female < 1) {
+      setGenError("Number of male and female nominees must each be at least 1.");
+      return;
+    }
     setGenerating(true);
     setGenError("");
     try {
-      const result = await generateFaceOfTheMonth(title.trim());
+      const result = await generateFaceOfTheMonth(title.trim(), male, female);
       setShowGenerateModal(false);
       setTitle("");
+      setNumMale("3");
+      setNumFemale("3");
       router.push(`/voting/${result.id}`);
     } catch (err) {
       setGenError(err instanceof Error ? err.message : "Failed to generate nominees.");
@@ -238,14 +248,13 @@ export default function FaceOfTheMonthPage() {
               <p className="font-medium">{genError}</p>
               {genError.toLowerCase().includes("nominee") && (
                 <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                  The system selects nominees from active members based on their engagement and activity.
-                  Ensure members are registered and active before generating.
+                  The system selects nominees from active members. Ensure members are registered and active before generating.
                 </p>
               )}
             </div>
           )}
           <p className="text-sm text-[#6B7280] dark:text-slate-400">
-            The system will automatically select nominees from active members. Provide a title for this month&apos;s event.
+            The system will automatically select nominees from active members by gender. Set the title and how many nominees to pick from each category.
           </p>
           <div>
             <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
@@ -257,8 +266,35 @@ export default function FaceOfTheMonthPage() {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. June 2025 Face of the Month"
               className={inputClass}
-              onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
             />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
+                Male Nominees
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={20}
+                value={numMale}
+                onChange={(e) => setNumMale(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
+                Female Nominees
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={20}
+                value={numFemale}
+                onChange={(e) => setNumFemale(e.target.value)}
+                className={inputClass}
+              />
+            </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button
@@ -266,6 +302,8 @@ export default function FaceOfTheMonthPage() {
               onClick={() => {
                 setShowGenerateModal(false);
                 setTitle("");
+                setNumMale("3");
+                setNumFemale("3");
                 setGenError("");
               }}
             >

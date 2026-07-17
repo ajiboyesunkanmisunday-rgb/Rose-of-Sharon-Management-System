@@ -4101,10 +4101,14 @@ export async function getFaceOfTheMonths(pageNo = 0, pageSize = 10): Promise<Cus
   return apiFetch<CustomPageResponse<FaceOfTheMonthResponse>>(`/api/v1/face-of-the-months?pageNo=${pageNo}&pageSize=${pageSize}`);
 }
 
-export async function generateFaceOfTheMonth(title: string): Promise<FaceOfTheMonthFullResponse> {
+export async function generateFaceOfTheMonth(
+  text: string,
+  numberOfMale: number,
+  numberOfFemale: number,
+): Promise<FaceOfTheMonthFullResponse> {
   return apiFetch<FaceOfTheMonthFullResponse>("/api/v1/face-of-the-months", {
     method: "POST",
-    body: JSON.stringify({ text: title }),
+    body: JSON.stringify({ text, numberOfMale, numberOfFemale }),
   });
 }
 
