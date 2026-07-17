@@ -507,16 +507,8 @@ export default function RilaFormCore({
 
         {/* ── Cover / Header ─────────────────────────────────────────────── */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-          {/* Logo placeholder — replace with <img src="/rila-logo.png" …/> once received */}
-          <div style={{
-            width: 80, height: 80, border: "1px solid #aaa", borderRadius: 4,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            flexDirection: "column", fontSize: 9, color: "#555", textAlign: "center",
-            background: "#f8f8f8", flexShrink: 0,
-          }}>
-            <span style={{ fontWeight: 700, fontSize: 11, color: "#DC2626" }}>RILA</span>
-            <span>Logo</span>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/rila-logo.jpeg" alt="RILA Logo" style={{ width: 80, height: 80, objectFit: "contain", flexShrink: 0 }} />
 
           {/* Title block */}
           <div style={{ flex: 1, textAlign: "center", padding: "0 16px" }}>
