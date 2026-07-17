@@ -1792,9 +1792,12 @@ export async function searchBabyDedicationRequests(
 export async function changeRequestStatus(
   id: string,
   status: string,
+  assignedTo?: string,
 ): Promise<OperationalResponse> {
+  const params = new URLSearchParams({ status });
+  if (assignedTo) params.append("assignedTo", assignedTo);
   return apiFetch<OperationalResponse>(
-    `/api/v1/requests/${id}/change-status?status=${encodeURIComponent(status)}`,
+    `/api/v1/requests/${id}/change-status?${params.toString()}`,
     { method: "PATCH" },
   );
 }

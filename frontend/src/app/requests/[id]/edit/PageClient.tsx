@@ -6,20 +6,13 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import { SelectField, TextAreaField } from "@/components/ui/FormField";
-import { getRequest, changeRequestStatus } from "@/lib/api";
+import { getRequest, changeRequestStatus, getAdmins, type AdminResponse } from "@/lib/api";
 
 const STATUS_OPTIONS = [
-  { label: "Received", value: "Received" },
-  { label: "Assigned", value: "Assigned" },
-  { label: "In Progress", value: "In Progress" },
-  { label: "Resolved", value: "Resolved" },
-];
-
-const ASSIGNEE_OPTIONS = [
-  { label: "Pastor David", value: "Pastor David" },
-  { label: "Pastor James", value: "Pastor James" },
-  { label: "Deaconess Grace", value: "Deaconess Grace" },
-  { label: "Shola Damson", value: "Shola Damson" },
+  { label: "Received",    value: "RECEIVED"    },
+  { label: "Assigned",    value: "ASSIGNED"    },
+  { label: "In Progress", value: "IN_PROGRESS" },
+  { label: "Resolved",    value: "RESOLVED"    },
 ];
 
 function fullName(u?: { firstName?: string; middleName?: string; lastName?: string }): string {
@@ -42,28 +35,33 @@ export default function EditRequestClient() {
   }, []);
 
   const [formData, setFormData] = useState({
-    subject: "",
-    category: "",
+    subject:     "",
+    category:    "",
     submittedBy: "",
-    assignedTo: "",
-    status: "Received",
-    content: "",
+    assignedTo:  "",
+    status:      "RECEIVED",
+    content:     "",
   });
 
+  const [admins,  setAdmins]  = useState<AdminResponse[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error,   setError]   = useState("");
 
   const populate = useCallback(async () => {
     if (!id || id.startsWith("req-")) return;
     try {
-      const data = await getRequest(id);
+      const [data, adminPage] = await Promise.all([
+        getRequest(id),
+        getAdmins(0, 100),
+      ]);
+      setAdmins(adminPage.content ?? []);
       setFormData({
-        subject: data.subject ?? "",
-        category: data.requestType ?? "",
+        subject:     data.subject ?? "",
+        category:    data.requestType ?? "",
         submittedBy: fullName(data.owner ?? data.createdBy),
-        assignedTo: fullName(data.assignedTo),
-        status: data.requestStatus ?? "Received",
-        content: data.content ?? "",
+        assignedTo:  data.assignedTo?.id ?? "",
+        status:      data.requestStatus ?? "RECEIVED",
+        content:     data.content ?? "",
       });
     } catch { /* silently fall back to empty fields */ }
   }, [id]);
@@ -82,13 +80,18 @@ export default function EditRequestClient() {
     setError("");
     setLoading(true);
     try {
-      await changeRequestStatus(id, formData.status);
+      await changeRequestStatus(id, formData.status, formData.assignedTo || undefined);
       router.push(`/requests/${id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update request.");
       setLoading(false);
     }
   };
+
+  const adminOptions = [
+    { label: "— Unassigned —", value: "" },
+    ...admins.map((a) => ({ label: fullName(a), value: a.id ?? "" })),
+  ];
 
   return (
     <DashboardLayout>
@@ -136,7 +139,7 @@ export default function EditRequestClient() {
               name="assignedTo"
               value={formData.assignedTo}
               onChange={handleChange}
-              options={ASSIGNEE_OPTIONS}
+              options={adminOptions}
             />
           </div>
 
