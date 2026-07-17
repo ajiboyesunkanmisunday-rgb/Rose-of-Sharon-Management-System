@@ -1731,6 +1731,64 @@ export async function createSuggestion(
   });
 }
 
+export async function getBabyChristeningRequests(
+  pageNo = 0,
+  pageSize = 10,
+): Promise<CustomPageResponse<RequestResponse>> {
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests/baby-christening?pageNo=${pageNo}&pageSize=${pageSize}`,
+  );
+}
+
+export async function createBabyChristening(
+  body: CreateRequestBody,
+): Promise<RequestResponse> {
+  return apiFetch<RequestResponse>("/api/v1/requests/baby-christening", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function searchBabyChristeningRequests(
+  body: { text: string },
+  pageNo = 0,
+  pageSize = 10,
+): Promise<CustomPageResponse<RequestResponse>> {
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests/baby-christening/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function getBabyDedicationRequests(
+  pageNo = 0,
+  pageSize = 10,
+): Promise<CustomPageResponse<RequestResponse>> {
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests/baby-dedication?pageNo=${pageNo}&pageSize=${pageSize}`,
+  );
+}
+
+export async function createBabyDedication(
+  body: CreateRequestBody,
+): Promise<RequestResponse> {
+  return apiFetch<RequestResponse>("/api/v1/requests/baby-dedication", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function searchBabyDedicationRequests(
+  body: { text: string },
+  pageNo = 0,
+  pageSize = 10,
+): Promise<CustomPageResponse<RequestResponse>> {
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests/baby-dedication/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
 export async function changeRequestStatus(
   id: string,
   status: string,

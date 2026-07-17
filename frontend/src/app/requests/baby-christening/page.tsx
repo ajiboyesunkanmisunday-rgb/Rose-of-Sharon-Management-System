@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
-import { createSuggestion, getStoredUser } from "@/lib/api";
+import { createBabyChristening, getStoredUser } from "@/lib/api";
 
 export default function BabyChristeningPage() {
   const router      = useRouter();
@@ -70,7 +70,7 @@ export default function BabyChristeningPage() {
         `House Leader: ${houseLeader}`,
       ].join("\n");
 
-      await createSuggestion({
+      await createBabyChristening({
         userId:  currentUser.id,
         subject: `Baby Christening – ${parentName}`,
         content,

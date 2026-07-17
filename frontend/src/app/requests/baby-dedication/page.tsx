@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
-import { createSuggestion, getStoredUser } from "@/lib/api";
+import { createBabyDedication, getStoredUser } from "@/lib/api";
 
 export default function BabyDedicationPage() {
   const router      = useRouter();
@@ -70,7 +70,7 @@ export default function BabyDedicationPage() {
         `House Leader: ${houseLeader}`,
       ].join("\n");
 
-      await createSuggestion({
+      await createBabyDedication({
         userId:  currentUser.id,
         subject: `Baby Dedication – ${childFullName}`,
         content,
