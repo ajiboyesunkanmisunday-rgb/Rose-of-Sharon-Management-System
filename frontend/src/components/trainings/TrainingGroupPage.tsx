@@ -5,13 +5,16 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
 import Pagination from "@/components/ui/Pagination";
 import { getMembers, getEMembers, getAllGroups, type UserResponse, type GroupResponse } from "@/lib/api";
-import { GraduationCap, Phone, Mail, Users, RefreshCw } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { GraduationCap, Phone, Mail, Users, RefreshCw, PlusCircle, FileText } from "lucide-react";
 
 interface Props {
   groupKeywords: string[];
   title: string;
   description: string;
   accentColor: string;
+  formHref?: string;
+  blankFormHref?: string;
 }
 
 const avatarBgColors = [
@@ -35,7 +38,8 @@ function fullName(u: UserResponse) {
 
 const ITEMS_PER_PAGE = 12;
 
-export default function TrainingGroupPage({ groupKeywords, title, description, accentColor }: Props) {
+export default function TrainingGroupPage({ groupKeywords, title, description, accentColor, formHref, blankFormHref }: Props) {
+  const router = useRouter();
   const [allMembers, setAllMembers] = useState<UserResponse[]>([]);
   const [groups,     setGroups]     = useState<GroupResponse[]>([]);
   const [loading,    setLoading]    = useState(true);
@@ -118,14 +122,38 @@ export default function TrainingGroupPage({ groupKeywords, title, description, a
           <h1 className="text-2xl sm:text-[28px] font-bold text-[#000000] dark:text-slate-100">{title}</h1>
           <p className="text-sm text-[#6B7280] dark:text-slate-400">{description}</p>
         </div>
-        <button
-          onClick={load}
-          disabled={loading}
-          className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 hover:border-[#7C3AED] hover:text-[#7C3AED] dark:text-purple-400 disabled:opacity-50 sm:ml-auto"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
+        <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+          {formHref && (
+            <button
+              onClick={() => router.push(formHref)}
+              className="flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold text-white"
+              style={{ background: accentColor }}
+            >
+              <PlusCircle className="h-3.5 w-3.5" />
+              New Application
+            </button>
+          )}
+          {blankFormHref && (
+            <button
+              onClick={() => router.push(blankFormHref)}
+              className="flex items-center gap-2 rounded-lg border px-4 py-2 text-xs font-semibold bg-white dark:bg-slate-800 hover:text-white transition-colors"
+              style={{ borderColor: accentColor, color: accentColor }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = accentColor; (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = ""; (e.currentTarget as HTMLButtonElement).style.color = accentColor; }}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              Download Blank Form
+            </button>
+          )}
+          <button
+            onClick={load}
+            disabled={loading}
+            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 hover:border-[#7C3AED] hover:text-[#7C3AED] dark:text-purple-400 disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Matched groups chips */}
