@@ -11,6 +11,7 @@ import {
   getFaceOfTheMonth,
   approveFaceOfTheMonth,
   declineFaceOfTheMonth,
+  castVote,
   getStoredUser,
   type FaceOfTheMonthFullResponse,
   type FaceOfTheMonthNominee,
@@ -47,7 +48,21 @@ function getStatus(item: FaceOfTheMonthFullResponse): string {
   return "Completed";
 }
 
-function NomineeCard({ nominee, rank }: { nominee: FaceOfTheMonthNominee; rank: number }) {
+function NomineeCard({
+  nominee,
+  rank,
+  votingOpen,
+  hasVoted,
+  onVote,
+  voting,
+}: {
+  nominee: FaceOfTheMonthNominee;
+  rank: number;
+  votingOpen: boolean;
+  hasVoted: boolean;
+  onVote: (nominee: FaceOfTheMonthNominee) => void;
+  voting: boolean;
+}) {
   const name = [nominee.firstName, nominee.middleName, nominee.lastName].filter(Boolean).join(" ");
   return (
     <div className="flex items-center gap-4 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
@@ -74,9 +89,64 @@ function NomineeCard({ nominee, rank }: { nominee: FaceOfTheMonthNominee; rank: 
           {nominee.occupation || nominee.email || "—"}
         </p>
       </div>
-      <div className="shrink-0 text-right">
+      <div className="shrink-0 flex flex-col items-end gap-1">
         <p className="text-lg font-bold text-[#000080] dark:text-indigo-400">{nominee.voteCount ?? 0}</p>
         <p className="text-xs text-[#6B7280] dark:text-slate-400">votes</p>
+        {votingOpen && !hasVoted && (
+          <button
+            onClick={() => onVote(nominee)}
+            disabled={voting}
+            className="mt-1 flex items-center gap-1 rounded-full bg-[#000080] px-3 py-1 text-[10px] font-semibold text-white hover:bg-[#000066] disabled:opacity-50"
+          >
+            <Vote className="h-3 w-3" /> Vote
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CategorySection({
+  title,
+  nominees,
+  votingOpen,
+  hasVoted,
+  onVote,
+  voting,
+  accentColor,
+}: {
+  title: string;
+  nominees: FaceOfTheMonthNominee[];
+  votingOpen: boolean;
+  hasVoted: boolean;
+  onVote: (nominee: FaceOfTheMonthNominee) => void;
+  voting: boolean;
+  accentColor: string;
+}) {
+  if (nominees.length === 0) return null;
+  const sorted = [...nominees].sort((a, b) => (b.voteCount ?? 0) - (a.voteCount ?? 0));
+  return (
+    <div className="mb-6">
+      <div className="mb-3 flex items-center gap-2">
+        <span
+          className="inline-block h-3 w-3 rounded-full"
+          style={{ background: accentColor }}
+        />
+        <h3 className="text-base font-semibold text-[#374151] dark:text-slate-200">{title}</h3>
+        <span className="text-sm text-[#6B7280] dark:text-slate-400">— {sorted.length} nominees</span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {sorted.map((nominee, idx) => (
+          <NomineeCard
+            key={nominee.id}
+            nominee={nominee}
+            rank={idx + 1}
+            votingOpen={votingOpen}
+            hasVoted={hasVoted}
+            onVote={onVote}
+            voting={voting}
+          />
+        ))}
       </div>
     </div>
   );
@@ -86,17 +156,26 @@ export default function FaceOfTheMonthDetailClient() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
-  const [data, setData] = useState<FaceOfTheMonthFullResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [apiError, setApiError] = useState("");
+  const [data,       setData]       = useState<FaceOfTheMonthFullResponse | null>(null);
+  const [loading,    setLoading]    = useState(true);
+  const [apiError,   setApiError]   = useState("");
 
   const [showApproveModal, setShowApproveModal] = useState(false);
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [approving, setApproving] = useState(false);
+  const [startTime,   setStartTime]   = useState("");
+  const [endTime,     setEndTime]     = useState("");
+  const [approving,   setApproving]   = useState(false);
   const [approveError, setApproveError] = useState("");
 
-  const [declining, setDeclining] = useState(false);
+  const [declining,   setDeclining]  = useState(false);
+
+  /* vote state */
+  const [voteTarget,  setVoteTarget]  = useState<FaceOfTheMonthNominee | null>(null);
+  const [voting,      setVoting]      = useState(false);
+  const [voteError,   setVoteError]   = useState("");
+  const [hasVoted,    setHasVoted]    = useState(false);
+  const [voteSuccess, setVoteSuccess] = useState("");
+
+  const currentUser = getStoredUser();
 
   const fetchData = useCallback(async () => {
     if (!id) return;
@@ -106,7 +185,7 @@ export default function FaceOfTheMonthDetailClient() {
       const res = await getFaceOfTheMonth(id);
       setData(res);
       if (res.votingStartTime) setStartTime(toLocalInputValue(res.votingStartTime));
-      if (res.votingEndTime) setEndTime(toLocalInputValue(res.votingEndTime));
+      if (res.votingEndTime)   setEndTime(toLocalInputValue(res.votingEndTime));
     } catch (err) {
       setApiError(err instanceof Error ? err.message : "Failed to load event.");
     } finally {
@@ -114,9 +193,7 @@ export default function FaceOfTheMonthDetailClient() {
     }
   }, [id]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleApprove = async () => {
     if (!data || !startTime || !endTime) return;
@@ -125,7 +202,7 @@ export default function FaceOfTheMonthDetailClient() {
     try {
       const updated = await approveFaceOfTheMonth(data.id, {
         startTime: new Date(startTime).toISOString(),
-        endTime: new Date(endTime).toISOString(),
+        endTime:   new Date(endTime).toISOString(),
       });
       setData(updated);
       setShowApproveModal(false);
@@ -149,16 +226,39 @@ export default function FaceOfTheMonthDetailClient() {
     }
   };
 
-  const status = data ? getStatus(data) : "";
-  const sortedNominees = data
-    ? [...data.nominees].sort((a, b) => (b.voteCount ?? 0) - (a.voteCount ?? 0))
-    : [];
+  const handleVoteConfirm = async () => {
+    if (!voteTarget || !currentUser?.id || !data) return;
+    setVoting(true);
+    setVoteError("");
+    try {
+      const category = voteTarget.sex === "FEMALE" ? "FEMALE" : "MALE";
+      await castVote(data.id, {
+        voterId:  currentUser.id,
+        votedFor: voteTarget.id,
+        category,
+      });
+      setHasVoted(true);
+      setVoteSuccess(
+        `Your vote for ${[voteTarget.firstName, voteTarget.lastName].filter(Boolean).join(" ")} has been recorded.`
+      );
+      setVoteTarget(null);
+      fetchData();
+    } catch (err) {
+      setVoteError(err instanceof Error ? err.message : "Failed to cast vote.");
+    } finally {
+      setVoting(false);
+    }
+  };
 
-  const currentUser = getStoredUser();
+  const status = data ? getStatus(data) : "";
+  const votingOpen = status === "Voting Open";
+
+  const maleNominees   = data?.nominees.filter((n) => n.sex !== "FEMALE") ?? [];
+  const femaleNominees = data?.nominees.filter((n) => n.sex === "FEMALE") ?? [];
+  const ungendered     = data?.nominees.filter((n) => !n.sex) ?? [];
 
   return (
     <DashboardLayout>
-      {/* Back */}
       <button
         onClick={() => router.push("/voting")}
         className="mb-4 flex items-center gap-1 text-sm text-[#6B7280] dark:text-slate-400 hover:text-[#000080] dark:hover:text-indigo-400 transition-colors"
@@ -172,9 +272,7 @@ export default function FaceOfTheMonthDetailClient() {
       ) : apiError ? (
         <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {apiError} —{" "}
-          <button className="font-medium underline" onClick={fetchData}>
-            Retry
-          </button>
+          <button className="font-medium underline" onClick={fetchData}>Retry</button>
         </div>
       ) : data ? (
         <>
@@ -188,81 +286,100 @@ export default function FaceOfTheMonthDetailClient() {
                 <div>
                   <h1 className="text-2xl font-bold text-[#000000] dark:text-slate-100">{data.title}</h1>
                   <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[#6B7280] dark:text-slate-400">
-                    {data.votingStartTime && (
-                      <span>Start: {fmtDateTime(data.votingStartTime)}</span>
-                    )}
-                    {data.votingEndTime && (
-                      <span>End: {fmtDateTime(data.votingEndTime)}</span>
-                    )}
+                    {data.votingStartTime && <span>Start: {fmtDateTime(data.votingStartTime)}</span>}
+                    {data.votingEndTime   && <span>End: {fmtDateTime(data.votingEndTime)}</span>}
                     <span>{data.nominees.length} nominees</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {status === "Pending" && (
                   <>
-                    <Button
-                      variant="primary"
-                      onClick={() => setShowApproveModal(true)}
-                      icon={<CheckCircle className="h-4 w-4" />}
-                    >
-                      Approve
+                    <Button variant="primary" onClick={() => setShowApproveModal(true)} icon={<CheckCircle className="h-4 w-4" />}>
+                      Approve &amp; Set Voting Window
                     </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={handleDecline}
-                      disabled={declining}
-                      icon={<XCircle className="h-4 w-4" />}
-                    >
+                    <Button variant="secondary" onClick={handleDecline} disabled={declining} icon={<XCircle className="h-4 w-4" />}>
                       {declining ? "Declining…" : "Decline"}
                     </Button>
                   </>
                 )}
                 {status === "Approved" && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-sm font-medium text-blue-700 dark:text-blue-300">
-                    <CheckCircle className="h-4 w-4" /> Approved — voting starts soon
+                    <CheckCircle className="h-4 w-4" /> Approved — voting opens {fmtDateTime(data.votingStartTime)}
                   </span>
                 )}
                 {status === "Voting Open" && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-sm font-medium text-green-700 dark:text-green-300">
-                    <Vote className="h-4 w-4" /> Voting is open
+                    <Vote className="h-4 w-4" /> Voting open until {fmtDateTime(data.votingEndTime)}
                   </span>
                 )}
                 {status === "Completed" && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 dark:bg-slate-700 px-3 py-1 text-sm font-medium text-gray-600 dark:text-slate-400">
-                    <Trophy className="h-4 w-4" /> Completed
+                    <Trophy className="h-4 w-4" /> Voting closed
                   </span>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Nominees */}
+          {/* Vote success banner */}
+          {voteSuccess && (
+            <div className="mb-4 rounded-lg border border-green-200 bg-green-50 dark:bg-green-900/20 px-4 py-3 text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 shrink-0" /> {voteSuccess}
+            </div>
+          )}
+
+          {/* Nominees by category */}
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-[#374151] dark:text-slate-200">Nominees</h2>
-            <span className="text-sm text-[#6B7280] dark:text-slate-400">
-              {sortedNominees.length} total
-            </span>
+            {votingOpen && !hasVoted && currentUser && (
+              <p className="text-xs text-[#6B7280] dark:text-slate-400">
+                Click <strong>Vote</strong> on any nominee to cast your vote.
+              </p>
+            )}
+            {votingOpen && hasVoted && (
+              <p className="text-xs text-green-600 dark:text-green-400 font-medium">Your vote has been cast.</p>
+            )}
           </div>
 
-          {sortedNominees.length === 0 ? (
+          {data.nominees.length === 0 ? (
             <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 py-12 text-center text-gray-400 dark:text-slate-500">
               No nominees for this event.
             </div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {sortedNominees.map((nominee, idx) => (
-                <NomineeCard key={nominee.id} nominee={nominee} rank={idx + 1} />
-              ))}
-            </div>
-          )}
-
-          {/* Current user ID info for voting integration */}
-          {currentUser && status === "Voting Open" && (
-            <p className="mt-4 text-xs text-[#6B7280] dark:text-slate-500">
-              Voting is open. Use the mobile app or member portal to cast your vote.
-            </p>
+            <>
+              <CategorySection
+                title="Male Nominees"
+                nominees={maleNominees}
+                votingOpen={votingOpen}
+                hasVoted={hasVoted}
+                onVote={setVoteTarget}
+                voting={voting}
+                accentColor="#000080"
+              />
+              <CategorySection
+                title="Female Nominees"
+                nominees={femaleNominees}
+                votingOpen={votingOpen}
+                hasVoted={hasVoted}
+                onVote={setVoteTarget}
+                voting={voting}
+                accentColor="#E8198B"
+              />
+              {/* Fallback for nominees with no sex field */}
+              {ungendered.length > 0 && (
+                <CategorySection
+                  title="Nominees"
+                  nominees={ungendered}
+                  votingOpen={votingOpen}
+                  hasVoted={hasVoted}
+                  onVote={setVoteTarget}
+                  voting={voting}
+                  accentColor="#CA8A04"
+                />
+              )}
+            </>
           )}
         </>
       ) : null}
@@ -270,10 +387,7 @@ export default function FaceOfTheMonthDetailClient() {
       {/* Approve Modal */}
       <Modal
         isOpen={showApproveModal}
-        onClose={() => {
-          setShowApproveModal(false);
-          setApproveError("");
-        }}
+        onClose={() => { setShowApproveModal(false); setApproveError(""); }}
         title="Approve & Set Voting Period"
       >
         <div className="space-y-4">
@@ -286,43 +400,50 @@ export default function FaceOfTheMonthDetailClient() {
             Set the start and end date/time for the voting period. Members will be able to vote during this window.
           </p>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
-              Voting Start
-            </label>
-            <input
-              type="datetime-local"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className={inputClass}
-            />
+            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">Voting Start</label>
+            <input type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">
-              Voting End
-            </label>
-            <input
-              type="datetime-local"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className={inputClass}
-            />
+            <label className="mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300">Voting End</label>
+            <input type="datetime-local" value={endTime} onChange={(e) => setEndTime(e.target.value)} className={inputClass} />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setShowApproveModal(false);
-                setApproveError("");
-              }}
-            >
+            <Button variant="secondary" onClick={() => { setShowApproveModal(false); setApproveError(""); }}>
               Cancel
             </Button>
-            <Button
-              variant="primary"
-              onClick={handleApprove}
-              disabled={approving || !startTime || !endTime}
-            >
+            <Button variant="primary" onClick={handleApprove} disabled={approving || !startTime || !endTime}>
               {approving ? "Approving…" : "Approve"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Vote Confirm Modal */}
+      <Modal
+        isOpen={!!voteTarget}
+        onClose={() => { setVoteTarget(null); setVoteError(""); }}
+        title="Confirm Your Vote"
+      >
+        <div className="space-y-4">
+          {voteError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
+              {voteError}
+            </div>
+          )}
+          {voteTarget && (
+            <p className="text-sm text-[#374151] dark:text-slate-300">
+              You are about to vote for{" "}
+              <strong>{[voteTarget.firstName, voteTarget.middleName, voteTarget.lastName].filter(Boolean).join(" ")}</strong>{" "}
+              in the <strong>{voteTarget.sex === "FEMALE" ? "Female" : "Male"}</strong> category.
+              This action cannot be changed.
+            </p>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => { setVoteTarget(null); setVoteError(""); }}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleVoteConfirm} disabled={voting}>
+              {voting ? "Submitting…" : "Confirm Vote"}
             </Button>
           </div>
         </div>
