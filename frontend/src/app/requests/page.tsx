@@ -214,19 +214,43 @@ export default function RequestsPage() {
       {/* Category Tabs */}
       <div className="mb-4 flex items-center overflow-x-auto border-b border-[#E5E7EB] dark:border-slate-700">
         <div className="flex gap-6 sm:gap-8">
-          {categoryTabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => { setActiveCategory(tab.key); setCurrentPage(1); }}
-              className={`pb-3 text-sm font-medium transition-colors ${
-                activeCategory === tab.key
-                  ? "border-b-2 border-[#000080] text-[#000080] dark:text-indigo-400"
-                  : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:text-slate-300"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+          {categoryTabs.map((tab) => {
+            if (tab.key === "BabyChristening") {
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => router.push("/requests/baby-christening")}
+                  className="pb-3 text-sm font-medium text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:hover:text-slate-300 transition-colors"
+                >
+                  {tab.label}
+                </button>
+              );
+            }
+            if (tab.key === "BabyDedication") {
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => router.push("/requests/baby-dedication")}
+                  className="pb-3 text-sm font-medium text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:hover:text-slate-300 transition-colors"
+                >
+                  {tab.label}
+                </button>
+              );
+            }
+            return (
+              <button
+                key={tab.key}
+                onClick={() => { setActiveCategory(tab.key); setCurrentPage(1); }}
+                className={`pb-3 text-sm font-medium transition-colors ${
+                  activeCategory === tab.key
+                    ? "border-b-2 border-[#000080] text-[#000080] dark:text-indigo-400"
+                    : "text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:hover:text-slate-300"
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
