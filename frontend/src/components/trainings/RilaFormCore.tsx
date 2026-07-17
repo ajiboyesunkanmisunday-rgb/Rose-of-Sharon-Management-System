@@ -1,156 +1,162 @@
 "use client";
 
 /**
- * RilaFormCore — digital replica of the physical RILA Application Form
+ * RilaFormCore — pixel-perfect 4-page replica of the physical RILA Application Form
  *
- * REDEEMER'S INTERNATIONAL LEADERSHIP ACADEMY (RILA)
- * Formerly International Bible Institute & Leadership Training School (IBI & LTS)
+ * Page 1: Cover (title, large logo, passport photo box, name/programme fields)
+ * Page 2: Sections A – F  (Biographic Data → Academic History)
+ * Page 3: Sections G – K  (Professional Quals → Method of Payment)
+ * Page 4: Sections L – P + Official Use Only
  *
- * mode = "blank"  → read-only, empty, Print Blank Form button only
- * mode = "fill"   → editable, Print + Submit buttons (submits via createSuggestion)
- * mode = "view"   → read-only, pre-filled (used after submit confirmation)
+ * mode = "blank"  → read-only empty form (print blank)
+ * mode = "fill"   → editable, multi-page, submit via createSuggestion
  */
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Printer, Send, CheckCircle, XCircle } from "lucide-react";
-import {
-  createSuggestion,
-  uploadProfilePicture,
-  getStoredUser,
-} from "@/lib/api";
+import { Printer, Send, CheckCircle, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { createSuggestion, uploadProfilePicture, getStoredUser } from "@/lib/api";
 
+/* ─── image compress helper ───────────────────────────────────────────────── */
 async function compressImage(file: File, maxDim = 800, quality = 0.8): Promise<File> {
   return new Promise((resolve) => {
     const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
+    const url = URL.createObjectURL(file);
     img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
+      URL.revokeObjectURL(url);
       const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-      const canvas = document.createElement("canvas");
-      canvas.width  = Math.round(img.width  * scale);
-      canvas.height = Math.round(img.height * scale);
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(
-        (blob) => resolve(new File([blob!], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" })),
-        "image/jpeg",
-        quality,
+      const c = document.createElement("canvas");
+      c.width  = Math.round(img.width  * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(
+        (b) => resolve(new File([b!], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" })),
+        "image/jpeg", quality,
       );
     };
-    img.src = objectUrl;
+    img.src = url;
   });
 }
 
-export type RilaMode = "blank" | "fill" | "view";
+export type RilaMode = "blank" | "fill";
 
-/* ── Style constants ─────────────────────────────────────────────────────── */
-const T: React.CSSProperties = { borderCollapse: "collapse", width: "100%", marginBottom: 14, fontSize: 11 };
-const LBL: React.CSSProperties = { border: "1px solid #000", padding: "3px 7px", whiteSpace: "nowrap", verticalAlign: "middle", fontWeight: 700, fontSize: 11 };
-const CEL: React.CSSProperties = { border: "1px solid #000", padding: "2px 5px", verticalAlign: "middle" };
-const TH: React.CSSProperties  = { border: "1px solid #000", padding: "3px 5px", fontWeight: 700, fontSize: 10, textAlign: "center", background: "#f0f0f0" };
-const TD: React.CSSProperties  = { border: "1px solid #000", padding: "2px 4px", fontSize: 10, verticalAlign: "middle" };
+/* ─── paper / global styles ───────────────────────────────────────────────── */
+const FONT = "Arial, Helvetica, sans-serif";
 
 const PAPER: React.CSSProperties = {
   background: "#fff",
   width: 794,
+  minHeight: 1123,
   margin: "0 auto",
-  padding: "36px 50px",
-  boxShadow: "0 8px 40px rgba(0,0,0,0.28)",
-  fontFamily: "Times New Roman, serif",
+  padding: "28px 44px 36px",
+  boxShadow: "0 6px 32px rgba(0,0,0,0.22)",
+  fontFamily: FONT,
   fontSize: 11,
   color: "#000",
-  lineHeight: 1.5,
+  boxSizing: "border-box",
+  position: "relative",
 };
 
-/* ── Cell Input ──────────────────────────────────────────────────────────── */
-function CI({
-  value, onChange, readOnly, placeholder, style, maxLength, multiline, rows = 2,
+/* ─── table / cell helpers ────────────────────────────────────────────────── */
+const TB: React.CSSProperties = { borderCollapse: "collapse", width: "100%", marginBottom: 10 };
+const C: React.CSSProperties  = { border: "1px solid #000", padding: "2px 5px", verticalAlign: "middle", fontSize: 11 };
+const CH: React.CSSProperties = { ...C, fontWeight: 700, background: "#f2f2f2", fontSize: 11, textAlign: "center" };
+const CL: React.CSSProperties = { ...C, fontWeight: 700, whiteSpace: "nowrap" };  // label cell
+
+/* ─── dotted-line input (free text fill lines) ────────────────────────────── */
+function DL({
+  value, onChange, readOnly, width = "100%", style,
 }: {
   value: string; onChange?: (v: string) => void; readOnly?: boolean;
-  placeholder?: string; style?: React.CSSProperties; maxLength?: number;
-  multiline?: boolean; rows?: number;
+  width?: string | number; style?: React.CSSProperties;
 }) {
-  const base: React.CSSProperties = {
-    border: "none", outline: "none", background: "transparent",
-    width: "100%", fontFamily: "Times New Roman, serif", fontSize: 11,
-    color: "#000", padding: "1px 0", resize: "none", ...style,
-  };
-  if (multiline) {
-    return (
-      <textarea readOnly={readOnly} value={value} rows={rows}
-        onChange={readOnly ? undefined : (e) => onChange?.(e.target.value)}
-        maxLength={maxLength} style={base}
-        placeholder={readOnly ? undefined : placeholder}
-      />
-    );
-  }
   return (
-    <input type="text" readOnly={readOnly} value={value} maxLength={maxLength}
+    <input
+      type="text" value={value} readOnly={readOnly}
       onChange={readOnly ? undefined : (e) => onChange?.(e.target.value)}
-      style={base} placeholder={readOnly ? undefined : placeholder}
+      style={{
+        border: "none", borderBottom: "1px dotted #555", outline: "none",
+        background: "transparent", fontFamily: FONT, fontSize: 11,
+        color: "#000", width, padding: "1px 2px", ...style,
+      }}
     />
   );
 }
 
-/* ── Section Heading ─────────────────────────────────────────────────────── */
-function SH({ letter, title }: { letter: string; title: string }) {
+/* ─── transparent cell input ─────────────────────────────────────────────── */
+function CI({
+  value, onChange, readOnly, placeholder, multiline, rows = 2, style,
+}: {
+  value: string; onChange?: (v: string) => void; readOnly?: boolean;
+  placeholder?: string; multiline?: boolean; rows?: number;
+  style?: React.CSSProperties;
+}) {
+  const base: React.CSSProperties = {
+    border: "none", outline: "none", background: "transparent",
+    fontFamily: FONT, fontSize: 11, color: "#000",
+    width: "100%", padding: "1px 2px", resize: "none", ...style,
+  };
+  if (multiline)
+    return <textarea value={value} readOnly={readOnly} rows={rows}
+      onChange={readOnly ? undefined : (e) => onChange?.(e.target.value)}
+      style={base} placeholder={readOnly ? undefined : placeholder} />;
+  return <input type="text" value={value} readOnly={readOnly}
+    onChange={readOnly ? undefined : (e) => onChange?.(e.target.value)}
+    style={base} placeholder={readOnly ? undefined : placeholder} />;
+}
+
+/* ─── section heading ─────────────────────────────────────────────────────── */
+function SH({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontWeight: 700, fontSize: 11, textTransform: "uppercase", marginTop: 16, marginBottom: 5, borderBottom: "1px solid #000", paddingBottom: 2 }}>
-      {letter}.&nbsp;&nbsp;{title}
+    <div style={{ fontWeight: 700, fontSize: 11, textTransform: "uppercase", marginTop: 10, marginBottom: 3 }}>
+      {children}
     </div>
   );
 }
 
-/* ── Yes/No checkbox row ─────────────────────────────────────────────────── */
-function YesNoRow({
-  label, value, onYes, onNo, dateValue, onDate, whereValue, onWhere, readOnly,
-}: {
-  label: string; value: string; onYes?: () => void; onNo?: () => void;
-  dateValue: string; onDate?: (v: string) => void;
-  whereValue: string; onWhere?: (v: string) => void;
-  readOnly?: boolean;
-}) {
+/* ─── small logo ──────────────────────────────────────────────────────────── */
+function SmallLogo() {
   return (
-    <tr>
-      <td style={{ ...TD, fontSize: 10, paddingLeft: 6 }}>{label}</td>
-      <td style={{ ...TD, textAlign: "center", width: 40 }}>
-        <input type="checkbox" checked={value === "Yes"} readOnly={readOnly}
-          onChange={readOnly ? undefined : () => onYes?.()}
-          style={{ cursor: readOnly ? "default" : "pointer" }}
-        />
-      </td>
-      <td style={{ ...TD, textAlign: "center", width: 40 }}>
-        <input type="checkbox" checked={value === "No"} readOnly={readOnly}
-          onChange={readOnly ? undefined : () => onNo?.()}
-          style={{ cursor: readOnly ? "default" : "pointer" }}
-        />
-      </td>
-      <td style={TD}><CI value={dateValue} onChange={onDate} readOnly={readOnly} /></td>
-      <td style={TD}><CI value={whereValue} onChange={onWhere} readOnly={readOnly} /></td>
-    </tr>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/rila-logo.jpeg" alt="RILA" style={{ width: 52, height: 52, objectFit: "contain" }} />
   );
 }
 
-/* ══════════════════════════════════════════════════════════════════════════ */
-export default function RilaFormCore({
-  mode,
+/* ─── checkbox that toggles a string value ───────────────────────────────── */
+function CB({
+  label, value, option, onChange, readOnly,
 }: {
-  mode: RilaMode;
+  label: string; value: string; option: string;
+  onChange?: (v: string) => void; readOnly?: boolean;
 }) {
+  return (
+    <label style={{ display: "inline-flex", alignItems: "center", gap: 3, marginRight: 10, fontSize: 11, cursor: readOnly ? "default" : "pointer" }}>
+      <input
+        type="checkbox" checked={value === option} readOnly={readOnly}
+        onChange={readOnly ? undefined : () => onChange?.(value === option ? "" : option)}
+        style={{ cursor: readOnly ? "default" : "pointer", width: 11, height: 11 }}
+      />
+      {label}
+    </label>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+export default function RilaFormCore({ mode }: { mode: RilaMode }) {
   const ro = mode !== "fill";
   const router = useRouter();
-  const photoInputRef = useRef<HTMLInputElement>(null);
+  const photoRef = useRef<HTMLInputElement>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  /* ── Cover page ──────────────────────────────────────────────────────── */
-  const [coverName,          setCoverName]          = useState("");
-  const [programme,          setProgramme]          = useState("");
-  const [matricNo,           setMatricNo]           = useState("");
-  const [campus,             setCampus]             = useState("");
-  const [yearAdmission,      setYearAdmission]      = useState("");
-  const [yearGraduated,      setYearGraduated]      = useState("");
-  const [photo,              setPhoto]              = useState<File | null>(null);
-  const [photoPreview,       setPhotoPreview]       = useState("");
+  /* ── Cover page fields ───────────────────────────────────────────────── */
+  const [passportPreview, setPassportPreview] = useState("");
+  const [passportFile,    setPassportFile]    = useState<File | null>(null);
+  const [coverName,       setCoverName]       = useState("");
+  const [programme,       setProgramme]       = useState("");
+  const [matricNo,        setMatricNo]        = useState("");
+  const [campus,          setCampus]          = useState("");
+  const [yearAdmission,   setYearAdmission]   = useState("");
+  const [yearGraduated,   setYearGraduated]   = useState("");
 
   /* ── A. Biographic Data ──────────────────────────────────────────────── */
   const [surname,        setSurname]        = useState("");
@@ -164,72 +170,64 @@ export default function RilaFormCore({
   const [lga,            setLga]            = useState("");
   const [contactAddress, setContactAddress] = useState("");
   const [telHome,        setTelHome]        = useState("");
-  const [telMobile,      setTelMobile]      = useState("");
+  const [mobile,         setMobile]         = useState("");
   const [email,          setEmail]          = useState("");
 
   /* ── B. Marital Status ───────────────────────────────────────────────── */
-  const [marital,      setMarital]      = useState("");
-  const [spouseName,   setSpouseName]   = useState("");
-  const [maidenName,   setMaidenName]   = useState("");
-  const [dateMarried,  setDateMarried]  = useState("");
-  const [numChildren,  setNumChildren]  = useState("");
+  const [marital,     setMarital]     = useState("");
+  const [spouseName,  setSpouseName]  = useState("");
+  const [maidenName,  setMaidenName]  = useState("");
+  const [dateMarried, setDateMarried] = useState("");
+  const [numChildren, setNumChildren] = useState("");
 
   /* ── C. Next of Kin ──────────────────────────────────────────────────── */
-  const [nokName,     setNokName]     = useState("");
-  const [nokRel,      setNokRel]      = useState("");
-  const [nokAddress,  setNokAddress]  = useState("");
-  const [nokTel,      setNokTel]      = useState("");
+  const [nokName,    setNokName]    = useState("");
+  const [nokRel,     setNokRel]     = useState("");
+  const [nokAddr,    setNokAddr]    = useState("");
+  const [nokTel,     setNokTel]     = useState("");
 
   /* ── D. Employment (Present) ─────────────────────────────────────────── */
-  const [empName,     setEmpName]     = useState("");
-  const [occupation,  setOccupation]  = useState("");
-  const [position,    setPosition]    = useState("");
-  const [jobDesc,     setJobDesc]     = useState("");
-  const [officeAddr,  setOfficeAddr]  = useState("");
-  const [officeTel,   setOfficeTel]   = useState("");
+  const [empName,    setEmpName]    = useState("");
+  const [empOcc,     setEmpOcc]     = useState("");
+  const [empPos,     setEmpPos]     = useState("");
+  const [empJobDesc, setEmpJobDesc] = useState("");
+  const [empAddr,    setEmpAddr]    = useState("");
+  const [empTel,     setEmpTel]     = useState("");
 
   /* ── E. Employment (Previous) ────────────────────────────────────────── */
-  const [prevEmpName,     setPrevEmpName]     = useState("");
-  const [prevOccupation,  setPrevOccupation]  = useState("");
-  const [prevEmpPosition, setPrevEmpPosition] = useState("");
-  const [prevJobDesc,     setPrevJobDesc]     = useState("");
-  const [prevOfficeAddr,  setPrevOfficeAddr]  = useState("");
-  const [prevOfficeTel,   setPrevOfficeTel]   = useState("");
+  const [prevEmpName,    setPrevEmpName]    = useState("");
+  const [prevEmpOcc,     setPrevEmpOcc]     = useState("");
+  const [prevEmpPos,     setPrevEmpPos]     = useState("");
+  const [prevEmpJobDesc, setPrevEmpJobDesc] = useState("");
+  const [prevEmpAddr,    setPrevEmpAddr]    = useState("");
+  const [prevEmpTel,     setPrevEmpTel]     = useState("");
 
-  /* ── F. Academic History (5 rows) ────────────────────────────────────── */
+  /* ── F. Academic History (6 rows) ────────────────────────────────────── */
   const [academics, setAcademics] = useState(() =>
-    Array.from({ length: 5 }, () => ({ school: "", from: "", to: "", field: "", qualification: "" }))
+    Array.from({ length: 6 }, () => ({ school: "", from: "", to: "", field: "", qualification: "" }))
   );
-  const updateAcademic = (i: number, k: keyof typeof academics[0], v: string) =>
-    setAcademics((prev) => prev.map((r, idx) => idx === i ? { ...r, [k]: v } : r));
+  const setAcad = (i: number, k: keyof typeof academics[0], v: string) =>
+    setAcademics((p) => p.map((r, idx) => idx === i ? { ...r, [k]: v } : r));
 
   /* ── G. Professional Qualifications (4 rows) ─────────────────────────── */
   const [profQuals, setProfQuals] = useState(() =>
     Array.from({ length: 4 }, () => ({ body: "", qualification: "", date: "" }))
   );
-  const updateProfQual = (i: number, k: keyof typeof profQuals[0], v: string) =>
-    setProfQuals((prev) => prev.map((r, idx) => idx === i ? { ...r, [k]: v } : r));
+  const setPQ = (i: number, k: keyof typeof profQuals[0], v: string) =>
+    setProfQuals((p) => p.map((r, idx) => idx === i ? { ...r, [k]: v } : r));
 
   /* ── H. Christian History ────────────────────────────────────────────── */
-  const [salvDate,    setSalvDate]    = useState("");
-  const [salvWhere,   setSalvWhere]   = useState("");
-  const [waterDate,   setWaterDate]   = useState("");
-  const [waterWhere,  setWaterWhere]  = useState("");
-  const [hgDate,      setHgDate]      = useState("");
-  const [hgWhere,     setHgWhere]     = useState("");
+  const [salvDate,   setSalvDate]   = useState("");
+  const [salvWhere,  setSalvWhere]  = useState("");
+  const [waterDate,  setWaterDate]  = useState("");
+  const [waterWhere, setWaterWhere] = useState("");
+  const [hgDate,     setHgDate]     = useState("");
+  const [hgWhere,    setHgWhere]    = useState("");
 
-  const [nbcAttended,    setNbcAttended]    = useState("");
-  const [nbcDate,        setNbcDate]        = useState("");
-  const [nbcWhere,       setNbcWhere]       = useState("");
-  const [btcAttended,    setBtcAttended]    = useState("");
-  const [btcDate,        setBtcDate]        = useState("");
-  const [btcWhere,       setBtcWhere]       = useState("");
-  const [witAttended,    setWitAttended]    = useState("");
-  const [witDate,        setWitDate]        = useState("");
-  const [witWhere,       setWitWhere]       = useState("");
-  const [bibleAttended,  setBibleAttended]  = useState("");
-  const [bibleDate,      setBibleDate]      = useState("");
-  const [bibleWhere,     setBibleWhere]     = useState("");
+  const [nbc,   setNbc]   = useState({ yes: false, no: false, date: "", where: "" });
+  const [btc,   setBtc]   = useState({ yes: false, no: false, date: "", where: "" });
+  const [wit,   setWit]   = useState({ yes: false, no: false, date: "", where: "" });
+  const [bible, setBible] = useState({ yes: false, no: false, date: "", where: "" });
 
   /* ── I. Place of Worship ─────────────────────────────────────────────── */
   const [presentChurch,    setPresentChurch]    = useState("");
@@ -238,9 +236,9 @@ export default function RilaFormCore({
   const [presentPastor,    setPresentPastor]    = useState("");
   const [presentPastorTel, setPresentPastorTel] = useState("");
   const [presentPosition,  setPresentPosition]  = useState("");
-  const [gift1,            setGift1]            = useState("");
-  const [gift2,            setGift2]            = useState("");
-  const [gift3,            setGift3]            = useState("");
+  const [gift1, setGift1] = useState("");
+  const [gift2, setGift2] = useState("");
+  const [gift3, setGift3] = useState("");
   const [prevChurch,       setPrevChurch]       = useState("");
   const [prevChurchAddr,   setPrevChurchAddr]   = useState("");
   const [prevChurchTel,    setPrevChurchTel]    = useState("");
@@ -249,152 +247,137 @@ export default function RilaFormCore({
   const [prevPosition,     setPrevPosition]     = useState("");
 
   /* ── J. Sponsorship ──────────────────────────────────────────────────── */
-  const [sponsorName,    setSponsorName]    = useState("");
-  const [sponsorAddress, setSponsorAddress] = useState("");
-  const [sponsorTel,     setSponsorTel]     = useState("");
+  const [sponsorName, setSponsorName] = useState("");
+  const [sponsorAddr, setSponsorAddr] = useState("");
+  const [sponsorTel,  setSponsorTel]  = useState("");
 
   /* ── K. Method of Payment ────────────────────────────────────────────── */
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const [payMethod, setPayMethod] = useState("");
 
-  /* ── L & M. Open questions ───────────────────────────────────────────── */
-  const [howHeard,   setHowHeard]   = useState("");
-  const [whyApply,   setWhyApply]   = useState("");
+  /* ── L & M ───────────────────────────────────────────────────────────── */
+  const [howHeard, setHowHeard] = useState("");
+  const [whyApply, setWhyApply] = useState("");
 
   /* ── N. Referees ─────────────────────────────────────────────────────── */
-  const [ref1Name,    setRef1Name]    = useState("");
-  const [ref1Addr,    setRef1Addr]    = useState("");
-  const [ref1Tel,     setRef1Tel]     = useState("");
-  const [ref2Name,    setRef2Name]    = useState("");
-  const [ref2Addr,    setRef2Addr]    = useState("");
-  const [ref2Tel,     setRef2Tel]     = useState("");
+  const [ref1Name, setRef1Name] = useState("");
+  const [ref1Addr, setRef1Addr] = useState("");
+  const [ref1Tel,  setRef1Tel]  = useState("");
+  const [ref2Name, setRef2Name] = useState("");
+  const [ref2Addr, setRef2Addr] = useState("");
+  const [ref2Tel,  setRef2Tel]  = useState("");
 
-  /* ── O. Applicant's Declaration ──────────────────────────────────────── */
-  const [declDate, setDeclDate] = useState("");
+  /* ── O. Declaration ──────────────────────────────────────────────────── */
+  const [applicantName, setApplicantName] = useState("");
+  const [declDate,      setDeclDate]      = useState("");
 
-  /* ── P. Pastor Attestation ───────────────────────────────────────────── */
+  /* ── P. Pastor attestation ───────────────────────────────────────────── */
   const [pastorChurch,     setPastorChurch]     = useState("");
   const [pastorChurchAddr, setPastorChurchAddr] = useState("");
   const [pastorName,       setPastorName]       = useState("");
   const [pastorDate,       setPastorDate]       = useState("");
 
   /* ── Submit state ────────────────────────────────────────────────────── */
-  const [submitting,       setSubmitting]       = useState(false);
-  const [uploading,        setUploading]        = useState(false);
-  const [submitError,      setSubmitError]      = useState("");
-  const [submitAttempted,  setSubmitAttempted]  = useState(false);
-  const [submitted,        setSubmitted]        = useState(false);
+  const [submitting,   setSubmitting]   = useState(false);
+  const [uploading,    setUploading]    = useState(false);
+  const [submitError,  setSubmitError]  = useState("");
+  const [submitted,    setSubmitted]    = useState(false);
+  const [pageErrors,   setPageErrors]   = useState<Record<number, boolean>>({});
 
-  /* ── Photo handler ───────────────────────────────────────────────────── */
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setPhoto(file);
-    const reader = new FileReader();
-    reader.onloadend = () => setPhotoPreview(reader.result as string);
-    reader.readAsDataURL(file);
+  /* ── passport photo ──────────────────────────────────────────────────── */
+  const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setPassportFile(f);
+    const r = new FileReader();
+    r.onloadend = () => setPassportPreview(r.result as string);
+    r.readAsDataURL(f);
   };
 
-  /* ── Validation ──────────────────────────────────────────────────────── */
-  const surnameErr  = submitAttempted && !surname.trim();
-  const otherNamesErr = submitAttempted && !otherNames.trim();
-  const mobileErr   = submitAttempted && !telMobile.trim();
+  /* ── page validation (required fields on page 2) ─────────────────────── */
+  const validatePage2 = () => {
+    const missing = !surname.trim() || !otherNames.trim() || !mobile.trim();
+    setPageErrors((p) => ({ ...p, 2: missing }));
+    return !missing;
+  };
 
-  /* ── Submit ──────────────────────────────────────────────────────────── */
+  /* ── submit ──────────────────────────────────────────────────────────── */
   const handleSubmit = async () => {
-    setSubmitAttempted(true);
-    const missing: string[] = [];
-    if (!surname.trim())    missing.push("Surname");
-    if (!otherNames.trim()) missing.push("Other Names");
-    if (!telMobile.trim())  missing.push("Mobile Tel");
-    if (missing.length > 0) {
-      setSubmitError(`Please fill in: ${missing.join(", ")}.`);
+    if (!validatePage2()) {
+      setSubmitError("Please go back to Page 2 and fill in Surname, Other Names and Mobile number.");
       return;
     }
     setSubmitError("");
     setSubmitting(true);
     try {
       let photoUrl = "";
-      if (photo) {
+      if (passportFile) {
         setUploading(true);
-        const compressed = await compressImage(photo);
-        photoUrl = await uploadProfilePicture(compressed);
+        photoUrl = await uploadProfilePicture(await compressImage(passportFile));
         setUploading(false);
       }
-
       const user = getStoredUser();
-      const userId = user?.id ?? "";
-
-      const acList = academics
-        .filter((a) => a.school.trim())
-        .map((a) => `  ${a.school} | ${a.from}-${a.to} | ${a.field} | ${a.qualification}`)
-        .join("\n") || "  —";
-
-      const pfList = profQuals
-        .filter((p) => p.body.trim() || p.qualification.trim())
-        .map((p) => `  ${p.body} | ${p.qualification} | ${p.date}`)
-        .join("\n") || "  —";
+      const ynRow = (label: string, v: { yes: boolean; no: boolean; date: string; where: string }) =>
+        `  ${label}  Yes:${v.yes ? "✓" : "☐"}  No:${v.no ? "✓" : "☐"}  Date: ${v.date}  Where: ${v.where}`;
 
       const content = [
-        "═══ RILA APPLICATION FORM ═══",
+        "════ RILA APPLICATION FORM ════",
         "",
-        `Applicant Name (Surname First): ${surname.trim()} ${otherNames.trim()}`,
+        `NAME (Surname First): ${coverName}`,
         `Programme: ${programme}    Matric No: ${matricNo}    Campus: ${campus}`,
         `Year of Admission: ${yearAdmission}    Year Graduated: ${yearGraduated}`,
         photoUrl ? `Passport Photo: ${photoUrl}` : "",
         "",
         "── A. BIOGRAPHIC DATA ──",
-        `Surname: ${surname}    Other Names: ${otherNames}    Title: ${title}`,
-        `Sex: ${sex}    Date of Birth: ${dob}    Place of Birth: ${placeOfBirth}`,
-        `Nationality: ${nationality}    State of Origin: ${stateOfOrigin}    LGA: ${lga}`,
+        `Surname: ${surname}    Other Names: ${otherNames}`,
+        `Title: ${title}    Sex: ${sex}    Date of Birth: ${dob}    Place of Birth: ${placeOfBirth}`,
+        `Nationality: ${nationality}    State of Origin: ${stateOfOrigin}    L.G.A.: ${lga}`,
         `Contact Address: ${contactAddress}`,
-        `Tel (Home): ${telHome}    Mobile: ${telMobile}    E-mail: ${email}`,
+        `Tel (Home): ${telHome}    Mobile: ${mobile}    E-mail: ${email}`,
         "",
         "── B. MARITAL STATUS ──",
-        `Status: ${marital}    Spouse Name: ${spouseName}    Maiden Name: ${maidenName}`,
+        `Status: ${marital}    Name of Spouse: ${spouseName}    Maiden Name: ${maidenName}`,
         `Date Married: ${dateMarried}    No. of Children: ${numChildren}`,
         "",
         "── C. NEXT OF KIN ──",
         `Name: ${nokName}    Relationship: ${nokRel}`,
-        `Contact Address: ${nokAddress}    Tel: ${nokTel}`,
+        `Contact Address: ${nokAddr}    Tel: ${nokTel}`,
         "",
-        "── D. EMPLOYMENT HISTORY (PRESENT) ──",
-        `Employer: ${empName}    Occupation: ${occupation}    Position: ${position}`,
-        `Job Description: ${jobDesc}`,
-        `Office Address: ${officeAddr}    Tel: ${officeTel}`,
+        "── D. EMPLOYMENT (PRESENT) ──",
+        `Employer: ${empName}    Occupation: ${empOcc}    Position: ${empPos}`,
+        `Job Description: ${empJobDesc}    Office Address: ${empAddr}    Tel: ${empTel}`,
         "",
-        "── E. EMPLOYMENT HISTORY (PREVIOUS) ──",
-        `Employer: ${prevEmpName}    Occupation: ${prevOccupation}    Position: ${prevEmpPosition}`,
-        `Job Description: ${prevJobDesc}`,
-        `Office Address: ${prevOfficeAddr}    Tel: ${prevOfficeTel}`,
+        "── E. EMPLOYMENT (PREVIOUS) ──",
+        `Employer: ${prevEmpName}    Occupation: ${prevEmpOcc}    Position: ${prevEmpPos}`,
+        `Job Description: ${prevEmpJobDesc}    Office Address: ${prevEmpAddr}    Tel: ${prevEmpTel}`,
         "",
         "── F. ACADEMIC HISTORY ──",
-        acList,
+        ...academics.filter(a => a.school).map(a => `  ${a.school} | ${a.from}–${a.to} | ${a.field} | ${a.qualification}`),
         "",
         "── G. PROFESSIONAL QUALIFICATIONS ──",
-        pfList,
+        ...profQuals.filter(p => p.body || p.qualification).map(p => `  ${p.body} | ${p.qualification} | ${p.date}`),
         "",
         "── H. CHRISTIAN HISTORY ──",
         `Date of Salvation: ${salvDate}    Where: ${salvWhere}`,
         `Date of Water Baptism: ${waterDate}    Where: ${waterWhere}`,
         `Date of Baptism in Holy Ghost: ${hgDate}    Where: ${hgWhere}`,
-        `New Believer's Class: ${nbcAttended}    Date: ${nbcDate}    Where: ${nbcWhere}`,
-        `Baptismal Class: ${btcAttended}    Date: ${btcDate}    Where: ${btcWhere}`,
-        `Worker's Training: ${witAttended}    Date: ${witDate}    Where: ${witWhere}`,
-        `Any Bible School Before: ${bibleAttended}    Date: ${bibleDate}    Where: ${bibleWhere}`,
+        ynRow("1. New Believer's Class?", nbc),
+        ynRow("2. Baptismal Class?", btc),
+        ynRow("3. Worker's Training?", wit),
+        ynRow("4. Any Bible School Before?", bible),
         "",
         "── I. PLACE OF WORSHIP ──",
         `Present Church: ${presentChurch}    Address: ${presentAddr}    Tel: ${presentTel}`,
         `Pastor-in-Charge: ${presentPastor}    Tel: ${presentPastorTel}`,
         `Position/Ministry: ${presentPosition}`,
-        `Special Gifts: 1. ${gift1}    2. ${gift2}    3. ${gift3}`,
+        `Special Gifts: 1. ${gift1}  2. ${gift2}  3. ${gift3}`,
         `Previous Church: ${prevChurch}    Address: ${prevChurchAddr}    Tel: ${prevChurchTel}`,
         `Pastor-in-Charge: ${prevPastor}    Tel: ${prevPastorTel}    Previous Position: ${prevPosition}`,
         "",
         "── J. SPONSORSHIP ──",
-        `Sponsor Name: ${sponsorName}    Address: ${sponsorAddress}    Tel: ${sponsorTel}`,
+        `Name: ${sponsorName}    Address: ${sponsorAddr}    Tel: ${sponsorTel}`,
         "",
         "── K. METHOD OF PAYMENT ──",
-        `Payment Method: ${paymentMethod}`,
+        `Payment: ${payMethod}`,
         "",
         "── L. HOW DID YOU HEAR ABOUT RILA? ──",
         howHeard,
@@ -403,19 +386,19 @@ export default function RilaFormCore({
         whyApply,
         "",
         "── N. REFEREES ──",
-        `Referee 1: ${ref1Name}    Address: ${ref1Addr}    Tel: ${ref1Tel}`,
-        `Referee 2: ${ref2Name}    Address: ${ref2Addr}    Tel: ${ref2Tel}`,
+        `1. ${ref1Name}    Address: ${ref1Addr}    Tel: ${ref1Tel}`,
+        `2. ${ref2Name}    Address: ${ref2Addr}    Tel: ${ref2Tel}`,
         "",
         "── O. DECLARATION ──",
-        `Date: ${declDate}`,
+        `Applicant: ${applicantName}    Date: ${declDate}`,
         "",
         "── P. PASTOR ATTESTATION ──",
         `Church: ${pastorChurch}    Address: ${pastorChurchAddr}`,
-        `Pastor's Name: ${pastorName}    Date: ${pastorDate}`,
+        `Pastor: ${pastorName}    Date: ${pastorDate}`,
       ].filter((l) => l !== undefined).join("\n");
 
       await createSuggestion({
-        userId: userId || "anonymous",
+        userId: user?.id ?? "anonymous",
         subject: `RILA Application — ${surname.trim()} ${otherNames.trim()}`,
         content,
       });
@@ -428,631 +411,664 @@ export default function RilaFormCore({
     }
   };
 
-  /* ── Print ───────────────────────────────────────────────────────────── */
-  const handlePrint = () => window.print();
-
-  /* ── Success screen ──────────────────────────────────────────────────── */
+  /* ── success ─────────────────────────────────────────────────────────── */
   if (submitted) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 16, fontFamily: "Arial, sans-serif" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 16, fontFamily: FONT }}>
         <CheckCircle size={56} color="#16A34A" />
-        <h2 style={{ fontSize: 22, fontWeight: 700, color: "#111827" }}>Application Submitted</h2>
-        <p style={{ color: "#6B7280", textAlign: "center", maxWidth: 380 }}>
-          Your RILA application has been received. The admissions team will review it and get in touch with you.
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: "#111" }}>Application Submitted</h2>
+        <p style={{ color: "#555", textAlign: "center", maxWidth: 380, fontSize: 14 }}>
+          Your RILA application has been received. The admissions team will review it and get in touch.
         </p>
-        <button
-          onClick={() => router.push("/trainings/rila")}
-          style={{ marginTop: 8, padding: "10px 24px", borderRadius: 8, background: "#DC2626", color: "#fff", fontWeight: 600, border: "none", cursor: "pointer", fontSize: 14 }}
-        >
+        <button onClick={() => router.push("/trainings/rila")}
+          style={{ padding: "10px 24px", borderRadius: 8, background: "#DC2626", color: "#fff", fontWeight: 700, border: "none", cursor: "pointer", fontSize: 14 }}>
           Back to RILA
         </button>
       </div>
     );
   }
 
-  /* ── Shared label style ──────────────────────────────────────────────── */
-  const errCell = (hasErr: boolean): React.CSSProperties => ({
-    ...CEL, background: hasErr ? "#FEF2F2" : undefined,
-  });
+  /* ══════════════════════════════════════════════════════════════════════
+     PAGE 1 — COVER
+  ══════════════════════════════════════════════════════════════════════ */
+  const page1 = (
+    <div style={PAPER}>
+      {/* Header row: title block + passport photo */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: 18, textAlign: "center", lineHeight: 1.3 }}>
+            REDEEMER&apos;S INTERNATIONAL LEADERSHIP ACADEMY (RILA)
+          </div>
+          <div style={{ background: "#000", color: "#fff", fontWeight: 700, fontSize: 10, textAlign: "center", padding: "3px 6px", marginTop: 6 }}>
+            FORMERLY INTERNATIONAL BIBLE INSTITUTE &amp; LEADERSHIP TRAINING SCHOOL (IBI &amp; LTS)
+          </div>
+          <div style={{ fontSize: 10, textAlign: "center", marginTop: 4 }}>
+            THE LEADERSHIP TRAINING ARM OF THE REDEEMED CHRISTIAN CHURCH OF GOD SINCE 1995
+          </div>
+        </div>
 
+        {/* Passport photo box */}
+        <div
+          onClick={() => !ro && photoRef.current?.click()}
+          style={{
+            width: 110, height: 126, border: "1px solid #000", marginLeft: 18, flexShrink: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: ro ? "default" : "pointer", overflow: "hidden", position: "relative",
+          }}
+        >
+          {passportPreview ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={passportPreview} alt="Passport" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <div style={{ textAlign: "center", fontSize: 9, color: "#555", padding: 6, lineHeight: 1.5 }}>
+              Affix a recent passport photograph here and enclose three others<br /><br />Have it signed
+            </div>
+          )}
+          {!ro && <input ref={photoRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhoto} />}
+        </div>
+      </div>
+
+      {/* Large centered logo */}
+      <div style={{ display: "flex", justifyContent: "center", margin: "50px 0 60px" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/rila-logo.jpeg" alt="RILA Logo" style={{ width: 240, height: 240, objectFit: "contain" }} />
+      </div>
+
+      {/* Bottom fill fields — with underlines matching physical form */}
+      <div style={{ paddingTop: 8 }}>
+        {[
+          { label: "NAME:", note: "(SURNAME FIRST)", value: coverName, set: setCoverName, full: true },
+          { label: "PROGRAMME:", note: "", value: programme, set: setProgramme, full: true },
+        ].map(({ label, note, value, set, full }) => (
+          <div key={label} style={{ display: "flex", alignItems: "baseline", marginBottom: 14, gap: 6 }}>
+            <span style={{ fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>{label}</span>
+            <DL value={value} onChange={set} readOnly={ro} width={full ? "100%" : "40%"} />
+            {note && <span style={{ fontSize: 10, whiteSpace: "nowrap", color: "#333" }}>{note}</span>}
+          </div>
+        ))}
+        <div style={{ display: "flex", gap: 24, marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6, flex: 1 }}>
+            <span style={{ fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>MATRIC NO:</span>
+            <DL value={matricNo} onChange={setMatricNo} readOnly={ro} />
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6, flex: 1 }}>
+            <span style={{ fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>CAMPUS:</span>
+            <DL value={campus} onChange={setCampus} readOnly={ro} />
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 24, marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6, flex: 1 }}>
+            <span style={{ fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>YEAR OF ADMISSION:</span>
+            <DL value={yearAdmission} onChange={setYearAdmission} readOnly={ro} />
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6, flex: 1 }}>
+            <span style={{ fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>YEAR GRADUATED:</span>
+            <DL value={yearGraduated} onChange={setYearGraduated} readOnly={ro} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  /* ══════════════════════════════════════════════════════════════════════
+     PAGE 2 — SECTIONS A – F
+  ══════════════════════════════════════════════════════════════════════ */
+  const page2 = (
+    <div style={PAPER}>
+      <SmallLogo />
+
+      {/* A. BIOGRAPHIC DATA */}
+      <SH>A.&nbsp;&nbsp;&nbsp;BIOGRAPHIC DATA</SH>
+      <table style={TB}>
+        <tbody>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Surname:</span><CI value={surname} onChange={setSurname} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Other Names:</span><CI value={otherNames} onChange={setOtherNames} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={{ ...C, width: "14%" }}><span style={{ fontWeight: 700 }}>Title:</span><CI value={title} onChange={setTitle} readOnly={ro} /></td>
+            <td style={{ ...C, width: "12%" }}><span style={{ fontWeight: 700 }}>Sex:</span><CI value={sex} onChange={setSex} readOnly={ro} /></td>
+            <td style={{ ...C, width: "30%" }}><span style={{ fontWeight: 700 }}>Date of Birth:</span><CI value={dob} onChange={setDob} readOnly={ro} placeholder="DD/MM/YYYY" /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Place of Birth:</span><CI value={placeOfBirth} onChange={setPlaceOfBirth} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C} colSpan={2}><span style={{ fontWeight: 700 }}>Nationality:</span><CI value={nationality} onChange={setNationality} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>State of Origin:</span><CI value={stateOfOrigin} onChange={setStateOfOrigin} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>L.G.A.:</span><CI value={lga} onChange={setLga} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C} colSpan={4}>
+              <div style={{ fontWeight: 700 }}>Contact Address: <span style={{ fontWeight: 400, fontSize: 10 }}>(Not Post Office:)</span></div>
+              <CI value={contactAddress} onChange={setContactAddress} readOnly={ro} />
+            </td>
+          </tr>
+          <tr>
+            <td style={C} colSpan={2}><span style={{ fontWeight: 700 }}>Tel: (Home)</span><CI value={telHome} onChange={setTelHome} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>(Mobile)</span><CI value={mobile} onChange={setMobile} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>E-mail:</span><CI value={email} onChange={setEmail} readOnly={ro} /></td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* B. MARITAL STATUS */}
+      <SH>B.&nbsp;&nbsp;&nbsp;MARITAL STATUS <span style={{ fontWeight: 400, fontSize: 10, textTransform: "none" }}>(please tick the applicable one)</span></SH>
+      <div style={{ marginBottom: 4, fontSize: 11 }}>
+        {["Married", "Single", "Divorced", "Separated", "Widowed", "Remarried"].map((opt) => (
+          <CB key={opt} label={opt + ":"} value={marital} option={opt} onChange={setMarital} readOnly={ro} />
+        ))}
+      </div>
+      <table style={TB}>
+        <tbody>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Name of Spouse:</span><CI value={spouseName} onChange={setSpouseName} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Maiden name:</span><CI value={maidenName} onChange={setMaidenName} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Date Married:</span><CI value={dateMarried} onChange={setDateMarried} readOnly={ro} placeholder="DD/MM/YYYY" /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>No. of Children:</span><CI value={numChildren} onChange={setNumChildren} readOnly={ro} /></td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* C. NEXT OF KIN */}
+      <SH>C.&nbsp;&nbsp;&nbsp;NEXT OF KIN</SH>
+      <table style={TB}>
+        <tbody>
+          <tr>
+            <td style={{ ...C, width: "60%" }}><span style={{ fontWeight: 700 }}>Name:</span><CI value={nokName} onChange={setNokName} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Relationship:</span><CI value={nokRel} onChange={setNokRel} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Contact address:</span><CI value={nokAddr} onChange={setNokAddr} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Tel:</span><CI value={nokTel} onChange={setNokTel} readOnly={ro} /></td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* D. EMPLOYMENT HISTORY (PRESENT) */}
+      <SH>D.&nbsp;&nbsp;&nbsp;EMPLOYMENT HISTORY (PRESENT)</SH>
+      <table style={TB}>
+        <tbody>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Employer&apos;s Name:</span><CI value={empName} onChange={setEmpName} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Occupation:</span><CI value={empOcc} onChange={setEmpOcc} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Position:</span><CI value={empPos} onChange={setEmpPos} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Job Description:</span><CI value={empJobDesc} onChange={setEmpJobDesc} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Office Address:</span><CI value={empAddr} onChange={setEmpAddr} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Tel:</span><CI value={empTel} onChange={setEmpTel} readOnly={ro} /></td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* E. EMPLOYMENT HISTORY (PREVIOUS) */}
+      <SH>E.&nbsp;&nbsp;&nbsp;EMPLOYMENT HISTORY (PREVIOUS)</SH>
+      <table style={TB}>
+        <tbody>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Employer&apos;s Name:</span><CI value={prevEmpName} onChange={setPrevEmpName} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Occupation:</span><CI value={prevEmpOcc} onChange={setPrevEmpOcc} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Position:</span><CI value={prevEmpPos} onChange={setPrevEmpPos} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Job Description:</span><CI value={prevEmpJobDesc} onChange={setPrevEmpJobDesc} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Office Address:</span><CI value={prevEmpAddr} onChange={setPrevEmpAddr} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Tel:</span><CI value={prevEmpTel} onChange={setPrevEmpTel} readOnly={ro} /></td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* F. ACADEMIC HISTORY */}
+      <SH>F.&nbsp;&nbsp;&nbsp;ACADEMIC HISTORY <span style={{ fontWeight: 400, fontSize: 10, textTransform: "none" }}>(from primary to university) Attach Photocopies of each certificate</span></SH>
+      <table style={TB}>
+        <thead>
+          <tr>
+            <th style={CH}>School:</th>
+            <th style={{ ...CH, width: 52 }}>From</th>
+            <th style={{ ...CH, width: 52 }}>To</th>
+            <th style={CH}>Field of Study</th>
+            <th style={CH}>Qualification received</th>
+          </tr>
+        </thead>
+        <tbody>
+          {academics.map((r, i) => (
+            <tr key={i}>
+              <td style={{ ...C, height: 22 }}><CI value={r.school} onChange={(v) => setAcad(i, "school", v)} readOnly={ro} /></td>
+              <td style={C}><CI value={r.from} onChange={(v) => setAcad(i, "from", v)} readOnly={ro} /></td>
+              <td style={C}><CI value={r.to} onChange={(v) => setAcad(i, "to", v)} readOnly={ro} /></td>
+              <td style={C}><CI value={r.field} onChange={(v) => setAcad(i, "field", v)} readOnly={ro} /></td>
+              <td style={C}><CI value={r.qualification} onChange={(v) => setAcad(i, "qualification", v)} readOnly={ro} /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  /* ══════════════════════════════════════════════════════════════════════
+     PAGE 3 — SECTIONS G – K
+  ══════════════════════════════════════════════════════════════════════ */
+  const ynToggle = (
+    field: typeof nbc,
+    set: React.Dispatch<React.SetStateAction<typeof nbc>>,
+    key: "yes" | "no",
+  ) => {
+    if (ro) return;
+    set((p) => ({ ...p, yes: key === "yes" ? !p.yes : p.yes, no: key === "no" ? !p.no : p.no }));
+  };
+
+  const page3 = (
+    <div style={PAPER}>
+      <SmallLogo />
+
+      {/* G. PROFESSIONAL QUALIFICATIONS */}
+      <SH>G.&nbsp;&nbsp;&nbsp;PROFESSIONAL QUALIFICATIONS <span style={{ fontWeight: 400, fontSize: 10, textTransform: "none" }}>(attach 2 photocopies of each certificate)</span></SH>
+      <table style={TB}>
+        <thead>
+          <tr>
+            <th style={CH}>Body</th>
+            <th style={CH}>Qualification</th>
+            <th style={{ ...CH, width: 90 }}>Date.</th>
+          </tr>
+        </thead>
+        <tbody>
+          {profQuals.map((r, i) => (
+            <tr key={i}>
+              <td style={{ ...C, height: 22 }}><CI value={r.body} onChange={(v) => setPQ(i, "body", v)} readOnly={ro} /></td>
+              <td style={C}><CI value={r.qualification} onChange={(v) => setPQ(i, "qualification", v)} readOnly={ro} /></td>
+              <td style={C}><CI value={r.date} onChange={(v) => setPQ(i, "date", v)} readOnly={ro} /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* H. CHRISTIAN HISTORY */}
+      <SH>H.&nbsp;&nbsp;&nbsp;CHRISTIAN HISTORY <span style={{ fontWeight: 400, fontSize: 10, textTransform: "none" }}>(indicate name and the location of the church in the spaces marked where)</span></SH>
+      <table style={TB}>
+        <tbody>
+          <tr>
+            <td style={{ ...C, width: "45%" }}><span style={{ fontWeight: 700 }}>Date of salvation:</span><CI value={salvDate} onChange={setSalvDate} readOnly={ro} placeholder="DD/MM/YYYY" /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Where:</span><CI value={salvWhere} onChange={setSalvWhere} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Date of water baptism by immersion:</span><CI value={waterDate} onChange={setWaterDate} readOnly={ro} placeholder="DD/MM/YYYY" /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Where:</span><CI value={waterWhere} onChange={setWaterWhere} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C}>
+              <span style={{ fontWeight: 700 }}>Date of baptism in the Holy Ghost</span><br />
+              <span style={{ fontStyle: "italic", fontSize: 10 }}>(with evidence of speaking in tongues):</span>
+              <CI value={hgDate} onChange={setHgDate} readOnly={ro} placeholder="DD/MM/YYYY" />
+            </td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Where:</span><CI value={hgWhere} onChange={setHgWhere} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C} colSpan={2}>
+              <div style={{ fontWeight: 700, marginBottom: 4 }}>Have you attended:</div>
+              {/* inline Yes/No rows matching physical form */}
+              {([
+                ["1. New believer&apos;s class?", nbc, setNbc],
+                ["2. Baptismal class?", btc, setBtc],
+                ["3. Worker&apos;s training?", wit, setWit],
+                ["4. Any bible school before?", bible, setBible],
+              ] as const).map(([lbl, fld, setFld], idx) => (
+                <div key={idx} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3, fontSize: 11 }}>
+                  <span style={{ minWidth: 200 }} dangerouslySetInnerHTML={{ __html: lbl }} />
+                  <label style={{ display: "inline-flex", alignItems: "center", gap: 2, cursor: ro ? "default" : "pointer" }}>
+                    <input type="checkbox" checked={fld.yes} readOnly={ro}
+                      onChange={() => ynToggle(fld, setFld as React.Dispatch<React.SetStateAction<typeof nbc>>, "yes")}
+                      style={{ width: 10, height: 10 }}
+                    /> Yes
+                  </label>
+                  <span style={{ marginLeft: 2, marginRight: 2 }}>||</span>
+                  <label style={{ display: "inline-flex", alignItems: "center", gap: 2, cursor: ro ? "default" : "pointer" }}>
+                    <input type="checkbox" checked={fld.no} readOnly={ro}
+                      onChange={() => ynToggle(fld, setFld as React.Dispatch<React.SetStateAction<typeof nbc>>, "no")}
+                      style={{ width: 10, height: 10 }}
+                    /> No
+                  </label>
+                  <span style={{ marginLeft: 2, marginRight: 2 }}>||</span>
+                  <span style={{ fontWeight: 700 }}>Date</span>
+                  <input type="text" value={fld.date} readOnly={ro}
+                    onChange={ro ? undefined : (e) => (setFld as React.Dispatch<React.SetStateAction<typeof nbc>>)((p) => ({ ...p, date: e.target.value }))}
+                    style={{ border: "none", borderBottom: "1px solid #aaa", outline: "none", background: "transparent", fontFamily: FONT, fontSize: 10, width: 70 }}
+                  />
+                  <span style={{ fontWeight: 700 }}>Where:</span>
+                  <input type="text" value={fld.where} readOnly={ro}
+                    onChange={ro ? undefined : (e) => (setFld as React.Dispatch<React.SetStateAction<typeof nbc>>)((p) => ({ ...p, where: e.target.value }))}
+                    style={{ border: "none", borderBottom: "1px solid #aaa", outline: "none", background: "transparent", fontFamily: FONT, fontSize: 10, flex: 1 }}
+                  />
+                </div>
+              ))}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* I. PLACE OF WORSHIP */}
+      <SH>I.&nbsp;&nbsp;&nbsp;PLACE OF WORSHIP</SH>
+      <table style={TB}>
+        <tbody>
+          <tr>
+            <td style={C} colSpan={2}><span style={{ fontWeight: 700 }}>Present church</span><CI value={presentChurch} onChange={setPresentChurch} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Address:</span><CI value={presentAddr} onChange={setPresentAddr} readOnly={ro} /></td>
+            <td style={{ ...C, width: "35%" }}><span style={{ fontWeight: 700 }}>Tel:</span><CI value={presentTel} onChange={setPresentTel} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Pastor-in-charge:</span><CI value={presentPastor} onChange={setPresentPastor} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Tel:</span><CI value={presentPastorTel} onChange={setPresentPastorTel} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C} colSpan={2}>
+              <span style={{ fontWeight: 700 }}>Your position or ministry in the Church (please describe in details):</span>
+              <CI value={presentPosition} onChange={setPresentPosition} readOnly={ro} multiline rows={2} />
+            </td>
+          </tr>
+          <tr>
+            <td style={C} colSpan={2}>
+              <div><span style={{ fontWeight: 700 }}>What special gifts do you possess?</span> <span style={{ fontSize: 10 }}>(In order of preference):</span> <span style={{ fontWeight: 700 }}>1.</span> <input type="text" value={gift1} readOnly={ro} onChange={ro ? undefined : e => setGift1(e.target.value)} style={{ border: "none", borderBottom: "1px solid #aaa", outline: "none", background: "transparent", fontFamily: FONT, fontSize: 11, width: 120 }} /></div>
+              <div style={{ marginTop: 3 }}><span style={{ fontWeight: 700 }}>2.</span> <input type="text" value={gift2} readOnly={ro} onChange={ro ? undefined : e => setGift2(e.target.value)} style={{ border: "none", borderBottom: "1px solid #aaa", outline: "none", background: "transparent", fontFamily: FONT, fontSize: 11, width: 200, marginRight: 24 }} /> <span style={{ fontWeight: 700 }}>3.</span> <input type="text" value={gift3} readOnly={ro} onChange={ro ? undefined : e => setGift3(e.target.value)} style={{ border: "none", borderBottom: "1px solid #aaa", outline: "none", background: "transparent", fontFamily: FONT, fontSize: 11, width: 200 }} /></div>
+            </td>
+          </tr>
+          <tr>
+            <td style={C} colSpan={2}><span style={{ fontWeight: 700 }}>Previous Church Attended:</span><CI value={prevChurch} onChange={setPrevChurch} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Address:</span><CI value={prevChurchAddr} onChange={setPrevChurchAddr} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Tel:</span><CI value={prevChurchTel} onChange={setPrevChurchTel} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Pastor-in-charge:</span><CI value={prevPastor} onChange={setPrevPastor} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Tel:</span><CI value={prevPastorTel} onChange={setPrevPastorTel} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C} colSpan={2}><span style={{ fontWeight: 700 }}>Your previous position or ministry in that church:</span><CI value={prevPosition} onChange={setPrevPosition} readOnly={ro} /></td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* J. SPONSORSHIP */}
+      <SH>J.&nbsp;&nbsp;&nbsp;SPONSORSHIP <span style={{ fontWeight: 400, fontSize: 10, textTransform: "none" }}>(if order than self)</span></SH>
+      <div style={{ marginBottom: 5 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 6 }}>
+          <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Name of Sponsor</span>
+          <DL value={sponsorName} onChange={setSponsorName} readOnly={ro} />
+        </div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 6 }}>
+          <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Address of Sponsor</span>
+          <DL value={sponsorAddr} onChange={setSponsorAddr} readOnly={ro} />
+        </div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
+          <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Tel:</span>
+          <DL value={sponsorTel} onChange={setSponsorTel} readOnly={ro} width={120} />
+          <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Sponsor&apos;s Signature</span>
+          <DL value="" onChange={() => {}} readOnly={true} width={160} />
+          <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Date</span>
+          <DL value="" onChange={() => {}} readOnly={true} width={100} />
+        </div>
+        <div style={{ fontSize: 10, fontStyle: "italic", marginTop: 3 }}>
+          (Sponsor should please note that the Academy will hold him or her liable for any default in payment by their students)
+        </div>
+      </div>
+
+      {/* K. METHOD OF PAYMENT */}
+      <SH>K.&nbsp;&nbsp;&nbsp;METHOD OF PAYMENT <span style={{ fontWeight: 400, fontSize: 10, textTransform: "none" }}>(how would you like to pay your fees? Two options are available):</span></SH>
+      <div style={{ marginBottom: 4 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 5, fontSize: 11 }}>
+          <span style={{ fontWeight: 700 }}>1.</span>
+          <label style={{ display: "flex", alignItems: "center", gap: 5, cursor: ro ? "default" : "pointer" }}>
+            <input type="radio" name="payment" value="full" checked={payMethod === "full"} readOnly={ro}
+              onChange={ro ? undefined : () => setPayMethod("full")} />
+            Full payment at registration ( )
+          </label>
+        </div>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 11 }}>
+          <span style={{ fontWeight: 700 }}>2.</span>
+          <label style={{ display: "flex", alignItems: "flex-start", gap: 5, cursor: ro ? "default" : "pointer" }}>
+            <input type="radio" name="payment" value="50pct" checked={payMethod === "50pct"} readOnly={ro}
+              onChange={ro ? undefined : () => setPayMethod("50pct")} style={{ marginTop: 2 }} />
+            <span>50% at registration (compulsory) and balance before matriculation, <em>(instalment payment may be negotiated for the balance).</em></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  );
+
+  /* ══════════════════════════════════════════════════════════════════════
+     PAGE 4 — SECTIONS L – P + OFFICIAL USE ONLY
+  ══════════════════════════════════════════════════════════════════════ */
+  const dotLine = { borderBottom: "1px dotted #555", display: "block", width: "100%", marginTop: 4, height: 18 } as const;
+
+  const page4 = (
+    <div style={PAPER}>
+      <SmallLogo />
+
+      {/* L. How did you get information */}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+          <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>L.</span>
+          <span>How did you get information about this Academy?</span>
+          <DL value={howHeard} onChange={setHowHeard} readOnly={ro} />
+        </div>
+        <span style={dotLine} />
+      </div>
+
+      {/* M. Why did you want to come */}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+          <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>M.</span>
+          <span>Why did you want to come to the Bible Academy?</span>
+          <DL value={whyApply} onChange={setWhyApply} readOnly={ro} />
+        </div>
+        <span style={dotLine} />
+      </div>
+
+      {/* N. REFEREES */}
+      <SH>N.&nbsp;&nbsp;&nbsp;REFEREES</SH>
+      <table style={TB}>
+        <tbody>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Name:</span><CI value={ref1Name} onChange={setRef1Name} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Address:</span><CI value={ref1Addr} onChange={setRef1Addr} readOnly={ro} /></td>
+            <td style={{ ...C, width: 120 }}><span style={{ fontWeight: 700 }}>Tel:</span><CI value={ref1Tel} onChange={setRef1Tel} readOnly={ro} /></td>
+          </tr>
+          <tr>
+            <td style={C}><span style={{ fontWeight: 700 }}>Name:</span><CI value={ref2Name} onChange={setRef2Name} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Address:</span><CI value={ref2Addr} onChange={setRef2Addr} readOnly={ro} /></td>
+            <td style={C}><span style={{ fontWeight: 700 }}>Tel:</span><CI value={ref2Tel} onChange={setRef2Tel} readOnly={ro} /></td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* O. APPLICANT'S DECLARATION */}
+      <SH>O.&nbsp;&nbsp;&nbsp;APPLICANT&apos;S DECLARATION</SH>
+      <div style={{ fontSize: 11, marginBottom: 8 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 2, marginBottom: 3 }}>
+          <span>I</span>
+          <DL value={applicantName} onChange={setApplicantName} readOnly={ro} width={280} style={{ marginLeft: 6, marginRight: 6 }} />
+        </div>
+        <p style={{ fontWeight: 700, textTransform: "uppercase", fontSize: 11, lineHeight: 1.7, margin: "4px 0 10px" }}>
+          HEREBY DECLARE THAT THE ABOVE INFORMATION PROVIDED IS TRUE. I PROMISE THAT
+          I SHALL, IF ADMITTED, ABIDE BY THE RULES AND REGULATIONS OF THE ACADEMY, BE
+          OBEDIENT TO ITS AUTHORITIES AND UPHOLD THEM IN PRAYERS. I PROMISE TO PROMOTE
+          THE LOFTY GOALS OF THE ACADEMY AS A WORTHY AMBASSADOR, AS WELL AS
+          COOPERATE WITH AND ENCOURAGE MY FELLOW STUDENTS AND ALUMNI.
+        </p>
+      </div>
+      <div style={{ display: "flex", gap: 80, marginBottom: 16 }}>
+        <div style={{ flex: 1 }}>
+          <span style={dotLine} />
+          <div style={{ fontSize: 10, textAlign: "center", fontWeight: 700, marginTop: 2 }}>SIGNATURE</div>
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+            <DL value={declDate} onChange={setDeclDate} readOnly={ro} />
+          </div>
+          <div style={{ fontSize: 10, textAlign: "center", fontWeight: 700, marginTop: 2 }}>DATE</div>
+        </div>
+      </div>
+
+      {/* P. ATTESTATION BY APPLICANT'S PASTOR */}
+      <SH>P.&nbsp;&nbsp;&nbsp;ATTESTATION BY APPLICANT&apos;S PASTOR</SH>
+      <div style={{ fontSize: 11, marginBottom: 8 }}>
+        <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: 3, marginBottom: 4 }}>
+          <span>I confirm that (applicant&apos;s name)</span>
+          <DL value={coverName || ""} onChange={setCoverName} readOnly={true} width={220} />
+          <span>is a worthy Member of my congregation.</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 5 }}>
+          <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Name of Church</span>
+          <DL value={pastorChurch} onChange={setPastorChurch} readOnly={ro} />
+        </div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 5 }}>
+          <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Address</span>
+          <DL value={pastorChurchAddr} onChange={setPastorChurchAddr} readOnly={ro} />
+        </div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 10 }}>
+          <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Pastor&apos;s Name</span>
+          <DL value={pastorName} onChange={setPastorName} readOnly={ro} />
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 16, marginBottom: 8 }}>
+        <div style={{ flex: 1 }}>
+          <span style={dotLine} />
+          <div style={{ fontSize: 10, textAlign: "center", fontWeight: 700, marginTop: 2 }}>SIGNATURE</div>
+        </div>
+        <div style={{ flex: 1 }}>
+          <span style={dotLine} />
+          <div style={{ fontSize: 10, textAlign: "center", fontWeight: 700, marginTop: 2 }}>OFFICIAL STAMP</div>
+        </div>
+        <div style={{ flex: 1 }}>
+          <DL value={pastorDate} onChange={setPastorDate} readOnly={ro} />
+          <div style={{ fontSize: 10, textAlign: "center", fontWeight: 700, marginTop: 2 }}>DATE</div>
+        </div>
+      </div>
+      <div style={{ fontSize: 10, fontStyle: "italic", marginBottom: 4 }}>
+        * (Pastors are advised to be sure of who they are recommending as the Academy will look up to them should the Applicant default in payment, character, etc).
+      </div>
+      <div style={{ fontSize: 10, fontStyle: "italic", marginBottom: 16 }}>
+        * PLEASE NOTE: A separate letter from your Pastor recommending you for admission to this Academy must accompany your application. The letter should be on the Church&apos;s letter headed paper.
+      </div>
+
+      {/* OFFICIAL USE ONLY */}
+      <div style={{ borderTop: "1px dotted #555", paddingTop: 8, marginTop: 8 }}>
+        <div style={{ textAlign: "center", fontWeight: 700, fontSize: 11, marginBottom: 8 }}>OFFICIAL USE ONLY</div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 6, fontSize: 11 }}>
+          <span style={{ fontWeight: 700 }}>SHORT LISTED FOR INTERVIEW:</span>
+          <span>YES|&nbsp;&nbsp;|</span>
+          <span>NO|&nbsp;&nbsp;|</span>
+          <span style={{ fontWeight: 700 }}>DATE INTERVIEWED</span>
+          <DL value="" onChange={() => {}} readOnly={true} width={160} />
+        </div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16, fontSize: 11 }}>
+          <span>ADMITTED|&nbsp;&nbsp;|</span>
+          <span>NOT ADMITTED|&nbsp;&nbsp;|</span>
+          <span style={{ fontWeight: 700 }}>ADMISSION NO.</span>
+          <DL value="" onChange={() => {}} readOnly={true} />
+        </div>
+        <div style={{ display: "flex", gap: 60 }}>
+          <div style={{ flex: 1 }}>
+            <span style={dotLine} />
+            <div style={{ fontSize: 10, fontWeight: 700, marginTop: 2 }}>ACADEMIC OFFICER (ADMISSIONS)</div>
+          </div>
+          <div style={{ flex: 1 }}>
+            <span style={dotLine} />
+            <div style={{ fontSize: 10, fontWeight: 700, marginTop: 2 }}>RECTOR</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const pages = [page1, page2, page3, page4];
+
+  /* ══════════════════════════════════════════════════════════════════════
+     RENDER
+  ══════════════════════════════════════════════════════════════════════ */
   return (
     <>
-      {/* Print styles */}
       <style>{`
         @media print {
           body * { visibility: hidden !important; }
-          #rila-form, #rila-form * { visibility: visible !important; }
-          #rila-form { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none !important; }
-          .no-print { display: none !important; }
+          #rila-print-area, #rila-print-area * { visibility: visible !important; }
+          #rila-print-area { position: absolute; left: 0; top: 0; width: 100%; }
+          .rila-no-print { display: none !important; }
         }
       `}</style>
 
-      {/* Action bar */}
-      <div className="no-print" style={{ display: "flex", gap: 10, justifyContent: "center", padding: "16px 0 10px", flexWrap: "wrap" }}>
-        <button
-          onClick={() => router.push("/trainings/rila")}
-          style={{ padding: "8px 18px", borderRadius: 8, border: "1px solid #E5E7EB", background: "#fff", color: "#374151", fontWeight: 600, cursor: "pointer", fontSize: 13 }}
-        >
+      {/* Top action bar */}
+      <div className="rila-no-print" style={{ display: "flex", gap: 10, justifyContent: "center", alignItems: "center", padding: "14px 0 8px", flexWrap: "wrap", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", position: "sticky", top: 0, zIndex: 10 }}>
+        <button onClick={() => router.push("/trainings/rila")}
+          style={{ padding: "7px 16px", borderRadius: 8, border: "1px solid #d1d5db", background: "#fff", color: "#374151", fontWeight: 600, cursor: "pointer", fontSize: 13 }}>
           ← Back
         </button>
-        <button
-          onClick={handlePrint}
-          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 18px", borderRadius: 8, border: "1px solid #000080", background: "#fff", color: "#000080", fontWeight: 600, cursor: "pointer", fontSize: 13 }}
-        >
-          <Printer size={15} /> {mode === "blank" ? "Print Blank Form" : "Print Form"}
+        <button onClick={() => window.print()}
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 16px", borderRadius: 8, border: "1px solid #000080", background: "#fff", color: "#000080", fontWeight: 600, cursor: "pointer", fontSize: 13 }}>
+          <Printer size={14} /> Print Page {currentPage}
         </button>
         {mode === "fill" && (
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 18px", borderRadius: 8, border: "none", background: submitting ? "#9CA3AF" : "#DC2626", color: "#fff", fontWeight: 600, cursor: submitting ? "not-allowed" : "pointer", fontSize: 13 }}
-          >
-            {submitting ? (
-              <>{uploading ? "Uploading photo…" : "Submitting…"}</>
-            ) : (
-              <><Send size={15} /> Submit Application</>
-            )}
+          <button onClick={handleSubmit} disabled={submitting}
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 20px", borderRadius: 8, border: "none", background: submitting ? "#9ca3af" : "#DC2626", color: "#fff", fontWeight: 700, cursor: submitting ? "not-allowed" : "pointer", fontSize: 13 }}>
+            {submitting ? (uploading ? "Uploading…" : "Submitting…") : <><Send size={14} /> Submit Application</>}
           </button>
         )}
       </div>
 
       {submitError && (
-        <div className="no-print" style={{ display: "flex", alignItems: "center", gap: 8, maxWidth: 794, margin: "0 auto 10px", padding: "10px 14px", borderRadius: 8, border: "1px solid #FECACA", background: "#FEF2F2", color: "#991B1B", fontSize: 13 }}>
+        <div className="rila-no-print" style={{ display: "flex", alignItems: "center", gap: 8, maxWidth: 794, margin: "6px auto", padding: "9px 14px", borderRadius: 8, border: "1px solid #fecaca", background: "#fef2f2", color: "#991b1b", fontSize: 13 }}>
           <XCircle size={16} /> {submitError}
         </div>
       )}
 
-      {/* ══ FORM ══ */}
-      <div id="rila-form" style={PAPER}>
+      {/* Page indicator */}
+      <div className="rila-no-print" style={{ textAlign: "center", padding: "10px 0 6px", fontSize: 13, color: "#6b7280", fontFamily: FONT }}>
+        Page {currentPage} of 4
+      </div>
 
-        {/* ── Cover / Header ─────────────────────────────────────────────── */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/rila-logo.jpeg" alt="RILA Logo" style={{ width: 80, height: 80, objectFit: "contain", flexShrink: 0 }} />
+      {/* Form paper */}
+      <div id="rila-print-area" style={{ padding: "0 0 24px" }}>
+        {pages[currentPage - 1]}
+      </div>
 
-          {/* Title block */}
-          <div style={{ flex: 1, textAlign: "center", padding: "0 16px" }}>
-            <div style={{ fontWeight: 700, fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5 }}>
-              Redeemer&apos;s International Leadership Academy
-            </div>
-            <div style={{ fontWeight: 700, fontSize: 12, textTransform: "uppercase" }}>(RILA)</div>
-            <div style={{ fontSize: 10, marginTop: 3 }}>
-              Formerly International Bible Institute &amp; Leadership Training School (IBI &amp; LTS)
-            </div>
-            <div style={{ fontSize: 10, fontStyle: "italic", marginTop: 2 }}>
-              The Leadership Training Arm of The Redeemed Christian Church of God since 1995
-            </div>
-            <div style={{ fontWeight: 700, fontSize: 12, marginTop: 8, textTransform: "uppercase", borderBottom: "2px solid #000", paddingBottom: 3, letterSpacing: 1 }}>
-              Application Form
-            </div>
-          </div>
+      {/* Page navigation */}
+      <div className="rila-no-print" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, padding: "16px 0 32px", flexWrap: "wrap" }}>
+        <button
+          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+          disabled={currentPage === 1}
+          style={{ display: "flex", alignItems: "center", gap: 5, padding: "9px 22px", borderRadius: 8, border: "1px solid #d1d5db", background: currentPage === 1 ? "#f9fafb" : "#fff", color: currentPage === 1 ? "#9ca3af" : "#374151", fontWeight: 600, cursor: currentPage === 1 ? "not-allowed" : "pointer", fontSize: 14 }}
+        >
+          <ChevronLeft size={16} /> Previous
+        </button>
 
-          {/* Passport photo box */}
-          <div style={{ width: 80, height: 96, border: "1px solid #000", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: ro ? "default" : "pointer", position: "relative", overflow: "hidden" }}
-            onClick={() => !ro && photoInputRef.current?.click()}
-          >
-            {photoPreview ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={photoPreview} alt="Passport" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : (
-              <div style={{ textAlign: "center", fontSize: 9, color: "#666", padding: 4 }}>
-                {ro ? "PASSPORT\nPHOTO" : "Click to\nadd photo"}
-              </div>
-            )}
-            {!ro && (
-              <input ref={photoInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoChange} />
-            )}
-          </div>
-        </div>
-
-        {/* Cover page fields */}
-        <table style={{ ...T, marginTop: 10 }}>
-          <tbody>
-            <tr>
-              <td style={LBL}>NAME (SURNAME FIRST)</td>
-              <td style={CEL} colSpan={3}><CI value={coverName} onChange={setCoverName} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>PROGRAMME</td>
-              <td style={CEL} colSpan={3}><CI value={programme} onChange={setProgramme} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>MATRIC NO</td>
-              <td style={CEL}><CI value={matricNo} onChange={setMatricNo} readOnly={ro} /></td>
-              <td style={LBL}>CAMPUS</td>
-              <td style={CEL}><CI value={campus} onChange={setCampus} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>YEAR OF ADMISSION</td>
-              <td style={CEL}><CI value={yearAdmission} onChange={setYearAdmission} readOnly={ro} /></td>
-              <td style={LBL}>YEAR GRADUATED</td>
-              <td style={CEL}><CI value={yearGraduated} onChange={setYearGraduated} readOnly={ro} /></td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* ── A. BIOGRAPHIC DATA ─────────────────────────────────────────── */}
-        <SH letter="A" title="Biographic Data" />
-        <table style={T}>
-          <tbody>
-            <tr>
-              <td style={LBL}>Surname{!ro && <span style={{ color: "red" }}>*</span>}</td>
-              <td style={errCell(surnameErr)}><CI value={surname} onChange={setSurname} readOnly={ro} /></td>
-              <td style={LBL}>Other Names{!ro && <span style={{ color: "red" }}>*</span>}</td>
-              <td style={errCell(otherNamesErr)}><CI value={otherNames} onChange={setOtherNames} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Title</td>
-              <td style={CEL}><CI value={title} onChange={setTitle} readOnly={ro} maxLength={20} /></td>
-              <td style={LBL}>Sex</td>
-              <td style={CEL}><CI value={sex} onChange={setSex} readOnly={ro} placeholder="Male / Female" /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Date of Birth</td>
-              <td style={CEL}><CI value={dob} onChange={setDob} readOnly={ro} placeholder="DD/MM/YYYY" /></td>
-              <td style={LBL}>Place of Birth</td>
-              <td style={CEL}><CI value={placeOfBirth} onChange={setPlaceOfBirth} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Nationality</td>
-              <td style={CEL}><CI value={nationality} onChange={setNationality} readOnly={ro} /></td>
-              <td style={LBL}>State of Origin</td>
-              <td style={CEL}><CI value={stateOfOrigin} onChange={setStateOfOrigin} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>L.G.A.</td>
-              <td style={CEL} colSpan={3}><CI value={lga} onChange={setLga} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Contact Address<br /><span style={{ fontSize: 9, fontWeight: 400 }}>(Not P.O. Box)</span></td>
-              <td style={CEL} colSpan={3}><CI value={contactAddress} onChange={setContactAddress} readOnly={ro} multiline rows={2} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Tel (Home)</td>
-              <td style={CEL}><CI value={telHome} onChange={setTelHome} readOnly={ro} /></td>
-              <td style={LBL}>Tel (Mobile){!ro && <span style={{ color: "red" }}>*</span>}</td>
-              <td style={errCell(mobileErr)}><CI value={telMobile} onChange={setTelMobile} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>E-mail</td>
-              <td style={CEL} colSpan={3}><CI value={email} onChange={setEmail} readOnly={ro} /></td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* ── B. MARITAL STATUS ──────────────────────────────────────────── */}
-        <SH letter="B" title="Marital Status" />
-        <div style={{ display: "flex", gap: 18, marginBottom: 8, flexWrap: "wrap" }}>
-          {["Married", "Single", "Divorced", "Separated", "Widowed", "Remarried"].map((opt) => (
-            <label key={opt} style={{ display: "flex", alignItems: "center", gap: 4, cursor: ro ? "default" : "pointer", fontSize: 11 }}>
-              <input type="checkbox" checked={marital === opt} readOnly={ro}
-                onChange={ro ? undefined : () => setMarital(marital === opt ? "" : opt)}
-                style={{ cursor: ro ? "default" : "pointer" }}
-              />
-              {opt}
-            </label>
+        {/* Page dots */}
+        <div style={{ display: "flex", gap: 8 }}>
+          {[1, 2, 3, 4].map((n) => (
+            <button key={n} onClick={() => setCurrentPage(n)}
+              style={{ width: 32, height: 32, borderRadius: "50%", border: "2px solid", borderColor: n === currentPage ? "#DC2626" : "#d1d5db", background: n === currentPage ? "#DC2626" : "#fff", color: n === currentPage ? "#fff" : "#6b7280", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
+              {n}
+            </button>
           ))}
         </div>
-        <table style={T}>
-          <tbody>
-            <tr>
-              <td style={LBL}>Name of Spouse</td>
-              <td style={CEL}><CI value={spouseName} onChange={setSpouseName} readOnly={ro} /></td>
-              <td style={LBL}>Maiden Name</td>
-              <td style={CEL}><CI value={maidenName} onChange={setMaidenName} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Date Married</td>
-              <td style={CEL}><CI value={dateMarried} onChange={setDateMarried} readOnly={ro} placeholder="DD/MM/YYYY" /></td>
-              <td style={LBL}>No. of Children</td>
-              <td style={CEL}><CI value={numChildren} onChange={setNumChildren} readOnly={ro} maxLength={3} /></td>
-            </tr>
-          </tbody>
-        </table>
 
-        {/* ── C. NEXT OF KIN ─────────────────────────────────────────────── */}
-        <SH letter="C" title="Next of Kin" />
-        <table style={T}>
-          <tbody>
-            <tr>
-              <td style={LBL}>Name</td>
-              <td style={CEL}><CI value={nokName} onChange={setNokName} readOnly={ro} /></td>
-              <td style={LBL}>Relationship</td>
-              <td style={CEL}><CI value={nokRel} onChange={setNokRel} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Contact Address</td>
-              <td style={CEL} colSpan={3}><CI value={nokAddress} onChange={setNokAddress} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Tel</td>
-              <td style={CEL} colSpan={3}><CI value={nokTel} onChange={setNokTel} readOnly={ro} /></td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* ── D. EMPLOYMENT HISTORY (PRESENT) ────────────────────────────── */}
-        <SH letter="D" title="Employment History (Present)" />
-        <table style={T}>
-          <tbody>
-            <tr>
-              <td style={LBL}>Employer&apos;s Name</td>
-              <td style={CEL}><CI value={empName} onChange={setEmpName} readOnly={ro} /></td>
-              <td style={LBL}>Occupation</td>
-              <td style={CEL}><CI value={occupation} onChange={setOccupation} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Position</td>
-              <td style={CEL}><CI value={position} onChange={setPosition} readOnly={ro} /></td>
-              <td style={LBL}>Job Description</td>
-              <td style={CEL}><CI value={jobDesc} onChange={setJobDesc} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Office Address</td>
-              <td style={CEL} colSpan={3}><CI value={officeAddr} onChange={setOfficeAddr} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Tel</td>
-              <td style={CEL} colSpan={3}><CI value={officeTel} onChange={setOfficeTel} readOnly={ro} /></td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* ── E. EMPLOYMENT HISTORY (PREVIOUS) ───────────────────────────── */}
-        <SH letter="E" title="Employment History (Previous)" />
-        <table style={T}>
-          <tbody>
-            <tr>
-              <td style={LBL}>Employer&apos;s Name</td>
-              <td style={CEL}><CI value={prevEmpName} onChange={setPrevEmpName} readOnly={ro} /></td>
-              <td style={LBL}>Occupation</td>
-              <td style={CEL}><CI value={prevOccupation} onChange={setPrevOccupation} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Position</td>
-              <td style={CEL}><CI value={prevEmpPosition} onChange={setPrevEmpPosition} readOnly={ro} /></td>
-              <td style={LBL}>Job Description</td>
-              <td style={CEL}><CI value={prevJobDesc} onChange={setPrevJobDesc} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Office Address</td>
-              <td style={CEL} colSpan={3}><CI value={prevOfficeAddr} onChange={setPrevOfficeAddr} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Tel</td>
-              <td style={CEL} colSpan={3}><CI value={prevOfficeTel} onChange={setPrevOfficeTel} readOnly={ro} /></td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* ── F. ACADEMIC HISTORY ────────────────────────────────────────── */}
-        <SH letter="F" title="Academic History" />
-        <table style={T}>
-          <thead>
-            <tr>
-              <th style={TH}>School</th>
-              <th style={{ ...TH, width: 60 }}>From</th>
-              <th style={{ ...TH, width: 60 }}>To</th>
-              <th style={TH}>Field of Study</th>
-              <th style={TH}>Qualification Received</th>
-            </tr>
-          </thead>
-          <tbody>
-            {academics.map((row, i) => (
-              <tr key={i}>
-                <td style={TD}><CI value={row.school} onChange={(v) => updateAcademic(i, "school", v)} readOnly={ro} /></td>
-                <td style={TD}><CI value={row.from} onChange={(v) => updateAcademic(i, "from", v)} readOnly={ro} /></td>
-                <td style={TD}><CI value={row.to} onChange={(v) => updateAcademic(i, "to", v)} readOnly={ro} /></td>
-                <td style={TD}><CI value={row.field} onChange={(v) => updateAcademic(i, "field", v)} readOnly={ro} /></td>
-                <td style={TD}><CI value={row.qualification} onChange={(v) => updateAcademic(i, "qualification", v)} readOnly={ro} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {/* ── G. PROFESSIONAL QUALIFICATIONS ────────────────────────────── */}
-        <SH letter="G" title="Professional Qualifications" />
-        <table style={T}>
-          <thead>
-            <tr>
-              <th style={TH}>Professional Body</th>
-              <th style={TH}>Qualification</th>
-              <th style={{ ...TH, width: 90 }}>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {profQuals.map((row, i) => (
-              <tr key={i}>
-                <td style={TD}><CI value={row.body} onChange={(v) => updateProfQual(i, "body", v)} readOnly={ro} /></td>
-                <td style={TD}><CI value={row.qualification} onChange={(v) => updateProfQual(i, "qualification", v)} readOnly={ro} /></td>
-                <td style={TD}><CI value={row.date} onChange={(v) => updateProfQual(i, "date", v)} readOnly={ro} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {/* ── H. CHRISTIAN HISTORY ───────────────────────────────────────── */}
-        <SH letter="H" title="Christian History" />
-        <table style={{ ...T, marginBottom: 6 }}>
-          <tbody>
-            <tr>
-              <td style={LBL}>Date of Salvation</td>
-              <td style={CEL}><CI value={salvDate} onChange={setSalvDate} readOnly={ro} placeholder="DD/MM/YYYY" /></td>
-              <td style={LBL}>Where</td>
-              <td style={CEL}><CI value={salvWhere} onChange={setSalvWhere} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Date of Water Baptism<br /><span style={{ fontSize: 9, fontWeight: 400 }}>(by immersion)</span></td>
-              <td style={CEL}><CI value={waterDate} onChange={setWaterDate} readOnly={ro} placeholder="DD/MM/YYYY" /></td>
-              <td style={LBL}>Where</td>
-              <td style={CEL}><CI value={waterWhere} onChange={setWaterWhere} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Date of Baptism in<br />Holy Ghost <span style={{ fontSize: 9, fontWeight: 400 }}>(with tongues)</span></td>
-              <td style={CEL}><CI value={hgDate} onChange={setHgDate} readOnly={ro} placeholder="DD/MM/YYYY" /></td>
-              <td style={LBL}>Where</td>
-              <td style={CEL}><CI value={hgWhere} onChange={setHgWhere} readOnly={ro} /></td>
-            </tr>
-          </tbody>
-        </table>
-        <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 4 }}>Have you attended:</div>
-        <table style={T}>
-          <thead>
-            <tr>
-              <th style={{ ...TH, textAlign: "left", paddingLeft: 6 }}>Programme</th>
-              <th style={{ ...TH, width: 44 }}>Yes</th>
-              <th style={{ ...TH, width: 44 }}>No</th>
-              <th style={TH}>Date</th>
-              <th style={TH}>Where</th>
-            </tr>
-          </thead>
-          <tbody>
-            <YesNoRow label="New Believer's Class" value={nbcAttended} onYes={() => setNbcAttended("Yes")} onNo={() => setNbcAttended("No")} dateValue={nbcDate} onDate={setNbcDate} whereValue={nbcWhere} onWhere={setNbcWhere} readOnly={ro} />
-            <YesNoRow label="Baptismal Class" value={btcAttended} onYes={() => setBtcAttended("Yes")} onNo={() => setBtcAttended("No")} dateValue={btcDate} onDate={setBtcDate} whereValue={btcWhere} onWhere={setBtcWhere} readOnly={ro} />
-            <YesNoRow label="Worker's Training" value={witAttended} onYes={() => setWitAttended("Yes")} onNo={() => setWitAttended("No")} dateValue={witDate} onDate={setWitDate} whereValue={witWhere} onWhere={setWitWhere} readOnly={ro} />
-            <YesNoRow label="Any Bible School Before" value={bibleAttended} onYes={() => setBibleAttended("Yes")} onNo={() => setBibleAttended("No")} dateValue={bibleDate} onDate={setBibleDate} whereValue={bibleWhere} onWhere={setBibleWhere} readOnly={ro} />
-          </tbody>
-        </table>
-
-        {/* ── I. PLACE OF WORSHIP ────────────────────────────────────────── */}
-        <SH letter="I" title="Place of Worship" />
-        <div style={{ fontSize: 10, fontWeight: 700, marginBottom: 4 }}>Present Church:</div>
-        <table style={{ ...T, marginBottom: 6 }}>
-          <tbody>
-            <tr>
-              <td style={LBL}>Name of Church</td>
-              <td style={CEL} colSpan={3}><CI value={presentChurch} onChange={setPresentChurch} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Address</td>
-              <td style={CEL}><CI value={presentAddr} onChange={setPresentAddr} readOnly={ro} /></td>
-              <td style={LBL}>Tel</td>
-              <td style={CEL}><CI value={presentTel} onChange={setPresentTel} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Pastor-in-Charge</td>
-              <td style={CEL}><CI value={presentPastor} onChange={setPresentPastor} readOnly={ro} /></td>
-              <td style={LBL}>Tel</td>
-              <td style={CEL}><CI value={presentPastorTel} onChange={setPresentPastorTel} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Your Position /<br />Ministry</td>
-              <td style={CEL} colSpan={3}><CI value={presentPosition} onChange={setPresentPosition} readOnly={ro} multiline rows={2} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Special Gifts<br /><span style={{ fontSize: 9, fontWeight: 400 }}>(in order)</span></td>
-              <td style={CEL}><span style={{ fontSize: 10, marginRight: 4 }}>1.</span><CI value={gift1} onChange={setGift1} readOnly={ro} /></td>
-              <td style={CEL}><span style={{ fontSize: 10, marginRight: 4 }}>2.</span><CI value={gift2} onChange={setGift2} readOnly={ro} /></td>
-              <td style={CEL}><span style={{ fontSize: 10, marginRight: 4 }}>3.</span><CI value={gift3} onChange={setGift3} readOnly={ro} /></td>
-            </tr>
-          </tbody>
-        </table>
-        <div style={{ fontSize: 10, fontWeight: 700, marginBottom: 4 }}>Previous Church Attended:</div>
-        <table style={T}>
-          <tbody>
-            <tr>
-              <td style={LBL}>Name of Church</td>
-              <td style={CEL} colSpan={3}><CI value={prevChurch} onChange={setPrevChurch} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Address</td>
-              <td style={CEL}><CI value={prevChurchAddr} onChange={setPrevChurchAddr} readOnly={ro} /></td>
-              <td style={LBL}>Tel</td>
-              <td style={CEL}><CI value={prevChurchTel} onChange={setPrevChurchTel} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Pastor-in-Charge</td>
-              <td style={CEL}><CI value={prevPastor} onChange={setPrevPastor} readOnly={ro} /></td>
-              <td style={LBL}>Tel</td>
-              <td style={CEL}><CI value={prevPastorTel} onChange={setPrevPastorTel} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Previous Position</td>
-              <td style={CEL} colSpan={3}><CI value={prevPosition} onChange={setPrevPosition} readOnly={ro} /></td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* ── J. SPONSORSHIP ─────────────────────────────────────────────── */}
-        <SH letter="J" title="Sponsorship (if other than self)" />
-        <table style={T}>
-          <tbody>
-            <tr>
-              <td style={LBL}>Name of Sponsor</td>
-              <td style={CEL} colSpan={3}><CI value={sponsorName} onChange={setSponsorName} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Address of Sponsor</td>
-              <td style={CEL} colSpan={3}><CI value={sponsorAddress} onChange={setSponsorAddress} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Tel</td>
-              <td style={CEL}><CI value={sponsorTel} onChange={setSponsorTel} readOnly={ro} /></td>
-              <td style={LBL}>Sponsor&apos;s Signature</td>
-              <td style={CEL}></td>
-            </tr>
-          </tbody>
-        </table>
-        <div style={{ fontSize: 10, fontStyle: "italic", marginBottom: 10 }}>
-          NOTE: Sponsor accepts full financial responsibility for the applicant&apos;s fees.
-        </div>
-
-        {/* ── K. METHOD OF PAYMENT ───────────────────────────────────────── */}
-        <SH letter="K" title="Method of Payment" />
-        <div style={{ marginBottom: 10 }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5, fontSize: 11, cursor: ro ? "default" : "pointer" }}>
-            <input type="radio" name="payment" value="full" checked={paymentMethod === "full"} readOnly={ro}
-              onChange={ro ? undefined : () => setPaymentMethod("full")}
-              style={{ cursor: ro ? "default" : "pointer" }}
-            />
-            Full payment at registration
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, cursor: ro ? "default" : "pointer" }}>
-            <input type="radio" name="payment" value="50pct" checked={paymentMethod === "50pct"} readOnly={ro}
-              onChange={ro ? undefined : () => setPaymentMethod("50pct")}
-              style={{ cursor: ro ? "default" : "pointer" }}
-            />
-            50% at registration (compulsory) and balance before matriculation
-          </label>
-        </div>
-
-        {/* ── L. How did you hear about RILA? ────────────────────────────── */}
-        <SH letter="L" title="How Did You Get Information About This Academy?" />
-        <div style={{ border: "1px solid #000", padding: "4px 6px", minHeight: 36, marginBottom: 14 }}>
-          <CI value={howHeard} onChange={setHowHeard} readOnly={ro} multiline rows={2} />
-        </div>
-
-        {/* ── M. Why do you want to attend? ──────────────────────────────── */}
-        <SH letter="M" title="Why Did You Want to Come to the Bible Academy?" />
-        <div style={{ border: "1px solid #000", padding: "4px 6px", minHeight: 36, marginBottom: 14 }}>
-          <CI value={whyApply} onChange={setWhyApply} readOnly={ro} multiline rows={2} />
-        </div>
-
-        {/* ── N. REFEREES ────────────────────────────────────────────────── */}
-        <SH letter="N" title="Referees" />
-        <table style={T}>
-          <thead>
-            <tr>
-              <th style={{ ...TH, width: 24 }}>No.</th>
-              <th style={TH}>Name</th>
-              <th style={TH}>Address</th>
-              <th style={{ ...TH, width: 100 }}>Tel</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style={{ ...TD, textAlign: "center", fontWeight: 700 }}>1.</td>
-              <td style={TD}><CI value={ref1Name} onChange={setRef1Name} readOnly={ro} /></td>
-              <td style={TD}><CI value={ref1Addr} onChange={setRef1Addr} readOnly={ro} /></td>
-              <td style={TD}><CI value={ref1Tel} onChange={setRef1Tel} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={{ ...TD, textAlign: "center", fontWeight: 700 }}>2.</td>
-              <td style={TD}><CI value={ref2Name} onChange={setRef2Name} readOnly={ro} /></td>
-              <td style={TD}><CI value={ref2Addr} onChange={setRef2Addr} readOnly={ro} /></td>
-              <td style={TD}><CI value={ref2Tel} onChange={setRef2Tel} readOnly={ro} /></td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* ── O. APPLICANT'S DECLARATION ─────────────────────────────────── */}
-        <SH letter="O" title="Applicant's Declaration" />
-        <div style={{ border: "1px solid #000", padding: "8px 10px", marginBottom: 10, fontSize: 10, lineHeight: 1.7 }}>
-          I hereby certify that all the information I have provided in this application form is true and correct
-          to the best of my knowledge. I understand that any false statement or misrepresentation may lead to
-          rejection of this application or dismissal from the academy. I agree to abide by all the rules and
-          regulations of the Redeemer&apos;s International Leadership Academy.
-        </div>
-        <table style={T}>
-          <tbody>
-            <tr>
-              <td style={{ ...LBL, width: 160 }}>Applicant&apos;s Signature</td>
-              <td style={CEL}></td>
-              <td style={{ ...LBL, width: 60 }}>Date</td>
-              <td style={CEL}><CI value={declDate} onChange={setDeclDate} readOnly={ro} placeholder="DD/MM/YYYY" /></td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* ── P. ATTESTATION BY APPLICANT'S PASTOR ───────────────────────── */}
-        <SH letter="P" title="Attestation by Applicant's Pastor" />
-        <div style={{ border: "1px solid #000", padding: "8px 10px", marginBottom: 10, fontSize: 10, lineHeight: 1.7 }}>
-          I confirm that{" "}
-          <span style={{ borderBottom: "1px dotted #000", display: "inline-block", minWidth: 200 }}>
-            {coverName || (ro ? "____________________________" : "")}
-          </span>{" "}
-          is a worthy member of my congregation and I hereby recommend him/her for admission into RILA.
-          I am aware of my responsibility to ensure that the applicant attends classes faithfully.
-        </div>
-        <table style={T}>
-          <tbody>
-            <tr>
-              <td style={LBL}>Name of Church</td>
-              <td style={CEL} colSpan={3}><CI value={pastorChurch} onChange={setPastorChurch} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Address</td>
-              <td style={CEL} colSpan={3}><CI value={pastorChurchAddr} onChange={setPastorChurchAddr} readOnly={ro} /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Pastor&apos;s Name</td>
-              <td style={CEL}><CI value={pastorName} onChange={setPastorName} readOnly={ro} /></td>
-              <td style={LBL}>Date</td>
-              <td style={CEL}><CI value={pastorDate} onChange={setPastorDate} readOnly={ro} placeholder="DD/MM/YYYY" /></td>
-            </tr>
-            <tr>
-              <td style={LBL}>Signature</td>
-              <td style={CEL}></td>
-              <td style={LBL}>Official Stamp</td>
-              <td style={CEL}></td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* ── OFFICIAL USE ONLY ───────────────────────────────────────────── */}
-        <div style={{ marginTop: 20, border: "2px solid #000", padding: "8px 10px" }}>
-          <div style={{ fontWeight: 700, fontSize: 11, textTransform: "uppercase", textAlign: "center", marginBottom: 8, borderBottom: "1px solid #000", paddingBottom: 4 }}>
-            For Official Use Only
-          </div>
-          <table style={{ ...T, marginBottom: 0 }}>
-            <tbody>
-              <tr>
-                <td style={LBL}>Short Listed for Interview</td>
-                <td style={{ ...CEL, width: 60 }}>YES ( )</td>
-                <td style={{ ...CEL, width: 60 }}>NO ( )</td>
-                <td style={LBL}>Date Interviewed</td>
-                <td style={CEL}></td>
-              </tr>
-              <tr>
-                <td style={LBL}>Decision</td>
-                <td style={{ ...CEL, width: 80 }}>Admitted ( )</td>
-                <td style={{ ...CEL, width: 100 }}>Not Admitted ( )</td>
-                <td style={LBL}>Admission No.</td>
-                <td style={CEL}></td>
-              </tr>
-              <tr>
-                <td style={LBL}>Academic Officer<br /><span style={{ fontWeight: 400 }}>(Admissions)</span></td>
-                <td style={CEL} colSpan={2}></td>
-                <td style={LBL}>Rector</td>
-                <td style={CEL}></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-      </div>
-      {/* Bottom action bar (fill mode only) */}
-      {mode === "fill" && (
-        <div className="no-print" style={{ display: "flex", gap: 10, justifyContent: "center", padding: "20px 0", flexWrap: "wrap" }}>
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 28px", borderRadius: 8, border: "none", background: submitting ? "#9CA3AF" : "#DC2626", color: "#fff", fontWeight: 700, cursor: submitting ? "not-allowed" : "pointer", fontSize: 14 }}
-          >
-            {submitting ? (uploading ? "Uploading photo…" : "Submitting…") : <><Send size={16} /> Submit Application</>}
+        {currentPage < 4 ? (
+          <button onClick={() => setCurrentPage((p) => Math.min(4, p + 1))}
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "9px 22px", borderRadius: 8, border: "none", background: "#DC2626", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 14 }}>
+            Next <ChevronRight size={16} />
           </button>
-        </div>
-      )}
+        ) : mode === "fill" ? (
+          <button onClick={handleSubmit} disabled={submitting}
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 24px", borderRadius: 8, border: "none", background: submitting ? "#9ca3af" : "#16a34a", color: "#fff", fontWeight: 700, cursor: submitting ? "not-allowed" : "pointer", fontSize: 14 }}>
+            {submitting ? "Submitting…" : <><Send size={16} /> Submit Application</>}
+          </button>
+        ) : null}
+      </div>
     </>
   );
 }
