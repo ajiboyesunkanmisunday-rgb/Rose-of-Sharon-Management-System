@@ -9,13 +9,13 @@
  * Page 4: Sections L – P + Official Use Only
  *
  * mode = "blank"  → read-only empty form (print blank)
- * mode = "fill"   → editable, multi-page, submit via createSuggestion
+ * mode = "fill"   → editable, multi-page, submit via POST /api/v1/rilas
  */
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Printer, Send, CheckCircle, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
-import { createSuggestion, uploadProfilePicture, getStoredUser } from "@/lib/api";
+import { createRila, uploadProfilePicture } from "@/lib/api";
 
 /* ─── image compress helper ───────────────────────────────────────────────── */
 async function compressImage(file: File, maxDim = 800, quality = 0.8): Promise<File> {
@@ -152,6 +152,7 @@ export default function RilaFormCore({ mode }: { mode: RilaMode }) {
   const [passportPreview, setPassportPreview] = useState("");
   const [passportFile,    setPassportFile]    = useState<File | null>(null);
   const [coverName,       setCoverName]       = useState("");
+  const [set,             setSet]             = useState("");
   const [programme,       setProgramme]       = useState("");
   const [matricNo,        setMatricNo]        = useState("");
   const [campus,          setCampus]          = useState("");
@@ -306,6 +307,10 @@ export default function RilaFormCore({ mode }: { mode: RilaMode }) {
       setSubmitError("Please go back to Page 2 and fill in Surname, Other Names and Mobile number.");
       return;
     }
+    if (!set.trim()) {
+      setSubmitError("Please fill in the SET field on the cover page.");
+      return;
+    }
     setSubmitError("");
     setSubmitting(true);
     try {
@@ -315,92 +320,114 @@ export default function RilaFormCore({ mode }: { mode: RilaMode }) {
         photoUrl = await uploadProfilePicture(await compressImage(passportFile));
         setUploading(false);
       }
-      const user = getStoredUser();
-      const ynRow = (label: string, v: { yes: boolean; no: boolean; date: string; where: string }) =>
-        `  ${label}  Yes:${v.yes ? "✓" : "☐"}  No:${v.no ? "✓" : "☐"}  Date: ${v.date}  Where: ${v.where}`;
 
-      const content = [
-        "════ RILA APPLICATION FORM ════",
-        "",
-        `NAME (Surname First): ${coverName}`,
-        `Programme: ${programme}    Matric No: ${matricNo}    Campus: ${campus}`,
-        `Year of Admission: ${yearAdmission}    Year Graduated: ${yearGraduated}`,
-        photoUrl ? `Passport Photo: ${photoUrl}` : "",
-        "",
-        "── A. BIOGRAPHIC DATA ──",
-        `Surname: ${surname}    Other Names: ${otherNames}`,
-        `Title: ${title}    Sex: ${sex}    Date of Birth: ${dob}    Place of Birth: ${placeOfBirth}`,
-        `Nationality: ${nationality}    State of Origin: ${stateOfOrigin}    L.G.A.: ${lga}`,
-        `Contact Address: ${contactAddress}`,
-        `Tel (Home): ${telHome}    Mobile: ${mobile}    E-mail: ${email}`,
-        "",
-        "── B. MARITAL STATUS ──",
-        `Status: ${marital}    Name of Spouse: ${spouseName}    Maiden Name: ${maidenName}`,
-        `Date Married: ${dateMarried}    No. of Children: ${numChildren}`,
-        "",
-        "── C. NEXT OF KIN ──",
-        `Name: ${nokName}    Relationship: ${nokRel}`,
-        `Contact Address: ${nokAddr}    Tel: ${nokTel}`,
-        "",
-        "── D. EMPLOYMENT (PRESENT) ──",
-        `Employer: ${empName}    Occupation: ${empOcc}    Position: ${empPos}`,
-        `Job Description: ${empJobDesc}    Office Address: ${empAddr}    Tel: ${empTel}`,
-        "",
-        "── E. EMPLOYMENT (PREVIOUS) ──",
-        `Employer: ${prevEmpName}    Occupation: ${prevEmpOcc}    Position: ${prevEmpPos}`,
-        `Job Description: ${prevEmpJobDesc}    Office Address: ${prevEmpAddr}    Tel: ${prevEmpTel}`,
-        "",
-        "── F. ACADEMIC HISTORY ──",
-        ...academics.filter(a => a.school).map(a => `  ${a.school} | ${a.from}–${a.to} | ${a.field} | ${a.qualification}`),
-        "",
-        "── G. PROFESSIONAL QUALIFICATIONS ──",
-        ...profQuals.filter(p => p.body || p.qualification).map(p => `  ${p.body} | ${p.qualification} | ${p.date}`),
-        "",
-        "── H. CHRISTIAN HISTORY ──",
-        `Date of Salvation: ${salvDate}    Where: ${salvWhere}`,
-        `Date of Water Baptism: ${waterDate}    Where: ${waterWhere}`,
-        `Date of Baptism in Holy Ghost: ${hgDate}    Where: ${hgWhere}`,
-        ynRow("1. New Believer's Class?", nbc),
-        ynRow("2. Baptismal Class?", btc),
-        ynRow("3. Worker's Training?", wit),
-        ynRow("4. Any Bible School Before?", bible),
-        "",
-        "── I. PLACE OF WORSHIP ──",
-        `Present Church: ${presentChurch}    Address: ${presentAddr}    Tel: ${presentTel}`,
-        `Pastor-in-Charge: ${presentPastor}    Tel: ${presentPastorTel}`,
-        `Position/Ministry: ${presentPosition}`,
-        `Special Gifts: 1. ${gift1}  2. ${gift2}  3. ${gift3}`,
-        `Previous Church: ${prevChurch}    Address: ${prevChurchAddr}    Tel: ${prevChurchTel}`,
-        `Pastor-in-Charge: ${prevPastor}    Tel: ${prevPastorTel}    Previous Position: ${prevPosition}`,
-        "",
-        "── J. SPONSORSHIP ──",
-        `Name: ${sponsorName}    Address: ${sponsorAddr}    Tel: ${sponsorTel}`,
-        "",
-        "── K. METHOD OF PAYMENT ──",
-        `Payment: ${payMethod}`,
-        "",
-        "── L. HOW DID YOU HEAR ABOUT RILA? ──",
-        howHeard,
-        "",
-        "── M. WHY DO YOU WANT TO ATTEND? ──",
-        whyApply,
-        "",
-        "── N. REFEREES ──",
-        `1. ${ref1Name}    Address: ${ref1Addr}    Tel: ${ref1Tel}`,
-        `2. ${ref2Name}    Address: ${ref2Addr}    Tel: ${ref2Tel}`,
-        "",
-        "── O. DECLARATION ──",
-        `Applicant: ${applicantName}    Date: ${declDate}`,
-        "",
-        "── P. PASTOR ATTESTATION ──",
-        `Church: ${pastorChurch}    Address: ${pastorChurchAddr}`,
-        `Pastor: ${pastorName}    Date: ${pastorDate}`,
-      ].filter((l) => l !== undefined).join("\n");
+      /* parse otherNames → firstName + middleName */
+      const nameParts = otherNames.trim().split(/\s+/);
+      const firstName  = nameParts[0] ?? "";
+      const middleName = nameParts.slice(1).join(" ") || undefined;
 
-      await createSuggestion({
-        userId: user?.id ?? "anonymous",
-        subject: `RILA Application — ${surname.trim()} ${otherNames.trim()}`,
-        content,
+      /* build qualificationRequests from academic history + professional quals */
+      const qualificationRequests = [
+        ...academics
+          .filter((a) => a.school.trim() || a.qualification.trim())
+          .map((a) => ({
+            nameOfInstitution: a.school,
+            yearFrom: a.from,
+            yearTo: a.to,
+            courseOfStudy: a.field,
+            qualification: a.qualification,
+            isProfessional: false,
+          })),
+        ...profQuals
+          .filter((p) => p.body.trim() || p.qualification.trim())
+          .map((p) => ({
+            nameOfInstitution: p.body,
+            yearFrom: "",
+            yearTo: p.date,
+            courseOfStudy: "",
+            qualification: p.qualification,
+            isProfessional: true,
+          })),
+      ];
+
+      /* previous church */
+      const createPastPlaceOfWorshipRequests = prevChurch.trim()
+        ? [{ name: prevChurch, address: prevChurchAddr, phoneNumber: prevChurchTel, pastorName: prevPastor, pastorPhoneNumber: prevPastorTel, positionHeld: prevPosition }]
+        : undefined;
+
+      /* referees */
+      const createStudentReferenceRequests = [
+        ...(ref1Name.trim() ? [{ name: ref1Name, address: ref1Addr, phoneNumber: ref1Tel }] : []),
+        ...(ref2Name.trim() ? [{ name: ref2Name, address: ref2Addr, phoneNumber: ref2Tel }] : []),
+      ];
+
+      /* gifts manifesting */
+      const giftsManifesting = [gift1, gift2, gift3].filter(Boolean);
+
+      await createRila({
+        set: set.trim(),
+        title: title || undefined,
+        programme: programme || undefined,
+        campus: campus || undefined,
+        firstName,
+        middleName,
+        lastName: surname.trim(),
+        maidenName: maidenName || undefined,
+        phoneNumber: mobile.trim(),
+        otherPhoneNumber: telHome || undefined,
+        email: email || undefined,
+        profilePictureUrl: photoUrl || undefined,
+        sex: sex || undefined,
+        dateOfBirth: dob || undefined,
+        placeOfBirth: placeOfBirth || undefined,
+        nationality: nationality || undefined,
+        stateOfOrigin: stateOfOrigin || undefined,
+        lga: lga || undefined,
+        street: contactAddress || undefined,
+        maritalStatus: marital || undefined,
+        spouseName: spouseName || undefined,
+        weddingDate: dateMarried || undefined,
+        noOfChildren: numChildren ? parseInt(numChildren, 10) : undefined,
+        nextOfKinName: nokName || undefined,
+        nextOfKinRelationship: nokRel || undefined,
+        nextOfKinFullAddress: nokAddr || undefined,
+        nextOfKinPhoneNumber: nokTel || undefined,
+        employer: empName || undefined,
+        occupation: empOcc || undefined,
+        position: empPos || undefined,
+        jobDescription: empJobDesc || undefined,
+        officeFullAddress: empAddr || undefined,
+        officePhoneNumber: empTel || undefined,
+        previousEmployer: prevEmpName || undefined,
+        previousOccupation: prevEmpOcc || undefined,
+        previousPosition: prevEmpPos || undefined,
+        previousJobDescription: prevEmpJobDesc || undefined,
+        previousOfficeFullAddress: prevEmpAddr || undefined,
+        previousOfficePhoneNumber: prevEmpTel || undefined,
+        salvationDate: salvDate || undefined,
+        salvationLocation: salvWhere || undefined,
+        waterBaptismDate: waterDate || undefined,
+        waterBaptismLocation: waterWhere || undefined,
+        holySpiritBaptismDate: hgDate || undefined,
+        holySpiritBaptismLocation: hgWhere || undefined,
+        believerClassDate: nbc.date || undefined,
+        believerClassLocation: nbc.where || undefined,
+        workersInTrainingDate: wit.date || undefined,
+        workersInTrainingLocation: wit.where || undefined,
+        otherBibleSchoolDate: bible.date || undefined,
+        otherBibleSchoolLocation: bible.where || undefined,
+        currentChurchName: presentChurch || undefined,
+        currentChurchAddress: presentAddr || undefined,
+        currentChurchPhoneNumber: presentTel || undefined,
+        currentPastorName: presentPastor || undefined,
+        currentPastorPhoneNumber: presentPastorTel || undefined,
+        yourMinistry: presentPosition || undefined,
+        giftsManifesting: giftsManifesting.length ? giftsManifesting : undefined,
+        heardAboutUs: howHeard || undefined,
+        reasonForApplying: whyApply || undefined,
+        qualificationRequests: qualificationRequests.length ? qualificationRequests : undefined,
+        createPastPlaceOfWorshipRequests,
+        createStudentReferenceRequests: createStudentReferenceRequests.length ? createStudentReferenceRequests : undefined,
       });
       setSubmitted(true);
     } catch (e) {
@@ -477,15 +504,19 @@ export default function RilaFormCore({ mode }: { mode: RilaMode }) {
       {/* Bottom fill fields — with underlines matching physical form */}
       <div style={{ paddingTop: 8 }}>
         {[
-          { label: "NAME:", note: "(SURNAME FIRST)", value: coverName, set: setCoverName, full: true },
-          { label: "PROGRAMME:", note: "", value: programme, set: setProgramme, full: true },
-        ].map(({ label, note, value, set, full }) => (
+          { label: "NAME:", note: "(SURNAME FIRST)", value: coverName, onChange: setCoverName, full: true },
+          { label: "PROGRAMME:", note: "", value: programme, onChange: setProgramme, full: true },
+        ].map(({ label, note, value, onChange, full }) => (
           <div key={label} style={{ display: "flex", alignItems: "baseline", marginBottom: 14, gap: 6 }}>
             <span style={{ fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>{label}</span>
-            <DL value={value} onChange={set} readOnly={ro} width={full ? "100%" : "40%"} />
+            <DL value={value} onChange={onChange} readOnly={ro} width={full ? "100%" : "40%"} />
             {note && <span style={{ fontSize: 10, whiteSpace: "nowrap", color: "#333" }}>{note}</span>}
           </div>
         ))}
+        <div style={{ display: "flex", alignItems: "baseline", marginBottom: 14, gap: 6 }}>
+          <span style={{ fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>SET:</span>
+          <DL value={set} onChange={setSet} readOnly={ro} />
+        </div>
         <div style={{ display: "flex", gap: 24, marginBottom: 14 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 6, flex: 1 }}>
             <span style={{ fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>MATRIC NO:</span>
