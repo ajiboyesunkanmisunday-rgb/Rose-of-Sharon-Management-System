@@ -15,22 +15,28 @@ import {
   getCounselingRequests,
   getPrayerRequests,
   getSuggestions,
+  getBabyChristeningRequests,
+  getBabyDedicationRequests,
+  searchBabyChristeningRequests,
+  searchBabyDedicationRequests,
   changeRequestStatus,
   getStoredUser,
   type RequestResponse,
 } from "@/lib/api";
 import { Inbox } from "lucide-react";
 
-type CategoryFilter = "All" | "Prayer" | "Counseling" | "Suggestion";
+type CategoryFilter = "All" | "Prayer" | "Counseling" | "Suggestion" | "BabyChristening" | "BabyDedication";
 type StatusFilter = "All" | "RECEIVED" | "ASSIGNED" | "IN_PROGRESS" | "RESOLVED";
 
 const ITEMS_PER_PAGE = 10;
 
 const categoryTabs: { key: CategoryFilter; label: string }[] = [
-  { key: "All",       label: "All"         },
-  { key: "Prayer",    label: "Prayer"      },
-  { key: "Counseling",label: "Counseling"  },
-  { key: "Suggestion",label: "Suggestions" },
+  { key: "All",             label: "All"              },
+  { key: "Prayer",          label: "Prayer"           },
+  { key: "Counseling",      label: "Counseling"       },
+  { key: "Suggestion",      label: "Suggestions"      },
+  { key: "BabyChristening", label: "Baby Christening" },
+  { key: "BabyDedication",  label: "Baby Dedication"  },
 ];
 
 const statusFilterOptions: { value: StatusFilter; label: string }[] = [
@@ -114,16 +120,28 @@ export default function RequestsPage() {
   const [bulkStatus,   setBulkStatus]   = useState("RESOLVED");
   const [saving,       setSaving]       = useState(false);
 
-  const fetchRequests = useCallback(async (page: number, category: CategoryFilter) => {
+  const fetchRequests = useCallback(async (page: number, category: CategoryFilter, searchText = "") => {
     setLoading(true);
     setApiError("");
     try {
-      const fn =
-        category === "Prayer"     ? getPrayerRequests    :
-        category === "Counseling" ? getCounselingRequests :
-        category === "Suggestion" ? getSuggestions       :
-        getAllRequests;
-      const res = await fn(page - 1, ITEMS_PER_PAGE);
+      let res;
+      const q = searchText.trim();
+      if (q && category === "BabyChristening") {
+        res = await searchBabyChristeningRequests({ text: q }, page - 1, ITEMS_PER_PAGE);
+      } else if (q && category === "BabyDedication") {
+        res = await searchBabyDedicationRequests({ text: q }, page - 1, ITEMS_PER_PAGE);
+      } else if (category === "BabyChristening") {
+        res = await getBabyChristeningRequests(page - 1, ITEMS_PER_PAGE);
+      } else if (category === "BabyDedication") {
+        res = await getBabyDedicationRequests(page - 1, ITEMS_PER_PAGE);
+      } else {
+        const fn =
+          category === "Prayer"     ? getPrayerRequests    :
+          category === "Counseling" ? getCounselingRequests :
+          category === "Suggestion" ? getSuggestions       :
+          getAllRequests;
+        res = await fn(page - 1, ITEMS_PER_PAGE);
+      }
       setRequests(res.content ?? []);
       setTotalPages(res.totalPages ?? 1);
       setTotalItems(res.totalElements ?? 0);
@@ -135,13 +153,13 @@ export default function RequestsPage() {
   }, []);
 
   useEffect(() => {
-    fetchRequests(currentPage, activeCategory);
-  }, [currentPage, activeCategory, fetchRequests]);
+    fetchRequests(currentPage, activeCategory, search);
+  }, [currentPage, activeCategory, fetchRequests]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Client-side status + search filter on loaded page
+  // Client-side status filter on loaded page (search is server-side for christening/dedication)
   const displayed = requests.filter((r) => {
     if (activeStatus !== "All" && r.requestStatus !== activeStatus) return false;
-    if (search.trim()) {
+    if (search.trim() && activeCategory !== "BabyChristening" && activeCategory !== "BabyDedication") {
       const q = search.toLowerCase();
       return (
         (r.subject ?? "").toLowerCase().includes(q) ||
@@ -266,8 +284,17 @@ export default function RequestsPage() {
         <div className="w-full sm:w-72">
           <SearchBar
             value={search}
-            onChange={setSearch}
-            onSearch={() => setCurrentPage(1)}
+            onChange={(v) => {
+              setSearch(v);
+              if (!v.trim() && (activeCategory === "BabyChristening" || activeCategory === "BabyDedication")) {
+                fetchRequests(1, activeCategory, "");
+                setCurrentPage(1);
+              }
+            }}
+            onSearch={() => {
+              setCurrentPage(1);
+              fetchRequests(1, activeCategory, search);
+            }}
             placeholder="Search requests…"
           />
         </div>

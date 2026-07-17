@@ -248,9 +248,10 @@ export default function RilaFormCore({ mode }: { mode: RilaMode }) {
   const [prevPosition,     setPrevPosition]     = useState("");
 
   /* ── J. Sponsorship ──────────────────────────────────────────────────── */
-  const [sponsorName, setSponsorName] = useState("");
-  const [sponsorAddr, setSponsorAddr] = useState("");
-  const [sponsorTel,  setSponsorTel]  = useState("");
+  const [selfSponsored, setSelfSponsored] = useState(true);
+  const [sponsorName,   setSponsorName]   = useState("");
+  const [sponsorAddr,   setSponsorAddr]   = useState("");
+  const [sponsorTel,    setSponsorTel]    = useState("");
 
   /* ── K. Method of Payment ────────────────────────────────────────────── */
   const [payMethod, setPayMethod] = useState("");
@@ -282,6 +283,8 @@ export default function RilaFormCore({ mode }: { mode: RilaMode }) {
   const [uploading,    setUploading]    = useState(false);
   const [submitError,  setSubmitError]  = useState("");
   const [submitted,    setSubmitted]    = useState(false);
+  const [submittedId,  setSubmittedId]  = useState("");
+  const [copiedLink,   setCopiedLink]   = useState<"sponsor" | "pastor" | null>(null);
   const [pageErrors,   setPageErrors]   = useState<Record<number, boolean>>({});
 
   /* ── passport photo ──────────────────────────────────────────────────── */
@@ -364,7 +367,7 @@ export default function RilaFormCore({ mode }: { mode: RilaMode }) {
       /* gifts manifesting */
       const giftsManifesting = [gift1, gift2, gift3].filter(Boolean);
 
-      await createRila({
+      const result = await createRila({
         set: set.trim(),
         title: title || undefined,
         programme: programme || undefined,
@@ -425,10 +428,12 @@ export default function RilaFormCore({ mode }: { mode: RilaMode }) {
         giftsManifesting: giftsManifesting.length ? giftsManifesting : undefined,
         heardAboutUs: howHeard || undefined,
         reasonForApplying: whyApply || undefined,
+        selfSponsored,
         qualificationRequests: qualificationRequests.length ? qualificationRequests : undefined,
         createPastPlaceOfWorshipRequests,
         createStudentReferenceRequests: createStudentReferenceRequests.length ? createStudentReferenceRequests : undefined,
       });
+      setSubmittedId(result.id ?? "");
       setSubmitted(true);
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : "Submission failed. Please try again.");
@@ -440,15 +445,62 @@ export default function RilaFormCore({ mode }: { mode: RilaMode }) {
 
   /* ── success ─────────────────────────────────────────────────────────── */
   if (submitted) {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const sponsorLink = `${origin}/trainings/rila/sponsor?id=${submittedId}`;
+    const pastorLink  = `${origin}/trainings/rila/pastor?id=${submittedId}`;
+    const copyLink = (type: "sponsor" | "pastor", url: string) => {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopiedLink(type);
+        setTimeout(() => setCopiedLink(null), 2000);
+      });
+    };
+    const linkBox: React.CSSProperties = {
+      display: "flex", alignItems: "center", gap: 8,
+      background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 8,
+      padding: "8px 12px", width: "100%", maxWidth: 480,
+    };
+    const copyBtn: React.CSSProperties = {
+      flexShrink: 0, padding: "4px 12px", borderRadius: 6, border: "1px solid #D1D5DB",
+      background: "#fff", cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#374151",
+    };
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 16, fontFamily: FONT }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 20, fontFamily: FONT, padding: "24px 16px" }}>
         <CheckCircle size={56} color="#16A34A" />
-        <h2 style={{ fontSize: 22, fontWeight: 700, color: "#111" }}>Application Submitted</h2>
-        <p style={{ color: "#555", textAlign: "center", maxWidth: 380, fontSize: 14 }}>
-          Your RILA application has been received. The admissions team will review it and get in touch.
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: "#111", textAlign: "center" }}>Application Submitted</h2>
+        <p style={{ color: "#555", textAlign: "center", maxWidth: 460, fontSize: 14, margin: 0 }}>
+          Your RILA application has been received. Complete the next steps below by sharing the links with your sponsor and pastor.
         </p>
+
+        {!selfSponsored && submittedId && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%", maxWidth: 480 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#111", margin: 0 }}>Step 2 — Share with your Sponsor</p>
+            <p style={{ fontSize: 12, color: "#666", margin: 0 }}>Your sponsor needs to fill their section. Share this link with them:</p>
+            <div style={linkBox}>
+              <span style={{ flex: 1, fontSize: 11, color: "#374151", wordBreak: "break-all" }}>{sponsorLink}</span>
+              <button style={copyBtn} onClick={() => copyLink("sponsor", sponsorLink)}>
+                {copiedLink === "sponsor" ? "Copied!" : "Copy"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {submittedId && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%", maxWidth: 480 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#111", margin: 0 }}>
+              {selfSponsored ? "Step 2" : "Step 3"} — Share with your Pastor
+            </p>
+            <p style={{ fontSize: 12, color: "#666", margin: 0 }}>Your pastor needs to fill the attestation section. Share this link:</p>
+            <div style={linkBox}>
+              <span style={{ flex: 1, fontSize: 11, color: "#374151", wordBreak: "break-all" }}>{pastorLink}</span>
+              <button style={copyBtn} onClick={() => copyLink("pastor", pastorLink)}>
+                {copiedLink === "pastor" ? "Copied!" : "Copy"}
+              </button>
+            </div>
+          </div>
+        )}
+
         <button onClick={() => router.push("/trainings/rila")}
-          style={{ padding: "10px 24px", borderRadius: 8, background: "#DC2626", color: "#fff", fontWeight: 700, border: "none", cursor: "pointer", fontSize: 14 }}>
+          style={{ padding: "10px 24px", borderRadius: 8, background: "#DC2626", color: "#fff", fontWeight: 700, border: "none", cursor: "pointer", fontSize: 14, marginTop: 8 }}>
           Back to RILA
         </button>
       </div>
@@ -826,27 +878,43 @@ export default function RilaFormCore({ mode }: { mode: RilaMode }) {
       </table>
 
       {/* J. SPONSORSHIP */}
-      <SH>J.&nbsp;&nbsp;&nbsp;SPONSORSHIP <span style={{ fontWeight: 400, fontSize: 10, textTransform: "none" }}>(if order than self)</span></SH>
+      <SH>J.&nbsp;&nbsp;&nbsp;SPONSORSHIP</SH>
       <div style={{ marginBottom: 5 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 6 }}>
-          <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Name of Sponsor</span>
-          <DL value={sponsorName} onChange={setSponsorName} readOnly={ro} />
-        </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 6 }}>
-          <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Address of Sponsor</span>
-          <DL value={sponsorAddr} onChange={setSponsorAddr} readOnly={ro} />
-        </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
-          <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Tel:</span>
-          <DL value={sponsorTel} onChange={setSponsorTel} readOnly={ro} width={120} />
-          <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Sponsor&apos;s Signature</span>
-          <DL value="" onChange={() => {}} readOnly={true} width={160} />
-          <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Date</span>
-          <DL value="" onChange={() => {}} readOnly={true} width={100} />
-        </div>
-        <div style={{ fontSize: 10, fontStyle: "italic", marginTop: 3 }}>
-          (Sponsor should please note that the Academy will hold him or her liable for any default in payment by their students)
-        </div>
+        {!ro && (
+          <div style={{ display: "flex", gap: 20, marginBottom: 8, fontSize: 11 }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
+              <input type="radio" name="selfSponsored" checked={selfSponsored} onChange={() => setSelfSponsored(true)} />
+              Self-sponsored
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
+              <input type="radio" name="selfSponsored" checked={!selfSponsored} onChange={() => setSelfSponsored(false)} />
+              I have a sponsor
+            </label>
+          </div>
+        )}
+        {!selfSponsored && (
+          <>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 6 }}>
+            <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Name of Sponsor</span>
+            <DL value={sponsorName} onChange={setSponsorName} readOnly={ro} />
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 6 }}>
+            <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Address of Sponsor</span>
+            <DL value={sponsorAddr} onChange={setSponsorAddr} readOnly={ro} />
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
+            <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Tel:</span>
+            <DL value={sponsorTel} onChange={setSponsorTel} readOnly={ro} width={120} />
+            <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Sponsor&apos;s Signature</span>
+            <DL value="" onChange={() => {}} readOnly={true} width={160} />
+            <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>Date</span>
+            <DL value="" onChange={() => {}} readOnly={true} width={100} />
+          </div>
+          <div style={{ fontSize: 10, fontStyle: "italic", marginTop: 3 }}>
+            (Sponsor should please note that the Academy will hold him or her liable for any default in payment by their students)
+          </div>
+          </>
+        )}
       </div>
 
       {/* K. METHOD OF PAYMENT */}
