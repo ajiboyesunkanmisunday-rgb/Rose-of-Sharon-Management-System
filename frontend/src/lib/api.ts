@@ -4072,3 +4072,306 @@ export async function castVote(votingEventId: string, body: CastVoteRequest): Pr
   });
 }
 
+/* ─── RILA ──────────────────────────────────────────────────────────────────── */
+
+export interface CreateStudentReferenceRequest {
+  name: string;
+  address: string;
+  phoneNumber: string;
+}
+
+export interface CreatePastPlaceOfWorshipRequest {
+  name: string;
+  address?: string;
+  phoneNumber?: string;
+  pastorName?: string;
+  pastorPhoneNumber?: string;
+  positionHeld?: string;
+}
+
+export interface CreateQualificationRequest {
+  nameOfInstitution?: string;
+  yearFrom?: string;
+  yearTo?: string;
+  courseOfStudy?: string;
+  qualification?: string;
+  isProfessional: boolean;
+}
+
+export interface CreateRilaRequest {
+  title?: string;
+  set: string;
+  programme?: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  campus?: string;
+  maidenName?: string;
+  countryCode?: string;
+  phoneNumber: string;
+  email?: string;
+  profilePictureUrl?: string;
+  sex?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  otherPhoneNumber?: string;
+  dateOfBirth?: string;
+  noOfChildren?: number;
+  spouseName?: string;
+  maritalStatus?: string;
+  nationality?: string;
+  placeOfBirth?: string;
+  lga?: string;
+  stateOfOrigin?: string;
+  weddingDate?: string;
+  nextOfKinName?: string;
+  nextOfKinRelationship?: string;
+  nextOfKinPhoneNumber?: string;
+  nextOfKinFullAddress?: string;
+  officeFullAddress?: string;
+  position?: string;
+  occupation?: string;
+  employer?: string;
+  officePhoneNumber?: string;
+  jobDescription?: string;
+  previousOccupation?: string;
+  previousEmployer?: string;
+  previousPosition?: string;
+  previousOfficeFullAddress?: string;
+  previousOfficePhoneNumber?: string;
+  previousJobDescription?: string;
+  salvationDate?: string;
+  salvationLocation?: string;
+  waterBaptismDate?: string;
+  waterBaptismLocation?: string;
+  holySpiritBaptismDate?: string;
+  holySpiritBaptismLocation?: string;
+  believerClassDate?: string;
+  believerClassLocation?: string;
+  workersInTrainingDate?: string;
+  workersInTrainingLocation?: string;
+  otherBibleSchoolDate?: string;
+  otherBibleSchoolLocation?: string;
+  currentChurchName?: string;
+  currentChurchAddress?: string;
+  currentChurchPhoneNumber?: string;
+  currentPastorName?: string;
+  currentPastorPhoneNumber?: string;
+  yourMinistry?: string;
+  giftsManifesting?: string[];
+  heardAboutUs?: string;
+  reasonForApplying?: string;
+  consent?: boolean;
+  signatureUrl?: string;
+  selfSponsored?: boolean;
+  createPastPlaceOfWorshipRequests?: CreatePastPlaceOfWorshipRequest[];
+  createStudentReferenceRequests?: CreateStudentReferenceRequest[];
+  qualificationRequests?: CreateQualificationRequest[];
+}
+
+export interface RilaResponse {
+  id: string;
+  title?: string;
+  admissionNo?: string;
+  set?: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  programme?: string;
+  campus?: string;
+  maidenName?: string;
+  email?: string;
+  profilePictureUrl?: string;
+  sex?: string;
+  phoneNumber?: string;
+  maritalStatus?: string;
+  spouseName?: string;
+  noOfChildren?: number;
+  currentChurchName?: string;
+  currentPastorName?: string;
+  heardAboutUs?: string;
+  reasonForApplying?: string;
+  rilaApplicationStage?: string;
+  shortlistedForInterview?: boolean;
+  approvedByAcademicOfficer?: boolean;
+  approvedByRector?: boolean;
+  feesPaid?: number;
+  createdOn?: string;
+}
+
+export interface RilaFullResponse extends RilaResponse {
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  countryCode?: string;
+  otherPhoneNumber?: string;
+  dateOfBirth?: string;
+  nationality?: string;
+  lga?: string;
+  placeOfBirth?: string;
+  stateOfOrigin?: string;
+  weddingDate?: string;
+  nextOfKinName?: string;
+  nextOfKinRelationship?: string;
+  nextOfKinPhoneNumber?: string;
+  nextOfKinFullAddress?: string;
+  occupation?: string;
+  employer?: string;
+  position?: string;
+  officeFullAddress?: string;
+  officePhoneNumber?: string;
+  jobDescription?: string;
+  previousOccupation?: string;
+  previousEmployer?: string;
+  previousPosition?: string;
+  previousOfficeFullAddress?: string;
+  previousOfficePhoneNumber?: string;
+  previousJobDescription?: string;
+  salvationDate?: string;
+  salvationLocation?: string;
+  waterBaptismDate?: string;
+  waterBaptismLocation?: string;
+  holySpiritBaptismDate?: string;
+  holySpiritBaptismLocation?: string;
+  believerClassDate?: string;
+  believerClassLocation?: string;
+  workersInTrainingDate?: string;
+  workersInTrainingLocation?: string;
+  otherBibleSchoolDate?: string;
+  otherBibleSchoolLocation?: string;
+  currentChurchAddress?: string;
+  currentChurchPhoneNumber?: string;
+  currentPastorPhoneNumber?: string;
+  yourMinistry?: string;
+  giftsManifesting?: string[];
+  sponsorName?: string;
+  sponsorAddress?: string;
+  sponsorPhoneNumber?: string;
+  consent?: boolean;
+  signatureUrl?: string;
+  dateInterviewed?: string;
+  graduationDate?: string;
+  pastPlaceOfWorships?: PastPlaceOfWorship[];
+  studentReferences?: { id: string; name: string; address: string; phoneNumber: string }[];
+  qualifications?: Qualification[];
+}
+
+export async function createRila(body: CreateRilaRequest): Promise<RilaFullResponse> {
+  return apiFetch<RilaFullResponse>("/api/v1/rilas", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function getAllRilas(
+  set: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<RilaResponse>> {
+  return apiFetch<CustomPageResponse<RilaResponse>>(
+    `/api/v1/rilas?set=${encodeURIComponent(set)}&pageNo=${pageNo}&pageSize=${pageSize}`,
+  );
+}
+
+export async function searchRilas(
+  body: { text: string },
+  set?: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<RilaResponse>> {
+  const setParam = set ? `&set=${encodeURIComponent(set)}` : "";
+  return apiFetch<CustomPageResponse<RilaResponse>>(
+    `/api/v1/rilas/search?pageNo=${pageNo}&pageSize=${pageSize}${setParam}`,
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function getRila(id: string): Promise<RilaFullResponse> {
+  return apiFetch<RilaFullResponse>(`/api/v1/rilas/${id}`);
+}
+
+export async function deleteRila(ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/rilas", {
+    method: "DELETE",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export async function markRilaAsGraduated(ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/rilas/mark-as-graduated", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export async function shortlistRilaForInterview(ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/rilas/shortlist-for-interview", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export async function markRilaInterviewDone(id: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/rilas/${id}/interview-done`, { method: "PUT" });
+}
+
+export async function updateRilaAdmissionNumber(
+  id: string,
+  admissionNumber: string,
+): Promise<RilaResponse> {
+  return apiFetch<RilaResponse>(
+    `/api/v1/rilas/${id}/admission-number?admissionNumber=${encodeURIComponent(admissionNumber)}`,
+    { method: "PUT" },
+  );
+}
+
+export async function updateRilaFeesPaid(id: string, feesPaid: number): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/rilas/${id}/fees-paid?feesPaid=${feesPaid}`,
+    { method: "PUT" },
+  );
+}
+
+export async function updateRilaAcademicOfficerApproval(
+  id: string,
+  approvalStatus: boolean,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/rilas/${id}/academic-officer?approvalStatus=${approvalStatus}`,
+    { method: "PATCH" },
+  );
+}
+
+export async function updateRilaRectorApproval(
+  id: string,
+  approvalStatus: boolean,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/rilas/${id}/rector?approvalStatus=${approvalStatus}`,
+    { method: "PATCH" },
+  );
+}
+
+export async function updateRilaSponsor(
+  id: string,
+  body: { name: string; address: string; phoneNumber: string; signature?: string },
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/rilas/${id}/sponsor`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateRilaPastorRecommendation(
+  id: string,
+  body: { name: string; phoneNumber: string; signature?: string; stampVideo?: string },
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/rilas/${id}/pastor-recommendation`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
