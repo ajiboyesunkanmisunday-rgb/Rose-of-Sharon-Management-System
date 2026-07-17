@@ -239,47 +239,6 @@ export default function RequestsPage() {
         />
       </div>
 
-      {/* Baby form quick-access cards */}
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <button
-          onClick={() => router.push("/requests/baby-christening")}
-          className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-left shadow-sm transition-shadow hover:shadow-md"
-        >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#FEF2F2] dark:bg-red-900/20">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2z"/><path d="M6 20v-1a6 6 0 0 1 12 0v1"/>
-              <path d="M9 9l-1 1M15 9l1 1"/>
-            </svg>
-          </div>
-          <div>
-            <p className="text-[13px] font-bold text-[#000000] dark:text-slate-100">Baby Christening Form</p>
-            <p className="text-[11px] text-[#6B7280] dark:text-slate-400">Notification of birth &amp; christening request</p>
-          </div>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-auto shrink-0">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-        </button>
-
-        <button
-          onClick={() => router.push("/requests/baby-dedication")}
-          className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-left shadow-sm transition-shadow hover:shadow-md"
-        >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#F0F4FF] dark:bg-indigo-900/20">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000080" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2z"/><path d="M6 20v-1a6 6 0 0 1 12 0v1"/>
-              <path d="M12 14v4M10 16h4"/>
-            </svg>
-          </div>
-          <div>
-            <p className="text-[13px] font-bold text-[#000000] dark:text-slate-100">Baby Dedication Form</p>
-            <p className="text-[11px] text-[#6B7280] dark:text-slate-400">Register your child for baby dedication Sunday</p>
-          </div>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-auto shrink-0">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-        </button>
-      </div>
-
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="w-full sm:w-72">
           <SearchBar
