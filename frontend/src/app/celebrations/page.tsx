@@ -421,9 +421,6 @@ function BirthdayCard({ u }: { u: UserResponse }) {
       <h3 className="text-sm font-bold text-[#111827] dark:text-slate-100">{name}</h3>
       <p className="mt-0.5 text-xs font-medium text-[#6B7280] dark:text-slate-400">🗓 {date}</p>
       {phone && <p className="mt-1 text-xs text-[#374151] dark:text-slate-300">📞 {phone}</p>}
-      {u.email && (
-        <p className="mt-0.5 truncate text-xs text-[#000080] dark:text-indigo-400">{u.email}</p>
-      )}
     </div>
   );
 }
@@ -464,9 +461,6 @@ function AnniversaryCard({ u }: { u: UserResponse }) {
       <h3 className="text-sm font-bold text-[#111827] dark:text-slate-100 leading-snug">{coupleName}</h3>
       <p className="mt-0.5 text-xs font-medium text-[#6B7280] dark:text-slate-400">🗓 {date}</p>
       {phone && <p className="mt-1 text-xs text-[#374151] dark:text-slate-300">📞 {phone}</p>}
-      {u.email && (
-        <p className="mt-0.5 truncate text-xs text-[#000080] dark:text-indigo-400">{u.email}</p>
-      )}
     </div>
   );
 }
@@ -652,7 +646,7 @@ export default function CelebrationsPage() {
           {activeTab === "thanksgiving" && (
             <Button
               variant="primary"
-              onClick={() => router.push("/celebrations/add?type=Thanksgiving")}
+              onClick={() => router.push("/celebrations/add?returnTab=thanksgiving")}
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
