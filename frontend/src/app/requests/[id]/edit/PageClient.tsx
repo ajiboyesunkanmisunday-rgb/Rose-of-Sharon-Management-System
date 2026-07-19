@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import { SelectField, TextAreaField } from "@/components/ui/FormField";
-import { getRequest, changeRequestStatus, getAdmins, type AdminResponse } from "@/lib/api";
+import { getRequest, changeRequestStatus, getAdminUsers, type AdminResponse } from "@/lib/api";
 
 const STATUS_OPTIONS = [
   { label: "Received",    value: "RECEIVED"    },
@@ -52,7 +52,7 @@ export default function EditRequestClient() {
     try {
       const [data, adminPage] = await Promise.all([
         getRequest(id),
-        getAdmins(0, 100),
+        getAdminUsers(0, 100),
       ]);
       setAdmins(adminPage.content ?? []);
       setFormData({
