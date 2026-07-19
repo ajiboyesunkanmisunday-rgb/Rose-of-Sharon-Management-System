@@ -67,6 +67,37 @@ export function isSessionExpired(): boolean {
   return isTokenExpired(token);
 }
 
+// ─── GET cache (in-memory, 30 s TTL) ────────────────────────────────────────────
+// Avoids redundant network calls when the user navigates back to a list page or
+// when multiple components on the same page request the same endpoint.
+
+const GET_CACHE_TTL = 30_000; // ms
+
+interface CacheEntry<T> {
+  data: T;
+  headers: Headers;
+  expiresAt: number;
+}
+
+const getCache = new Map<string, CacheEntry<unknown>>();
+const inFlight = new Map<string, Promise<ApiFetchResult<unknown>>>();
+
+function cacheGet<T>(key: string): ApiFetchResult<T> | null {
+  const entry = getCache.get(key) as CacheEntry<T> | undefined;
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) { getCache.delete(key); return null; }
+  return { data: entry.data, headers: entry.headers };
+}
+
+function cacheSet<T>(key: string, result: ApiFetchResult<T>): void {
+  getCache.set(key, { data: result.data, headers: result.headers, expiresAt: Date.now() + GET_CACHE_TTL });
+}
+
+export function invalidateCache(prefix?: string): void {
+  if (!prefix) { getCache.clear(); inFlight.clear(); return; }
+  for (const key of getCache.keys()) { if (key.includes(prefix)) getCache.delete(key); }
+}
+
 // ─── Core fetch wrapper ─────────────────────────────────────────────────────────
 
 interface ApiFetchResult<T> {
@@ -107,13 +138,12 @@ function isTokenExpired(token: string): boolean {
   return false;
 }
 
-async function apiFetchRaw<T>(
+async function apiFetchNetwork<T>(
   path: string,
-  options: RequestInit = {},
+  options: RequestInit,
+  token: string | null,
+  method: string,
 ): Promise<ApiFetchResult<T>> {
-  const token = getToken();
-  const method = (options.method ?? "GET").toUpperCase();
-
   // Only include Content-Type for requests that have a body.
   // GET/HEAD with Content-Type causes browsers to add Content-Length: 0,
   // which confuses Netlify's function body parsing.
@@ -292,6 +322,33 @@ async function apiFetchRaw<T>(
   }
 
   return { data, headers: response.headers };
+}
+
+async function apiFetchRaw<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<ApiFetchResult<T>> {
+  const token = getToken();
+  const method = (options.method ?? "GET").toUpperCase();
+
+  if (method === "GET") {
+    const cacheKey = `${token?.slice(-8) ?? "anon"}:${path}`;
+    const cached = cacheGet<T>(cacheKey);
+    if (cached) return cached;
+    const existing = inFlight.get(cacheKey) as Promise<ApiFetchResult<T>> | undefined;
+    if (existing) return existing;
+    const promise = apiFetchNetwork<T>(path, options, token, method)
+      .then((result) => { cacheSet(cacheKey, result); inFlight.delete(cacheKey); return result; })
+      .catch((err) => { inFlight.delete(cacheKey); throw err; });
+    inFlight.set(cacheKey, promise as Promise<ApiFetchResult<unknown>>);
+    return promise;
+  }
+
+  // Mutating requests: bust cache for the affected resource path.
+  const basePath = path.split("?")[0];
+  invalidateCache(basePath.split("/").slice(0, 4).join("/"));
+
+  return apiFetchNetwork<T>(path, options, token, method);
 }
 
 async function apiFetch<T>(

@@ -48,7 +48,7 @@ const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct"
 // ─── Helpers ────────────────────────────────────────────────────────────────
 async function fetchAll<T>(
   fetcher: (p: number, s: number) => Promise<{ content?: T[]; totalPages?: number }>,
-  size = 200,
+  size = 500,
 ): Promise<T[]> {
   const first  = await fetcher(0, size);
   const rows   = [...(first.content ?? [])];
