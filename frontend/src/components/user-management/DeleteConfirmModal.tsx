@@ -11,6 +11,7 @@ interface DeleteConfirmModalProps {
   confirmLabel?: string;
   confirmDisabled?: boolean;
   isLoading?: boolean;
+  danger?: boolean;
 }
 
 export default function DeleteConfirmModal({
@@ -22,6 +23,7 @@ export default function DeleteConfirmModal({
   confirmLabel = "Delete",
   confirmDisabled = false,
   isLoading = false,
+  danger = true,
 }: DeleteConfirmModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -95,7 +97,7 @@ export default function DeleteConfirmModal({
           <button
             onClick={onConfirm}
             disabled={confirmDisabled || isLoading}
-            className="rounded-xl bg-[#DC2626] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${danger ? "bg-[#DC2626] hover:bg-red-700" : "bg-[#000080] hover:bg-[#000066]"}`}
           >
             {isLoading ? "Processing…" : confirmLabel}
           </button>

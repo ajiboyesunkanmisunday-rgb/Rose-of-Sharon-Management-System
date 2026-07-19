@@ -157,8 +157,9 @@ export default function CelebrationDetailClient() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
         title="Mark as Treated"
-        message="Are you sure you want to mark this celebration as treated? This action cannot be undone."
+        message="Are you sure you want to mark this celebration as treated?"
         confirmLabel="Mark as Treated"
+        danger={false}
       />
     </DashboardLayout>
   );

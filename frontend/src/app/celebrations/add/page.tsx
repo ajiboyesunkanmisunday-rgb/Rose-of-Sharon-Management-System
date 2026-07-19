@@ -40,6 +40,7 @@ export default function AddCelebrationPage() {
   const [membersLoading, setMembersLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const [returnTab, setReturnTab] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -53,6 +54,15 @@ export default function AddCelebrationPage() {
   };
 
   const isFormValid = !!selectedUserId && !!formData.type && !!formData.date;
+
+  // Read returnTab from URL on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search);
+      const rt = p.get("returnTab");
+      if (rt) setReturnTab(rt);
+    }
+  }, []);
 
   // Load members once for search
   useEffect(() => {
@@ -124,11 +134,11 @@ export default function AddCelebrationPage() {
         date: formData.date,
         notes: formData.notes || undefined,
       });
-      // Redirect to the matching tab so the user lands on the right section.
-      const tab =
-        formData.type === "BIRTHDAY" ? "birthdays"
+      // Redirect to the tab the user came from, or derive it from the type.
+      const tab = returnTab ||
+        (formData.type === "BIRTHDAY" ? "birthdays"
         : formData.type === "WEDDING" ? "anniversaries"
-        : "thanksgiving";
+        : "thanksgiving");
       router.push(`/celebrations?tab=${tab}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save celebration.");
