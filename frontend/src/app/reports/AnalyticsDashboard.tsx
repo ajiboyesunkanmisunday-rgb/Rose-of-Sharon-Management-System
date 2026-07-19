@@ -717,7 +717,7 @@ export default function AnalyticsDashboard() {
       {/* ── Row 2: New Joiners This Month + Group Membership ───────── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Chart 1 */}
-        <ChartCard title="1. New Joiners This Month — By Type">
+        <ChartCard title="New Joiners This Month — By Type">
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={newJoinersThisMonth} margin={{ top: 4, right: 10, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
@@ -734,7 +734,7 @@ export default function AnalyticsDashboard() {
         </ChartCard>
 
         {/* Chart 2 */}
-        <ChartCard title="2. Membership Across All Groups">
+        <ChartCard title="Membership Across All Groups">
           {groupData.length === 0 ? (
             <p className="py-10 text-center text-xs text-[#9CA3AF] dark:text-slate-400">No group data available.</p>
           ) : (
@@ -755,7 +755,7 @@ export default function AnalyticsDashboard() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Chart 3: 2-bar conversion rates */}
         <div className="lg:col-span-2">
-          <ChartCard title="3. Visitor Conversion Rates">
+          <ChartCard title="Visitor Conversion Rates">
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={conversionRateData} margin={{ top: 4, right: 10, left: -10, bottom: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
@@ -779,7 +779,7 @@ export default function AnalyticsDashboard() {
         {/* KPI cards */}
         <div className="flex flex-col gap-4">
           <KpiCard
-            label="4. Overall Conversion Rate"
+            label="Overall Conversion Rate"
             value={`${convRate}%`}
             sub={`${totalMem} members from ${totalFT} first timers`}
             color={C.green}
@@ -796,7 +796,7 @@ export default function AnalyticsDashboard() {
       {/* ── Row 4: Gender Pie + Believers Class ───────────────────── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Chart 8: Gender pie */}
-        <ChartCard title="8. Gender Distribution (All Users)">
+        <ChartCard title="Gender Distribution (All Users)">
           <div className="flex items-center gap-4">
             <ResponsiveContainer width="60%" height={200}>
               <PieChart>
@@ -821,7 +821,7 @@ export default function AnalyticsDashboard() {
         </ChartCard>
 
         {/* Chart 10: New converts by stage */}
-        <ChartCard title="10. New Converts — Believers Class Stage">
+        <ChartCard title="New Converts — Believers Class Stage">
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={convertStageData} margin={{ top: 4, right: 10, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
@@ -836,7 +836,7 @@ export default function AnalyticsDashboard() {
 
       {/* ── Row 5: Service Attendance (FT + ST) ───────────────────── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <ChartCard title="5. First Timers — By Service Attended This Month">
+        <ChartCard title="First Timers — By Service Attended This Month">
           {ftByService.length === 0 ? (
             <p className="py-10 text-center text-xs text-[#9CA3AF] dark:text-slate-400">No service attendance data on first timers.</p>
           ) : (
@@ -852,7 +852,7 @@ export default function AnalyticsDashboard() {
           )}
         </ChartCard>
 
-        <ChartCard title="6. Second Timers — By Service Attended This Month">
+        <ChartCard title="Second Timers — By Service Attended This Month">
           {stByService.length === 0 ? (
             <p className="py-10 text-center text-xs text-[#9CA3AF] dark:text-slate-400">No service attendance data on second timers.</p>
           ) : (
@@ -870,7 +870,7 @@ export default function AnalyticsDashboard() {
       </div>
 
       {/* ── Row 6: SOD / SOM / WIT / Baptismal ───────────────────── */}
-      <ChartCard title="9. Special Ministry Groups — SOD / SOM / Workers in Training / Baptismal">
+      <ChartCard title="Special Ministry Groups — SOD / SOM / Workers in Training / Baptismal">
         {specialGroupData.length === 0 ? (
           <p className="py-6 text-center text-xs text-[#9CA3AF] dark:text-slate-400">
             No groups matching SOD, SOM, Workers in Training, or Baptismal found.
@@ -891,7 +891,7 @@ export default function AnalyticsDashboard() {
 
       {/* ── Row 7: Birthdays + Weddings by Month ─────────────────── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <ChartCard title="11. Birthdays by Month">
+        <ChartCard title="Birthdays by Month">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={birthdayData} margin={{ top: 4, right: 10, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
@@ -903,7 +903,7 @@ export default function AnalyticsDashboard() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="12. Wedding Anniversaries by Month">
+        <ChartCard title="Wedding Anniversaries by Month">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={weddingData} margin={{ top: 4, right: 10, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
@@ -917,7 +917,7 @@ export default function AnalyticsDashboard() {
       </div>
 
       {/* ── Row 8: Testimonies vs Celebrations ───────────────────── */}
-      <ChartCard title="13. Testimonies vs Celebrations — Monthly (This Year)">
+      <ChartCard title="Testimonies vs Celebrations — Monthly (This Year)">
         <ResponsiveContainer width="100%" height={240}>
           <BarChart data={testCelebData} margin={{ top: 4, right: 10, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
@@ -932,7 +932,7 @@ export default function AnalyticsDashboard() {
       </ChartCard>
 
       {/* ── Row 9: People who left ────────────────────────────────── */}
-      <ChartCard title="14. Members Who Left / Stopped — Monthly">
+      <ChartCard title="Members Who Left / Stopped — Monthly">
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={leftData} margin={{ top: 4, right: 10, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
@@ -950,7 +950,7 @@ export default function AnalyticsDashboard() {
       {/* ── Row 10: Charts 17 / 18 / 19 ─────────────────────────── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Chart 17: Favourite parts of service */}
-        <ChartCard title="17. Favourite Parts of Service — First Timers">
+        <ChartCard title="Favourite Parts of Service — First Timers">
           {favouritePartsData.length === 0 ? (
             <p className="py-10 text-center text-xs text-[#9CA3AF] dark:text-slate-400">No favourite-part data recorded yet.</p>
           ) : (
@@ -967,7 +967,7 @@ export default function AnalyticsDashboard() {
         </ChartCard>
 
         {/* Chart 19: How did you hear about the church */}
-        <ChartCard title="19. How First Timers Heard About the Church">
+        <ChartCard title="How First Timers Heard About the Church">
           {howDidYouHearData.length === 0 ? (
             <p className="py-10 text-center text-xs text-[#9CA3AF] dark:text-slate-400">No invitation-source data recorded yet.</p>
           ) : (
@@ -985,7 +985,7 @@ export default function AnalyticsDashboard() {
       </div>
 
       {/* Chart 18: Visitor pie */}
-      <ChartCard title="18. First Timers — Indicated Visiting vs Did Not Indicate Visiting">
+      <ChartCard title="First Timers — Indicated Visiting vs Did Not Indicate Visiting">
         <div className="flex items-center gap-8">
           <ResponsiveContainer width="50%" height={220}>
             <PieChart>
@@ -1020,13 +1020,13 @@ export default function AnalyticsDashboard() {
       {/* ── Row 11: Charts 20 & 21 ───────────────────────────────── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <KpiCard
-          label="21. Avg. Days Before First Contact"
+          label="Avg. Days Before First Contact"
           value={avgResponseDays > 0 ? `${avgResponseDays}d` : "—"}
           sub={`Based on ${contactedVisitors.length} visitors who were contacted`}
           color={avgResponseDays <= 14 ? C.green : avgResponseDays <= 30 ? C.amber : C.red}
         />
         <div className="lg:col-span-2">
-          <ChartCard title="20. Total Follow-up Actions per Month (Calls + Visits)">
+          <ChartCard title="Total Follow-up Actions per Month (Calls + Visits)">
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={followupMonthData} margin={{ top: 4, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
@@ -1045,13 +1045,13 @@ export default function AnalyticsDashboard() {
         {/* KPI cards */}
         <div className="flex flex-col gap-4">
           <KpiCard
-            label="16. Followup Attention Rate"
+            label="Followup Attention Rate"
             value={`${attentionRate}%`}
             sub={`${attended} visitors contacted out of ${totalVisitors}`}
             color={C.green}
           />
           <KpiCard
-            label="15. Urgent Followup Count"
+            label="Urgent Followup Count"
             value={urgentTotal}
             sub="Visitors with 0 calls and 0 visits"
             color={C.red}
@@ -1060,7 +1060,7 @@ export default function AnalyticsDashboard() {
 
         {/* 15: Urgent followup table */}
         <div className="lg:col-span-2">
-          <ChartCard title="15. People Needing Urgent Followup (No Calls or Visits Yet)">
+          <ChartCard title="People Needing Urgent Followup (No Calls or Visits Yet)">
             <div className="max-h-[300px] overflow-y-auto">
               {urgentList.length === 0 ? (
                 <p className="py-8 text-center text-xs text-[#9CA3AF] dark:text-slate-400">All visitors have been contacted.</p>
