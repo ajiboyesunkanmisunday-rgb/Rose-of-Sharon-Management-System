@@ -557,7 +557,7 @@ export default function FirstTimersPage() {
                     {ft.serviceAttended || <span className="text-[#9CA3AF] dark:text-slate-500">—</span>}
                   </td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
-                    {ft.assignedFollowUp ? fullName(ft.assignedFollowUp) : <span className="text-[#9CA3AF] dark:text-slate-500">—</span>}
+                    {ft.assignedFollowUp ? (fullName(ft.assignedFollowUp) || ft.assignedFollowUp.email || "—") : <span className="text-[#9CA3AF] dark:text-slate-500">—</span>}
                   </td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{ft.noOfCalls ?? 0}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{ft.noOfVisits ?? 0}</td>

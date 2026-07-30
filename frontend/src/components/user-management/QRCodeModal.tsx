@@ -14,6 +14,7 @@ interface QRCodeModalProps {
 export default function QRCodeModal({ isOpen, onClose, value, title }: QRCodeModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [origin, setOrigin] = useState("");
+  const [copied, setCopied] = useState(false);
   useEffect(() => { setOrigin(window.location.origin); }, []);
   const url = value
     ? (value.startsWith("http") ? value : `${origin}${value}`)
@@ -29,7 +30,10 @@ export default function QRCodeModal({ isOpen, onClose, value, title }: QRCodeMod
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(url).catch(() => {});
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
   };
 
   return (
@@ -57,7 +61,7 @@ export default function QRCodeModal({ isOpen, onClose, value, title }: QRCodeMod
             onClick={handleCopyLink}
             className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-2 text-xs font-medium text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 transition-colors"
           >
-            Copy Link
+            {copied ? "Copied!" : "Copy Link"}
           </button>
         </div>
       </div>
