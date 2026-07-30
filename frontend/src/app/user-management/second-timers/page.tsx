@@ -197,15 +197,20 @@ export default function SecondTimersPage() {
     }
   };
 
-  const handleBulkAssign = async (officerId: string, note: string) => {
+  const handleBulkAssign = async (officerId: string, note: string, officerName: string) => {
     setActionLoading(true);
     try {
       await Promise.all(
         Array.from(selectedRows).map((id) => assignFollowUp(id, officerId, note))
       );
+      const ids = Array.from(selectedRows);
+      setTimers((prev) => prev.map((t) =>
+        ids.includes(t.id)
+          ? { ...t, assignedFollowUp: { id: officerId, firstName: officerName, lastName: "", email: "" } as UserResponse }
+          : t
+      ));
       setSelectedRows(new Set());
       setShowBulkAssignModal(false);
-      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to assign follow-up.");
       setShowBulkAssignModal(false);
@@ -214,14 +219,19 @@ export default function SecondTimersPage() {
     }
   };
 
-  const handleSingleAssign = async (officerId: string, note: string) => {
+  const handleSingleAssign = async (officerId: string, note: string, officerName: string) => {
     if (!selectedTimerId) return;
     setActionLoading(true);
+    const timerId = selectedTimerId;
     try {
-      await assignFollowUp(selectedTimerId, officerId, note);
+      await assignFollowUp(timerId, officerId, note);
+      setTimers((prev) => prev.map((t) =>
+        t.id === timerId
+          ? { ...t, assignedFollowUp: { id: officerId, firstName: officerName, lastName: "", email: "" } as UserResponse }
+          : t
+      ));
       setShowSingleAssignModal(false);
       setSelectedTimerId(null);
-      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to assign follow-up.");
       setShowSingleAssignModal(false);
@@ -549,7 +559,7 @@ export default function SecondTimersPage() {
                     {st.serviceAttended || <span className="text-[#9CA3AF] dark:text-slate-400">—</span>}
                   </td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
-                    {st.assignedFollowUp ? fullName(st.assignedFollowUp) : <span className="text-[#9CA3AF] dark:text-slate-400">—</span>}
+                    {st.assignedFollowUp ? (fullName(st.assignedFollowUp) || st.assignedFollowUp.email || "—") : <span className="text-[#9CA3AF] dark:text-slate-400">—</span>}
                   </td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{st.noOfCalls ?? 0}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{st.noOfVisits ?? 0}</td>

@@ -14,7 +14,7 @@ interface OfficerOption {
 interface AssignFollowUpModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAssign: (officerId: string, note: string) => void;
+  onAssign: (officerId: string, note: string, officerName: string) => void;
   memberCount?: number;
 }
 
@@ -53,7 +53,8 @@ export default function AssignFollowUpModal({
 
   const handleAssign = () => {
     if (!officerId) return;
-    onAssign(officerId, note);
+    const officerName = officerOptions.find((o) => o.value === officerId)?.label ?? "";
+    onAssign(officerId, note, officerName);
     setOfficerId("");
     setNote("");
     onClose();
