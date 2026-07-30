@@ -149,7 +149,7 @@ export default function AddEventPage() {
       <PageHeader
         title="Event Management"
         subtitle="Create Event"
-        backHref="/event-management"
+        backOnClick={() => router.back()}
       />
 
       <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
@@ -314,7 +314,7 @@ export default function AddEventPage() {
             <Button
               variant="secondary"
               type="button"
-              onClick={() => router.push("/event-management")}
+              onClick={() => router.back()}
             >
               Cancel
             </Button>

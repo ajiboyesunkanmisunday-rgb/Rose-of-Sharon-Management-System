@@ -59,6 +59,7 @@ export default function EditSecondTimerPage() {
       setPhone(u.phoneNumber ?? "");
       if (u.whatsappNumber) {
         setWhatsappNumber(u.whatsappNumber);
+        setWhatsappCode(u.countryCode ? `+${u.countryCode}` : "+234");
       }
       setDobDay(u.dayOfBirth?.toString() ?? "");
       setDobMonth(u.monthOfBirth?.toString() ?? "");
