@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import SearchBar from "@/components/ui/SearchBar";
 import Pagination from "@/components/ui/Pagination";
 import {
-  getSchoolOfMinistries,
-  searchSchoolOfMinistries,
-  type SchoolOfMinistryResponse,
+  getWaterBaptisms,
+  searchWaterBaptisms,
+  type WaterBaptismResponse,
 } from "@/lib/api";
 import {
   Droplets, Phone, RefreshCw, PlusCircle, FileText, Users,
@@ -17,7 +17,7 @@ const ACCENT   = "#0891B2";
 const ACCENT10 = "#0891B218";
 const ITEMS_PER_PAGE = 20;
 
-function fullName(u: SchoolOfMinistryResponse) {
+function fullName(u: WaterBaptismResponse) {
   return [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—";
 }
 
@@ -47,7 +47,7 @@ function SkeletonRow() {
 
 export default function BaptismalClassPage() {
   const router = useRouter();
-  const [records, setRecords] = useState<SchoolOfMinistryResponse[]>([]);
+  const [records, setRecords] = useState<WaterBaptismResponse[]>([]);
   const [total,   setTotal]   = useState(0);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
@@ -58,7 +58,7 @@ export default function BaptismalClassPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await getSchoolOfMinistries(pg - 1, ITEMS_PER_PAGE);
+      const res = await getWaterBaptisms(pg - 1, ITEMS_PER_PAGE);
       setRecords(res.content ?? []);
       setTotal(res.totalElements ?? 0);
     } catch (e) {
@@ -79,7 +79,7 @@ export default function BaptismalClassPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await searchSchoolOfMinistries(q.trim(), 0, ITEMS_PER_PAGE);
+      const res = await searchWaterBaptisms(q.trim(), 0, ITEMS_PER_PAGE);
       setRecords(res.content ?? []);
       setTotal(res.totalElements ?? 0);
       setPage(1);
