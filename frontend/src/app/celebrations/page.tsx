@@ -880,7 +880,7 @@ export default function CelebrationsPage() {
                       key={row.id}
                       className="border-b border-[#F3F4F6] hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 cursor-pointer"
                       style={{ height: "56px" }}
-                      onClick={() => router.push(`/celebrations/${row.id}`)}
+                      onClick={() => router.push(`/celebrations/${row.id}?returnTab=thanksgiving`)}
                     >
                       <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{fullName(row.requester)}</td>
                       <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
@@ -900,7 +900,7 @@ export default function CelebrationsPage() {
                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <ActionDropdown
                           actions={[
-                            { label: "View", onClick: () => router.push(`/celebrations/${row.id}`) },
+                            { label: "View", onClick: () => router.push(`/celebrations/${row.id}?returnTab=thanksgiving`) },
                             ...(row.celebrationStatus !== "TREATED"
                               ? [{ label: "Mark as Treated", onClick: () => handleMarkTreated(row.id) }]
                               : []),

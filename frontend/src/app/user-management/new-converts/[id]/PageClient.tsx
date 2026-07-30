@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import {
-  getNewConvert, addCallReport, addVisitReport, getNotes, deleteNote,
+  getNewConvert, addNewConvertNote, getNewConvertNotes, deleteNewConvertNote,
   updateBelieversClass,
   type NewConvertResponse, type NoteResponse,
 } from "@/lib/api";
@@ -101,7 +101,7 @@ export default function ViewNewConvertPage() {
     if (!id || id.startsWith("nc-")) return;
     setNotesLoading(true);
     try {
-      const data = await getNotes(id);
+      const data = await getNewConvertNotes(id);
       setNotes(data);
     } catch { /* non-fatal */ }
     finally { setNotesLoading(false); }
@@ -138,8 +138,7 @@ export default function ViewNewConvertPage() {
     setSaveMsg("");
     setSaveFailed(false);
     try {
-      if (type === "call")  await addCallReport(id, text.trim());
-      if (type === "visit") await addVisitReport(id, text.trim());
+      await addNewConvertNote(id, text.trim());
       if (type === "call")  setCallText("");
       if (type === "visit") setVisitText("");
       setSaveMsg("");
@@ -161,7 +160,7 @@ export default function ViewNewConvertPage() {
   const handleDeleteNote = async (noteId: string) => {
     setDeletingNoteId(noteId);
     try {
-      await deleteNote(noteId);
+      await deleteNewConvertNote(noteId);
       setNotes((prev) => prev.filter((n) => n.id !== noteId));
       addToast("Entry deleted.", "success");
     } catch (err) {

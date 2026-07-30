@@ -12,13 +12,13 @@ import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import BaptismalFormCore from "@/components/trainings/BaptismalFormCore";
 import {
-  getSchoolOfMinistry,
-  type SchoolOfMinistryFullResponse,
+  getWaterBaptism,
+  type WaterBaptismFullResponse,
 } from "@/lib/api";
 import { RefreshCw } from "lucide-react";
 
 function BaptismalFormViewLoader({ id }: { id: string }) {
-  const [record, setRecord] = useState<SchoolOfMinistryFullResponse | null>(
+  const [record, setRecord] = useState<WaterBaptismFullResponse | null>(
     null
   );
   const [loading, setLoading] = useState(true);
@@ -28,7 +28,7 @@ function BaptismalFormViewLoader({ id }: { id: string }) {
     let cancelled = false;
     setLoading(true);
     setError("");
-    getSchoolOfMinistry(id)
+    getWaterBaptism(id)
       .then((data) => {
         if (!cancelled) {
           setRecord(data);
