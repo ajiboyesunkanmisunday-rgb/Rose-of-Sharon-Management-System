@@ -198,15 +198,20 @@ export default function FirstTimersPage() {
     }
   };
 
-  const handleBulkAssign = async (officerId: string, note: string) => {
+  const handleBulkAssign = async (officerId: string, note: string, officerName: string) => {
     setActionLoading(true);
     try {
       await Promise.all(
         Array.from(selectedRows).map((id) => assignFollowUp(id, officerId, note))
       );
+      const ids = Array.from(selectedRows);
+      setTimers((prev) => prev.map((t) =>
+        ids.includes(t.id)
+          ? { ...t, assignedFollowUp: { id: officerId, firstName: officerName, lastName: "", email: "" } as UserResponse }
+          : t
+      ));
       setSelectedRows(new Set());
       setShowBulkAssignModal(false);
-      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to assign follow-up.");
       setShowBulkAssignModal(false);
@@ -215,14 +220,19 @@ export default function FirstTimersPage() {
     }
   };
 
-  const handleSingleAssign = async (officerId: string, note: string) => {
+  const handleSingleAssign = async (officerId: string, note: string, officerName: string) => {
     if (!selectedTimerId) return;
     setActionLoading(true);
+    const timerId = selectedTimerId;
     try {
-      await assignFollowUp(selectedTimerId, officerId, note);
+      await assignFollowUp(timerId, officerId, note);
+      setTimers((prev) => prev.map((t) =>
+        t.id === timerId
+          ? { ...t, assignedFollowUp: { id: officerId, firstName: officerName, lastName: "", email: "" } as UserResponse }
+          : t
+      ));
       setShowSingleAssignModal(false);
       setSelectedTimerId(null);
-      fetchTimers(currentPage, activeSearch, filterService);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to assign follow-up.");
       setShowSingleAssignModal(false);
