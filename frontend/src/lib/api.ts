@@ -4497,3 +4497,214 @@ export async function updateRilaPastorRecommendation(
   });
 }
 
+// ─── Water Baptisms ───────────────────────────────────────────────────────────
+
+export interface WaterBaptismResponse {
+  id: string;
+  userId?: string;
+  set?: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  profilePictureUrl?: string;
+  sex?: "FEMALE" | "MALE" | string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+  stateOfOrigin?: string;
+  dateOfBirth?: string;
+  maritalStatus?: string;
+  spouseName?: string;
+  noOfChildren?: number;
+  occupation?: string;
+  employer?: string;
+  officeFullAddress?: string;
+  officePhoneNumber?: string;
+  officeEmail?: string;
+  officeSocialMediaHandle?: string;
+  salvationDate?: string;
+  salvationLocation?: string;
+  holySpiritBaptismDate?: string;
+  holySpiritBaptismLocation?: string;
+  goneThroughNewConvertClass?: boolean;
+  afraidOfWater?: boolean;
+  reasonForApplying?: string[];
+  otherInformation?: string;
+  signatureUrl?: string;
+  toAttendNewConvertClass?: boolean;
+  toAttendBaptismalClass?: boolean;
+  officialRemarks?: string;
+  graduationDate?: string;
+  createdOn?: string;
+}
+
+export interface WaterBaptismFullResponse extends WaterBaptismResponse {
+  pastPlaceOfWorships?: PastPlaceOfWorship[];
+  studentDepartments?: { id?: string; name?: string; date?: string }[];
+  qualifications?: Qualification[];
+}
+
+export interface CreateWaterBaptismRequest {
+  userId?: string;
+  set?: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  countryCode: string;
+  phoneNumber: string;
+  profilePictureUrl?: string;
+  sex?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  stateOfOrigin?: string;
+  dateOfBirth?: string;
+  noOfChildren?: number;
+  spouseName?: string;
+  maritalStatus?: string;
+  employer?: string;
+  officeFullAddress?: string;
+  officePhoneNumber?: string;
+  officeEmail?: string;
+  occupation?: string;
+  officeSocialMediaHandle?: string;
+  salvationDate?: string;
+  salvationLocation?: string;
+  holySpiritBaptismDate?: string;
+  holySpiritBaptismLocation?: string;
+  goneThroughNewConvertClass?: boolean;
+  afraidOfWater?: boolean;
+  reasonForApplying?: string[];
+  otherInformation?: string;
+  signatureUrl?: string;
+  createPastPlaceOfWorshipRequests?: { name?: string; address?: string; date?: string }[];
+  studentDepartmentRequests?: { name?: string; date?: string }[];
+  qualificationRequests?: { institution?: string; date?: string; qualificationReceived?: string }[];
+}
+
+export async function getWaterBaptisms(
+  pageNo = 0,
+  pageSize = 20,
+  set?: string,
+): Promise<CustomPageResponse<WaterBaptismResponse>> {
+  const qs = set ? `&set=${encodeURIComponent(set)}` : "";
+  return apiFetch<CustomPageResponse<WaterBaptismResponse>>(
+    `/api/v1/water-baptisms?pageNo=${pageNo}&pageSize=${pageSize}${qs}`,
+  );
+}
+
+export async function getWaterBaptism(id: string): Promise<WaterBaptismFullResponse> {
+  return apiFetch<WaterBaptismFullResponse>(`/api/v1/water-baptisms/${id}`);
+}
+
+export async function searchWaterBaptisms(
+  text: string,
+  pageNo = 0,
+  pageSize = 20,
+): Promise<CustomPageResponse<WaterBaptismResponse>> {
+  return apiFetch<CustomPageResponse<WaterBaptismResponse>>(
+    `/api/v1/water-baptisms/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ text }) },
+  );
+}
+
+export async function createWaterBaptism(
+  body: CreateWaterBaptismRequest,
+): Promise<WaterBaptismResponse> {
+  return apiFetch<WaterBaptismResponse>("/api/v1/water-baptisms", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteWaterBaptismsBulk(
+  ids: string[],
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/water-baptisms", {
+    method: "DELETE",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export async function markWaterBaptismsAsGraduated(
+  ids: string[],
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/water-baptisms/mark-as-graduated", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export async function giveWaterBaptismOfficialRemark(
+  id: string,
+  text: string,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(
+    `/api/v1/water-baptisms/${id}/give-official-remark`,
+    { method: "PATCH", body: JSON.stringify({ text }) },
+  );
+}
+
+// ─── Notes — calls vs visits stat ────────────────────────────────────────────
+
+export async function getCallsVsVisits(): Promise<FeatureStatResponse> {
+  return apiFetch<FeatureStatResponse>("/api/v1/notes/calls-vs-visits");
+}
+
+// ─── New Convert Notes ────────────────────────────────────────────────────────
+
+export async function getNewConvertNotes(convertId: string): Promise<NoteResponse[]> {
+  const res = await apiFetch<NoteResponse[] | { content?: NoteResponse[] }>(
+    `/api/v1/new-converts/${encodeURIComponent(convertId)}/note`,
+  );
+  if (Array.isArray(res)) return res;
+  return (res as { content?: NoteResponse[] }).content ?? [];
+}
+
+export async function addNewConvertNote(
+  convertId: string,
+  content: string,
+): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/new-converts/note", {
+    method: "POST",
+    body: JSON.stringify({ userId: convertId, content }),
+  });
+}
+
+export async function deleteNewConvertNote(noteId: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/new-converts/note/${noteId}`, {
+    method: "DELETE",
+  });
+}
+
+// ─── Events — attendance by user type ────────────────────────────────────────
+
+export async function getFirstTimersServicesAttendance(): Promise<PastServicesAttendanceResponse> {
+  return apiFetch<PastServicesAttendanceResponse>(
+    "/api/v1/events/first-timers-services-attendance",
+  );
+}
+
+export async function getSecondTimersServicesAttendance(): Promise<PastServicesAttendanceResponse> {
+  return apiFetch<PastServicesAttendanceResponse>(
+    "/api/v1/events/second-timers-services-attendance",
+  );
+}
+
+// ─── Roles — search ───────────────────────────────────────────────────────────
+
+export async function searchRoles(
+  text: string,
+  pageNo = 0,
+  pageSize = 50,
+): Promise<CustomPageResponse<RoleResponse>> {
+  return apiFetch<CustomPageResponse<RoleResponse>>(
+    `/api/v1/roles/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify({ text }) },
+  );
+}
+

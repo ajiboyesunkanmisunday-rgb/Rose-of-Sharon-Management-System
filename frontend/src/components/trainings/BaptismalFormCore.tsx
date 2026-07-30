@@ -13,9 +13,9 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Printer, Send, CheckCircle, XCircle } from "lucide-react";
 import {
-  createSchoolOfMinistry,
+  createWaterBaptism,
   uploadProfilePicture,
-  type SchoolOfMinistryFullResponse,
+  type WaterBaptismFullResponse,
 } from "@/lib/api";
 
 /** Compress + resize before upload to avoid nginx 413 errors. */
@@ -167,7 +167,7 @@ export default function BaptismalFormCore({
   initialData,
 }: {
   mode: BaptismalMode;
-  initialData?: SchoolOfMinistryFullResponse;
+  initialData?: WaterBaptismFullResponse;
 }) {
   const ro = mode === "blank" || mode === "view";
   const router = useRouter();
@@ -207,7 +207,7 @@ export default function BaptismalFormCore({
   const [occupation, setOccupation] = useState(initialData?.occupation ?? "");
   const [email, setEmail] = useState("");
   const [placeOfWork, setPlaceOfWork] = useState(
-    initialData?.placeOfWork ?? ""
+    initialData?.employer ?? ""
   );
   const [socialMedia, setSocialMedia] = useState("");
   const [officeAddress, setOfficeAddress] = useState(
@@ -279,8 +279,8 @@ export default function BaptismalFormCore({
 
   /* ── Section F — New Converts Class ─────────────────────────────────────── */
   const [newConvertsText, setNewConvertsText] = useState(() => {
-    if (initialData?.goneThroughNewConverts === true) return "Yes";
-    if (initialData?.goneThroughNewConverts === false) return "No";
+    if (initialData?.goneThroughNewConvertClass === true) return "Yes";
+    if (initialData?.goneThroughNewConvertClass === false) return "No";
     return "";
   });
 
@@ -289,7 +289,7 @@ export default function BaptismalFormCore({
 
   /* ── Section H — Reasons for attending (3 boxes) ────────────────────────── */
   const [reasons, setReasons] = useState<string[]>(() => {
-    const fromData = [...(initialData?.reasonsForApplying ?? [])];
+    const fromData = [...(initialData?.reasonForApplying ?? [])];
     while (fromData.length < 3) fromData.push("");
     return fromData.slice(0, 3);
   });
@@ -386,17 +386,6 @@ export default function BaptismalFormCore({
 
     const reasonItems = reasons.filter((r) => r.trim());
 
-    // Build otherInformation: prepend afraid-of-water if provided
-    let otherInfoStr: string | undefined;
-    const parts: string[] = [];
-    if (afraidOfWater.trim()) {
-      parts.push(`Afraid of water: ${afraidOfWater.trim()}`);
-    }
-    if (otherInfoText.trim()) {
-      parts.push(otherInfoText.trim());
-    }
-    otherInfoStr = parts.length > 0 ? parts.join("\n") : undefined;
-
     const maritalMap: Record<string, string> = {
       Single: "SINGLE",
       Married: "MARRIED",
@@ -423,7 +412,7 @@ export default function BaptismalFormCore({
         setUploading(false);
       }
 
-      const created = await createSchoolOfMinistry({
+      const created = await createWaterBaptism({
         firstName: firstName.trim(),
         lastName: surname.trim(),
         middleName: middleName.trim() || undefined,
@@ -442,7 +431,7 @@ export default function BaptismalFormCore({
         state:   addrState.trim()   || undefined,
         country: addrCountry.trim() || undefined,
         occupation: occupation.trim() || undefined,
-        placeOfWork: placeOfWork.trim() || undefined,
+        employer: placeOfWork.trim() || undefined,
         officePhoneNumber: workPhone.trim()
           ? normalisePhone(workPhone, countryCode)
           : undefined,
@@ -452,12 +441,13 @@ export default function BaptismalFormCore({
         salvationLocation: salvationWhere.trim() || undefined,
         holySpiritBaptismDate: holySpiritWhere.trim() || undefined,
         holySpiritBaptismLocation: holySpiritAnswer.trim() || undefined,
-        goneThroughNewConverts: parseYesNo(newConvertsText),
-        otherInformation: otherInfoStr,
+        goneThroughNewConvertClass: parseYesNo(newConvertsText),
+        afraidOfWater: afraidOfWater.trim() ? parseYesNo(afraidOfWater) : undefined,
+        otherInformation: otherInfoText.trim() || undefined,
         ...(qualItems.length ? { qualificationRequests:            qualItems }  : {}),
         ...(wpItems.length   ? { createPastPlaceOfWorshipRequests: wpItems }    : {}),
-        ...(deptItems.length ? { createStudentDepartmentRequests:  deptItems }  : {}),
-        ...(reasonItems.length ? { reasonsForApplying:             reasonItems } : {}),
+        ...(deptItems.length ? { studentDepartmentRequests:        deptItems }  : {}),
+        ...(reasonItems.length ? { reasonForApplying:              reasonItems } : {}),
       });
 
       const savedId = (created as { id?: string })?.id;
