@@ -85,6 +85,7 @@ export default function ViewSecondTimerPage() {
   const [activeTab, setActiveTab] = useState<Tab>("details");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showConvertModal, setShowConvertModal] = useState(false);
+  const [convertError, setConvertError] = useState("");
 
   const [callText,  setCallText]  = useState("");
   const [visitText, setVisitText] = useState("");
@@ -178,6 +179,7 @@ export default function ViewSecondTimerPage() {
 
   const handleConfirmConvert = async () => {
     setShowConvertModal(false);
+    setConvertError("");
     setConverting(true);
     try {
       await convertToFullMember(id);
@@ -185,8 +187,7 @@ export default function ViewSecondTimerPage() {
       router.push("/user-management/members");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Conversion failed.";
-      setSaveMsg(msg);
-      addToast(msg, "error");
+      setConvertError(msg);
       setConverting(false);
     }
   };
@@ -420,7 +421,13 @@ export default function ViewSecondTimerPage() {
           )}
 
           {/* Actions */}
-          <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
+          {convertError && (
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700 dark:text-red-300">
+              <strong>Conversion failed:</strong> {convertError}
+              <button className="ml-2 underline text-xs" onClick={() => setConvertError("")}>Dismiss</button>
+            </div>
+          )}
+          <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
             <Button variant="secondary" onClick={() => router.push(`/user-management/second-timers/${id}/edit`)}>Edit</Button>
             <Button variant="primary" onClick={handleConvertToMember} disabled={converting}>
               {converting ? "Converting…" : "Convert to Member"}
@@ -440,13 +447,20 @@ export default function ViewSecondTimerPage() {
       {showConvertModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-xl">
-            <h3 className="mb-2 text-lg font-bold text-[#111827] dark:text-slate-100">Convert to Full Member?</h3>
+            <div className="flex items-center justify-between bg-[#000080] -mx-6 -mt-6 px-6 py-4 rounded-t-xl mb-4">
+              <h3 className="text-lg font-bold text-white">Convert to Full Member?</h3>
+              <button onClick={() => setShowConvertModal(false)} className="text-white hover:text-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
             <p className="mb-6 text-sm text-[#374151] dark:text-slate-300">
-              This will move this second timer to the Members list. This action cannot be undone.
+              This will move <strong>{user ? `${user.firstName} ${user.lastName}`.trim() : "this person"}</strong> to the Members list. This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <Button variant="secondary" onClick={() => setShowConvertModal(false)}>Cancel</Button>
-              <Button variant="primary" onClick={handleConfirmConvert}>Yes, Convert</Button>
+              <Button variant="primary" onClick={handleConfirmConvert} disabled={converting}>
+                {converting ? "Converting…" : "Yes, Convert"}
+              </Button>
             </div>
           </div>
         </div>
