@@ -703,6 +703,12 @@ export default function CelebrationsPage() {
                   setBdPage(1);
                 }}
               />
+              <button
+                onClick={() => { setBFrom(thisWeekStartISO()); setBTo(thisWeekEndISO()); setBdPage(1); }}
+                className="h-[38px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 text-xs text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50"
+              >
+                Reset
+              </button>
             </div>
             <ExportMenu onExport={handleBirthdayExport} disabled={exporting || filteredBirthdays.length === 0} />
           </div>
@@ -780,6 +786,12 @@ export default function CelebrationsPage() {
                   setAnnPage(1);
                 }}
               />
+              <button
+                onClick={() => { setAFrom(thisWeekStartISO()); setATo(thisWeekEndISO()); setAnnPage(1); }}
+                className="h-[38px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 text-xs text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50"
+              >
+                Reset
+              </button>
             </div>
             <ExportMenu onExport={handleAnniversaryExport} disabled={exporting || filteredAnniversaries.length === 0} />
           </div>
