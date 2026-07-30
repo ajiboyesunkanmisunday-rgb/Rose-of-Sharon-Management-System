@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
@@ -25,6 +25,12 @@ function fullName(u?: { firstName?: string; middleName?: string; lastName?: stri
 export default function CelebrationDetailClient() {
   const router = useRouter();
   const params = useParams();
+  const backHref = useMemo(() => {
+    if (typeof window === "undefined") return "/celebrations";
+    const sp = new URLSearchParams(window.location.search);
+    const returnTab = sp.get("returnTab");
+    return returnTab ? `/celebrations?tab=${returnTab}` : "/celebrations";
+  }, []);
   const paramId = params.id as string;
   const [id, setId] = useState(paramId);
   useEffect(() => {
@@ -67,14 +73,14 @@ export default function CelebrationDetailClient() {
     } finally {
       setTreating(false);
       setShowDeleteModal(false);
-      router.push("/celebrations");
+      router.push(backHref);
     }
   };
 
   if (loading) {
     return (
       <DashboardLayout>
-        <PageHeader title="Celebrations" subtitle="Loading…" backHref="/celebrations" />
+        <PageHeader title="Celebrations" subtitle="Loading…" backHref={backHref} />
         <div className="py-12 text-center text-sm text-gray-400 dark:text-slate-500">Loading celebration details…</div>
       </DashboardLayout>
     );
@@ -83,7 +89,7 @@ export default function CelebrationDetailClient() {
   if (error || !celebration) {
     return (
       <DashboardLayout>
-        <PageHeader title="Celebrations" subtitle="Error" backHref="/celebrations" />
+        <PageHeader title="Celebrations" subtitle="Error" backHref={backHref} />
         <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
           {error || "Celebration not found."}
           <button className="ml-2 font-medium underline" onClick={loadCelebration}>Retry</button>
@@ -101,7 +107,7 @@ export default function CelebrationDetailClient() {
 
   return (
     <DashboardLayout>
-      <PageHeader title="Celebrations" subtitle={name} backHref="/celebrations" />
+      <PageHeader title="Celebrations" subtitle={name} backHref={backHref} />
 
       <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <div className="flex items-center gap-3">
@@ -138,7 +144,7 @@ export default function CelebrationDetailClient() {
       </div>
 
       <div className="flex items-center justify-end gap-3">
-        <Button variant="secondary" onClick={() => router.push("/celebrations")}>
+        <Button variant="secondary" onClick={() => router.push(backHref)}>
           Back
         </Button>
         <Button
