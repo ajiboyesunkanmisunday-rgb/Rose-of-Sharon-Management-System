@@ -31,18 +31,15 @@
   to     = "/login"
   status = 302
 
-# Login is handled by a serverless function so it can read the
-# Authorization response header from the backend and return the JWT token.
-[[redirects]]
-  from  = "/api/v1/users/login"
-  to    = "/.netlify/functions/login"
-  status = 200
-  force  = true
-
-# All other API calls are proxied through Netlify to avoid CORS issues.
+# All API calls go through the api-proxy serverless function.
+# The function makes server-to-server requests to the backend without
+# forwarding the browser Origin header, so nginx allows all HTTP methods
+# (PATCH/PUT/DELETE were blocked by nginx's CORS config when Origin was present).
+# Login also goes here — the function forwards the Authorization response header
+# so the frontend can extract the JWT token as before.
 [[redirects]]
   from  = "/api/*"
-  to    = "https://api.rccgros.org/api/:splat"
+  to    = "/.netlify/functions/api-proxy"
   status = 200
   force  = true
 
