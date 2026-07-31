@@ -32,7 +32,6 @@ const statusBadgeColors: Record<string, string> = {
 // "Assigned" is handled by the Assign button, not the status dropdown
 const statusOptions = ["Received", "In Progress", "Resolved"] as const;
 
-// Map display name → API enum value
 const STATUS_API_MAP: Record<string, string> = {
   "Received":    "RECEIVED",
   "In Progress": "IN_PROGRESS",
@@ -49,6 +48,8 @@ export default function RequestDetailPage() {
   const params = useParams();
   const paramId = params.id as string;
   const [id, setId] = useState(paramId);
+
+  // ── All hooks must be at the top, before any conditional returns ──
   useEffect(() => {
     if (typeof window !== "undefined") {
       const parts = window.location.pathname.replace(/\/$/, "").split("/");
@@ -94,6 +95,60 @@ export default function RequestDetailPage() {
 
   useEffect(() => { loadRequest(); }, [loadRequest]);
 
+  // Member search debounce — must be here (before any conditional return)
+  useEffect(() => {
+    if (assignDebounce.current) clearTimeout(assignDebounce.current);
+    if (!assignQuery.trim()) { setAssignResults([]); return; }
+    assignDebounce.current = setTimeout(async () => {
+      setAssignSearching(true);
+      try {
+        const res = await searchMembers(assignQuery.trim());
+        setAssignResults(res.content ?? []);
+      } catch {
+        setAssignResults([]);
+      } finally {
+        setAssignSearching(false);
+      }
+    }, 350);
+    return () => { if (assignDebounce.current) clearTimeout(assignDebounce.current); };
+  }, [assignQuery]);
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
+  const handleStatusChange = async (status: string) => {
+    setShowStatusDropdown(false);
+    setUpdatingStatus(true);
+    setStatusError("");
+    try {
+      const apiStatus = STATUS_API_MAP[status] ?? status;
+      await changeRequestStatus(id, apiStatus);
+      setCurrentStatus(status);
+    } catch (err) {
+      setStatusError(err instanceof Error ? err.message : "Failed to update status. Please try again.");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const handleAssign = async (member: UserResponse) => {
+    setAssigning(true);
+    setAssignError("");
+    try {
+      await changeRequestStatus(id, "ASSIGNED", member.id);
+      setCurrentAssignee(`${member.firstName ?? ""} ${member.lastName ?? ""}`.trim() || member.email);
+      setCurrentStatus("Assigned");
+      setShowAssignPanel(false);
+      setAssignQuery("");
+      setAssignResults([]);
+    } catch (err) {
+      setAssignError(err instanceof Error ? err.message : "Failed to assign request.");
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  // ── Conditional renders (after all hooks) ─────────────────────────────────
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -114,56 +169,6 @@ export default function RequestDetailPage() {
       </DashboardLayout>
     );
   }
-
-  const handleStatusChange = async (status: string) => {
-    setShowStatusDropdown(false);
-    setUpdatingStatus(true);
-    setStatusError("");
-    try {
-      const apiStatus = STATUS_API_MAP[status] ?? status;
-      await changeRequestStatus(id, apiStatus);
-      setCurrentStatus(status);
-    } catch (err) {
-      setStatusError(err instanceof Error ? err.message : "Failed to update status. Please try again.");
-    } finally {
-      setUpdatingStatus(false);
-    }
-  };
-
-  // Member search for assign panel
-  useEffect(() => {
-    if (assignDebounce.current) clearTimeout(assignDebounce.current);
-    if (!assignQuery.trim()) { setAssignResults([]); return; }
-    assignDebounce.current = setTimeout(async () => {
-      setAssignSearching(true);
-      try {
-        const res = await searchMembers(assignQuery.trim());
-        setAssignResults(res.content ?? []);
-      } catch {
-        setAssignResults([]);
-      } finally {
-        setAssignSearching(false);
-      }
-    }, 350);
-    return () => { if (assignDebounce.current) clearTimeout(assignDebounce.current); };
-  }, [assignQuery]);
-
-  const handleAssign = async (member: UserResponse) => {
-    setAssigning(true);
-    setAssignError("");
-    try {
-      await changeRequestStatus(id, "ASSIGNED", member.id);
-      setCurrentAssignee(`${member.firstName ?? ""} ${member.lastName ?? ""}`.trim() || member.email);
-      setCurrentStatus("Assigned");
-      setShowAssignPanel(false);
-      setAssignQuery("");
-      setAssignResults([]);
-    } catch (err) {
-      setAssignError(err instanceof Error ? err.message : "Failed to assign request.");
-    } finally {
-      setAssigning(false);
-    }
-  };
 
   const category = (() => {
     const t = request.requestType ?? "";
@@ -189,17 +194,7 @@ export default function RequestDetailPage() {
             onClick={() => router.push("/requests")}
             className="flex items-center text-[#000080] dark:text-indigo-400 transition-colors hover:text-[#000066]"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12" />
               <polyline points="12 19 5 12 12 5" />
             </svg>
@@ -213,38 +208,20 @@ export default function RequestDetailPage() {
       {/* Request Content Card */}
       <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <div className="mb-4 flex items-center gap-3">
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-medium ${
-              categoryBadgeColors[category] || "bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-slate-300"
-            }`}
-          >
+          <span className={`rounded-full px-3 py-1 text-xs font-medium ${categoryBadgeColors[category] || "bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-slate-300"}`}>
             {category}
           </span>
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-medium ${
-              statusBadgeColors[currentStatus] || "bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-slate-300"
-            }`}
-          >
+          <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusBadgeColors[currentStatus] || "bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-slate-300"}`}>
             {currentStatus}
           </span>
         </div>
 
-        <h3 className="mb-3 text-lg font-bold text-[#111827] dark:text-slate-100">
-          {request.subject}
-        </h3>
-
-        <p className="mb-4 text-sm leading-relaxed text-[#374151] dark:text-slate-300">
-          {request.content}
-        </p>
+        <h3 className="mb-3 text-lg font-bold text-[#111827] dark:text-slate-100">{request.subject}</h3>
+        <p className="mb-4 text-sm leading-relaxed text-[#374151] dark:text-slate-300">{request.content}</p>
 
         <div className="flex flex-wrap items-center gap-4 text-xs text-[#6B7280] dark:text-slate-400">
-          <span>
-            <span className="font-medium">Submitted by:</span>{" "}
-            {submittedBy}
-          </span>
-          <span>
-            <span className="font-medium">Date:</span> {date}
-          </span>
+          <span><span className="font-medium">Submitted by:</span> {submittedBy}</span>
+          <span><span className="font-medium">Date:</span> {date}</span>
         </div>
       </div>
 
@@ -257,11 +234,7 @@ export default function RequestDetailPage() {
           </div>
         )}
         <div className="flex flex-wrap items-center gap-4">
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-medium ${
-              statusBadgeColors[currentStatus] || "bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-slate-300"
-            }`}
-          >
+          <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusBadgeColors[currentStatus] || "bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-slate-300"}`}>
             {currentStatus}
           </span>
           <div className="relative">
@@ -278,11 +251,7 @@ export default function RequestDetailPage() {
                   <button
                     key={status}
                     onClick={() => handleStatusChange(status)}
-                    className={`block w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 ${
-                      currentStatus === status
-                        ? "font-medium text-[#000080] dark:text-indigo-400"
-                        : "text-gray-700 dark:text-slate-300"
-                    }`}
+                    className={`block w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 ${currentStatus === status ? "font-medium text-[#000080] dark:text-indigo-400" : "text-gray-700 dark:text-slate-300"}`}
                   >
                     {status}
                   </button>
@@ -328,9 +297,7 @@ export default function RequestDetailPage() {
               disabled={assigning}
               className="w-full rounded-xl border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-gray-700 dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080] disabled:opacity-50"
             />
-            {assignSearching && (
-              <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">Searching…</p>
-            )}
+            {assignSearching && <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">Searching…</p>}
             {!assignSearching && assignQuery.length > 1 && assignResults.length === 0 && (
               <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">No members found.</p>
             )}
@@ -361,10 +328,7 @@ export default function RequestDetailPage() {
         <Button variant="secondary" onClick={() => router.push("/requests")}>
           Back
         </Button>
-        <Button
-          variant="primary"
-          onClick={() => router.push(`/requests/${id}/edit`)}
-        >
+        <Button variant="primary" onClick={() => router.push(`/requests/${id}/edit`)}>
           Edit
         </Button>
       </div>

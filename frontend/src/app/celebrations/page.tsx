@@ -571,22 +571,40 @@ export default function CelebrationsPage() {
 
   const q = search.toLowerCase().trim();
 
-  const filteredBirthdays = birthdays.filter((u) =>
-    !q || fullName(u).toLowerCase().includes(q)
-  );
+  const filteredBirthdays = birthdays.filter((u) => {
+    if (!q) return true;
+    return (
+      fullName(u).toLowerCase().includes(q) ||
+      fmtBirthdayDate(u).toLowerCase().includes(q) ||
+      monthName(u.monthOfBirth).toLowerCase().includes(q) ||
+      String(u.dayOfBirth ?? "").includes(q) ||
+      (u.phoneNumber ?? "").includes(q) ||
+      (u.email ?? "").toLowerCase().includes(q)
+    );
+  });
 
   const filteredAnniversaries = anniversaries.filter((u) => {
     if (!q) return true;
     return (
       fullName(u).toLowerCase().includes(q) ||
-      (u.spouse ? fullName(u.spouse).toLowerCase().includes(q) : false)
+      (u.spouse ? fullName(u.spouse).toLowerCase().includes(q) : false) ||
+      fmtWeddingDate(u).toLowerCase().includes(q) ||
+      monthName(u.monthOfWedding).toLowerCase().includes(q) ||
+      String(u.dayOfWedding ?? "").includes(q) ||
+      (u.phoneNumber ?? "").includes(q) ||
+      (u.email ?? "").toLowerCase().includes(q)
     );
   });
 
   const filteredCelebrations = celebrations.filter((c) => {
     if (tgStatus !== "All" && c.celebrationStatus !== tgStatus) return false;
     if (!q) return true;
-    return fullName(c.requester).toLowerCase().includes(q);
+    return (
+      fullName(c.requester).toLowerCase().includes(q) ||
+      (c.celebrationType ?? "").toLowerCase().replace(/_/g, " ").includes(q) ||
+      (c.notes ?? "").toLowerCase().includes(q) ||
+      (c.celebrationStatus ?? "").toLowerCase().includes(q)
+    );
   });
 
   // Pagination for card grids
@@ -704,10 +722,10 @@ export default function CelebrationsPage() {
                 }}
               />
               <button
-                onClick={() => { setBFrom(thisWeekStartISO()); setBTo(thisWeekEndISO()); setBdPage(1); }}
+                onClick={() => { setSearch(""); setBFrom(thisWeekStartISO()); setBTo(thisWeekEndISO()); setBdPage(1); }}
                 className="h-[38px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 text-xs text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50"
               >
-                Reset
+                Clear
               </button>
             </div>
             <ExportMenu onExport={handleBirthdayExport} disabled={exporting || filteredBirthdays.length === 0} />
@@ -787,10 +805,10 @@ export default function CelebrationsPage() {
                 }}
               />
               <button
-                onClick={() => { setAFrom(thisWeekStartISO()); setATo(thisWeekEndISO()); setAnnPage(1); }}
+                onClick={() => { setSearch(""); setAFrom(thisWeekStartISO()); setATo(thisWeekEndISO()); setAnnPage(1); }}
                 className="h-[38px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 text-xs text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50"
               >
-                Reset
+                Clear
               </button>
             </div>
             <ExportMenu onExport={handleAnniversaryExport} disabled={exporting || filteredAnniversaries.length === 0} />
@@ -845,10 +863,18 @@ export default function CelebrationsPage() {
       {/* ── Thanksgiving ──────────────────────────────────────────────────────── */}
       {activeTab === "thanksgiving" && (
         <>
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="mb-4 flex flex-wrap items-center gap-3">
             <div className="w-full sm:w-72">
               <SearchBar value={search} onChange={setSearch} onSearch={() => {}} placeholder="Search thanksgiving…" />
             </div>
+            {(search || tgStatus !== "All") && (
+              <button
+                onClick={() => { setSearch(""); setTgStatus("All"); setCelebPage(1); }}
+                className="h-[38px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 text-xs text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50"
+              >
+                Clear
+              </button>
+            )}
           </div>
 
           <div className="mb-4">
