@@ -3,11 +3,12 @@
  * Base URL: https://api.rccgros.org
  */
 
-// Direct requests to the backend — no Netlify proxy in the middle.
-// The backend has CORS configured (Access-Control-Allow-Origin: *) so
-// the browser can call it directly from any Netlify deployment without
-// any team-member-specific proxy configuration.
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.rccgros.org";
+// In production (Netlify), NEXT_PUBLIC_API_BASE_URL is set to "" so all API
+// calls use relative paths (/api/v1/...) and route through the Netlify proxy
+// (netlify.toml: /api/* → https://api.rccgros.org/api/:splat) — this avoids
+// CORS preflight failures for PATCH/POST/DELETE from the browser.
+// In local dev the env var is unset so it falls back to the direct backend URL.
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.rccgros.org";
 
 // ─── Token helpers ─────────────────────────────────────────────────────────────
 

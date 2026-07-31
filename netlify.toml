@@ -20,6 +20,7 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  NEXT_PUBLIC_API_BASE_URL = ""
 
 # ── Root path ────────────────────────────────────────────────────────────────
 # Next.js static export does NOT generate out/index.html for redirect() pages.
