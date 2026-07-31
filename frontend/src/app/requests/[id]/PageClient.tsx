@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
-import { getRequest, changeRequestStatus, type RequestResponse } from "@/lib/api";
+import { getRequest, changeRequestStatus, searchMembers, type RequestResponse, type UserResponse } from "@/lib/api";
 
 const categoryBadgeColors: Record<string, string> = {
   Prayer: "bg-[#16A34A] text-white",
@@ -29,12 +29,12 @@ const statusBadgeColors: Record<string, string> = {
   RESOLVED: "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
 };
 
-const statusOptions = ["Received", "Assigned", "In Progress", "Resolved"] as const;
+// "Assigned" is handled by the Assign button, not the status dropdown
+const statusOptions = ["Received", "In Progress", "Resolved"] as const;
 
 // Map display name → API enum value
 const STATUS_API_MAP: Record<string, string> = {
   "Received":    "RECEIVED",
-  "Assigned":    "ASSIGNED",
   "In Progress": "IN_PROGRESS",
   "Resolved":    "RESOLVED",
 };
@@ -66,6 +66,15 @@ export default function RequestDetailPage() {
   const [currentAssignee, setCurrentAssignee] = useState("");
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [statusError, setStatusError] = useState("");
+
+  // Assign to state
+  const [showAssignPanel, setShowAssignPanel] = useState(false);
+  const [assignQuery, setAssignQuery] = useState("");
+  const [assignResults, setAssignResults] = useState<UserResponse[]>([]);
+  const [assignSearching, setAssignSearching] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+  const [assignError, setAssignError] = useState("");
+  const assignDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadRequest = useCallback(async () => {
     if (!id || id.startsWith("req-")) return;
@@ -118,6 +127,41 @@ export default function RequestDetailPage() {
       setStatusError(err instanceof Error ? err.message : "Failed to update status. Please try again.");
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  // Member search for assign panel
+  useEffect(() => {
+    if (assignDebounce.current) clearTimeout(assignDebounce.current);
+    if (!assignQuery.trim()) { setAssignResults([]); return; }
+    assignDebounce.current = setTimeout(async () => {
+      setAssignSearching(true);
+      try {
+        const res = await searchMembers(assignQuery.trim());
+        setAssignResults(res.content ?? []);
+      } catch {
+        setAssignResults([]);
+      } finally {
+        setAssignSearching(false);
+      }
+    }, 350);
+    return () => { if (assignDebounce.current) clearTimeout(assignDebounce.current); };
+  }, [assignQuery]);
+
+  const handleAssign = async (member: UserResponse) => {
+    setAssigning(true);
+    setAssignError("");
+    try {
+      await changeRequestStatus(id, "ASSIGNED", member.id);
+      setCurrentAssignee(`${member.firstName ?? ""} ${member.lastName ?? ""}`.trim() || member.email);
+      setCurrentStatus("Assigned");
+      setShowAssignPanel(false);
+      setAssignQuery("");
+      setAssignResults([]);
+    } catch (err) {
+      setAssignError(err instanceof Error ? err.message : "Failed to assign request.");
+    } finally {
+      setAssigning(false);
     }
   };
 
@@ -251,10 +295,65 @@ export default function RequestDetailPage() {
 
       {/* Assigned To Section */}
       <div className="mb-6 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
-        <h4 className="mb-4 text-sm font-bold text-[#111827] dark:text-slate-100">Assigned To</h4>
-        <span className="text-sm text-[#374151] dark:text-slate-300">
-          {currentAssignee && currentAssignee !== "—" ? currentAssignee : "Unassigned"}
-        </span>
+        <div className="mb-4 flex items-center justify-between">
+          <h4 className="text-sm font-bold text-[#111827] dark:text-slate-100">Assigned To</h4>
+          <button
+            onClick={() => { setShowAssignPanel(!showAssignPanel); setAssignQuery(""); setAssignResults([]); setAssignError(""); }}
+            className="rounded-lg border border-[#000080] dark:border-indigo-500 px-3 py-1.5 text-xs font-medium text-[#000080] dark:text-indigo-400 hover:bg-[#000080]/5 transition-colors"
+          >
+            {showAssignPanel ? "Cancel" : currentAssignee && currentAssignee !== "—" ? "Reassign" : "Assign"}
+          </button>
+        </div>
+
+        {assignError && (
+          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-2 text-sm text-red-700 dark:text-red-400">
+            {assignError}
+          </div>
+        )}
+
+        {!showAssignPanel && (
+          <span className="text-sm text-[#374151] dark:text-slate-300">
+            {currentAssignee && currentAssignee !== "—" ? currentAssignee : "Unassigned"}
+          </span>
+        )}
+
+        {showAssignPanel && (
+          <div className="relative">
+            <input
+              type="text"
+              value={assignQuery}
+              onChange={(e) => setAssignQuery(e.target.value)}
+              placeholder="Search member by name…"
+              autoFocus
+              disabled={assigning}
+              className="w-full rounded-xl border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-gray-700 dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080] disabled:opacity-50"
+            />
+            {assignSearching && (
+              <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">Searching…</p>
+            )}
+            {!assignSearching && assignQuery.length > 1 && assignResults.length === 0 && (
+              <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">No members found.</p>
+            )}
+            {assignResults.length > 0 && (
+              <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-md">
+                {assignResults.map((m) => (
+                  <li key={m.id}>
+                    <button
+                      type="button"
+                      disabled={assigning}
+                      onClick={() => handleAssign(m)}
+                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-slate-300 hover:bg-[#000080]/5 disabled:opacity-50"
+                    >
+                      {`${m.firstName ?? ""} ${m.lastName ?? ""}`.trim()}
+                      {m.email && <span className="ml-2 text-xs text-gray-400 dark:text-slate-500">{m.email}</span>}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {assigning && <p className="mt-2 text-xs text-[#000080] dark:text-indigo-400">Assigning…</p>}
+          </div>
+        )}
       </div>
 
       {/* Action Buttons */}

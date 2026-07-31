@@ -1629,6 +1629,7 @@ export interface TestimonyResponse {
   createdOn?: string;
   wantsToBeShot?: boolean;
   isRosTv?: boolean;
+  rosTv?: boolean;
 }
 
 export async function getTestimonies(

@@ -128,6 +128,7 @@ export default function FirstTimersPage() {
   const displayedTimers = timers.filter((ft) => {
     if (filterDateFrom || filterDateTo) {
       const d = toIsoDate(ft.firstTimeService?.date ?? ft.createdOn);
+      if (!d) return true; // no date on record — don't exclude
       if (filterDateFrom && d < filterDateFrom) return false;
       if (filterDateTo && d > filterDateTo) return false;
     }
@@ -564,7 +565,7 @@ export default function FirstTimersPage() {
                   <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{ft.phoneNumber}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">{ft.email}</td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
-                    {ft.serviceAttended || <span className="text-[#9CA3AF] dark:text-slate-500">—</span>}
+                    {ft.serviceAttended || ft.firstTimeService?.title || <span className="text-[#9CA3AF] dark:text-slate-500">—</span>}
                   </td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
                     {ft.assignedFollowUp ? (fullName(ft.assignedFollowUp) || ft.assignedFollowUp.email || "—") : <span className="text-[#9CA3AF] dark:text-slate-500">—</span>}
