@@ -272,7 +272,7 @@ export default function TestimoniesPage() {
                     )}
                   </td>
                   <td className="hidden sm:table-cell px-4 py-3 text-sm">
-                    {(t.wantsToBeShot || t.isRosTv)
+                    {(t.wantsToBeShot || t.isRosTv || t.rosTv)
                       ? <span className="font-medium text-[#000080] dark:text-indigo-400">Yes</span>
                       : <span className="text-gray-400 dark:text-slate-500">No</span>}
                   </td>
@@ -354,7 +354,7 @@ export default function TestimoniesPage() {
               <div>
                 <div className="text-xs font-medium text-gray-500 dark:text-slate-400">ROSTV Request</div>
                 <div className="text-sm text-[#374151] dark:text-slate-300">
-                  {(viewing.wantsToBeShot || viewing.isRosTv) ? "Yes – wants story filmed" : "No"}
+                  {(viewing.wantsToBeShot || viewing.isRosTv || viewing.rosTv) ? "Yes – wants story filmed" : "No"}
                 </div>
               </div>
             </div>
