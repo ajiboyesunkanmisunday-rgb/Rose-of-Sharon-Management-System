@@ -1,96 +1,100 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
-import { createBabyChristening, getStoredUser } from "@/lib/api";
+import Pagination from "@/components/ui/Pagination";
+import ActionDropdown from "@/components/ui/ActionDropdown";
+import StatusFilterTabs from "@/components/ui/StatusFilterTabs";
+import {
+  getBabyChristeningRequests,
+  searchBabyChristeningRequests,
+  type RequestResponse,
+} from "@/lib/api";
 
-export default function BabyChristeningPage() {
-  const router      = useRouter();
-  const currentUser = getStoredUser();
+type StatusFilter = "All" | "RECEIVED" | "ASSIGNED" | "IN_PROGRESS" | "RESOLVED";
 
-  const [form, setForm] = useState({
-    parentName:            "",
-    address:               "",
-    sex:                   "",
-    dateOfBirth:           "",
-    namingCeremonyDate:    "",
-    phoneNumber:           "",
-    churchHandleNaming:    "",
-    houseFellowshipCentre: "",
-    houseLeader:           "",
-  });
-  const [submitting, setSubmitting] = useState(false);
-  const [error,      setError]      = useState("");
+const ITEMS_PER_PAGE = 10;
 
-  const set = (field: string, value: string) =>
-    setForm((prev) => ({ ...prev, [field]: value }));
+const statusFilterOptions: { value: StatusFilter; label: string }[] = [
+  { value: "All",         label: "All"         },
+  { value: "RECEIVED",    label: "Received"    },
+  { value: "ASSIGNED",    label: "Assigned"    },
+  { value: "IN_PROGRESS", label: "In Progress" },
+  { value: "RESOLVED",    label: "Resolved"    },
+];
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentUser?.id) {
-      setError("You must be logged in to submit this form.");
-      return;
-    }
-    // Re-read values from the form DOM so autofill is always captured
-    const el = (e.target as HTMLFormElement).elements;
-    const getValue = (name: string) =>
-      ((el.namedItem(name) as HTMLInputElement | null)?.value ?? "").trim();
+const statusBadgeColors: Record<string, string> = {
+  RECEIVED:    "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#6B7280] dark:text-slate-400",
+  ASSIGNED:    "bg-[#DBEAFE] dark:bg-blue-900/30 text-[#1D4ED8] dark:text-blue-300",
+  IN_PROGRESS: "bg-[#FEF9C3] dark:bg-yellow-900/30 text-[#CA8A04] dark:text-yellow-300",
+  RESOLVED:    "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
+};
 
-    const parentName            = getValue("parentName")            || form.parentName.trim();
-    const address               = getValue("address")               || form.address.trim();
-    const sex                   = form.sex; // radio — always from state
-    const dateOfBirth           = getValue("dateOfBirth")           || form.dateOfBirth.trim();
-    const namingCeremonyDate    = getValue("namingCeremonyDate")    || form.namingCeremonyDate.trim();
-    const phoneNumber           = getValue("phoneNumber")           || form.phoneNumber.trim();
-    const churchHandleNaming    = form.churchHandleNaming;           // radio — always from state
-    const houseFellowshipCentre = getValue("houseFellowshipCentre") || form.houseFellowshipCentre.trim();
-    const houseLeader           = getValue("houseLeader")           || form.houseLeader.trim();
+function fullName(u?: { firstName?: string; middleName?: string; lastName?: string } | null) {
+  if (!u) return "—";
+  return [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—";
+}
 
-    if (!parentName || !address || !sex || !dateOfBirth || !namingCeremonyDate ||
-        !phoneNumber || !churchHandleNaming || !houseFellowshipCentre || !houseLeader) {
-      setError("Please fill in all required fields before submitting.");
-      return;
-    }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fmtDate(s?: any): string {
+  if (!s) return "—";
+  if (Array.isArray(s)) {
+    const [year, month, day] = s as number[];
+    return new Date(year, month - 1, day).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+  const d = new Date(s as string);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
 
-    setSubmitting(true);
-    setError("");
+export default function BabyChristeningListPage() {
+  const router = useRouter();
+
+  const [requests,    setRequests]    = useState<RequestResponse[]>([]);
+  const [totalPages,  setTotalPages]  = useState(1);
+  const [totalItems,  setTotalItems]  = useState(0);
+  const [loading,     setLoading]     = useState(true);
+  const [apiError,    setApiError]    = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search,      setSearch]      = useState("");
+  const [activeStatus, setActiveStatus] = useState<StatusFilter>("All");
+
+  const fetchRequests = useCallback(async (page: number, searchText = "") => {
+    setLoading(true);
+    setApiError("");
     try {
-      const content = [
-        `Name of Parent: ${parentName}`,
-        `Parents' Address: ${address}`,
-        `Sex: ${sex}`,
-        `Date of Birth: ${dateOfBirth}`,
-        `Naming Ceremony Date: ${namingCeremonyDate}`,
-        `Phone Number of Parent: ${phoneNumber}`,
-        `Church to Handle Naming Ceremony: ${churchHandleNaming}`,
-        `House Fellowship Centre: ${houseFellowshipCentre}`,
-        `House Leader: ${houseLeader}`,
-      ].join("\n");
-
-      await createBabyChristening({
-        userId:  currentUser.id,
-        subject: `Baby Christening – ${parentName}`,
-        content,
-      });
-      router.push("/requests");
+      const q = searchText.trim();
+      const res = q
+        ? await searchBabyChristeningRequests({ text: q }, page - 1, ITEMS_PER_PAGE)
+        : await getBabyChristeningRequests(page - 1, ITEMS_PER_PAGE);
+      setRequests(res.content ?? []);
+      setTotalPages(res.totalPages ?? 1);
+      setTotalItems(res.totalElements ?? 0);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit form.");
+      setApiError(err instanceof Error ? err.message : "Failed to load requests.");
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchRequests(currentPage, search);
+  }, [currentPage, fetchRequests]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const displayed = requests.filter((r) =>
+    activeStatus === "All" || r.requestStatus === activeStatus
+  );
 
   return (
     <DashboardLayout>
-      {/* Breadcrumb */}
+      {/* Header */}
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Requests</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mb-1">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push("/requests")}
             className="flex items-center text-[#000080] dark:text-indigo-400 hover:text-[#000066]"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
@@ -98,238 +102,120 @@ export default function BabyChristeningPage() {
               <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
             </svg>
           </button>
-          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">Baby Christening Form</h2>
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">Baby Christening</h2>
         </div>
+        <p className="text-sm text-[#6B7280] dark:text-slate-400 pl-7">
+          Baby christening requests submitted by members
+        </p>
       </div>
 
-      {error && (
+      {/* Status filter */}
+      <div className="mb-4">
+        <StatusFilterTabs
+          options={statusFilterOptions}
+          active={activeStatus}
+          onChange={(v) => { setActiveStatus(v as StatusFilter); setCurrentPage(1); }}
+        />
+      </div>
+
+      {/* Search + New Request */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="w-full sm:w-72">
+          <SearchBar
+            value={search}
+            onChange={(v) => {
+              setSearch(v);
+              if (!v.trim()) { fetchRequests(1, ""); setCurrentPage(1); }
+            }}
+            onSearch={() => { setCurrentPage(1); fetchRequests(1, search); }}
+            placeholder="Search christening requests…"
+          />
+        </div>
+        <Button
+          variant="primary"
+          onClick={() => router.push("/requests/baby-christening/new")}
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          }
+        >
+          New Request
+        </Button>
+      </div>
+
+      {apiError && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
-          {error}
+          {apiError} — <button className="font-medium underline" onClick={() => fetchRequests(currentPage, search)}>Retry</button>
         </div>
       )}
 
-      {/* ── Paper form card ─────────────────────────────────────────────── */}
-      <div className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
-
-        {/* ── Church header ─────────────────────────────────────────────── */}
-        <div className="flex flex-col items-center px-8 pt-8 pb-6 text-center">
-          <Image
-            src="/rccg-icon.png"
-            alt="RCCG Logo"
-            width={80}
-            height={80}
-            className="mb-3 object-contain"
-          />
-          <p className="text-[16px] font-extrabold uppercase tracking-wide text-black dark:text-slate-100">
-            THE REDEEMED CHRISTIAN CHURCH OF GOD
-          </p>
-          <p
-            className="mt-1 text-[20px] font-bold italic text-black dark:text-slate-100"
-            style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
-          >
-            Rose of Sharon
-          </p>
-          <p className="mt-5 text-[14px] font-extrabold uppercase text-black dark:text-slate-100 leading-tight">
-            NOTIFICATION OF BIRTH AND REQUEST FOR CHURCH TO<br />
-            CONDUCT BABY&apos;S CHRISTENING
-          </p>
-        </div>
-
-        {/* ── Form body ─────────────────────────────────────────────────── */}
-        <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-5">
-
-          <p className="text-[13px] font-extrabold uppercase text-black dark:text-slate-100 mb-2">
-            Please fill all in block letters
-          </p>
-
-          {/* Name of Parent */}
-          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
-            <label className="shrink-0 text-[13px] font-bold text-black dark:text-slate-100 whitespace-nowrap">
-              Name of Parent:
-            </label>
-            <input
-              type="text"
-              name="parentName"
-              value={form.parentName}
-              onChange={(e) => set("parentName", e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
-              required
-            />
-          </div>
-
-          {/* Parents' Address — label + first underline */}
-          <div className="space-y-2">
-            <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
-              <label className="shrink-0 text-[13px] font-bold text-black dark:text-slate-100 whitespace-nowrap">
-                Parents&apos; Address:
-              </label>
-              <input
-                type="text"
-                name="address"
-                value={form.address}
-                onChange={(e) => set("address", e.target.value)}
-                className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
-                required
-              />
-            </div>
-            {/* Second blank underline for overflow */}
-            <div className="border-b border-black dark:border-slate-400 h-5" />
-          </div>
-
-          {/* Sex */}
-          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
-            <label className="shrink-0 text-[13px] font-bold text-black dark:text-slate-100 whitespace-nowrap">
-              Sex:
-            </label>
-            <select
-              name="sex"
-              value={form.sex}
-              onChange={(e) => set("sex", e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0 cursor-pointer"
-              required
-            >
-              <option value="">—</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
-          </div>
-
-          {/* Date of Birth */}
-          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
-            <label className="shrink-0 text-[13px] font-bold text-black dark:text-slate-100 whitespace-nowrap">
-              Date of birth:
-            </label>
-            <input
-              type="date"
-              name="dateOfBirth"
-              value={form.dateOfBirth}
-              onChange={(e) => set("dateOfBirth", e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
-              required
-            />
-          </div>
-
-          {/* Naming Ceremony Date */}
-          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
-            <label className="shrink-0 text-[13px] font-bold text-black dark:text-slate-100 whitespace-nowrap">
-              Naming ceremony date:
-            </label>
-            <input
-              type="date"
-              name="namingCeremonyDate"
-              value={form.namingCeremonyDate}
-              onChange={(e) => set("namingCeremonyDate", e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
-              required
-            />
-          </div>
-
-          {/* Phone Number */}
-          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
-            <label className="shrink-0 text-[13px] font-bold text-black dark:text-slate-100 whitespace-nowrap">
-              Phone number of Parent:
-            </label>
-            <input
-              type="tel"
-              name="phoneNumber"
-              value={form.phoneNumber}
-              onChange={(e) => set("phoneNumber", e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
-              required
-            />
-          </div>
-
-          {/* Church handle naming ceremony + House Fellowship Centre */}
-          <div className="space-y-2">
-            <p className="text-[13px] font-bold text-black dark:text-slate-100">
-              Do you want the Church to handle the naming ceremony?
-            </p>
-            <div className="flex items-center gap-6">
-              {["Yes", "No"].map((opt) => (
-                <label
-                  key={opt}
-                  className="flex items-center gap-1.5 text-[13px] font-bold text-black dark:text-slate-100 cursor-pointer"
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Subject</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Submitted By</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Date</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Status</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Assigned To</th>
+              <th className="px-4 py-4" />
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">Loading…</td></tr>
+            ) : displayed.length === 0 ? (
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">No requests found.</td></tr>
+            ) : (
+              displayed.map((r) => (
+                <tr
+                  key={r.id}
+                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 cursor-pointer"
+                  style={{ height: "56px" }}
+                  onClick={() => router.push(`/requests/${r.id}`)}
                 >
-                  <input
-                    type="radio"
-                    name="churchHandleNaming"
-                    value={opt}
-                    checked={form.churchHandleNaming === opt}
-                    onChange={() => set("churchHandleNaming", opt)}
-                    className="h-4 w-4 accent-[#000080]"
-                  />
-                  {opt} [ ]
-                </label>
-              ))}
-            </div>
-            {/* House Fellowship Centre on same section */}
-            <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5 mt-2">
-              <label className="shrink-0 text-[13px] font-bold text-black dark:text-slate-100 whitespace-nowrap">
-                House Fellowship Centre:
-              </label>
-              <input
-                type="text"
-                name="houseFellowshipCentre"
-                value={form.houseFellowshipCentre}
-                onChange={(e) => set("houseFellowshipCentre", e.target.value)}
-                className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
-                required
-              />
-            </div>
-          </div>
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[220px]">
+                    <span className="block truncate">{r.subject}</span>
+                  </td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[160px]">
+                    <span className="block truncate">
+                      {r.owner ? fullName(r.owner) : <span className="italic text-gray-400 dark:text-slate-500">Anonymous</span>}
+                    </span>
+                  </td>
+                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
+                    {fmtDate(r.createdOn)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${statusBadgeColors[r.requestStatus ?? ""] ?? "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400"}`}>
+                      {(r.requestStatus ?? "—").replace(/_/g, " ")}
+                    </span>
+                  </td>
+                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[160px]">
+                    <span className="block truncate">{fullName(r.assignedTo)}</span>
+                  </td>
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    <ActionDropdown
+                      actions={[
+                        { label: "View", onClick: () => router.push(`/requests/${r.id}`) },
+                      ]}
+                    />
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-          {/* House Leader & Signature */}
-          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
-            <label className="shrink-0 text-[13px] font-bold text-black dark:text-slate-100 whitespace-nowrap">
-              House Leader &amp; Signature:
-            </label>
-            <input
-              type="text"
-              name="houseLeader"
-              value={form.houseLeader}
-              onChange={(e) => set("houseLeader", e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
-              required
-            />
-          </div>
-
-          {/* Note */}
-          <p className="text-[12.5px] italic text-[#374151] dark:text-slate-400 pt-4">
-            <span className="font-semibold not-italic">Note:</span> The second Sunday of the month
-            is Baby Dedication Sunday: please notify the Church as soon as you are ready to dedicate
-            the baby.
-          </p>
-
-          <div className="flex items-center justify-end gap-3 pt-3">
-            <Button variant="secondary" type="button" onClick={() => router.push("/requests")}>
-              Cancel
-            </Button>
-            <Button variant="primary" type="submit" disabled={submitting}>
-              {submitting ? "Submitting…" : "Submit Form"}
-            </Button>
-          </div>
-        </form>
-
-        {/* ── Footer — pink blocks protrude above the black base ──────────── */}
-        {/*
-            Physical form layout:
-            [white]  [white]  [white]
-            [ PINK  BLK  ] [PINK BLK] [PINK BLK] [BLK]   ← blocks rise above
-            [         BLACK  BASE  STRIP           ]       ← full-width black
-        */}
-        <div className="relative overflow-hidden" style={{ height: 44 }}>
-          {/* Full-width black base at bottom */}
-          <div className="absolute bottom-0 left-0 right-0 bg-black" style={{ height: 20 }} />
-          {/* Three pink blocks protruding above the black */}
-          <div
-            className="absolute flex"
-            style={{ bottom: 4, left: 14, right: 14, height: 30, gap: 8 }}
-          >
-            <div style={{ flex: 5, background: "#E8198B" }} />
-            <div style={{ flex: 3, background: "#E8198B" }} />
-            <div style={{ flex: 3, background: "#E8198B" }} />
-          </div>
-        </div>
+      <div className="mt-4">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          onPageChange={setCurrentPage}
+        />
       </div>
     </DashboardLayout>
   );

@@ -1,96 +1,100 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
-import { createBabyDedication, getStoredUser } from "@/lib/api";
+import Pagination from "@/components/ui/Pagination";
+import ActionDropdown from "@/components/ui/ActionDropdown";
+import StatusFilterTabs from "@/components/ui/StatusFilterTabs";
+import {
+  getBabyDedicationRequests,
+  searchBabyDedicationRequests,
+  type RequestResponse,
+} from "@/lib/api";
 
-export default function BabyDedicationPage() {
-  const router      = useRouter();
-  const currentUser = getStoredUser();
+type StatusFilter = "All" | "RECEIVED" | "ASSIGNED" | "IN_PROGRESS" | "RESOLVED";
 
-  const [form, setForm] = useState({
-    fatherName:            "",
-    motherName:            "",
-    childFullName:         "",
-    dateOfBirth:           "",
-    placeOfBirth:          "",
-    meaningOfNames:        "",
-    phoneNumber:           "",
-    houseFellowshipCentre: "",
-    houseLeader:           "",
-  });
-  const [submitting, setSubmitting] = useState(false);
-  const [error,      setError]      = useState("");
+const ITEMS_PER_PAGE = 10;
 
-  const set = (field: string, value: string) =>
-    setForm((prev) => ({ ...prev, [field]: value }));
+const statusFilterOptions: { value: StatusFilter; label: string }[] = [
+  { value: "All",         label: "All"         },
+  { value: "RECEIVED",    label: "Received"    },
+  { value: "ASSIGNED",    label: "Assigned"    },
+  { value: "IN_PROGRESS", label: "In Progress" },
+  { value: "RESOLVED",    label: "Resolved"    },
+];
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentUser?.id) {
-      setError("You must be logged in to submit this form.");
-      return;
-    }
-    // Re-read values from the form DOM directly so autofill is always captured
-    const el = (e.target as HTMLFormElement).elements;
-    const getValue = (name: string) =>
-      ((el.namedItem(name) as HTMLInputElement | null)?.value ?? "").trim();
+const statusBadgeColors: Record<string, string> = {
+  RECEIVED:    "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#6B7280] dark:text-slate-400",
+  ASSIGNED:    "bg-[#DBEAFE] dark:bg-blue-900/30 text-[#1D4ED8] dark:text-blue-300",
+  IN_PROGRESS: "bg-[#FEF9C3] dark:bg-yellow-900/30 text-[#CA8A04] dark:text-yellow-300",
+  RESOLVED:    "bg-[#DCFCE7] dark:bg-green-900/30 text-[#16A34A] dark:text-green-300",
+};
 
-    const fatherName            = getValue("fatherName")            || form.fatherName.trim();
-    const motherName            = getValue("motherName")            || form.motherName.trim();
-    const childFullName         = getValue("childFullName")         || form.childFullName.trim();
-    const dateOfBirth           = getValue("dateOfBirth")           || form.dateOfBirth.trim();
-    const placeOfBirth          = getValue("placeOfBirth")          || form.placeOfBirth.trim();
-    const meaningOfNames        = getValue("meaningOfNames")        || form.meaningOfNames.trim();
-    const phoneNumber           = getValue("phoneNumber")           || form.phoneNumber.trim();
-    const houseFellowshipCentre = getValue("houseFellowshipCentre") || form.houseFellowshipCentre.trim();
-    const houseLeader           = getValue("houseLeader")           || form.houseLeader.trim();
+function fullName(u?: { firstName?: string; middleName?: string; lastName?: string } | null) {
+  if (!u) return "—";
+  return [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || "—";
+}
 
-    if (!fatherName || !motherName || !childFullName || !dateOfBirth || !placeOfBirth ||
-        !meaningOfNames || !phoneNumber || !houseFellowshipCentre || !houseLeader) {
-      setError("Please fill in all required fields before submitting.");
-      return;
-    }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fmtDate(s?: any): string {
+  if (!s) return "—";
+  if (Array.isArray(s)) {
+    const [year, month, day] = s as number[];
+    return new Date(year, month - 1, day).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+  const d = new Date(s as string);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
 
-    setSubmitting(true);
-    setError("");
+export default function BabyDedicationListPage() {
+  const router = useRouter();
+
+  const [requests,    setRequests]    = useState<RequestResponse[]>([]);
+  const [totalPages,  setTotalPages]  = useState(1);
+  const [totalItems,  setTotalItems]  = useState(0);
+  const [loading,     setLoading]     = useState(true);
+  const [apiError,    setApiError]    = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search,      setSearch]      = useState("");
+  const [activeStatus, setActiveStatus] = useState<StatusFilter>("All");
+
+  const fetchRequests = useCallback(async (page: number, searchText = "") => {
+    setLoading(true);
+    setApiError("");
     try {
-      const content = [
-        `Name of Father: ${fatherName}`,
-        `Name of Mother: ${motherName}`,
-        `Full Name of Child: ${childFullName}`,
-        `Date of Birth: ${dateOfBirth}`,
-        `Place of Birth: ${placeOfBirth}`,
-        `Meaning of Names: ${meaningOfNames}`,
-        `Phone Number: ${phoneNumber}`,
-        `House Fellowship Centre: ${houseFellowshipCentre}`,
-        `House Leader: ${houseLeader}`,
-      ].join("\n");
-
-      await createBabyDedication({
-        userId:  currentUser.id,
-        subject: `Baby Dedication – ${childFullName}`,
-        content,
-      });
-      router.push("/requests");
+      const q = searchText.trim();
+      const res = q
+        ? await searchBabyDedicationRequests({ text: q }, page - 1, ITEMS_PER_PAGE)
+        : await getBabyDedicationRequests(page - 1, ITEMS_PER_PAGE);
+      setRequests(res.content ?? []);
+      setTotalPages(res.totalPages ?? 1);
+      setTotalItems(res.totalElements ?? 0);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit form.");
+      setApiError(err instanceof Error ? err.message : "Failed to load requests.");
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchRequests(currentPage, search);
+  }, [currentPage, fetchRequests]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const displayed = requests.filter((r) =>
+    activeStatus === "All" || r.requestStatus === activeStatus
+  );
 
   return (
     <DashboardLayout>
-      {/* Breadcrumb */}
+      {/* Header */}
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Requests</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mb-1">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push("/requests")}
             className="flex items-center text-[#000080] dark:text-indigo-400 hover:text-[#000066]"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
@@ -98,226 +102,120 @@ export default function BabyDedicationPage() {
               <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
             </svg>
           </button>
-          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">Baby Dedication Form</h2>
+          <h2 className="text-[22px] font-bold text-[#000080] dark:text-indigo-400">Baby Dedication</h2>
         </div>
+        <p className="text-sm text-[#6B7280] dark:text-slate-400 pl-7">
+          Baby dedication requests submitted by members
+        </p>
       </div>
 
-      {error && (
+      {/* Status filter */}
+      <div className="mb-4">
+        <StatusFilterTabs
+          options={statusFilterOptions}
+          active={activeStatus}
+          onChange={(v) => { setActiveStatus(v as StatusFilter); setCurrentPage(1); }}
+        />
+      </div>
+
+      {/* Search + New Request */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="w-full sm:w-72">
+          <SearchBar
+            value={search}
+            onChange={(v) => {
+              setSearch(v);
+              if (!v.trim()) { fetchRequests(1, ""); setCurrentPage(1); }
+            }}
+            onSearch={() => { setCurrentPage(1); fetchRequests(1, search); }}
+            placeholder="Search dedication requests…"
+          />
+        </div>
+        <Button
+          variant="primary"
+          onClick={() => router.push("/requests/baby-dedication/new")}
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          }
+        >
+          New Request
+        </Button>
+      </div>
+
+      {apiError && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
-          {error}
+          {apiError} — <button className="font-medium underline" onClick={() => fetchRequests(currentPage, search)}>Retry</button>
         </div>
       )}
 
-      {/* ── Paper form card ─────────────────────────────────────────────── */}
-      <div className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="bg-[#F3F4F6] dark:bg-slate-700/30">
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Subject</th>
+              <th className="hidden sm:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Submitted By</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Date</th>
+              <th className="px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Status</th>
+              <th className="hidden md:table-cell px-4 py-4 text-sm font-bold text-[#000080] dark:text-indigo-400">Assigned To</th>
+              <th className="px-4 py-4" />
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">Loading…</td></tr>
+            ) : displayed.length === 0 ? (
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">No requests found.</td></tr>
+            ) : (
+              displayed.map((r) => (
+                <tr
+                  key={r.id}
+                  className="border-b border-[#F3F4F6] transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 dark:bg-slate-700/50 cursor-pointer"
+                  style={{ height: "56px" }}
+                  onClick={() => router.push(`/requests/${r.id}`)}
+                >
+                  <td className="px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[220px]">
+                    <span className="block truncate">{r.subject}</span>
+                  </td>
+                  <td className="hidden sm:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[160px]">
+                    <span className="block truncate">
+                      {r.owner ? fullName(r.owner) : <span className="italic text-gray-400 dark:text-slate-500">Anonymous</span>}
+                    </span>
+                  </td>
+                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300">
+                    {fmtDate(r.createdOn)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${statusBadgeColors[r.requestStatus ?? ""] ?? "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400"}`}>
+                      {(r.requestStatus ?? "—").replace(/_/g, " ")}
+                    </span>
+                  </td>
+                  <td className="hidden md:table-cell px-4 py-3 text-sm text-[#374151] dark:text-slate-300 max-w-[160px]">
+                    <span className="block truncate">{fullName(r.assignedTo)}</span>
+                  </td>
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    <ActionDropdown
+                      actions={[
+                        { label: "View", onClick: () => router.push(`/requests/${r.id}`) },
+                      ]}
+                    />
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-        {/* ── Church header ─────────────────────────────────────────────── */}
-        <div className="flex flex-col items-center px-8 pt-8 pb-6 text-center">
-          <Image
-            src="/rccg-icon.png"
-            alt="RCCG Logo"
-            width={80}
-            height={80}
-            className="mb-3 object-contain"
-          />
-          <p className="text-[16px] font-extrabold uppercase tracking-wide text-black dark:text-slate-100">
-            THE REDEEMED CHRISTIAN CHURCH OF GOD
-          </p>
-          <p
-            className="mt-1 text-[20px] font-bold italic text-black dark:text-slate-100"
-            style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
-          >
-            Rose of Sharon
-          </p>
-          <p className="mt-5 text-[16px] font-extrabold uppercase text-black dark:text-slate-100">
-            BABY DEDICATION FORM
-          </p>
-        </div>
-
-        {/* ── Form body ─────────────────────────────────────────────────── */}
-        <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-4">
-
-          <p className="text-[13px] italic font-bold text-black dark:text-slate-100 mb-2">
-            PLEASE NOTE: YOU ARE TO WRITE ALL IN BLOCK LETTERS
-          </p>
-
-          {/* Name of Father */}
-          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
-            <label className="shrink-0 text-[13px] text-black dark:text-slate-100 whitespace-nowrap">
-              Name of Father:
-            </label>
-            <input
-              type="text"
-              name="fatherName"
-              value={form.fatherName}
-              onChange={(e) => set("fatherName", e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
-              required
-            />
-          </div>
-
-          {/* Name of Mother */}
-          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
-            <label className="shrink-0 text-[13px] text-black dark:text-slate-100 whitespace-nowrap">
-              Name of Mother:
-            </label>
-            <input
-              type="text"
-              name="motherName"
-              value={form.motherName}
-              onChange={(e) => set("motherName", e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
-              required
-            />
-          </div>
-
-          {/* Full name of Child */}
-          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
-            <label className="shrink-0 text-[13px] text-black dark:text-slate-100 whitespace-nowrap">
-              Full name of Child:
-            </label>
-            <input
-              type="text"
-              name="childFullName"
-              value={form.childFullName}
-              onChange={(e) => set("childFullName", e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
-              required
-            />
-          </div>
-
-          {/* Date of Birth */}
-          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
-            <label className="shrink-0 text-[13px] text-black dark:text-slate-100 whitespace-nowrap">
-              Date of Birth:
-            </label>
-            <input
-              type="date"
-              name="dateOfBirth"
-              value={form.dateOfBirth}
-              onChange={(e) => set("dateOfBirth", e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
-              required
-            />
-          </div>
-
-          {/* Place of Birth */}
-          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
-            <label className="shrink-0 text-[13px] text-black dark:text-slate-100 whitespace-nowrap">
-              Place of Birth:
-            </label>
-            <input
-              type="text"
-              name="placeOfBirth"
-              value={form.placeOfBirth}
-              onChange={(e) => set("placeOfBirth", e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
-              required
-            />
-          </div>
-
-          {/* Meaning of names — label + first underline + second blank underline */}
-          <div className="space-y-2">
-            <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
-              <label className="shrink-0 text-[13px] text-black dark:text-slate-100 whitespace-nowrap">
-                Meaning of names:
-              </label>
-              <input
-                type="text"
-                name="meaningOfNames"
-                value={form.meaningOfNames}
-                onChange={(e) => set("meaningOfNames", e.target.value)}
-                className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
-                required
-              />
-            </div>
-            {/* Second blank underline */}
-            <div className="border-b border-black dark:border-slate-400 h-5" />
-          </div>
-
-          {/* Phone number */}
-          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
-            <label className="shrink-0 text-[13px] text-black dark:text-slate-100 whitespace-nowrap">
-              Phone number:
-            </label>
-            <input
-              type="tel"
-              name="phoneNumber"
-              value={form.phoneNumber}
-              onChange={(e) => set("phoneNumber", e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
-              required
-            />
-          </div>
-
-          {/* House Fellowship Centre */}
-          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
-            <label className="shrink-0 text-[13px] text-black dark:text-slate-100 whitespace-nowrap">
-              House Fellowship Centre:
-            </label>
-            <input
-              type="text"
-              name="houseFellowshipCentre"
-              value={form.houseFellowshipCentre}
-              onChange={(e) => set("houseFellowshipCentre", e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
-              required
-            />
-          </div>
-
-          {/* House Leader & Signature */}
-          <div className="flex items-end gap-2 border-b border-black dark:border-slate-400 pb-0.5">
-            <label className="shrink-0 text-[13px] text-black dark:text-slate-100 whitespace-nowrap">
-              House Leader &amp; Signature:
-            </label>
-            <input
-              type="text"
-              name="houseLeader"
-              value={form.houseLeader}
-              onChange={(e) => set("houseLeader", e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#374151] dark:text-slate-200 min-w-0"
-              required
-            />
-          </div>
-
-          {/* Notes */}
-          <div className="pt-4 space-y-3">
-            <p className="text-[13px] text-[#374151] dark:text-slate-400">
-              Please note that the 2nd Sunday of the month is baby dedication Sunday.
-            </p>
-            <p className="text-[13px] text-[#374151] dark:text-slate-400">
-              On the day of dedication, Parents should endeavor to get to church very early and
-              intimate the Pastor in Charge through the head usher that they are around.
-            </p>
-            <p className="text-[13px] italic text-[#374151] dark:text-slate-400">
-              God bless you and remain blessed.
-            </p>
-          </div>
-
-          <div className="flex items-center justify-end gap-3 pt-4">
-            <Button variant="secondary" type="button" onClick={() => router.push("/requests")}>
-              Cancel
-            </Button>
-            <Button variant="primary" type="submit" disabled={submitting}>
-              {submitting ? "Submitting…" : "Submit Form"}
-            </Button>
-          </div>
-        </form>
-
-        {/* ── Footer — pink blocks protrude above the black base ──────────── */}
-        <div className="relative overflow-hidden" style={{ height: 44 }}>
-          {/* Full-width black base at bottom */}
-          <div className="absolute bottom-0 left-0 right-0 bg-black" style={{ height: 20 }} />
-          {/* Three pink blocks protruding above the black */}
-          <div
-            className="absolute flex"
-            style={{ bottom: 4, left: 14, right: 14, height: 30, gap: 8 }}
-          >
-            <div style={{ flex: 5, background: "#E8198B" }} />
-            <div style={{ flex: 3, background: "#E8198B" }} />
-            <div style={{ flex: 3, background: "#E8198B" }} />
-          </div>
-        </div>
+      <div className="mt-4">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          onPageChange={setCurrentPage}
+        />
       </div>
     </DashboardLayout>
   );
