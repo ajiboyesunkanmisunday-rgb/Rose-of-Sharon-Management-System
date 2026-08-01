@@ -156,14 +156,13 @@ export default function FaceOfTheMonthDetailClient() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
 
-  const paramId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
-  const [id, setId] = useState(paramId);
+  const [id, setId] = useState("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const parts = window.location.pathname.replace(/\/$/, "").split("/");
       const urlId = parts[parts.length - 1] ?? "";
-      if (urlId && urlId !== id) setId(urlId);
+      if (urlId) setId(urlId);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
