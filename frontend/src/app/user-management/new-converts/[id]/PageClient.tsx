@@ -138,7 +138,8 @@ export default function ViewNewConvertPage() {
     setSaveMsg("");
     setSaveFailed(false);
     try {
-      await addNewConvertNote(id, text.trim());
+      const prefix = type === "call" ? "[CALL] " : "[VISIT] ";
+      await addNewConvertNote(id, prefix + text.trim());
       if (type === "call")  setCallText("");
       if (type === "visit") setVisitText("");
       setSaveMsg("");
@@ -147,11 +148,8 @@ export default function ViewNewConvertPage() {
     } catch (err) {
       setSaveFailed(true);
       const raw = err instanceof Error ? err.message : "";
-      const msg = raw.includes("not found") || raw.includes("404") || raw.includes("not yet supported")
-        ? `${type === "call" ? "Call" : "Visit"} reports are not yet available on the server. Please contact your administrator.`
-        : raw || "Failed to save.";
-      setSaveMsg(msg);
-      addToast(msg, "error");
+      setSaveMsg(raw || "Failed to save.");
+      addToast(raw || "Failed to save.", "error");
     } finally {
       setSaving(false);
     }
@@ -333,11 +331,24 @@ export default function ViewNewConvertPage() {
                 ) : (
                   <ul className="space-y-3">
                     {notes.map((n) => {
-                      const cat = (n.noteCategory ?? n.type ?? "").toUpperCase();
-                      const typeLabel = cat.includes("CALL") ? "Call Log" : cat.includes("VISIT") ? "Visit Log" : "Note";
-                      const typeBg    = cat.includes("CALL") ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700" : cat.includes("VISIT") ? "bg-green-50 dark:bg-green-900/20 text-green-700" : "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#374151] dark:text-slate-300";
+                      const raw = n.content ?? "";
+                      const isCall  = raw.startsWith("[CALL] ");
+                      const isVisit = raw.startsWith("[VISIT] ");
+                      const typeLabel    = isCall ? "Call Log" : isVisit ? "Visit Log" : "Note";
+                      const typeBg       = isCall  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+                                         : isVisit ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
+                                         : "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#374151] dark:text-slate-300";
+                      const displayContent = isCall  ? raw.slice(7)
+                                           : isVisit ? raw.slice(8)
+                                           : raw;
+                      const createdBy = n.officerName
+                        ?? (typeof n.createdBy === "string"
+                          ? n.createdBy
+                          : n.createdBy
+                            ? [n.createdBy.firstName, n.createdBy.lastName].filter(Boolean).join(" ")
+                            : null);
                       return (
-                        <li key={n.id} className="rounded-lg border border-[#F3F4F6] bg-[#FAFAFA] px-4 py-3">
+                        <li key={n.id} className="rounded-lg border border-[#F3F4F6] dark:border-slate-700 bg-[#FAFAFA] dark:bg-slate-700/20 px-4 py-3">
                           <div className="mb-1 flex items-center justify-between gap-2">
                             <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${typeBg}`}>{typeLabel}</span>
                             <div className="flex items-center gap-2">
@@ -345,16 +356,16 @@ export default function ViewNewConvertPage() {
                               <button
                                 onClick={() => handleDeleteNote(n.id)}
                                 disabled={deletingNoteId === n.id}
-                                className="rounded p-0.5 text-[#9CA3AF] dark:text-slate-400 hover:bg-red-50 dark:bg-red-900/20 hover:text-red-500 disabled:opacity-50"
+                                className="rounded p-0.5 text-[#9CA3AF] dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 disabled:opacity-50"
                                 title="Delete"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                               </button>
                             </div>
                           </div>
-                          <p className="text-sm text-[#374151] dark:text-slate-300">{n.content ?? "—"}</p>
-                          {(n.officerName ?? n.createdBy) && (
-                            <p className="mt-1 text-xs text-[#9CA3AF] dark:text-slate-400">By {n.officerName ?? (typeof n.createdBy === "string" ? n.createdBy : [n.createdBy?.firstName, n.createdBy?.lastName].filter(Boolean).join(" "))}</p>
+                          <p className="text-sm text-[#374151] dark:text-slate-300">{displayContent || "—"}</p>
+                          {createdBy && (
+                            <p className="mt-1 text-xs text-[#9CA3AF] dark:text-slate-400">By {createdBy}</p>
                           )}
                         </li>
                       );
