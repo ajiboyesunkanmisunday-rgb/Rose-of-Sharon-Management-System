@@ -187,7 +187,7 @@ export default function FaceOfTheMonthPage() {
                     key={item.id}
                     className="border-b border-[#F3F4F6] dark:border-slate-700 transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer"
                     style={{ height: "56px" }}
-                    onDoubleClick={() => router.push(`/voting/${item.id}`)}
+                    onClick={() => router.push(`/voting/${item.id}`)}
                   >
                     <td className="px-4 py-3 font-medium text-[#374151] dark:text-slate-300">{item.title}</td>
                     <td className="hidden sm:table-cell px-4 py-3 text-[#374151] dark:text-slate-300">

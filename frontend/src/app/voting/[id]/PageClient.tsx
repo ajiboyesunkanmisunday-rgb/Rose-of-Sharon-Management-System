@@ -153,8 +153,20 @@ function CategorySection({
 }
 
 export default function FaceOfTheMonthDetailClient() {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>();
   const router = useRouter();
+
+  const paramId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
+  const [id, setId] = useState(paramId);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const parts = window.location.pathname.replace(/\/$/, "").split("/");
+      const urlId = parts[parts.length - 1] ?? "";
+      if (urlId && urlId !== id) setId(urlId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [data,       setData]       = useState<FaceOfTheMonthFullResponse | null>(null);
   const [loading,    setLoading]    = useState(true);
