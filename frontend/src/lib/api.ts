@@ -882,14 +882,13 @@ export interface NoteResponse {
   id: string;
   userId?: string;
   content?: string;
-  /** Swagger: "CALL" | "VISIT" | "OTHERS" */
+  /** New endpoint: always "NEW_CONVERT" for new-convert notes */
+  otherNoteCategory?: string;
+  /** Legacy field — older endpoints used "CALL" | "VISIT" | "OTHERS" */
   noteCategory?: string;
-  /** Legacy alias kept for backward-compat with older backend versions */
   type?: string;
   createdOn?: string;
-  /** createdBy is an object per Swagger (UserBasicResponse) */
   createdBy?: { id?: string; firstName?: string; lastName?: string } | string;
-  /** Legacy field kept for backward compat */
   officerName?: string;
 }
 
@@ -4659,12 +4658,11 @@ export async function getCallsVsVisits(): Promise<FeatureStatResponse> {
 
 // ─── New Convert Notes ────────────────────────────────────────────────────────
 
-export async function getNewConvertNotes(convertId: string): Promise<NoteResponse[]> {
-  const res = await apiFetch<NoteResponse[] | { content?: NoteResponse[] }>(
-    `/api/v1/new-converts/${encodeURIComponent(convertId)}/note`,
+export async function getNewConvertNotes(convertId: string, page = 0, size = 50): Promise<NoteResponse[]> {
+  const res = await apiFetch<{ content?: NoteResponse[] }>(
+    `/api/v1/new-converts/${encodeURIComponent(convertId)}/note?pageNo=${page}&pageSize=${size}`,
   );
-  if (Array.isArray(res)) return res;
-  return (res as { content?: NoteResponse[] }).content ?? [];
+  return res.content ?? [];
 }
 
 export async function addNewConvertNote(
