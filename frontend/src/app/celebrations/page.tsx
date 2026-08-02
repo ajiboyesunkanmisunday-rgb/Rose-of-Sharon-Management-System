@@ -144,7 +144,10 @@ function buildThanksgivingRows(celebrations: CelebrationResponse[]): ExportRow[]
 async function fetchImageData(url: string): Promise<{ buffer: ArrayBuffer; ext: string } | null> {
   if (!url) return null;
   try {
-    const r = await fetch(url);
+    // Route through the Netlify proxy so the Origin header is stripped —
+    // nginx on api.rccgros.org blocks browser CORS requests from the Netlify origin.
+    const fetchUrl = url.replace(/^https?:\/\/api\.rccgros\.org/, "");
+    const r = await fetch(fetchUrl || url);
     if (!r.ok) return null;
     const buf = await r.arrayBuffer();
     const ct = r.headers.get("content-type") ?? "";
