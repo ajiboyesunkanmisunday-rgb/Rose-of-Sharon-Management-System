@@ -161,6 +161,26 @@
   status = 200
 
 [[redirects]]
+  from   = "/requests/baby-christening/"
+  to     = "/requests/baby-christening/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/requests/baby-christening/new/"
+  to     = "/requests/baby-christening/new/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/requests/baby-dedication/"
+  to     = "/requests/baby-dedication/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/requests/baby-dedication/new/"
+  to     = "/requests/baby-dedication/new/index.html"
+  status = 200
+
+[[redirects]]
   from   = "/requests/:id/"
   to     = "/requests/req-1/"
   status = 200
@@ -296,26 +316,6 @@
 [[redirects]]
   from   = "/requests/add/"
   to     = "/requests/add/index.html"
-  status = 200
-
-[[redirects]]
-  from   = "/requests/baby-christening/"
-  to     = "/requests/baby-christening/index.html"
-  status = 200
-
-[[redirects]]
-  from   = "/requests/baby-christening/new/"
-  to     = "/requests/baby-christening/new/index.html"
-  status = 200
-
-[[redirects]]
-  from   = "/requests/baby-dedication/"
-  to     = "/requests/baby-dedication/index.html"
-  status = 200
-
-[[redirects]]
-  from   = "/requests/baby-dedication/new/"
-  to     = "/requests/baby-dedication/new/index.html"
   status = 200
 
 [[redirects]]
