@@ -211,7 +211,7 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
               ref={inputRef}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search members…"
+              placeholder="Members, E-Members, First Timers, Second Timers, New Converts…"
               className="flex-1 text-sm text-[#111827] dark:text-slate-100 outline-none placeholder:text-[#9CA3AF] dark:placeholder:text-slate-500 bg-transparent min-w-0"
             />
             <button onClick={() => { if (searchQuery.trim()) saveRecent(searchQuery); setSearchOpen(false); setSearchQuery(""); setSearchResults([]); }}>
