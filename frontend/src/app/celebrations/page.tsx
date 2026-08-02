@@ -129,6 +129,16 @@ function buildAnniversaryRows(users: UserResponse[]): ExportRow[] {
   }));
 }
 
+function buildThanksgivingRows(celebrations: CelebrationResponse[]): ExportRow[] {
+  return celebrations.map((c) => ({
+    "Full Name": fullName(c.requester),
+    "Thanksgiving Date": fmtDate(c.date),
+    "Celebration Type": (c.celebrationType ?? "—").replace(/_/g, " "),
+    "Notes": c.notes ?? "—",
+    "_photoUrl": "",
+  }));
+}
+
 // ── Image fetch helper with extension detection ───────────────────────────────
 
 async function fetchImageData(url: string): Promise<{ buffer: ArrayBuffer; ext: string } | null> {
@@ -187,15 +197,18 @@ async function downloadAsZip(
   URL.revokeObjectURL(url);
 }
 
-/** Collect photos for all rows that have a _photoUrl. */
-async function collectPhotos(rows: ExportRow[]): Promise<Array<{ name: string; buffer: ArrayBuffer; ext: string }>> {
+/** Collect photos for all rows that have a _photoUrl, naming each file "{Name}_{Date}". */
+async function collectPhotos(rows: ExportRow[], dateColumn: string): Promise<Array<{ name: string; buffer: ArrayBuffer; ext: string }>> {
   const results = await Promise.all(
     rows.map(async (r) => {
       const photoUrl = r["_photoUrl"];
       if (!photoUrl) return null;
       const data = await fetchImageData(photoUrl);
       if (!data) return null;
-      return { name: nameToFileStem(r["Full Name"] ?? "Celebrant"), buffer: data.buffer, ext: data.ext };
+      const nameStem = nameToFileStem(r["Full Name"] ?? "Celebrant");
+      const date = r[dateColumn] ?? "";
+      const dateStem = date && date !== "—" ? `_${date.replace(/[^a-zA-Z0-9]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "")}` : "";
+      return { name: `${nameStem}${dateStem}`, buffer: data.buffer, ext: data.ext };
     })
   );
   return results.filter((x): x is NonNullable<typeof x> => x !== null);
@@ -211,7 +224,7 @@ async function exportData(
 ) {
   if (rows.length === 0) return;
 
-  const columns = ["Full Name", dateColumn, "Phone Number", "Email Address"];
+  const columns = Object.keys(rows[0]).filter((k) => !k.startsWith("_"));
 
   // ── CSV ──────────────────────────────────────────────────────────────────
   if (format === "csv") {
@@ -221,7 +234,7 @@ async function exportData(
       .map((r) => columns.map((c) => escape(r[c] ?? "")).join(","))
       .join("\n");
     const docBlob = new Blob([`${header}\n${body}`], { type: "text/csv;charset=utf-8;" });
-    const photos = await collectPhotos(rows);
+    const photos = await collectPhotos(rows, dateColumn);
 
     if (photos.length > 0) {
       await downloadAsZip(docBlob, `${filename}.csv`, photos);
@@ -249,7 +262,7 @@ async function exportData(
     utils.book_append_sheet(wb, ws, "Celebrants");
     const xlsxBuf = write(wb, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
     const docBlob = new Blob([xlsxBuf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-    const photos = await collectPhotos(rows);
+    const photos = await collectPhotos(rows, dateColumn);
 
     if (photos.length > 0) {
       await downloadAsZip(docBlob, `${filename}.xlsx`, photos);
@@ -284,7 +297,7 @@ async function exportData(
       rowPageBreak: "avoid",
     });
 
-    const photos = await collectPhotos(rows);
+    const photos = await collectPhotos(rows, dateColumn);
 
     if (photos.length > 0) {
       const pdfOutput = doc.output("blob");
@@ -358,7 +371,7 @@ async function exportData(
     });
 
     const docBlob = await Packer.toBlob(wordDoc);
-    const photos = await collectPhotos(rows);
+    const photos = await collectPhotos(rows, dateColumn);
 
     if (photos.length > 0) {
       await downloadAsZip(docBlob, `${filename}.docx`, photos);
@@ -647,6 +660,13 @@ export default function CelebrationsPage() {
     } finally { setExporting(false); }
   };
 
+  const handleThanksgivingExport = async (fmt: ExportFormat) => {
+    setExporting(true);
+    try {
+      await exportData(fmt, buildThanksgivingRows(filteredCelebrations), "Thanksgiving_Celebrants", "Thanksgiving Date");
+    } finally { setExporting(false); }
+  };
+
   return (
     <DashboardLayout>
       {/* Header */}
@@ -863,18 +883,21 @@ export default function CelebrationsPage() {
       {/* ── Thanksgiving ──────────────────────────────────────────────────────── */}
       {activeTab === "thanksgiving" && (
         <>
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <div className="w-full sm:w-72">
-              <SearchBar value={search} onChange={setSearch} onSearch={() => {}} placeholder="Search thanksgiving…" />
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="w-full sm:w-72">
+                <SearchBar value={search} onChange={setSearch} onSearch={() => {}} placeholder="Search thanksgiving…" />
+              </div>
+              {(search || tgStatus !== "All") && (
+                <button
+                  onClick={() => { setSearch(""); setTgStatus("All"); setCelebPage(1); }}
+                  className="h-[38px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 text-xs text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50"
+                >
+                  Clear
+                </button>
+              )}
             </div>
-            {(search || tgStatus !== "All") && (
-              <button
-                onClick={() => { setSearch(""); setTgStatus("All"); setCelebPage(1); }}
-                className="h-[38px] rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 text-xs text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50"
-              >
-                Clear
-              </button>
-            )}
+            <ExportMenu onExport={handleThanksgivingExport} disabled={exporting || filteredCelebrations.length === 0} />
           </div>
 
           <div className="mb-4">
