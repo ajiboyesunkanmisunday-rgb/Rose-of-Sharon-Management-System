@@ -9,10 +9,18 @@ import Pagination from "@/components/ui/Pagination";
 import ActionDropdown from "@/components/ui/ActionDropdown";
 import StatusFilterTabs from "@/components/ui/StatusFilterTabs";
 import {
-  getBabyDedicationRequests,
-  searchBabyDedicationRequests,
+  getAllRequests,
   type RequestResponse,
 } from "@/lib/api";
+
+function isBabyDedication(r: RequestResponse): boolean {
+  const type = r.requestType ?? "";
+  const subject = (r.subject ?? "").toLowerCase();
+  return (
+    type === "BABY_DEDICATION" ||
+    ((type === "SUGGESTIONS" || type === "SUGGESTION") && subject.includes("dedication"))
+  );
+}
 
 type StatusFilter = "All" | "RECEIVED" | "ASSIGNED" | "IN_PROGRESS" | "RESOLVED";
 
@@ -66,13 +74,21 @@ export default function BabyDedicationListPage() {
     setLoading(true);
     setApiError("");
     try {
-      const q = searchText.trim();
-      const res = q
-        ? await searchBabyDedicationRequests({ text: q }, page - 1, ITEMS_PER_PAGE)
-        : await getBabyDedicationRequests(page - 1, ITEMS_PER_PAGE);
-      setRequests(res.content ?? []);
-      setTotalPages(res.totalPages ?? 1);
-      setTotalItems(res.totalElements ?? 0);
+      const res = await getAllRequests(0, 500);
+      let filtered = (res.content ?? []).filter(isBabyDedication);
+      const q = searchText.trim().toLowerCase();
+      if (q) {
+        filtered = filtered.filter(
+          (r) =>
+            (r.subject ?? "").toLowerCase().includes(q) ||
+            [r.owner?.firstName, r.owner?.middleName, r.owner?.lastName]
+              .filter(Boolean).join(" ").toLowerCase().includes(q),
+        );
+      }
+      const start = (page - 1) * ITEMS_PER_PAGE;
+      setRequests(filtered.slice(start, start + ITEMS_PER_PAGE));
+      setTotalPages(Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1);
+      setTotalItems(filtered.length);
     } catch (err) {
       setApiError(err instanceof Error ? err.message : "Failed to load requests.");
     } finally {
