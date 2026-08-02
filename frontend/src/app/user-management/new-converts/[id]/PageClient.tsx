@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import DeleteConfirmModal from "@/components/user-management/DeleteConfirmModal";
 import {
-  getNewConvert, getNotes, addNote, deleteNote,
+  getNewConvert, getNewConvertNotes, addNewConvertNote, deleteNewConvertNote,
   updateBelieversClass,
   type NewConvertResponse, type NoteResponse,
 } from "@/lib/api";
@@ -101,7 +101,7 @@ export default function ViewNewConvertPage() {
     if (!id || id.startsWith("nc-")) return;
     setNotesLoading(true);
     try {
-      const data = await getNotes(id);
+      const data = await getNewConvertNotes(id);
       setNotes(data);
     } catch { /* non-fatal */ }
     finally { setNotesLoading(false); }
@@ -138,7 +138,8 @@ export default function ViewNewConvertPage() {
     setSaveMsg("");
     setSaveFailed(false);
     try {
-      await addNote(id, text.trim(), type === "call" ? "CALL" : "VISIT");
+      const prefix = type === "call" ? "[CALL] " : "[VISIT] ";
+      await addNewConvertNote(id, prefix + text.trim());
       if (type === "call")  setCallText("");
       if (type === "visit") setVisitText("");
       setSaveMsg("");
@@ -157,7 +158,7 @@ export default function ViewNewConvertPage() {
   const handleDeleteNote = async (noteId: string) => {
     setDeletingNoteId(noteId);
     try {
-      await deleteNote(noteId);
+      await deleteNewConvertNote(noteId);
       setNotes((prev) => prev.filter((n) => n.id !== noteId));
       addToast("Entry deleted.", "success");
     } catch (err) {
@@ -330,14 +331,14 @@ export default function ViewNewConvertPage() {
                 ) : (
                   <ul className="space-y-3">
                     {notes.map((n) => {
-                      const cat = (n.noteCategory ?? n.type ?? "").toUpperCase();
-                      const isCall  = cat === "CALL";
-                      const isVisit = cat === "VISIT";
+                      const raw = n.content ?? "";
+                      const isCall  = raw.startsWith("[CALL]");
+                      const isVisit = raw.startsWith("[VISIT]");
                       const typeLabel = isCall ? "Call Log" : isVisit ? "Visit Log" : "Note";
                       const typeBg    = isCall  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
                                       : isVisit ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
                                       : "bg-[#F3F4F6] dark:bg-slate-700/30 text-[#374151] dark:text-slate-300";
-                      const displayContent = n.content ?? "";
+                      const displayContent = isCall ? raw.slice(7).trim() : isVisit ? raw.slice(8).trim() : raw;
                       const createdBy = n.officerName
                         ?? (typeof n.createdBy === "string"
                           ? n.createdBy
