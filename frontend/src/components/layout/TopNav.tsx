@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Menu, Bell, Search, X, Users, CalendarClock, UserPlus, Sun, Moon } from "lucide-react";
-import { getStoredUser, setStoredUser, getUser, logoutUser, searchMembers, searchEvents, type StoredUser } from "@/lib/api";
+import { ChevronDown, Menu, Bell, Search, X, Users, UserPlus, UserCheck, UserRound, Sun, Moon } from "lucide-react";
+import {
+  getStoredUser, setStoredUser, getUser, logoutUser,
+  searchMembers, searchEMembers, searchFirstTimers, searchSecondTimers, searchNewConverts,
+  type StoredUser,
+} from "@/lib/api";
 import { useTheme } from "@/context/ThemeContext";
 import { useSidebar } from "@/context/SidebarContext";
 
@@ -18,7 +22,7 @@ interface SearchResult {
   label: string;
   sub: string;
   href: string;
-  kind: "member" | "event" | "firsttimer";
+  kind: "member" | "emember" | "firsttimer" | "secondtimer" | "newconvert";
 }
 
 interface TopNavProps {
@@ -98,22 +102,37 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
     if (!q.trim()) { setSearchResults([]); return; }
     setSearchLoading(true);
     try {
-      const [mems, evts] = await Promise.allSettled([
-        searchMembers(q.trim(), 0, 4),
-        searchEvents(q.trim(), 0, 3),
+      const [mems, emems, fts, sts, ncs] = await Promise.allSettled([
+        searchMembers(q.trim(), 0, 3),
+        searchEMembers(q.trim(), 0, 3),
+        searchFirstTimers(q.trim(), 0, 3),
+        searchSecondTimers(q.trim(), 0, 3),
+        searchNewConverts(q.trim(), 0, 3),
       ]);
       const results: SearchResult[] = [];
-      if (mems.status === "fulfilled") {
-        (mems.value.content ?? []).forEach((m) => {
-          const name = [m.firstName, m.lastName].filter(Boolean).join(" ") || "—";
-          results.push({ id: m.id, label: name, sub: m.email ?? "Member", href: `/user-management/members/${m.id}`, kind: "member" });
-        });
-      }
-      if (evts.status === "fulfilled") {
-        (evts.value.content ?? []).forEach((e) => {
-          results.push({ id: e.id, label: e.title, sub: e.date ?? "Event", href: `/event-management/${e.id}`, kind: "event" });
-        });
-      }
+      const name = (u: { firstName?: string; lastName?: string }) =>
+        [u.firstName, u.lastName].filter(Boolean).join(" ") || "—";
+
+      if (mems.status === "fulfilled")
+        (mems.value.content ?? []).forEach((m) =>
+          results.push({ id: m.id, label: name(m), sub: m.email ?? "Member", href: `/user-management/members/${m.id}`, kind: "member" }));
+
+      if (emems.status === "fulfilled")
+        (emems.value.content ?? []).forEach((m) =>
+          results.push({ id: `em-${m.id}`, label: name(m), sub: m.email ?? "E-Member", href: `/user-management/e-members/${m.id}`, kind: "emember" }));
+
+      if (fts.status === "fulfilled")
+        (fts.value.content ?? []).forEach((m) =>
+          results.push({ id: `ft-${m.id}`, label: name(m), sub: m.email ?? "First Timer", href: `/user-management/first-timers/${m.id}`, kind: "firsttimer" }));
+
+      if (sts.status === "fulfilled")
+        (sts.value.content ?? []).forEach((m) =>
+          results.push({ id: `st-${m.id}`, label: name(m), sub: m.email ?? "Second Timer", href: `/user-management/second-timers/${m.id}`, kind: "secondtimer" }));
+
+      if (ncs.status === "fulfilled")
+        (ncs.value.content ?? []).forEach((m) =>
+          results.push({ id: `nc-${m.id}`, label: name(m), sub: m.email ?? "New Convert", href: `/user-management/new-converts/${m.id}`, kind: "newconvert" }));
+
       setSearchResults(results);
     } catch {
       setSearchResults([]);
@@ -161,10 +180,12 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
-  const kindIcon = (kind: SearchResult["kind"]) => {
-    if (kind === "event")      return <CalendarClock className="h-4 w-4 text-purple-500 shrink-0" />;
-    if (kind === "firsttimer") return <UserPlus className="h-4 w-4 text-orange-500 shrink-0" />;
-    return <Users className="h-4 w-4 text-[#000080] dark:text-indigo-400 shrink-0" />;
+  const KIND_META: Record<SearchResult["kind"], { icon: React.ReactNode; badge: string }> = {
+    member:      { icon: <Users      className="h-4 w-4 text-[#000080] dark:text-indigo-400 shrink-0" />, badge: "Member"       },
+    emember:     { icon: <UserRound  className="h-4 w-4 text-blue-500 shrink-0" />,                       badge: "E-Member"     },
+    firsttimer:  { icon: <UserPlus   className="h-4 w-4 text-orange-500 shrink-0" />,                     badge: "First Timer"  },
+    secondtimer: { icon: <UserCheck  className="h-4 w-4 text-green-500 shrink-0" />,                      badge: "Second Timer" },
+    newconvert:  { icon: <UserPlus   className="h-4 w-4 text-purple-500 shrink-0" />,                     badge: "New Convert"  },
   };
 
   return (
@@ -190,7 +211,7 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
               ref={inputRef}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search members, events…"
+              placeholder="Search members…"
               className="flex-1 text-sm text-[#111827] dark:text-slate-100 outline-none placeholder:text-[#9CA3AF] dark:placeholder:text-slate-500 bg-transparent min-w-0"
             />
             <button onClick={() => { if (searchQuery.trim()) saveRecent(searchQuery); setSearchOpen(false); setSearchQuery(""); setSearchResults([]); }}>
@@ -236,19 +257,25 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
               ) : searchResults.length === 0 ? (
                 <div className="px-4 py-3 text-sm text-[#9CA3AF] dark:text-slate-500 text-center">No results for &ldquo;{searchQuery}&rdquo;</div>
               ) : (
-                searchResults.map((r) => (
-                  <button
-                    key={r.id}
-                    onClick={() => { saveRecent(searchQuery); router.push(r.href); setSearchOpen(false); setSearchQuery(""); setSearchResults([]); }}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-[#F9FAFB] dark:hover:bg-slate-700 transition-colors"
-                  >
-                    {kindIcon(r.kind)}
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-[#111827] dark:text-slate-100 truncate">{r.label}</p>
-                      <p className="text-xs text-[#9CA3AF] dark:text-slate-500 truncate">{r.sub}</p>
-                    </div>
-                  </button>
-                ))
+                searchResults.map((r) => {
+                  const meta = KIND_META[r.kind];
+                  return (
+                    <button
+                      key={r.id}
+                      onClick={() => { saveRecent(searchQuery); router.push(r.href); setSearchOpen(false); setSearchQuery(""); setSearchResults([]); }}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-[#F9FAFB] dark:hover:bg-slate-700 transition-colors"
+                    >
+                      {meta.icon}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-[#111827] dark:text-slate-100 truncate">{r.label}</p>
+                          <span className="shrink-0 rounded-full bg-gray-100 dark:bg-slate-700 px-1.5 py-0.5 text-[10px] text-[#6B7280] dark:text-slate-400">{meta.badge}</span>
+                        </div>
+                        <p className="text-xs text-[#9CA3AF] dark:text-slate-500 truncate">{r.sub}</p>
+                      </div>
+                    </button>
+                  );
+                })
               )
             )}
           </div>
