@@ -6,24 +6,25 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import { FormField, SelectField } from "@/components/ui/FormField";
-import { trainingCourses } from "@/lib/mock-data";
+import { createTrainingEvent } from "@/lib/api";
 
-const STATUS_OPTIONS = [
-  { label: "Active", value: "Active" },
-  { label: "Upcoming", value: "Upcoming" },
+const CATEGORY_OPTIONS = [
+  { label: "Water Baptism", value: "BAPTISM" },
+  { label: "Workers in Training", value: "WORKERS_IN_TRAINING" },
+  { label: "School of Disciples", value: "SCHOOL_OF_DISCIPLES" },
+  { label: "School of Ministry", value: "SCHOOL_OF_MINISTRY" },
 ];
 
 export default function AddSchedulePage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    courseId: "",
-    instructor: "",
-    startDate: "",
-    endDate: "",
-    dayTime: "",
-    venue: "",
-    capacity: "",
-    status: "Upcoming",
+    name: "",
+    trainingCategory: "",
+    teacher: "",
+    date: "",
+    location: "",
+    set: "",
+    isExam: false,
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -31,68 +32,86 @@ export default function AddSchedulePage() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    if (type === "checkbox") {
+      setFormData((prev) => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
-    const el = (e.target as HTMLFormElement).elements;
-    const getVal = (name: string) =>
-      ((el.namedItem(name) as HTMLInputElement | null)?.value ?? "").trim();
-
-    const courseId = getVal("courseId") || formData.courseId.trim();
-    const startDate = getVal("startDate") || formData.startDate.trim();
-    const endDate = getVal("endDate") || formData.endDate.trim();
-
-    if (!courseId || !startDate || !endDate) {
-      setError("Please fill in all required fields.");
+    if (!formData.trainingCategory || !formData.date) {
+      setError("Please fill in Category and Date.");
       return;
     }
-
     setSubmitting(true);
     try {
-      console.log("Create schedule:", formData);
+      await createTrainingEvent({
+        name: formData.name.trim() || formData.trainingCategory,
+        trainingCategory: formData.trainingCategory,
+        teacher: formData.teacher.trim() || undefined,
+        date: formData.date,
+        location: formData.location.trim() || undefined,
+        set: formData.set.trim() || undefined,
+        isExam: formData.isExam,
+      });
       router.push("/trainings/schedules");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save schedule.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const courseOptions = trainingCourses.map((c) => ({
-    label: c.name,
-    value: c.id,
-  }));
-
   return (
     <DashboardLayout>
-      <PageHeader
-        title="Trainings"
-        subtitle="Add Schedule"
-        backHref="/trainings/schedules"
-      />
+      <PageHeader title="Trainings" subtitle="Add Schedule" backHref="/trainings/schedules" />
 
       <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           <SelectField
-            label="Course"
-            name="courseId"
-            value={formData.courseId}
+            label="Category"
+            name="trainingCategory"
+            value={formData.trainingCategory}
             onChange={handleChange}
-            options={courseOptions}
+            options={CATEGORY_OPTIONS}
             required
           />
 
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
-            <FormField label="Instructor" name="instructor" value={formData.instructor} onChange={handleChange} placeholder="Lead instructor" required />
-            <FormField label="Day / Time" name="dayTime" value={formData.dayTime} onChange={handleChange} placeholder="e.g. Saturdays, 10:00 AM" required />
-            <FormField label="Start Date" type="date" name="startDate" value={formData.startDate} onChange={handleChange} required />
-            <FormField label="End Date" type="date" name="endDate" value={formData.endDate} onChange={handleChange} required />
-            <FormField label="Venue" name="venue" value={formData.venue} onChange={handleChange} placeholder="e.g. Main Hall" required />
-            <FormField label="Capacity" type="number" name="capacity" value={formData.capacity} onChange={handleChange} />
-            <SelectField label="Status" name="status" value={formData.status} onChange={handleChange} options={STATUS_OPTIONS} />
+            <FormField
+              label="Session Name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="e.g. Week 3 – Holy Spirit Baptism"
+            />
+            <FormField
+              label="Instructor / Teacher"
+              name="teacher"
+              value={formData.teacher}
+              onChange={handleChange}
+              placeholder="Lead instructor"
+            />
+            <FormField label="Date" type="date" name="date" value={formData.date} onChange={handleChange} required />
+            <FormField label="Venue / Location" name="location" value={formData.location} onChange={handleChange} placeholder="e.g. Main Hall" />
+            <FormField label="Set" name="set" value={formData.set} onChange={handleChange} placeholder="e.g. 2026A" />
+            <div className="flex items-center gap-3 pt-6">
+              <input
+                type="checkbox"
+                id="isExam"
+                name="isExam"
+                checked={formData.isExam}
+                onChange={handleChange}
+                className="h-4 w-4 rounded border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
+              />
+              <label htmlFor="isExam" className="text-sm font-medium text-[#374151] dark:text-slate-300">
+                This is an exam session
+              </label>
+            </div>
           </div>
 
           {error && (
