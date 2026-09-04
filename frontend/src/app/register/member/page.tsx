@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import SearchableSelect from "@/components/ui/SearchableSelect";
+import { createMember } from "@/lib/api";
 
 const GENDERS = ["Male", "Female"];
 const MARITAL_STATUS = ["Single", "Married", "Divorced", "Widowed"];
@@ -29,6 +30,34 @@ const months = [
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
+async function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement("canvas");
+    const img = document.createElement("img");
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const MAX = 600;
+      const scale = Math.min(MAX / img.width, MAX / img.height, 1);
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { resolve(""); return; }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", 0.7));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+const MARITAL_STATUS_MAP: Record<string, string> = {
+  Single: "SINGLE",
+  Married: "MARRIED",
+  Divorced: "DIVORCED",
+  Widowed: "WIDOWED",
+};
+
 export default function RegisterMemberPage() {
   const [formData, setFormData] = useState({
     firstName: "",
@@ -48,6 +77,9 @@ export default function RegisterMemberPage() {
   });
 
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -62,10 +94,52 @@ export default function RegisterMemberPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Save member:", { ...formData, photo: photoFile });
-    alert("Member saved successfully!");
+    setError("");
+
+    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.phone.trim()) {
+      setError("Please fill in First Name, Last Name, Phone and Email.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      let profilePictureUrl: string | undefined;
+      if (photoFile) {
+        profilePictureUrl = await fileToBase64(photoFile);
+      }
+
+      await createMember({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim(),
+        phoneNumber: formData.phone.trim(),
+        countryCode: "+234",
+        sex: formData.gender === "Male" ? "MALE" : formData.gender === "Female" ? "FEMALE" : undefined,
+        dayOfBirth: formData.dobDay ? Number(formData.dobDay) : undefined,
+        monthOfBirth: formData.dobMonth ? Number(formData.dobMonth) : undefined,
+        yearOfBirth: formData.dobYear ? Number(formData.dobYear) : undefined,
+        street: formData.street.trim() || undefined,
+        city: formData.city.trim() || undefined,
+        state: formData.state || undefined,
+        country: formData.country || undefined,
+        maritalStatus: formData.maritalStatus ? MARITAL_STATUS_MAP[formData.maritalStatus] : undefined,
+        profilePictureUrl,
+      });
+
+      setSuccess(true);
+      setFormData({
+        firstName: "", lastName: "", phone: "", email: "", gender: "",
+        dobDay: "", dobMonth: "", dobYear: "", street: "", city: "",
+        state: "", country: "", maritalStatus: "", group: "",
+      });
+      setPhotoFile(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save member. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const inputStyles =
@@ -73,6 +147,28 @@ export default function RegisterMemberPage() {
   const selectStyles =
     "w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-4 py-3 text-sm text-[#374151] dark:text-slate-300 outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080]";
   const labelStyles = "mb-1 block text-sm font-medium text-[#374151] dark:text-slate-300";
+
+  if (success) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-white dark:bg-slate-900 px-8 text-center">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-[#111827] dark:text-slate-100">Member Registered!</h2>
+        <p className="max-w-sm text-sm text-[#6B7280] dark:text-slate-400">
+          The member has been successfully added to the system.
+        </p>
+        <button
+          onClick={() => setSuccess(false)}
+          className="rounded-xl bg-[#000080] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[#000066]"
+        >
+          Register Another Member
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-800">
@@ -102,6 +198,7 @@ export default function RegisterMemberPage() {
             <p className={labelStyles}>Profile Photo</p>
             <label className="mt-2 flex h-[120px] w-[120px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 transition-colors hover:border-[#000080]">
               {photoFile ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={URL.createObjectURL(photoFile)}
                   alt="Preview"
@@ -146,149 +243,61 @@ export default function RegisterMemberPage() {
           </h2>
 
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
-            {/* First Name */}
             <div>
-              <label className={labelStyles}>First Name</label>
-              <input
-                type="text"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                placeholder="Enter first name"
-                className={inputStyles}
-                required
-              />
+              <label className={labelStyles}>First Name *</label>
+              <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Enter first name" className={inputStyles} required />
             </div>
-
-            {/* Last Name */}
             <div>
-              <label className={labelStyles}>Last Name</label>
-              <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                placeholder="Enter last name"
-                className={inputStyles}
-                required
-              />
+              <label className={labelStyles}>Last Name *</label>
+              <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Enter last name" className={inputStyles} required />
             </div>
-
-            {/* Phone Number */}
             <div>
-              <label className={labelStyles}>Phone Number</label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="Enter phone number"
-                className={inputStyles}
-                maxLength={10}
-                required
-              />
+              <label className={labelStyles}>Phone Number *</label>
+              <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="Enter phone number" className={inputStyles} maxLength={11} required />
             </div>
-
-            {/* Email */}
             <div>
-              <label className={labelStyles}>Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter email"
-                className={inputStyles}
-                required
-              />
+              <label className={labelStyles}>Email *</label>
+              <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Enter email" className={inputStyles} required />
             </div>
           </div>
 
-          {/* Address Section */}
-          <h2 className="mb-4 mt-8 text-base font-medium text-[#374151] dark:text-slate-300">
-            Address
-          </h2>
+          <h2 className="mb-4 mt-8 text-base font-medium text-[#374151] dark:text-slate-300">Address</h2>
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
             <div>
               <label className={labelStyles}>Street</label>
-              <input
-                type="text"
-                name="street"
-                value={formData.street}
-                onChange={handleChange}
-                placeholder="eg. 123 street"
-                className={inputStyles}
-              />
+              <input type="text" name="street" value={formData.street} onChange={handleChange} placeholder="eg. 123 street" className={inputStyles} />
             </div>
             <div>
               <label className={labelStyles}>City</label>
-              <input
-                type="text"
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                placeholder="Enter city name"
-                className={inputStyles}
-              />
+              <input type="text" name="city" value={formData.city} onChange={handleChange} placeholder="Enter city name" className={inputStyles} />
             </div>
 
-            {/* Gender */}
             <div>
               <label className={labelStyles}>Gender</label>
-              <select
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className={selectStyles}
-              >
+              <select name="gender" value={formData.gender} onChange={handleChange} className={selectStyles}>
                 <option value="">Select</option>
-                {GENDERS.map((g) => (
-                  <option key={g} value={g}>{g}</option>
-                ))}
+                {GENDERS.map((g) => <option key={g} value={g}>{g}</option>)}
               </select>
             </div>
 
-            {/* Date of Birth */}
             <div>
               <label className={labelStyles}>Date of Birth</label>
               <div className="flex gap-2">
-                <select
-                  name="dobDay"
-                  value={formData.dobDay}
-                  onChange={handleChange}
-                  className={selectStyles}
-                >
+                <select name="dobDay" value={formData.dobDay} onChange={handleChange} className={selectStyles}>
                   <option value="">Day</option>
-                  {days.map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
+                  {days.map((d) => <option key={d} value={d}>{d}</option>)}
                 </select>
-                <select
-                  name="dobMonth"
-                  value={formData.dobMonth}
-                  onChange={handleChange}
-                  className={selectStyles}
-                >
+                <select name="dobMonth" value={formData.dobMonth} onChange={handleChange} className={selectStyles}>
                   <option value="">Month</option>
-                  {months.map((m, i) => (
-                    <option key={m} value={i + 1}>{m}</option>
-                  ))}
+                  {months.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                 </select>
-                <select
-                  name="dobYear"
-                  value={formData.dobYear}
-                  onChange={handleChange}
-                  className={selectStyles}
-                >
+                <select name="dobYear" value={formData.dobYear} onChange={handleChange} className={selectStyles}>
                   <option value="">Year</option>
-                  {years.map((y) => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
+                  {years.map((y) => <option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
             </div>
 
-            {/* State */}
             <div>
               <label className={labelStyles}>State</label>
               <SearchableSelect
@@ -300,7 +309,6 @@ export default function RegisterMemberPage() {
               />
             </div>
 
-            {/* Country */}
             <div>
               <label className={labelStyles}>Country</label>
               <SearchableSelect
@@ -313,48 +321,37 @@ export default function RegisterMemberPage() {
             </div>
           </div>
 
-          {/* Bottom Fields */}
           <div className="mt-8 grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
-            {/* Marital Status */}
             <div>
               <label className={labelStyles}>Marital Status</label>
-              <select
-                name="maritalStatus"
-                value={formData.maritalStatus}
-                onChange={handleChange}
-                className={selectStyles}
-              >
+              <select name="maritalStatus" value={formData.maritalStatus} onChange={handleChange} className={selectStyles}>
                 <option value="">Select</option>
-                {MARITAL_STATUS.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
+                {MARITAL_STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
 
-            {/* Group */}
             <div>
               <label className={labelStyles}>Group</label>
-              <select
-                name="group"
-                value={formData.group}
-                onChange={handleChange}
-                className={selectStyles}
-              >
-                <option value="">No yet</option>
-                {GROUPS.map((g) => (
-                  <option key={g} value={g}>{g}</option>
-                ))}
+              <select name="group" value={formData.group} onChange={handleChange} className={selectStyles}>
+                <option value="">Not yet</option>
+                {GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
               </select>
             </div>
           </div>
 
-          {/* Submit */}
+          {error && (
+            <div className="mt-6 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
           <div className="mt-10">
             <button
               type="submit"
-              className="rounded-xl bg-[#000080] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[#000066]"
+              disabled={submitting}
+              className="rounded-xl bg-[#000080] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[#000066] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Save Member
+              {submitting ? "Saving…" : "Save Member"}
             </button>
           </div>
         </form>
