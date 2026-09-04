@@ -5,32 +5,15 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
-import { FormField, SelectField, TextAreaField } from "@/components/ui/FormField";
-import { trainingCourses } from "@/lib/mock-data";
+import { FormField, SelectField } from "@/components/ui/FormField";
+import { getTrainingEvent, updateTrainingEvent } from "@/lib/api";
 
 const CATEGORY_OPTIONS = [
-  { label: "Spiritual Formation", value: "Spiritual Formation" },
-  { label: "Discipleship", value: "Discipleship" },
-  { label: "Leadership", value: "Leadership" },
-  { label: "Counseling", value: "Counseling" },
-  { label: "Teaching", value: "Teaching" },
-  { label: "Youth Ministry", value: "Youth Ministry" },
+  { label: "Water Baptism", value: "BAPTISM" },
+  { label: "Workers in Training", value: "WORKERS_IN_TRAINING" },
+  { label: "School of Disciples", value: "SCHOOL_OF_DISCIPLES" },
+  { label: "School of Ministry", value: "SCHOOL_OF_MINISTRY" },
 ];
-
-const STATUS_OPTIONS = [
-  { label: "Active", value: "Active" },
-  { label: "Upcoming", value: "Upcoming" },
-  { label: "Completed", value: "Completed" },
-];
-
-function toInputDate(value: string): string {
-  if (!value) return "";
-  if (value.includes("-")) return value;
-  const parts = value.split("/");
-  if (parts.length !== 3) return "";
-  const [m, d, y] = parts;
-  return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
-}
 
 export default function EditCourseClient() {
   const router = useRouter();
@@ -46,74 +29,117 @@ export default function EditCourseClient() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const existing = trainingCourses.find((c) => c.id === id) || trainingCourses[0];
-
   const [formData, setFormData] = useState({
-    name: existing.name,
-    description: existing.description,
-    category: existing.category,
-    instructor: existing.instructor,
-    duration: existing.duration,
-    startDate: toInputDate(existing.startDate || ""),
-    endDate: toInputDate(existing.endDate || ""),
-    status: existing.status,
+    name: "",
+    trainingCategory: "",
+    teacher: "",
+    date: "",
+    location: "",
+    set: "",
+    isExam: false,
   });
-
+  const [loadError, setLoadError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!id) return;
+    getTrainingEvent(id)
+      .then((e) => {
+        setFormData({
+          name: e.name ?? "",
+          trainingCategory: e.trainingCategory ?? "",
+          teacher: e.teacher ?? "",
+          date: e.date ? e.date.slice(0, 10) : "",
+          location: e.location ?? "",
+          set: e.set ?? "",
+          isExam: e.isExam ?? false,
+        });
+      })
+      .catch((err) => setLoadError(err instanceof Error ? err.message : "Failed to load course."));
+  }, [id]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    if (type === "checkbox") {
+      setFormData((prev) => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
-    const el = (e.target as HTMLFormElement).elements;
-    const getVal = (fieldName: string) =>
-      ((el.namedItem(fieldName) as HTMLInputElement | null)?.value ?? "").trim();
-
-    const courseName = getVal("name") || formData.name.trim();
-    const description = getVal("description") || formData.description.trim();
-
-    if (!courseName || !description) {
-      setError("Please fill in all required fields.");
+    if (!formData.trainingCategory || !formData.date) {
+      setError("Please fill in Category and Date.");
       return;
     }
-
     setSubmitting(true);
     try {
-      console.log("Update course:", id, formData);
+      await updateTrainingEvent(id, {
+        name: formData.name.trim() || formData.trainingCategory,
+        trainingCategory: formData.trainingCategory,
+        teacher: formData.teacher.trim() || undefined,
+        date: formData.date,
+        location: formData.location.trim() || undefined,
+        set: formData.set.trim() || undefined,
+        isExam: formData.isExam,
+      });
       router.push(`/trainings/courses/${id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update course.");
     } finally {
       setSubmitting(false);
     }
   };
 
+  if (loadError) {
+    return (
+      <DashboardLayout>
+        <div className="flex h-64 items-center justify-center">
+          <p className="text-gray-400 dark:text-slate-500">{loadError}</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
-      <PageHeader
-        title="Trainings"
-        subtitle="Edit Course"
-        backHref={`/trainings/courses/${id}`}
-      />
+      <PageHeader title="Trainings" subtitle="Edit Course" backHref={`/trainings/courses/${id}`} />
 
       <div className="rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
-          <FormField label="Course Name" name="name" value={formData.name} onChange={handleChange} required />
-          <TextAreaField label="Description" name="description" value={formData.description} onChange={handleChange} rows={4} required />
+          <SelectField
+            label="Category"
+            name="trainingCategory"
+            value={formData.trainingCategory}
+            onChange={handleChange}
+            options={CATEGORY_OPTIONS}
+            required
+          />
 
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
-            <SelectField label="Category" name="category" value={formData.category} onChange={handleChange} options={CATEGORY_OPTIONS} required />
-            <FormField label="Instructor" name="instructor" value={formData.instructor} onChange={handleChange} required />
-            <FormField label="Duration" name="duration" value={formData.duration} onChange={handleChange} required />
-            <SelectField label="Status" name="status" value={formData.status} onChange={handleChange} options={STATUS_OPTIONS} />
-            <FormField label="Start Date" type="date" name="startDate" value={formData.startDate} onChange={handleChange} />
-            <FormField label="End Date" type="date" name="endDate" value={formData.endDate} onChange={handleChange} />
+            <FormField label="Course Name" name="name" value={formData.name} onChange={handleChange} placeholder="e.g. Water Baptism Class" />
+            <FormField label="Instructor / Teacher" name="teacher" value={formData.teacher} onChange={handleChange} />
+            <FormField label="Date" type="date" name="date" value={formData.date} onChange={handleChange} required />
+            <FormField label="Venue / Location" name="location" value={formData.location} onChange={handleChange} placeholder="e.g. Main Hall" />
+            <FormField label="Set" name="set" value={formData.set} onChange={handleChange} placeholder="e.g. 2026A" />
+            <div className="flex items-center gap-3 pt-6">
+              <input
+                type="checkbox"
+                id="isExam"
+                name="isExam"
+                checked={formData.isExam}
+                onChange={handleChange}
+                className="h-4 w-4 rounded border-[#D1D5DB] text-[#000080] focus:ring-[#000080]"
+              />
+              <label htmlFor="isExam" className="text-sm font-medium text-[#374151] dark:text-slate-300">
+                This is an exam session
+              </label>
+            </div>
           </div>
 
           {error && (

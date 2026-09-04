@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import { FormField, TextAreaField } from "@/components/ui/FormField";
+import { createRole } from "@/lib/api";
 
 const MODULES = [
   "Dashboard",
@@ -65,16 +66,11 @@ export default function AddRolePage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError("");
 
-    const el = (e.target as HTMLFormElement).elements;
-    const getVal = (fieldName: string) =>
-      ((el.namedItem(fieldName) as HTMLInputElement | null)?.value ?? "").trim();
-
-    const name = getVal("name") || formData.name.trim();
-
+    const name = formData.name.trim();
     if (!name) {
       setSubmitError("Please fill in all required fields.");
       return;
@@ -82,8 +78,10 @@ export default function AddRolePage() {
 
     setSubmitting(true);
     try {
-      console.log("Add role:", { ...formData, permissions });
+      await createRole({ name, description: formData.description.trim() || undefined });
       router.push("/settings/roles");
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Failed to create role.");
     } finally {
       setSubmitting(false);
     }
