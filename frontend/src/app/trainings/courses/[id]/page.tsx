@@ -1,9 +1,7 @@
 import PageClient from "./PageClient";
 
 export function generateStaticParams() {
-  return Array.from({ length: 6 }, (_, i) => ({
-    id: `course-${i + 1}`,
-  }));
+  return [{ id: "course-1" }];
 }
 
 export default function Page() {
