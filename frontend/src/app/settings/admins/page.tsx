@@ -102,7 +102,7 @@ export default function AdminUsersPage() {
       setShowAddModal(false);
       fetchAdmins();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to add admin.");
+      setApiError(err instanceof Error ? err.message : "Failed to add admin.");
     } finally {
       setSaving(false);
     }
@@ -117,7 +117,8 @@ export default function AdminUsersPage() {
       setDeletingAdmin(null);
       fetchAdmins();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to remove admin.");
+      setApiError(err instanceof Error ? err.message : "Failed to remove admin.");
+      setShowDeleteModal(false);
     } finally {
       setDeleting(false);
     }
@@ -132,7 +133,8 @@ export default function AdminUsersPage() {
       setReassigningAdmin(null);
       fetchAdmins();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to reassign role.");
+      setApiError(err instanceof Error ? err.message : "Failed to reassign role.");
+      setShowReassignModal(false);
     } finally {
       setReassigning(false);
     }
