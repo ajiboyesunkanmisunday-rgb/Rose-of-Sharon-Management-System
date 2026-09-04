@@ -67,7 +67,6 @@ export default function NotificationSettingsPage() {
   };
 
   const handleSave = () => {
-    console.log("Saved notification settings:", settings);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
