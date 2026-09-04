@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import { FormField, TextAreaField } from "@/components/ui/FormField";
+import { createGroup } from "@/lib/api";
 
 export default function AddGroupPage() {
   const router = useRouter();
@@ -34,16 +35,11 @@ export default function AddGroupPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError("");
 
-    const el = (e.target as HTMLFormElement).elements;
-    const getVal = (fieldName: string) =>
-      ((el.namedItem(fieldName) as HTMLInputElement | null)?.value ?? "").trim();
-
-    const name = getVal("name") || formData.name.trim();
-
+    const name = formData.name.trim();
     if (!name) {
       setSubmitError("Please fill in all required fields.");
       return;
@@ -51,8 +47,13 @@ export default function AddGroupPage() {
 
     setSubmitting(true);
     try {
-      console.log("Add group:", formData);
+      await createGroup({
+        name,
+        description: formData.description.trim() || undefined,
+      });
       router.push("/settings/groups");
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Failed to create group.");
     } finally {
       setSubmitting(false);
     }
