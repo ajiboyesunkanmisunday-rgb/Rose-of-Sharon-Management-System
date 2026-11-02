@@ -10,6 +10,7 @@ import {
   createCounselingRequest,
   createPrayerRequest,
   createSuggestion,
+  createWelfareRequest,
   searchMembers,
   type UserResponse,
 } from "@/lib/api";
@@ -19,6 +20,7 @@ const CATEGORY_OPTIONS = [
   { label: "Prayer",     value: "PRAYER"     },
   { label: "Counseling", value: "COUNSELING" },
   { label: "Suggestion", value: "SUGGESTIONS" },
+  { label: "Welfare",    value: "WELFARE"    },
 ];
 
 export default function AddRequestPage() {
@@ -29,6 +31,13 @@ export default function AddRequestPage() {
     category: "",
     content: "",
   });
+
+  // "New Request" on the Welfare page opens this form with Welfare already chosen (?type=WELFARE)
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("type") === "WELFARE") {
+      setFormData((prev) => ({ ...prev, category: "WELFARE" }));
+    }
+  }, []);
 
   // Member search state
   const [memberQuery, setMemberQuery] = useState("");
@@ -134,6 +143,8 @@ export default function AddRequestPage() {
         await createPrayerRequest(body);
       } else if (formData.category === "COUNSELING") {
         await createCounselingRequest(body);
+      } else if (formData.category === "WELFARE") {
+        await createWelfareRequest(body);
       } else {
         await createSuggestion(body);
       }

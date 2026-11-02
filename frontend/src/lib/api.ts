@@ -1789,6 +1789,35 @@ export async function createSuggestion(
   });
 }
 
+export async function getWelfareRequests(
+  pageNo = 0,
+  pageSize = 10,
+  status?: string,
+): Promise<CustomPageResponse<RequestResponse>> {
+  const q = `pageNo=${pageNo}&pageSize=${pageSize}${status ? `&status=${encodeURIComponent(status)}` : ""}`;
+  return apiFetch<CustomPageResponse<RequestResponse>>(`/api/v1/requests/welfare?${q}`);
+}
+
+export async function createWelfareRequest(
+  body: CreateRequestBody,
+): Promise<RequestResponse> {
+  return apiFetch<RequestResponse>("/api/v1/requests/welfare", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function searchWelfareRequests(
+  body: { text: string },
+  pageNo = 0,
+  pageSize = 10,
+): Promise<CustomPageResponse<RequestResponse>> {
+  return apiFetch<CustomPageResponse<RequestResponse>>(
+    `/api/v1/requests/welfare/search?pageNo=${pageNo}&pageSize=${pageSize}`,
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
 export async function getBabyChristeningRequests(
   pageNo = 0,
   pageSize = 10,

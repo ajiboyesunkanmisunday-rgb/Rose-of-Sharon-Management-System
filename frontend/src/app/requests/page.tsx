@@ -25,7 +25,7 @@ import {
 } from "@/lib/api";
 import { Inbox } from "lucide-react";
 
-type CategoryFilter = "All" | "Prayer" | "Counseling" | "Suggestion" | "BabyChristening" | "BabyDedication";
+type CategoryFilter = "All" | "Prayer" | "Counseling" | "Suggestion" | "Welfare" | "BabyChristening" | "BabyDedication";
 type StatusFilter = "All" | "RECEIVED" | "ASSIGNED" | "IN_PROGRESS" | "RESOLVED";
 
 const ITEMS_PER_PAGE = 10;
@@ -35,6 +35,7 @@ const categoryTabs: { key: CategoryFilter; label: string }[] = [
   { key: "Prayer",          label: "Prayer"           },
   { key: "Counseling",      label: "Counseling"       },
   { key: "Suggestion",      label: "Suggestions"      },
+  { key: "Welfare",         label: "Welfare"          },
   { key: "BabyChristening", label: "Baby Christening" },
   { key: "BabyDedication",  label: "Baby Dedication"  },
 ];
@@ -207,7 +208,7 @@ export default function RequestsPage() {
         </div>
         <div>
           <h1 className="text-[28px] font-bold text-[#000000] dark:text-slate-100">Requests</h1>
-          <p className="text-sm text-[#6B7280] dark:text-slate-400">Prayer, counseling, and suggestion requests from members</p>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Prayer, counseling, suggestion, welfare and baby requests from members</p>
         </div>
       </div>
 
@@ -215,6 +216,17 @@ export default function RequestsPage() {
       <div className="mb-4 flex items-center overflow-x-auto border-b border-[#E5E7EB] dark:border-slate-700">
         <div className="flex gap-6 sm:gap-8">
           {categoryTabs.map((tab) => {
+            if (tab.key === "Welfare") {
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => router.push("/requests/welfare")}
+                  className="pb-3 text-sm font-medium text-[#6B7280] dark:text-slate-400 hover:text-[#374151] dark:hover:text-slate-300 transition-colors"
+                >
+                  {tab.label}
+                </button>
+              );
+            }
             if (tab.key === "BabyChristening") {
               return (
                 <button
