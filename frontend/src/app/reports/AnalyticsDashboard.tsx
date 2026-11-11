@@ -233,6 +233,16 @@ interface ServerStats {
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
+
+/** Past-services labels: Thanksgiving Service, First Service or Second Service. */
+function serviceLabel(raw: string): string {
+  const f = raw.toLowerCase();
+  if (f.includes("thanksgiving")) return "Thanksgiving Service";
+  if (/\b(1st|first)\b/.test(f)) return "First Service";
+  if (/\b(2nd|second)\b/.test(f)) return "Second Service";
+  return raw.length > 16 ? raw.slice(0, 14) + "…" : raw;
+}
+
 export default function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState("");
@@ -664,7 +674,7 @@ export default function AnalyticsDashboard() {
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart
                     data={svrStats.pastServicesAttendance.columns.map((c) => ({
-                      name: (c.feature ?? "").length > 16 ? (c.feature ?? "").slice(0, 14) + "…" : (c.feature ?? ""),
+                      name: serviceLabel(c.feature ?? ""),
                       count: c.totalCount,
                     }))}
                     margin={{ top: 4, right: 10, left: -10, bottom: 40 }}
