@@ -147,11 +147,16 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     );
   };
 
-  const isChildActive = (href: string) =>
-    href === "/settings" ? pathname === "/settings" : pathname.startsWith(href);
+  // Only one child is highlighted: the sibling with the longest matching path
+  // (so /notifications/settings does not also light up /notifications).
+  const isChildActive = (href: string, siblings: SubItem[] = []) => {
+    const matches = (h: string) => pathname === h || pathname.startsWith(h + "/");
+    if (!matches(href)) return false;
+    return !siblings.some((s) => s.href !== href && s.href.length > href.length && matches(s.href));
+  };
 
   const isParentActive = (item: NavItem) => {
-    if (item.children) return item.children.some((c) => pathname.startsWith(c.href));
+    if (item.children) return item.children.some((c) => isChildActive(c.href, item.children));
     return item.href ? pathname.startsWith(item.href) : false;
   };
 
@@ -261,7 +266,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                         {parentActive && <div style={{ height: 2, backgroundColor: C.navBgActive, margin: "2px 0" }} />}
                         <ul className="py-1">
                           {item.children!.map((child) => {
-                            const childActive = isChildActive(child.href);
+                            const childActive = isChildActive(child.href, item.children);
                             return (
                               <li key={child.href}>
                                 <Link
