@@ -10,6 +10,8 @@ interface PhotoUploadProps {
   hint?: string;
   accept?: string;
   className?: string;
+  /** a picture that is already saved: shown until a new one is chosen */
+  existingUrl?: string;
 }
 
 const SIZE_CLASSES = {
@@ -26,6 +28,7 @@ export default function PhotoUpload({
   hint = "JPG, PNG (max 5MB)",
   accept = "image/*",
   className = "",
+  existingUrl,
 }: PhotoUploadProps) {
   const [preview, setPreview] = useState<string | null>(null);
 
@@ -51,9 +54,9 @@ export default function PhotoUpload({
           <span
             className={`${SIZE_CLASSES[previewSize]} flex shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 transition-colors group-hover:border-[#000080]`}
           >
-            {preview || value ? (
+            {preview || value || existingUrl ? (
               <img
-                src={preview || (value ? URL.createObjectURL(value) : "")}
+                src={preview || (value ? URL.createObjectURL(value) : existingUrl || "")}
                 alt="Preview"
                 className="h-full w-full object-cover"
               />

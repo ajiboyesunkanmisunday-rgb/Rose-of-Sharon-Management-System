@@ -42,6 +42,9 @@ export default function EditEMemberPage() {
   const [serviceAttended, setServiceAttended] = useState<string>("");
   const { services: eventServices, loading: servicesLoading } = useEventServices();
   const [photo, setPhoto] = useState<File | null>(null);
+  // the picture and birth date already saved: shown in the form and sent back unchanged unless edited
+  const [storedPhotoUrl, setStoredPhotoUrl] = useState("");
+  const [storedDob, setStoredDob] = useState<{ d?: number; m?: number; y?: number }>({});
   const [spouse, setSpouse] = useState<SpouseData | null>(null);
   const [showSpouseModal, setShowSpouseModal] = useState(false);
   // Store fields not shown in form so they are preserved on update
@@ -77,6 +80,11 @@ export default function EditEMemberPage() {
       setEmail(u.email ?? "");
       setMaritalStatus(u.maritalStatus ?? "");
       setServiceAttended(u.serviceAttended ?? "");
+      setStoredPhotoUrl(u.profilePictureUrl ?? "");
+      setStoredDob({ d: u.dayOfBirth ?? undefined, m: u.monthOfBirth ?? undefined, y: u.yearOfBirth ?? undefined });
+      if (u.dayOfBirth && u.monthOfBirth && u.yearOfBirth) {
+        setDateOfBirth(`${u.yearOfBirth}-${String(u.monthOfBirth).padStart(2, "0")}-${String(u.dayOfBirth).padStart(2, "0")}`);
+      }
       setStoredEmail(u.email ?? "");
       setStoredSex(u.sex ?? "");
       setStoredCountry(u.country ?? "");
@@ -101,11 +109,16 @@ export default function EditEMemberPage() {
     setSubmitting(true);
     try {
       const rawCode = countryCode.replace("+", "");
-      let profilePictureUrl: string | undefined;
+      let profilePictureUrl: string | undefined = storedPhotoUrl || undefined;
       if (photo) {
         profilePictureUrl = await uploadProfilePicture(photo);
       }
+      // birth date: what is in the date box, otherwise whatever parts were already saved
+      const [dy, dm, dd] = dateOfBirth ? dateOfBirth.split("-").map(Number) : [storedDob.y, storedDob.m, storedDob.d];
       await updateEMember(id, {
+        dayOfBirth: dd || undefined,
+        monthOfBirth: dm || undefined,
+        yearOfBirth: dy || undefined,
         firstName: firstName || undefined,
         middleName: middleName || undefined,
         lastName: lastName || undefined,
@@ -300,6 +313,7 @@ export default function EditEMemberPage() {
               value={photo}
               onChange={setPhoto}
               previewSize="md"
+              existingUrl={storedPhotoUrl || undefined}
             />
           </div>
 
