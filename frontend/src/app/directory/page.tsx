@@ -395,7 +395,7 @@ export default function DirectoryPage() {
                 {/* Avatar */}
                 <div className="mb-3 flex items-start justify-between">
                   {person.profilePictureUrl ? (
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={person.profilePictureUrl}
                       alt={name}
                       className="h-14 w-14 rounded-full object-cover"

@@ -234,9 +234,10 @@ interface ServerStats {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-/** Past-services labels: Thanksgiving Service, First Service or Second Service. */
+/** Past-services labels: Midweek Service, Thanksgiving Service, First Service or Second Service. */
 function serviceLabel(raw: string): string {
   const f = raw.toLowerCase();
+  if (/mid-?week/.test(f)) return "Midweek Service";
   if (f.includes("thanksgiving")) return "Thanksgiving Service";
   if (/\b(1st|first)\b/.test(f)) return "First Service";
   if (/\b(2nd|second)\b/.test(f)) return "Second Service";

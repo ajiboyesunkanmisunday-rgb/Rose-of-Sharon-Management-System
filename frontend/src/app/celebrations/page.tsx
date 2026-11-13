@@ -416,7 +416,7 @@ function BirthdayCard({ u }: { u: UserResponse }) {
       {/* Avatar + badge */}
       <div className="mb-3 flex items-start justify-between">
         {u.profilePictureUrl ? (
-          <img
+          <img loading="lazy" decoding="async"
             src={u.profilePictureUrl}
             alt={name}
             className="h-14 w-14 rounded-full object-cover"
@@ -456,7 +456,7 @@ function AnniversaryCard({ u }: { u: UserResponse }) {
       {/* Avatar + badge */}
       <div className="mb-3 flex items-start justify-between">
         {u.couplePictureUrl || u.profilePictureUrl ? (
-          <img
+          <img loading="lazy" decoding="async"
             src={u.couplePictureUrl ?? u.profilePictureUrl!}
             alt={coupleName}
             className="h-14 w-14 rounded-full object-cover"

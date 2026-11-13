@@ -1262,7 +1262,7 @@ function StudentCard({
       <div className={`mb-3 ${isGraduated ? "mt-6" : "mt-4"}`}>
         {student.profilePictureUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <img loading="lazy" decoding="async"
             src={student.profilePictureUrl}
             alt={fullName(student)}
             className="h-14 w-14 rounded-full object-cover"

@@ -11,12 +11,14 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  preload: false, // not used on any page: do not make every page download it up front
 });
 
 const dancingScript = Dancing_Script({
   variable: "--font-dancing-script",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  preload: false, // not used on any page: do not make every page download it up front
 });
 
 export const metadata: Metadata = {

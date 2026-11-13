@@ -446,7 +446,7 @@ export default function SchoolOfMinistryPage() {
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         {rec.profilePictureUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <img loading="lazy" decoding="async"
                             src={rec.profilePictureUrl}
                             alt={fullName(rec)}
                             style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}

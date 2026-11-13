@@ -23,7 +23,7 @@ export default function UserAvatar({
   if (profilePictureUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <img loading="lazy" decoding="async"
         src={profilePictureUrl}
         alt={`${firstName ?? ""} ${lastName ?? ""}`.trim() || "Profile"}
         className={`${dim} shrink-0 rounded-full object-cover`}

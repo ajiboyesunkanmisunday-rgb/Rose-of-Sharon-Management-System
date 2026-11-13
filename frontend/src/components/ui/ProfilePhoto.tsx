@@ -28,6 +28,6 @@ export default function ProfilePhoto({ src, alt = "", className = "h-full w-full
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt} className={className} onError={() => setError(true)} />
+    <img loading="lazy" decoding="async" src={src} alt={alt} className={className} onError={() => setError(true)} />
   );
 }

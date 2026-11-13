@@ -110,7 +110,7 @@ function GuestCard({
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2.5">
             {user.profilePictureUrl ? (
-              <img src={user.profilePictureUrl} alt={name} className="h-9 w-9 shrink-0 rounded-full object-cover" />
+              <img loading="lazy" decoding="async" src={user.profilePictureUrl} alt={name} className="h-9 w-9 shrink-0 rounded-full object-cover" />
             ) : (
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-xs font-bold text-blue-800 dark:text-blue-300">
                 {initials}
