@@ -212,7 +212,7 @@ export default function BaptismalClassPage() {
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       {r.profilePictureUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={r.profilePictureUrl}
                           alt=""
                           style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}

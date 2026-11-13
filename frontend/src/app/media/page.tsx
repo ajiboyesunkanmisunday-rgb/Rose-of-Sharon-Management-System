@@ -171,7 +171,7 @@ function MediaCard({ item, onNavigate }: { item: MediaResponse; onNavigate: () =
     if (isImage && mediaUrl) {
       return (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <img loading="lazy" decoding="async"
           src={mediaUrl}
           alt={item.title ?? ""}
           className="h-full w-full object-cover"
@@ -194,7 +194,7 @@ function MediaCard({ item, onNavigate }: { item: MediaResponse; onNavigate: () =
 
           {/* Thumbnail image */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <img loading="lazy" decoding="async"
             src={ytThumbnail}
             alt={item.title ?? ""}
             className={`h-full w-full object-cover transition-opacity duration-300 ${

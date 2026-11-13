@@ -232,7 +232,7 @@ export default function AdminUsersPage() {
                     <div className="flex items-center gap-3">
                       {admin.profilePictureUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={admin.profilePictureUrl}
                           alt=""
                           className="h-8 w-8 rounded-full object-cover"

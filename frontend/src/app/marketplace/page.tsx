@@ -262,7 +262,7 @@ export default function MarketplacePage() {
                     <div className="flex items-center gap-3">
                       {product.images?.[0] ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={product.images[0]}
                           alt={product.name}
                           className="h-10 w-10 rounded-lg object-cover flex-shrink-0 border border-[#E5E7EB] dark:border-slate-700"

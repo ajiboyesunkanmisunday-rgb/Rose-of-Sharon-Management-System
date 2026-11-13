@@ -242,7 +242,7 @@ export default function TrainingGroupPage({ groupKeywords, title, description, a
                 <div className="mb-3">
                   {u.profilePictureUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={u.profilePictureUrl}
                       alt={name}
                       className="h-14 w-14 rounded-full object-cover"

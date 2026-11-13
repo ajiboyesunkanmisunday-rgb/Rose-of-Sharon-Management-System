@@ -441,7 +441,7 @@ export default function GroupDetailClient() {
                         <div className="flex items-center gap-2">
                           {m.profilePictureUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img
+                            <img loading="lazy" decoding="async"
                               src={m.profilePictureUrl}
                               alt=""
                               className="h-8 w-8 rounded-full object-cover"
@@ -575,7 +575,7 @@ export default function GroupDetailClient() {
                   <div className="flex items-center gap-2 min-w-0">
                     {m.profilePictureUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={m.profilePictureUrl}
                         alt=""
                         className="h-9 w-9 shrink-0 rounded-full object-cover"

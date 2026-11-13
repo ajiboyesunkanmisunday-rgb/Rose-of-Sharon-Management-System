@@ -330,7 +330,7 @@ function WorkerCard({
       <div className={`mb-3 ${isGraduated ? "mt-6" : "mt-4"}`}>
         {worker.profilePictureUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <img loading="lazy" decoding="async"
             src={worker.profilePictureUrl}
             alt={fullName(worker)}
             className="h-14 w-14 rounded-full object-cover"

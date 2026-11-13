@@ -238,7 +238,7 @@ export default function RilaPage() {
                       <div className="flex items-center gap-2">
                         {r.profilePictureUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={r.profilePictureUrl} alt="" className="h-8 w-8 rounded-full object-cover shrink-0" />
+                          <img loading="lazy" decoding="async" src={r.profilePictureUrl} alt="" className="h-8 w-8 rounded-full object-cover shrink-0" />
                         ) : (
                           <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center shrink-0 text-[10px] font-bold text-[#DC2626]">
                             {(r.firstName?.[0] ?? "") + (r.lastName?.[0] ?? "")}
