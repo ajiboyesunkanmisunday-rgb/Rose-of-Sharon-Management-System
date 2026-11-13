@@ -619,7 +619,7 @@ export default function SodFormCore({
 
             {/* Logo + church name */}
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <Image src="/sod-logo.svg" alt="SOD" width={60} height={60} style={{ objectFit: "contain", flexShrink: 0 }} />
+              <Image src="/sod-logo.png" alt="SOD" width={60} height={60} style={{ objectFit: "contain", flexShrink: 0 }} />
               <div style={{ textAlign: "center", lineHeight: 1.65 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}>The Redeemed Christian Church of God</div>
                 <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}>Rose of Sharon Parish</div>
