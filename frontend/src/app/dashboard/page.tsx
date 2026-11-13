@@ -31,9 +31,13 @@ import {
   type UserBasicResponse,
 } from "@/lib/api";
 import { SkeletonCard } from "@/components/ui/Skeleton";
-import AttendanceChart, {
-  type AttendanceItem,
-} from "@/components/dashboard/AttendanceChart";
+import dynamic from "next/dynamic";
+import type { AttendanceItem } from "@/components/dashboard/AttendanceChart";
+// the chart library is large: load it after the page's own content instead of before it
+const AttendanceChart = dynamic(() => import("@/components/dashboard/AttendanceChart"), {
+  ssr: false,
+  loading: () => <SkeletonCard />,
+});
 
 interface KpiStats {
   activeMembers: number;
