@@ -18,7 +18,7 @@ export default function AuthShell({
         <div
           className="relative hidden flex-col justify-between p-10 text-white lg:flex"
           style={{
-            backgroundImage: "url('/church-bg.png')",
+            backgroundImage: "url('/church-bg.jpg')",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
