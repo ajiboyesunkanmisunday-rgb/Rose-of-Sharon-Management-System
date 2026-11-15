@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+The permanent working standards for this repository are in PROJECT-STANDARDS.md. Follow them on every task.
+
+@PROJECT-STANDARDS.md
+
 ## Repository layout
 
 This is a monorepo for the Rose of Sharon Management System (ROSMS), a church admin app.
