@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
 import TopNav from "./TopNav";
+import IdleSessionGuard from "./IdleSessionGuard";
 import { isAuthenticated, isSessionExpired, logoutUser } from "@/lib/api";
 import { ToastProvider } from "@/context/ToastContext";
 import { useSidebar } from "@/context/SidebarContext";
@@ -64,6 +65,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
 
   return (
     <ToastProvider>
+      <IdleSessionGuard />
       <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
         <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
