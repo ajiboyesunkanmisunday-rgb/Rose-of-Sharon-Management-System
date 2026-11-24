@@ -345,9 +345,16 @@ function QuestionEditor({ examId, onBack }: { examId: string; onBack: () => void
       const body: CreateExamQuestionRequest[] = drafts.map((d) => ({
         question: d.question,
         questionType: d.questionType,
-        ...(d.questionType === "OBJECTIVE" ? { options: d.options, correctOption: d.correctOption } : {}),
+        // The exam system saves nothing when a written question arrives without these two fields, so they are always sent.
+        options: d.questionType === "OBJECTIVE" ? d.options : [],
+        correctOption: d.questionType === "OBJECTIVE" ? d.correctOption : "",
       }));
       await createExamQuestions(examId, body);
+      const after = await getExamQuestions(examId, 0, 200);
+      if ((after.content?.length ?? 0) < questions.length + drafts.length) {
+        addToast("The exam system did not keep the questions. Please try again.", "error");
+        return;
+      }
       addToast(`${drafts.length} question${drafts.length === 1 ? "" : "s"} saved.`, "success");
       setDrafts([]);
       await load();
