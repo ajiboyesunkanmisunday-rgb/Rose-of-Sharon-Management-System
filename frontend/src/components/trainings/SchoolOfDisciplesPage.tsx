@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
+import ExamSetupForm from "@/components/trainings/ExamSetupForm";
 import Pagination from "@/components/ui/Pagination";
 import {
   getSchoolOfDisciples,
@@ -93,29 +94,38 @@ function CreateTrainingEventModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const router = useRouter();
   const [name,     setName]     = useState("");
   const [teacher,  setTeacher]  = useState("");
   const [date,     setDate]     = useState("");
   const [location, setLocation] = useState("");
   const [isExam,   setIsExam]   = useState(false);
+  const [examEvent, setExamEvent] = useState<TrainingEventResponse | null>(null);
   const [saving,   setSaving]   = useState(false);
   const [error,    setError]    = useState("");
 
   const handleSubmit = async () => {
     if (!name.trim()) { setError("Name is required."); return; }
+    if (!teacher.trim()) { setError("Teacher is required."); return; }
+    if (!date) { setError("Date is required."); return; }
+    if (!location.trim()) { setError("Location is required."); return; }
     setSaving(true);
     setError("");
     try {
-      await createTrainingEvent({
+      const created = await createTrainingEvent({
         trainingCategory: "SCHOOL_OF_DISCIPLES",
         set: setFilter,
         name: name.trim(),
-        teacher: teacher.trim() || undefined,
-        date: date || "",
-        location: location.trim() || undefined,
+        teacher: teacher.trim(),
+        date,
+        location: location.trim(),
         isExam,
       } as CreateTrainingEventRequest);
-      onCreated();
+      if (isExam && created?.id) {
+        setExamEvent(created);
+      } else {
+        onCreated();
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create training event.");
     } finally {
@@ -136,6 +146,21 @@ function CreateTrainingEventModal({
           </button>
         </div>
 
+        {examEvent ? (
+          <div className="p-5">
+            <p className="mb-4 text-sm text-[#6B7280] dark:text-slate-400">
+              The training event &ldquo;{examEvent.name}&rdquo; is saved. Now set up the online exam for it. You add the questions next.
+            </p>
+            <ExamSetupForm
+              trainingEventId={examEvent.id}
+              trainingCategory="SCHOOL_OF_DISCIPLES"
+              defaultTitle={examEvent.name ?? ""}
+              onSkip={onCreated}
+              onCreated={(setup) => { onCreated(); router.push(`/trainings/exams?setup=${encodeURIComponent(setup.id)}`); }}
+            />
+          </div>
+        ) : (
+          <>
         <div className="p-5 space-y-4">
           {/* Set (read-only) */}
           <div>
@@ -162,19 +187,19 @@ function CreateTrainingEventModal({
 
           {/* Teacher */}
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-slate-400">Teacher</label>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-slate-400">Teacher <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={teacher}
               onChange={(e) => setTeacher(e.target.value)}
-              placeholder="Optional"
+              placeholder="Required"
               className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-[#111827] dark:text-slate-100 outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]"
             />
           </div>
 
           {/* Date */}
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-slate-400">Date</label>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-slate-400">Date <span className="text-red-500">*</span></label>
             <input
               type="date"
               value={date}
@@ -185,12 +210,12 @@ function CreateTrainingEventModal({
 
           {/* Location */}
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-slate-400">Location</label>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-slate-400">Location <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="Optional"
+              placeholder="Required"
               className="w-full rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-[#111827] dark:text-slate-100 outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]"
             />
           </div>
@@ -228,6 +253,8 @@ function CreateTrainingEventModal({
             {saving ? "Creating…" : "Create Event"}
           </button>
         </div>
+          </>
+        )}
       </div>
     </div>
   );

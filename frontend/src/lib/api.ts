@@ -3339,6 +3339,97 @@ export async function deleteTrainingEvent(
   });
 }
 
+// ─── Online exams ─────────────────────────────────────────────────────────────
+
+export type ExamQuestionType = "OBJECTIVE" | "THEORY";
+
+export interface ExamSetupResponse {
+  id: string;
+  trainingEventId?: string;
+  title?: string;
+  instructions?: string;
+  trainingCategory?: string;
+  allowedStudents?: string[];
+  isOpen?: boolean;
+  duration?: number;
+  createdOn?: string;
+}
+
+export interface CreateExamSetupRequest {
+  trainingEventId: string;
+  title: string;
+  instructions?: string;
+  trainingCategory: string;
+  allowedStudents: string[];
+  duration: number;
+}
+
+export interface ExamQuestionOption {
+  id: string;
+  position?: number;
+  optionText?: string;
+}
+
+export interface ExamQuestionResponse {
+  id: string;
+  examId?: string;
+  question?: string;
+  position?: number;
+  questionType?: ExamQuestionType;
+  options?: ExamQuestionOption[];
+  correctOption?: string;
+}
+
+export interface CreateExamQuestionRequest {
+  question: string;
+  questionType: ExamQuestionType;
+  options?: string[];
+  correctOption?: string;
+}
+
+export async function createExamSetup(body: CreateExamSetupRequest): Promise<ExamSetupResponse> {
+  return apiFetch<ExamSetupResponse>("/api/v1/exam-setups", { method: "POST", body: JSON.stringify(body) });
+}
+
+export async function getExamSetups(pageNo = 0, pageSize = 50): Promise<CustomPageResponse<ExamSetupResponse>> {
+  return apiFetch<CustomPageResponse<ExamSetupResponse>>(`/api/v1/exam-setups?pageNo=${pageNo}&pageSize=${pageSize}`);
+}
+
+export async function updateExamSetup(
+  id: string,
+  body: { title: string; instructions?: string; duration: number },
+): Promise<ExamSetupResponse> {
+  return apiFetch<ExamSetupResponse>(`/api/v1/exam-setups/${id}`, { method: "PUT", body: JSON.stringify(body) });
+}
+
+export async function deleteExamSetup(id: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/exam-setups/${id}`, { method: "DELETE" });
+}
+
+export async function openExamSetup(id: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/exam-setups/${id}/open`, { method: "PATCH" });
+}
+
+export async function closeExamSetup(id: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/exam-setups/${id}/close`, { method: "PATCH" });
+}
+
+export async function updateExamAllowedStudents(id: string, ids: string[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/exam-setups/${id}/allowed-students`, { method: "PUT", body: JSON.stringify({ ids }) });
+}
+
+export async function getExamQuestions(examId: string, pageNo = 0, pageSize = 100): Promise<CustomPageResponse<ExamQuestionResponse>> {
+  return apiFetch<CustomPageResponse<ExamQuestionResponse>>(`/api/v1/exam-questions/${examId}?pageNo=${pageNo}&pageSize=${pageSize}`);
+}
+
+export async function createExamQuestions(examSetupId: string, examQuestionRequests: CreateExamQuestionRequest[]): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>("/api/v1/exam-questions", { method: "POST", body: JSON.stringify({ examSetupId, examQuestionRequests }) });
+}
+
+export async function deleteExamQuestion(id: string): Promise<OperationalResponse> {
+  return apiFetch<OperationalResponse>(`/api/v1/exam-questions/${id}`, { method: "DELETE" });
+}
+
 // ─── Attendance Sheets ────────────────────────────────────────────────────────
 
 export interface StudentAttendance {

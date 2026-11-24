@@ -87,6 +87,7 @@ const navItems: NavItem[] = [
       { label: "School of Disciples", href: "/trainings/sod" },
       { label: "School of Ministry",  href: "/trainings/som" },
       { label: "RILA",                href: "/trainings/rila" },
+      { label: "Online Exams",        href: "/trainings/exams" },
     ],
   },
   { label: "Marketplace",          icon: ShoppingBag,   href: "/marketplace" },
