@@ -4,13 +4,15 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import SearchBar from "@/components/ui/SearchBar";
 import Pagination from "@/components/ui/Pagination";
+import CreateTrainingEventModal from "@/components/trainings/CreateTrainingEventModal";
+import { useToast } from "@/context/ToastContext";
 import {
   getWaterBaptisms,
   searchWaterBaptisms,
   type WaterBaptismResponse,
 } from "@/lib/api";
 import {
-  Droplets, Phone, RefreshCw, PlusCircle, FileText, Users,
+  Droplets, Phone, RefreshCw, PlusCircle, FileText, Users, CalendarPlus,
 } from "lucide-react";
 
 const ACCENT   = "#0891B2";
@@ -48,6 +50,8 @@ function SkeletonRow() {
 export default function BaptismalClassPage() {
   const router = useRouter();
   const [records, setRecords] = useState<WaterBaptismResponse[]>([]);
+  const { addToast } = useToast();
+  const [showEventModal, setShowEventModal] = useState(false);
   const [total,   setTotal]   = useState(0);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
@@ -96,12 +100,31 @@ export default function BaptismalClassPage() {
 
   return (
     <div>
+      {showEventModal && (
+        <CreateTrainingEventModal
+          category="BAPTISM"
+          onClose={() => setShowEventModal(false)}
+          onCreated={() => { setShowEventModal(false); addToast("Training event created.", "success"); }}
+        />
+      )}
+
       {/* Page header */}
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: "#000", margin: 0 }}>Trainings</h1>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4, flexWrap: "wrap", gap: 8 }}>
           <h2 style={{ fontSize: 22, fontWeight: 700, color: ACCENT, margin: 0 }}>Baptismal Class</h2>
           <div style={{ display: "flex", gap: 10 }}>
+            <button
+              onClick={() => setShowEventModal(true)}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                background: "transparent", border: "1.5px solid #E5E7EB", color: "#374151",
+                borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              <CalendarPlus size={15} />
+              Create Training Event
+            </button>
             <button
               onClick={() => router.push("/trainings/baptismal/form?mode=blank")}
               style={{

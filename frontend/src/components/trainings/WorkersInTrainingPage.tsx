@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
 import Pagination from "@/components/ui/Pagination";
+import CreateTrainingEventModal from "@/components/trainings/CreateTrainingEventModal";
+import { useToast } from "@/context/ToastContext";
 import {
   getWorkersInTraining,
   searchWorkersInTraining,
@@ -16,7 +18,7 @@ import {
   type TrainingEventResponse,
 } from "@/lib/api";
 import {
-  GraduationCap, Phone, Mail, RefreshCw, Award, Users,
+  GraduationCap, Phone, Mail, RefreshCw, Award, Users, CalendarPlus,
   CheckCircle, Clock, Star, ChevronDown, X, MessageSquare, PlusCircle,
   FileText, Eye, CalendarCheck,
 } from "lucide-react";
@@ -454,6 +456,8 @@ export default function WorkersInTrainingPage() {
   const [attendanceWorker, setAttendanceWorker] = useState<WorkersInTrainingResponse | null>(null);
   const [successMsg,       setSuccessMsg]       = useState("");
   const [witSet,           setWitSet]           = useState(String(new Date().getFullYear()));
+  const { addToast } = useToast();
+  const [showEventModal, setShowEventModal] = useState(false);
 
   const load = useCallback(async (activeSet?: string) => {
     setLoading(true);
@@ -600,6 +604,15 @@ export default function WorkersInTrainingPage() {
         />
       )}
 
+            {showEventModal && (
+        <CreateTrainingEventModal
+          category="WORKERS_IN_TRAINING"
+          setFilter={witSet}
+          onClose={() => setShowEventModal(false)}
+          onCreated={() => { setShowEventModal(false); addToast("Training event created.", "success"); }}
+        />
+      )}
+
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-start gap-3 sm:flex-nowrap sm:items-center">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#7C3AED]/10">
@@ -623,6 +636,13 @@ export default function WorkersInTrainingPage() {
           >
             <FileText className="h-3.5 w-3.5" />
             Download Blank Form
+          </button>
+          <button
+            onClick={() => setShowEventModal(true)}
+            className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-semibold text-[#374151] dark:text-slate-300 hover:border-[#D97706] hover:text-[#D97706] transition-colors"
+          >
+            <CalendarPlus className="h-3.5 w-3.5" />
+            Create Training Event
           </button>
           <button
             onClick={() => load(witSet)}

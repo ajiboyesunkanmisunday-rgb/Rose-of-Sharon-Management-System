@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Trash2, Lock, Unlock, ListChecks } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import { useToast } from "@/context/ToastContext";
+import ExamStudentPicker, { fullName, type PickedStudent } from "@/components/trainings/ExamStudentPicker";
 import {
   closeExamSetup,
   createExamQuestions,
@@ -12,7 +13,12 @@ import {
   deleteExamSetup,
   getExamQuestions,
   getExamSetups,
+  getUsersByIds,
   openExamSetup,
+  updateExamAllowedStudents,
+  updateExamQuestionCorrectOption,
+  updateExamQuestionText,
+  updateExamSetup,
   type CreateExamQuestionRequest,
   type ExamQuestionResponse,
   type ExamQuestionType,
@@ -128,6 +134,165 @@ interface Draft {
 }
 const blankDraft = (): Draft => ({ question: "", questionType: "OBJECTIVE", options: ["", "", "", ""], correctOption: "" });
 
+
+function ExamDetailsCard({ setup, onSaved }: { setup: ExamSetupResponse; onSaved: () => void }) {
+  const { addToast } = useToast();
+  const [title, setTitle] = useState(setup.title ?? "");
+  const [instructions, setInstructions] = useState(setup.instructions ?? "");
+  const [duration, setDuration] = useState(String(setup.duration ?? 30));
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    const minutes = Number(duration);
+    if (!title.trim()) { addToast("The exam title is required.", "error"); return; }
+    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 600) { addToast("Enter the time allowed as whole minutes, from 1 to 600.", "error"); return; }
+    setSaving(true);
+    try {
+      await updateExamSetup(setup.id, { title: title.trim(), instructions: instructions.trim() || undefined, duration: minutes });
+      addToast("Exam details saved.", "success");
+      onSaved();
+    } catch (e) {
+      addToast(errorText(e, "Could not save the exam details."), "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="mt-6 grid max-w-2xl gap-4 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+      <h3 className="text-sm font-semibold text-[#111827] dark:text-slate-100">Exam details</h3>
+      <div>
+        <label className={labelCls}>Exam title <span className="text-red-500">*</span></label>
+        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} />
+      </div>
+      <div>
+        <label className={labelCls}>Instructions</label>
+        <textarea rows={3} value={instructions} onChange={(e) => setInstructions(e.target.value)} className={inputCls} />
+      </div>
+      <div>
+        <label className={labelCls}>Time allowed (minutes) <span className="text-red-500">*</span></label>
+        <input type="number" inputMode="numeric" min={1} max={600} value={duration} onChange={(e) => setDuration(e.target.value)} className={inputCls} />
+      </div>
+      <button type="button" onClick={save} disabled={saving} className="w-fit rounded-lg bg-[#000080] px-4 py-2 text-xs font-semibold text-white hover:bg-[#000066] disabled:opacity-50">
+        {saving ? "Saving..." : "Save details"}
+      </button>
+    </div>
+  );
+}
+
+function AllowedStudentsCard({ setup, onSaved }: { setup: ExamSetupResponse; onSaved: () => void }) {
+  const { addToast } = useToast();
+  const [students, setStudents] = useState<PickedStudent[] | null>(null);
+  const [saving, setSaving] = useState(false);
+  const idsKey = (setup.allowedStudents ?? []).join(",");
+
+  useEffect(() => {
+    const ids = idsKey ? idsKey.split(",") : [];
+    if (ids.length === 0) { Promise.resolve().then(() => setStudents([])); return; }
+    getUsersByIds(ids)
+      .then((users) => setStudents(users.map((u) => ({ id: u.id, name: fullName(u) }))))
+      .catch(() => setStudents(ids.map((id) => ({ id, name: "Student" }))));
+  }, [idsKey]);
+
+  const save = async () => {
+    if (!students) return;
+    setSaving(true);
+    try {
+      await updateExamAllowedStudents(setup.id, students.map((s) => s.id));
+      addToast("Allowed students saved.", "success");
+      onSaved();
+    } catch (e) {
+      addToast(errorText(e, "Could not save the allowed students."), "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="mt-6 grid max-w-2xl gap-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+      <h3 className="text-sm font-semibold text-[#111827] dark:text-slate-100">Students allowed to take the exam</h3>
+      <p className="text-xs text-[#6B7280] dark:text-slate-400">Students take the exam on the public website, not in this app. Saving replaces the whole list.</p>
+      {students === null ? <p className="text-sm text-[#6B7280]">Loading...</p> : <ExamStudentPicker value={students} onChange={setStudents} />}
+      <button type="button" onClick={save} disabled={saving || students === null} className="w-fit rounded-lg bg-[#000080] px-4 py-2 text-xs font-semibold text-white hover:bg-[#000066] disabled:opacity-50">
+        {saving ? "Saving..." : "Save students"}
+      </button>
+    </div>
+  );
+}
+
+function QuestionRow({ q, index, locked, onChanged, onDelete }: { q: ExamQuestionResponse; index: number; locked: boolean; onChanged: () => void; onDelete: () => void }) {
+  const { addToast } = useToast();
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(q.question ?? "");
+  const [correct, setCorrect] = useState(q.correctOption ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    if (!text.trim()) { addToast("Type the question.", "error"); return; }
+    setSaving(true);
+    try {
+      if (text.trim() !== q.question) await updateExamQuestionText(q.id, text.trim());
+      if (q.questionType === "OBJECTIVE" && correct && correct !== q.correctOption) await updateExamQuestionCorrectOption(q.id, correct);
+      addToast("Question saved.", "success");
+      setEditing(false);
+      onChanged();
+    } catch (e) {
+      addToast(errorText(e, "Could not save the question."), "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <li className="flex gap-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+      <span className="text-sm font-semibold text-[#9CA3AF]">{index + 1}.</span>
+      <div className="min-w-0 flex-1">
+        {editing ? (
+          <div className="grid gap-3">
+            <textarea rows={2} value={text} onChange={(e) => setText(e.target.value)} className={inputCls} />
+            {q.questionType === "OBJECTIVE" && (
+              <fieldset className="grid gap-1 text-sm">
+                <legend className={labelCls}>Correct answer</legend>
+                {q.options?.map((o) => (
+                  <label key={o.id} className="flex items-center gap-2 text-[#374151] dark:text-slate-300">
+                    <input type="radio" name={`correct-${q.id}`} checked={correct === o.optionText} onChange={() => setCorrect(o.optionText ?? "")} style={{ accentColor: "#000080" }} />
+                    {o.optionText}
+                  </label>
+                ))}
+              </fieldset>
+            )}
+            <div className="flex gap-2">
+              <button type="button" onClick={save} disabled={saving} className="rounded-lg bg-[#000080] px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50">{saving ? "Saving..." : "Save"}</button>
+              <button type="button" onClick={() => { setEditing(false); setText(q.question ?? ""); setCorrect(q.correctOption ?? ""); }} className="rounded-lg border border-[#E5E7EB] dark:border-slate-700 px-3 py-1.5 text-xs font-semibold text-[#374151] dark:text-slate-300">Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <p className="text-sm text-[#111827] dark:text-slate-100">{q.question}</p>
+            {q.questionType === "OBJECTIVE" ? (
+              <ul className="mt-2 grid gap-1 text-xs">
+                {q.options?.map((o) => (
+                  <li key={o.id} className={o.optionText === q.correctOption ? "font-semibold text-green-700" : "text-[#6B7280]"}>
+                    {o.optionText}{o.optionText === q.correctOption ? " (correct)" : ""}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-1 text-xs text-[#6B7280]">Written answer</p>
+            )}
+          </>
+        )}
+      </div>
+      {!editing && (
+        <div className="flex flex-col gap-1 self-start sm:flex-row">
+          <button type="button" onClick={() => setEditing(true)} disabled={locked} className="rounded-lg px-2 py-1.5 text-xs font-semibold text-[#000080] dark:text-indigo-400 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">Edit</button>
+          <button type="button" onClick={onDelete} disabled={locked} aria-label="Delete question" className="rounded-lg p-2 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"><Trash2 className="h-4 w-4" /></button>
+        </div>
+      )}
+    </li>
+  );
+}
+
 function QuestionEditor({ examId, onBack }: { examId: string; onBack: () => void }) {
   const { addToast } = useToast();
   const [setup, setSetup] = useState<ExamSetupResponse | null>(null);
@@ -208,32 +373,18 @@ function QuestionEditor({ examId, onBack }: { examId: string; onBack: () => void
     <div>
       <PageHeader title={setup?.title ?? "Exam questions"} subtitle={setup ? `${setup.duration} minutes · ${setup.isOpen ? "Open" : "Closed"}` : undefined} backOnClick={onBack} />
 
-      <h3 className="mt-6 text-sm font-semibold text-[#111827] dark:text-slate-100">Questions in this exam ({questions.length})</h3>
+      {setup && <ExamDetailsCard key={`${setup.id}-${setup.title}-${setup.duration}-${setup.instructions}`} setup={setup} onSaved={load} />}
+      {setup && <AllowedStudentsCard setup={setup} onSaved={load} />}
+
+      <h3 className="mt-8 text-sm font-semibold text-[#111827] dark:text-slate-100">Questions in this exam ({questions.length})</h3>
       {setup?.isOpen && (
-        <p className="mt-2 text-xs text-[#6B7280] dark:text-slate-400">This exam is open. Close it from the exam list before deleting questions.</p>
+        <p className="mt-2 text-xs text-[#6B7280] dark:text-slate-400">This exam is open. Close it from the exam list before editing or deleting questions. You can still add questions.</p>
       )}
       {loading && <p className="mt-3 text-sm text-[#6B7280]">Loading...</p>}
       {!loading && questions.length === 0 && <p className="mt-3 text-sm text-[#6B7280]">No questions yet. Add them below.</p>}
       <ol className="mt-3 grid gap-2">
         {questions.map((q, i) => (
-          <li key={q.id} className="flex gap-3 rounded-xl border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
-            <span className="text-sm font-semibold text-[#9CA3AF]">{i + 1}.</span>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm text-[#111827] dark:text-slate-100">{q.question}</p>
-              {q.questionType === "OBJECTIVE" ? (
-                <ul className="mt-2 grid gap-1 text-xs">
-                  {q.options?.map((o) => (
-                    <li key={o.id} className={o.optionText === q.correctOption ? "font-semibold text-green-700" : "text-[#6B7280]"}>
-                      {o.optionText}{o.optionText === q.correctOption ? " (correct)" : ""}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-1 text-xs text-[#6B7280]">Written answer</p>
-              )}
-            </div>
-            <button type="button" onClick={() => removeQuestion(q)} disabled={!!setup?.isOpen} aria-label="Delete question" className="self-start rounded-lg p-2 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"><Trash2 className="h-4 w-4" /></button>
-          </li>
+          <QuestionRow key={q.id} q={q} index={i} locked={!!setup?.isOpen} onChanged={load} onDelete={() => removeQuestion(q)} />
         ))}
       </ol>
 

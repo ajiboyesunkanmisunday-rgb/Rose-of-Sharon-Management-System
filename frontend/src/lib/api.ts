@@ -3426,6 +3426,14 @@ export async function createExamQuestions(examSetupId: string, examQuestionReque
   return apiFetch<OperationalResponse>("/api/v1/exam-questions", { method: "POST", body: JSON.stringify({ examSetupId, examQuestionRequests }) });
 }
 
+export async function updateExamQuestionText(id: string, text: string): Promise<ExamQuestionResponse> {
+  return apiFetch<ExamQuestionResponse>(`/api/v1/exam-questions/${id}`, { method: "PUT", body: JSON.stringify({ text }) });
+}
+
+export async function updateExamQuestionCorrectOption(id: string, text: string): Promise<ExamQuestionResponse> {
+  return apiFetch<ExamQuestionResponse>(`/api/v1/exam-questions/${id}/correct-option`, { method: "PUT", body: JSON.stringify({ text }) });
+}
+
 export async function deleteExamQuestion(id: string): Promise<OperationalResponse> {
   return apiFetch<OperationalResponse>(`/api/v1/exam-questions/${id}`, { method: "DELETE" });
 }
