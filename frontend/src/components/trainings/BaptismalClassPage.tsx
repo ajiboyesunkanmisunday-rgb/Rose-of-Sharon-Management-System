@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import SearchBar from "@/components/ui/SearchBar";
 import Pagination from "@/components/ui/Pagination";
 import CreateTrainingEventModal from "@/components/trainings/CreateTrainingEventModal";
+import ExamActions from "@/components/trainings/ExamActions";
 import { useToast } from "@/context/ToastContext";
 import {
   getWaterBaptisms,
@@ -114,6 +115,7 @@ export default function BaptismalClassPage() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4, flexWrap: "wrap", gap: 8 }}>
           <h2 style={{ fontSize: 22, fontWeight: 700, color: ACCENT, margin: 0 }}>Baptismal Class</h2>
           <div style={{ display: "flex", gap: 10 }}>
+            <ExamActions category="BAPTISM" />
             <button
               onClick={() => setShowEventModal(true)}
               style={{

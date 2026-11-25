@@ -3429,6 +3429,18 @@ export async function createExamQuestions(examSetupId: string, examQuestionReque
   return apiFetch<OperationalResponse>("/api/v1/exam-questions", { method: "POST", body: JSON.stringify({ examSetupId, examQuestionRequests }) });
 }
 
+export interface ExamAnswerResponse {
+  id: string;
+  questionId: string;
+  studentId?: string;
+  /** the text of the option the student chose */
+  text?: string;
+}
+
+export async function getExamStudentAnswers(examId: string, studentId: string): Promise<ExamAnswerResponse[]> {
+  return apiFetch<ExamAnswerResponse[]>(`/api/v1/exam-answers/${examId}/student/${studentId}`);
+}
+
 export async function updateExamQuestionText(id: string, text: string): Promise<ExamQuestionResponse> {
   return apiFetch<ExamQuestionResponse>(`/api/v1/exam-questions/${id}`, { method: "PUT", body: JSON.stringify({ text }) });
 }

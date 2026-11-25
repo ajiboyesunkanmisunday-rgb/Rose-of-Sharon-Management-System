@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SearchBar from "@/components/ui/SearchBar";
 import CreateTrainingEventModal from "@/components/trainings/CreateTrainingEventModal";
+import ExamActions from "@/components/trainings/ExamActions";
 import Pagination from "@/components/ui/Pagination";
 import {
   getSchoolOfDisciples,
@@ -1482,6 +1483,7 @@ export default function SchoolOfDisciplesPage() {
             <FileText className="h-3.5 w-3.5" />
             Download Blank Form
           </button>
+          <ExamActions category="SCHOOL_OF_DISCIPLES" set={setFilter} />
           <button
             onClick={() => setShowCreateEventModal(true)}
             className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-semibold text-[#374151] dark:text-slate-300 hover:border-[#D97706] hover:text-[#D97706] transition-colors"

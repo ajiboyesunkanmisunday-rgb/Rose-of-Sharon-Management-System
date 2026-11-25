@@ -13,18 +13,20 @@ interface Props {
   category: string;
   /** The set the page is showing. When it is not known the form asks for it. */
   setFilter?: string;
+  /** Opened from the exams page: the event is always an exam, so the tick box is not shown. */
+  examOnly?: boolean;
   onClose: () => void;
   onCreated: () => void;
 }
 
-export default function CreateTrainingEventModal({ category, setFilter, onClose, onCreated }: Props) {
+export default function CreateTrainingEventModal({ category, setFilter, examOnly = false, onClose, onCreated }: Props) {
   const router = useRouter();
-  const [setName2, setSetName2] = useState(setFilter ?? "");
+  const [setName2, setSetName2] = useState(setFilter ?? String(new Date().getFullYear()));
   const [name,     setName]     = useState("");
   const [teacher,  setTeacher]  = useState("");
   const [date,     setDate]     = useState("");
   const [location, setLocation] = useState("");
-  const [isExam,   setIsExam]   = useState(false);
+  const [isExam,   setIsExam]   = useState(examOnly);
   const [examEvent, setExamEvent] = useState<TrainingEventResponse | null>(null);
   const [saving,   setSaving]   = useState(false);
   const [error,    setError]    = useState("");
@@ -65,7 +67,7 @@ export default function CreateTrainingEventModal({ category, setFilter, onClose,
         <div className="flex items-center justify-between border-b border-[#E5E7EB] dark:border-slate-700 px-5 py-4">
           <div className="flex items-center gap-2">
             <CalendarPlus className="h-5 w-5" style={{ color: ACCENT }} />
-            <h2 className="text-base font-bold text-[#111827] dark:text-slate-100">Create Training Event</h2>
+            <h2 className="text-base font-bold text-[#111827] dark:text-slate-100">{examOnly ? "New exam" : "Create Training Event"}</h2>
           </div>
           <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-[#F3F4F6] dark:bg-slate-700/30">
             <X className="h-4 w-4 text-[#6B7280] dark:text-slate-400" />
@@ -149,6 +151,7 @@ export default function CreateTrainingEventModal({ category, setFilter, onClose,
           </div>
 
           {/* Is Exam */}
+          {!examOnly && (
           <label className="flex cursor-pointer items-center gap-2 text-sm text-[#374151] dark:text-slate-300">
             <input
               type="checkbox"
@@ -159,6 +162,7 @@ export default function CreateTrainingEventModal({ category, setFilter, onClose,
             />
             Is Exam
           </label>
+          )}
 
           {error && (
             <p className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-xs text-red-700">{error}</p>
@@ -178,7 +182,7 @@ export default function CreateTrainingEventModal({ category, setFilter, onClose,
             className="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
             style={{ backgroundColor: ACCENT }}
           >
-            {saving ? "Creating…" : "Create Event"}
+            {saving ? "Creating…" : examOnly ? "Next: exam setup" : "Create Event"}
           </button>
         </div>
           </>
