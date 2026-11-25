@@ -3352,6 +3352,8 @@ export interface ExamSetupResponse {
   allowedStudents?: string[];
   isOpen?: boolean;
   duration?: number;
+  /** The mark the exam is scored out of; the score is a percentage when this is not set. */
+  totalAvailableScore?: number | null;
   createdOn?: string;
 }
 
@@ -3362,6 +3364,7 @@ export interface CreateExamSetupRequest {
   trainingCategory: string;
   allowedStudents: string[];
   duration: number;
+  totalAvailableScore?: number;
 }
 
 export interface ExamQuestionOption {
@@ -3397,7 +3400,7 @@ export async function getExamSetups(pageNo = 0, pageSize = 50): Promise<CustomPa
 
 export async function updateExamSetup(
   id: string,
-  body: { title: string; instructions?: string; duration: number },
+  body: { title: string; instructions?: string; duration: number; totalAvailableScore?: number },
 ): Promise<ExamSetupResponse> {
   return apiFetch<ExamSetupResponse>(`/api/v1/exam-setups/${id}`, { method: "PUT", body: JSON.stringify(body) });
 }

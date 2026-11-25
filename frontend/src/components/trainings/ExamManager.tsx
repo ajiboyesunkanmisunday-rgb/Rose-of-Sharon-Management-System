@@ -102,7 +102,7 @@ function ExamList({ onOpen }: { onOpen: (id: string) => void }) {
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-[#111827] dark:text-slate-100">{s.title}</p>
               <p className="mt-0.5 text-xs text-[#6B7280] dark:text-slate-400">
-                {CATEGORY_LABEL[s.trainingCategory ?? ""] ?? s.trainingCategory} · {s.duration} minutes · {s.allowedStudents?.length ?? 0} students allowed
+                {CATEGORY_LABEL[s.trainingCategory ?? ""] ?? s.trainingCategory} · {s.duration} minutes · {s.allowedStudents?.length ?? 0} students allowed{s.totalAvailableScore ? ` · scored out of ${s.totalAvailableScore}` : ""}
               </p>
               <span className={`mt-2 inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${s.isOpen ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
                 {s.isOpen ? "Open" : "Closed"}
@@ -140,15 +140,18 @@ function ExamDetailsCard({ setup, onSaved }: { setup: ExamSetupResponse; onSaved
   const [title, setTitle] = useState(setup.title ?? "");
   const [instructions, setInstructions] = useState(setup.instructions ?? "");
   const [duration, setDuration] = useState(String(setup.duration ?? 30));
+  const [totalScore, setTotalScore] = useState(setup.totalAvailableScore ? String(setup.totalAvailableScore) : "");
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
     const minutes = Number(duration);
     if (!title.trim()) { addToast("The exam title is required.", "error"); return; }
     if (!Number.isInteger(minutes) || minutes < 1 || minutes > 600) { addToast("Enter the time allowed as whole minutes, from 1 to 600.", "error"); return; }
+    const total = totalScore.trim() ? Number(totalScore) : undefined;
+    if (total !== undefined && !(total > 0)) { addToast("Total score must be a number above zero.", "error"); return; }
     setSaving(true);
     try {
-      await updateExamSetup(setup.id, { title: title.trim(), instructions: instructions.trim() || undefined, duration: minutes });
+      await updateExamSetup(setup.id, { title: title.trim(), instructions: instructions.trim() || undefined, duration: minutes, totalAvailableScore: total });
       addToast("Exam details saved.", "success");
       onSaved();
     } catch (e) {
@@ -172,6 +175,10 @@ function ExamDetailsCard({ setup, onSaved }: { setup: ExamSetupResponse; onSaved
       <div>
         <label className={labelCls}>Time allowed (minutes) <span className="text-red-500">*</span></label>
         <input type="number" inputMode="numeric" min={1} max={600} value={duration} onChange={(e) => setDuration(e.target.value)} className={inputCls} />
+      </div>
+      <div>
+        <label className={labelCls}>Total score</label>
+        <input type="number" inputMode="decimal" min={1} value={totalScore} onChange={(e) => setTotalScore(e.target.value)} placeholder="Empty: scores are shown as a percentage" className={inputCls} />
       </div>
       <button type="button" onClick={save} disabled={saving} className="w-fit rounded-lg bg-[#000080] px-4 py-2 text-xs font-semibold text-white hover:bg-[#000066] disabled:opacity-50">
         {saving ? "Saving..." : "Save details"}
@@ -380,7 +387,7 @@ function QuestionEditor({ examId, onBack }: { examId: string; onBack: () => void
     <div>
       <PageHeader title={setup?.title ?? "Exam questions"} subtitle={setup ? `${setup.duration} minutes · ${setup.isOpen ? "Open" : "Closed"}` : undefined} backOnClick={onBack} />
 
-      {setup && <ExamDetailsCard key={`${setup.id}-${setup.title}-${setup.duration}-${setup.instructions}`} setup={setup} onSaved={load} />}
+      {setup && <ExamDetailsCard key={`${setup.id}-${setup.title}-${setup.duration}-${setup.instructions}-${setup.totalAvailableScore}`} setup={setup} onSaved={load} />}
       {setup && <AllowedStudentsCard setup={setup} onSaved={load} />}
 
       <h3 className="mt-8 text-sm font-semibold text-[#111827] dark:text-slate-100">Questions in this exam ({questions.length})</h3>

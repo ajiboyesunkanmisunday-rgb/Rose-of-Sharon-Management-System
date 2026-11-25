@@ -21,6 +21,7 @@ export default function ExamSetupForm({ trainingEventId, trainingCategory, defau
   const [title, setTitle] = useState(defaultTitle);
   const [instructions, setInstructions] = useState("");
   const [duration, setDuration] = useState("30");
+  const [totalScore, setTotalScore] = useState("");
   const [students, setStudents] = useState<PickedStudent[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -29,6 +30,8 @@ export default function ExamSetupForm({ trainingEventId, trainingCategory, defau
     const minutes = Number(duration);
     if (!title.trim()) { setError("The exam title is required."); return; }
     if (!Number.isInteger(minutes) || minutes < 1 || minutes > 600) { setError("Enter the time allowed as whole minutes, from 1 to 600."); return; }
+    const total = totalScore.trim() ? Number(totalScore) : undefined;
+    if (total !== undefined && !(total > 0)) { setError("Total score must be a number above zero, or left empty."); return; }
     setSaving(true);
     setError("");
     try {
@@ -39,6 +42,7 @@ export default function ExamSetupForm({ trainingEventId, trainingCategory, defau
         instructions: instructions.trim() || undefined,
         allowedStudents: students.map((s) => s.id),
         duration: minutes,
+        totalAvailableScore: total,
       });
       onCreated(setup);
     } catch (e) {
@@ -61,6 +65,10 @@ export default function ExamSetupForm({ trainingEventId, trainingCategory, defau
       <div>
         <label className={labelCls}>Time allowed (minutes) <span className="text-red-500">*</span></label>
         <input type="number" inputMode="numeric" min={1} max={600} value={duration} onChange={(e) => setDuration(e.target.value)} className={inputCls} />
+      </div>
+      <div>
+        <label className={labelCls}>Total score</label>
+        <input type="number" inputMode="decimal" min={1} value={totalScore} onChange={(e) => setTotalScore(e.target.value)} placeholder="Empty: scores are shown as a percentage" className={inputCls} />
       </div>
       <div>
         <label className={labelCls}>Students allowed to take the exam</label>
